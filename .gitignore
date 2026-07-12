@@ -45,3 +45,5 @@ coverage/
 psd/
 *.psd
 *.psb
+.vercel
+.env*
