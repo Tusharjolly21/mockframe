@@ -1,0 +1,54 @@
+{
+  "id": "iphone-15-plus",
+  "name": "iPhone 15 Plus",
+  "brand": "apple",
+  "category": "phone",
+  "released": "2023-09",
+  "screen": {
+    "width": 1290,
+    "height": 2796,
+    "cornerRadius": 154
+  },
+  "aliases": [
+    "apple iphone 15 plus"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "iphone 15 plus mockup"
+    ]
+  },
+  "wallpaper": [
+    "#16a34a",
+    "#0891b2",
+    "#fde68a"
+  ],
+  "frame": {
+    "width": 1398,
+    "height": 2904,
+    "screenRect": {
+      "x": 54,
+      "y": 54,
+      "width": 1290,
+      "height": 2796
+    },
+    "maskPath": "M208 54 H1190 A154 154 0 0 1 1344 208 V2696 A154 154 0 0 1 1190 2850 H208 A154 154 0 0 1 54 2696 V208 A154 154 0 0 1 208 54 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "pink",
+      "label": "Pink",
+      "svg": "frame-pink.svg"
+    },
+    {
+      "id": "blue",
+      "label": "Blue",
+      "svg": "frame-blue.svg"
+    },
+    {
+      "id": "yellow",
+      "label": "Yellow",
+      "svg": "frame-yellow.svg"
+    }
+  ]
+}

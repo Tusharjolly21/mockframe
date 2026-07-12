@@ -1,0 +1,54 @@
+{
+  "id": "iphone-15",
+  "name": "iPhone 15",
+  "brand": "apple",
+  "category": "phone",
+  "released": "2023-09",
+  "screen": {
+    "width": 1179,
+    "height": 2556,
+    "cornerRadius": 150
+  },
+  "aliases": [
+    "apple iphone 15"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "iphone 15 mockup"
+    ]
+  },
+  "wallpaper": [
+    "#ec4899",
+    "#8b5cf6",
+    "#fbcfe8"
+  ],
+  "frame": {
+    "width": 1287,
+    "height": 2664,
+    "screenRect": {
+      "x": 54,
+      "y": 54,
+      "width": 1179,
+      "height": 2556
+    },
+    "maskPath": "M204 54 H1083 A150 150 0 0 1 1233 204 V2460 A150 150 0 0 1 1083 2610 H204 A150 150 0 0 1 54 2460 V204 A150 150 0 0 1 204 54 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "pink",
+      "label": "Pink",
+      "svg": "frame-pink.svg"
+    },
+    {
+      "id": "blue",
+      "label": "Blue",
+      "svg": "frame-blue.svg"
+    },
+    {
+      "id": "black",
+      "label": "Black",
+      "svg": "frame-black.svg"
+    }
+  ]
+}

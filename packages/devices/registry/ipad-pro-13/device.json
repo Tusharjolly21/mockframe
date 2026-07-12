@@ -1,0 +1,51 @@
+{
+  "id": "ipad-pro-13",
+  "name": "iPad Pro 13″ (M4)",
+  "brand": "apple",
+  "category": "tablet",
+  "released": "2024-05",
+  "screen": {
+    "width": 2064,
+    "height": 2752,
+    "cornerRadius": 44
+  },
+  "aliases": [
+    "apple ipad pro 13",
+    "ipad pro 13 m4"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "ipad pro 13 mockup",
+      "ipad pro m4 mockup"
+    ]
+  },
+  "wallpaper": [
+    "#0ea5e9",
+    "#1e3a8a",
+    "#a5f3fc"
+  ],
+  "frame": {
+    "width": 2260,
+    "height": 2948,
+    "screenRect": {
+      "x": 98,
+      "y": 98,
+      "width": 2064,
+      "height": 2752
+    },
+    "maskPath": "M142 98 H2118 A44 44 0 0 1 2162 142 V2806 A44 44 0 0 1 2118 2850 H142 A44 44 0 0 1 98 2806 V142 A44 44 0 0 1 142 98 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "space-black",
+      "label": "Space Black",
+      "svg": "frame-space-black.svg"
+    },
+    {
+      "id": "silver",
+      "label": "Silver",
+      "svg": "frame-silver.svg"
+    }
+  ]
+}

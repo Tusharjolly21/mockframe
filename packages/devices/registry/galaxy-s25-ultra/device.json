@@ -1,0 +1,51 @@
+{
+  "id": "galaxy-s25-ultra",
+  "name": "Galaxy S25 Ultra",
+  "brand": "samsung",
+  "category": "phone",
+  "released": "2025-01",
+  "screen": {
+    "width": 1440,
+    "height": 3120,
+    "cornerRadius": 56
+  },
+  "aliases": [
+    "samsung galaxy s25 ultra",
+    "s25 ultra"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "galaxy s25 ultra mockup",
+      "samsung s25 mockup"
+    ]
+  },
+  "wallpaper": [
+    "#312e81",
+    "#0f172a",
+    "#a5b4fc"
+  ],
+  "frame": {
+    "width": 1524,
+    "height": 3204,
+    "screenRect": {
+      "x": 42,
+      "y": 42,
+      "width": 1440,
+      "height": 3120
+    },
+    "maskPath": "M98 42 H1426 A56 56 0 0 1 1482 98 V3106 A56 56 0 0 1 1426 3162 H98 A56 56 0 0 1 42 3106 V98 A56 56 0 0 1 98 42 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "titanium-black",
+      "label": "Titanium Black",
+      "svg": "frame-titanium-black.svg"
+    },
+    {
+      "id": "titanium-gray",
+      "label": "Titanium Gray",
+      "svg": "frame-titanium-gray.svg"
+    }
+  ]
+}

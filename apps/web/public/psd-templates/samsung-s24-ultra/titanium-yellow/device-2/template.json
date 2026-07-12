@@ -1,0 +1,171 @@
+{
+  "id": "titanium-yellow-device-2",
+  "sourceLayerPath": [
+    "Titanium Yellow",
+    "Device 2",
+    "Change This"
+  ],
+  "renderMode": "perspective-smart-object-fallback",
+  "sourcePsd": "004.psd",
+  "preservesSourcePsd": true,
+  "canvas": {
+    "width": 3349,
+    "height": 2889
+  },
+  "screen": {
+    "smartObjectName": "Change This",
+    "smartObjectFile": "smart-object.psb",
+    "sourceSize": [
+      1440,
+      3120
+    ],
+    "bounds": [
+      653,
+      870,
+      3550,
+      3361
+    ],
+    "quad": [
+      [
+        2010.0813,
+        98.5596
+      ],
+      [
+        3060.7312,
+        604.8471
+      ],
+      [
+        1229.5054,
+        2590.1588
+      ],
+      [
+        164.7231,
+        1985.9705
+      ]
+    ],
+    "mask": "screen-mask.png",
+    "cornerRadius": 0,
+    "clippingMask": true
+  },
+  "layers": {
+    "name": "Device 2",
+    "kind": "group",
+    "visible": true,
+    "opacity": 255,
+    "blendMode": "BlendMode.PASS_THROUGH",
+    "clipping": false,
+    "bounds": {
+      "left": 489,
+      "top": 771,
+      "right": 3838,
+      "bottom": 3660
+    },
+    "localBounds": {
+      "left": 0,
+      "top": 0,
+      "right": 3349,
+      "bottom": 2889
+    },
+    "children": [
+      {
+        "name": "Shadow",
+        "kind": "pixel",
+        "visible": true,
+        "opacity": 255,
+        "blendMode": "BlendMode.LINEAR_BURN",
+        "clipping": false,
+        "bounds": {
+          "left": 489,
+          "top": 771,
+          "right": 3838,
+          "bottom": 3660
+        },
+        "localBounds": {
+          "left": 0,
+          "top": 0,
+          "right": 3349,
+          "bottom": 2889
+        }
+      },
+      {
+        "name": "Samsung Galaxy S24 Ultra",
+        "kind": "pixel",
+        "visible": true,
+        "opacity": 255,
+        "blendMode": "BlendMode.NORMAL",
+        "clipping": false,
+        "bounds": {
+          "left": 588,
+          "top": 835,
+          "right": 3632,
+          "bottom": 3506
+        },
+        "localBounds": {
+          "left": 99,
+          "top": 64,
+          "right": 3143,
+          "bottom": 2735
+        }
+      },
+      {
+        "name": "Change This",
+        "kind": "smartobject",
+        "visible": true,
+        "opacity": 255,
+        "blendMode": "BlendMode.NORMAL",
+        "clipping": false,
+        "bounds": {
+          "left": 653,
+          "top": 870,
+          "right": 3550,
+          "bottom": 3361
+        },
+        "localBounds": {
+          "left": 164,
+          "top": 99,
+          "right": 3061,
+          "bottom": 2590
+        },
+        "smartObject": {
+          "filename": "Change This.psb",
+          "filetype": "8bpb",
+          "bytes": 9859962,
+          "transformBox": [
+            [
+              2499.081286799302,
+              869.5596042843821
+            ],
+            [
+              3549.731249737096,
+              1375.8470933559997
+            ],
+            [
+              1718.5053982065592,
+              3361.158753516633
+            ],
+            [
+              653.7231131313598,
+              2756.9704660821412
+            ]
+          ],
+          "maskBounds": [
+            657,
+            872,
+            3546,
+            3358
+          ]
+        }
+      }
+    ]
+  },
+  "assets": {
+    "deviceBase": "device-base.png",
+    "screenMask": "screen-mask.png",
+    "foreground": "foreground.png",
+    "reflection": "reflection.png"
+  },
+  "notes": [
+    "The PSD contains no separate named reflection layer; case highlights, shadows and bezel shading are baked into the case pixel layer.",
+    "The original PSD and embedded PSB are preserved; the fallback replaces only the screen content at render time."
+  ]
+}

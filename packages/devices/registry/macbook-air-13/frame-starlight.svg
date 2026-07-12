@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3277 1958">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_macbook-air-13_starlight_alum" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2ede2"/><stop offset="1" stop-color="#c8c1b0"/></linearGradient>
+<linearGradient id="fk_macbook-air-13_starlight_deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e5dfd1"/><stop offset="1" stop-color="#b8b1a0"/></linearGradient>
+</defs>
+<path d="M388.5 10 H2888.5 A96 96 0 0 1 2984.5 106 V1806 A24 24 0 0 1 2960.5 1830 H316.5 A24 24 0 0 1 292.5 1806 V106 A96 96 0 0 1 388.5 10 Z" fill="url(#fk_macbook-air-13_starlight_alum)"/>
+<path d="M388.5 20 H2888.5 A86 86 0 0 1 2974.5 106 V1804 A16 16 0 0 1 2958.5 1820 H318.5 A16 16 0 0 1 302.5 1804 V106 A86 86 0 0 1 388.5 20 Z" fill="#050506"/>
+<path d="M24 1830 H3253 A14 14 0 0 1 3267 1844 V1890 A58 58 0 0 1 3209 1948 H68 A58 58 0 0 1 10 1890 V1844 A14 14 0 0 1 24 1830 Z" fill="url(#fk_macbook-air-13_starlight_deck)"/>
+<path d="M1348.5 1830 H1928.5 V1834 A30 30 0 0 1 1898.5 1864 H1378.5 A30 30 0 0 1 1348.5 1834 V1830 Z" fill="#00000022"/>
+<rect x="10" y="1830" width="3257" height="6" fill="#ffffff" opacity="0.14"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_macbook-air-13_starlight_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0891b2"/><stop offset="1" stop-color="#1e40af"/></linearGradient>
+<radialGradient id="fk_scr_macbook-air-13_starlight_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#67e8f9" stop-opacity="0.95"/><stop offset="1" stop-color="#67e8f9" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_macbook-air-13_starlight_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M384.5 76 H2892.5 A26 26 0 0 1 2918.5 102 V1740 H358.5 V102 A26 26 0 0 1 384.5 76 Z" fill="url(#fk_scr_macbook-air-13_starlight_a)"/>
+<path d="M384.5 76 H2892.5 A26 26 0 0 1 2918.5 102 V1740 H358.5 V102 A26 26 0 0 1 384.5 76 Z" fill="url(#fk_scr_macbook-air-13_starlight_b)"/>
+<path d="M384.5 76 H2892.5 A26 26 0 0 1 2918.5 102 V1740 H358.5 V102 A26 26 0 0 1 384.5 76 Z" fill="url(#fk_scr_macbook-air-13_starlight_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<path d="M1493.5 76 H1783.5 V120 A18 18 0 0 1 1765.5 138 H1511.5 A18 18 0 0 1 1493.5 120 V76 Z" fill="#000000"/>
+<circle cx="1638.5" cy="107" r="9.92" fill="#101418"/>
+<circle cx="1638.5" cy="107" r="4.96" fill="#1d2b3a"/><!--/OVERLAY-->
+</svg>

@@ -1,0 +1,52 @@
+{
+  "id": "ipad-pro-11",
+  "name": "iPad Pro 11″ (M4)",
+  "brand": "apple",
+  "category": "tablet",
+  "released": "2024-05",
+  "screen": {
+    "width": 1668,
+    "height": 2420,
+    "cornerRadius": 40
+  },
+  "aliases": [
+    "apple ipad pro 11",
+    "ipad pro 11 m4"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "ipad pro mockup",
+      "ipad mockup png",
+      "ipad pro m4 mockup"
+    ]
+  },
+  "wallpaper": [
+    "#7c3aed",
+    "#1d4ed8",
+    "#f0abfc"
+  ],
+  "frame": {
+    "width": 1852,
+    "height": 2604,
+    "screenRect": {
+      "x": 92,
+      "y": 92,
+      "width": 1668,
+      "height": 2420
+    },
+    "maskPath": "M132 92 H1720 A40 40 0 0 1 1760 132 V2472 A40 40 0 0 1 1720 2512 H132 A40 40 0 0 1 92 2472 V132 A40 40 0 0 1 132 92 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "space-black",
+      "label": "Space Black",
+      "svg": "frame-space-black.svg"
+    },
+    {
+      "id": "silver",
+      "label": "Silver",
+      "svg": "frame-silver.svg"
+    }
+  ]
+}

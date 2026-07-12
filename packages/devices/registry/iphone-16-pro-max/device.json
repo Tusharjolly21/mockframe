@@ -1,0 +1,54 @@
+{
+  "id": "iphone-16-pro-max",
+  "name": "iPhone 16 Pro Max",
+  "brand": "apple",
+  "category": "phone",
+  "released": "2024-09",
+  "screen": {
+    "width": 1320,
+    "height": 2868,
+    "cornerRadius": 168
+  },
+  "aliases": [
+    "apple iphone 16 pro max"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "iphone 16 pro max mockup"
+    ]
+  },
+  "wallpaper": [
+    "#5b21b6",
+    "#1d4ed8",
+    "#c084fc"
+  ],
+  "frame": {
+    "width": 1416,
+    "height": 2964,
+    "screenRect": {
+      "x": 48,
+      "y": 48,
+      "width": 1320,
+      "height": 2868
+    },
+    "maskPath": "M216 48 H1200 A168 168 0 0 1 1368 216 V2748 A168 168 0 0 1 1200 2916 H216 A168 168 0 0 1 48 2748 V216 A168 168 0 0 1 216 48 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "black-titanium",
+      "label": "Black Titanium",
+      "svg": "frame-black-titanium.svg"
+    },
+    {
+      "id": "natural-titanium",
+      "label": "Natural Titanium",
+      "svg": "frame-natural-titanium.svg"
+    },
+    {
+      "id": "desert-titanium",
+      "label": "Desert Titanium",
+      "svg": "frame-desert-titanium.svg"
+    }
+  ]
+}

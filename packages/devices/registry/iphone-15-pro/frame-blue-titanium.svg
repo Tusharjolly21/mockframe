@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1279 2656">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_iphone-15-pro_blue-titanium_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fa6c4"/><stop offset="0.5" stop-color="#5f7a9c"/><stop offset="1" stop-color="#7f98b8"/></linearGradient>
+<linearGradient id="fk_iphone-15-pro_blue-titanium_btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8fa6c4"/><stop offset="1" stop-color="#7f98b8"/></linearGradient>
+<radialGradient id="fk_iphone-15-pro_blue-titanium_sheen" cx="0.25" cy="0.05" r="1.4">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect x="2" y="498" width="16" height="95" rx="7" fill="url(#fk_iphone-15-pro_blue-titanium_btn)"/>
+<rect x="2" y="677" width="16" height="176" rx="7" fill="url(#fk_iphone-15-pro_blue-titanium_btn)"/>
+<rect x="2" y="881" width="16" height="176" rx="7" fill="url(#fk_iphone-15-pro_blue-titanium_btn)"/>
+<rect x="1261" y="625" width="16" height="294" rx="7" fill="url(#fk_iphone-15-pro_blue-titanium_btn)"/>
+<path d="M202 12 H1077 A190 190 0 0 1 1267 202 V2454 A190 190 0 0 1 1077 2644 H202 A190 190 0 0 1 12 2454 V202 A190 190 0 0 1 202 12 Z" fill="url(#fk_iphone-15-pro_blue-titanium_rail)"/>
+<path d="M202 19 H1077 A183 183 0 0 1 1260 202 V2454 A183 183 0 0 1 1077 2637 H202 A183 183 0 0 1 19 2454 V202 A183 183 0 0 1 202 19 Z" fill="#0c1019"/>
+<path d="M202 19 H1077 A183 183 0 0 1 1260 202 V2454 A183 183 0 0 1 1077 2637 H202 A183 183 0 0 1 19 2454 V202 A183 183 0 0 1 202 19 Z" fill="url(#fk_iphone-15-pro_blue-titanium_sheen)"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_iphone-15-pro_blue-titanium_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b21b6"/><stop offset="1" stop-color="#2563eb"/></linearGradient>
+<radialGradient id="fk_scr_iphone-15-pro_blue-titanium_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#a5b4fc" stop-opacity="0.95"/><stop offset="1" stop-color="#a5b4fc" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_iphone-15-pro_blue-titanium_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M200 50 H1079 A150 150 0 0 1 1229 200 V2456 A150 150 0 0 1 1079 2606 H200 A150 150 0 0 1 50 2456 V200 A150 150 0 0 1 200 50 Z" fill="url(#fk_scr_iphone-15-pro_blue-titanium_a)"/>
+<path d="M200 50 H1079 A150 150 0 0 1 1229 200 V2456 A150 150 0 0 1 1079 2606 H200 A150 150 0 0 1 50 2456 V200 A150 150 0 0 1 200 50 Z" fill="url(#fk_scr_iphone-15-pro_blue-titanium_b)"/>
+<path d="M200 50 H1079 A150 150 0 0 1 1229 200 V2456 A150 150 0 0 1 1079 2606 H200 A150 150 0 0 1 50 2456 V200 A150 150 0 0 1 200 50 Z" fill="url(#fk_scr_iphone-15-pro_blue-titanium_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<rect x="469.5" y="82" width="340" height="104" rx="52" fill="#020204"/>
+<circle cx="757.5" cy="134" r="31.2" fill="#08080d"/>
+<circle cx="757.5" cy="134" r="14.560000000000002" fill="#141824"/>
+<circle cx="748.14" cy="122.56" r="5.2" fill="#2d3550" opacity="0.9"/><!--/OVERLAY-->
+</svg>

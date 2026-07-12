@@ -1,0 +1,55 @@
+{
+  "id": "macbook-air-13",
+  "name": "MacBook Air 13″",
+  "brand": "apple",
+  "category": "laptop",
+  "released": "2024-03",
+  "screen": {
+    "width": 2560,
+    "height": 1664,
+    "cornerRadius": 22
+  },
+  "aliases": [
+    "macbook air m3",
+    "macbook air mockup"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "macbook air mockup"
+    ]
+  },
+  "wallpaper": [
+    "#0891b2",
+    "#1e40af",
+    "#67e8f9"
+  ],
+  "frame": {
+    "width": 3277,
+    "height": 1958,
+    "screenRect": {
+      "x": 358.5,
+      "y": 76,
+      "width": 2560,
+      "height": 1664
+    },
+    "maskPath": "M384.5 76 H2892.5 A26 26 0 0 1 2918.5 102 V1740 H358.5 V102 A26 26 0 0 1 384.5 76 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "midnight",
+      "label": "Midnight",
+      "svg": "frame-midnight.svg"
+    },
+    {
+      "id": "starlight",
+      "label": "Starlight",
+      "svg": "frame-starlight.svg"
+    },
+    {
+      "id": "silver",
+      "label": "Silver",
+      "svg": "frame-silver.svg"
+    }
+  ]
+}

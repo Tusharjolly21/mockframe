@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2580 1724">
+<!--BODY-->
+<defs></defs>
+<path d="M36 8 H2544 A28 28 0 0 1 2572 36 V1688 A28 28 0 0 1 2544 1716 H36 A28 28 0 0 1 8 1688 V36 A28 28 0 0 1 36 8 Z" fill="#141317"/>
+
+<path d="M36 10 H2544 A26 26 0 0 1 2570 36 V114 H10 V36 A26 26 0 0 1 36 10 Z" fill="#2d2c31"/>
+
+<circle cx="54" cy="62" r="13" fill="#ff5f57"/>
+<circle cx="98" cy="62" r="13" fill="#febc2e"/>
+<circle cx="142" cy="62" r="13" fill="#28c840"/>
+<rect x="830" y="34" width="920" height="56" rx="16" fill="#3a393f"/>
+<text x="1290" y="72" text-anchor="middle" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="30" fill="#d7d7dc" id="fk_urltext_fk_safari-browser_dark">framekit.app</text>
+<g stroke="#8e8e93" stroke-width="5" fill="none" stroke-linecap="round">
+  <path d="M220 50 l-14 12 14 12"/>
+  <path d="M260 50 l14 12 -14 12" opacity="0.45"/>
+</g>
+<rect x="10" y="112" width="2560" height="2" fill="#232227"/>
+<rect x="10" y="114" width="2560" height="1600" fill="#2d2c31"/>
+<!--/BODY-->
+<!--SCREEN--><path d="M10 114 H2570 V1688 A26 26 0 0 1 2544 1714 H36 A26 26 0 0 1 10 1688 V114 Z" fill="#f6f7f9"/>
+<rect x="163.6" y="242" width="1075.2" height="96" rx="48" fill="#e2e5ea"/>
+<rect x="163.6" y="434" width="2252.8" height="640" rx="28" fill="#e9ecf1"/>
+<rect x="163.6" y="1170" width="1075.2" height="352" rx="24" fill="#eef0f4"/>
+<rect x="1341.2" y="1170" width="1075.2" height="352" rx="24" fill="#eef0f4"/><!--/SCREEN-->
+<!--OVERLAY--><!--/OVERLAY-->
+</svg>

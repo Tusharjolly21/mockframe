@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4410 2576">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_macbook-pro-16_silver_alum" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6e8ec"/><stop offset="1" stop-color="#b9bcc2"/></linearGradient>
+<linearGradient id="fk_macbook-pro-16_silver_deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d7d9de"/><stop offset="1" stop-color="#a9acb3"/></linearGradient>
+</defs>
+<path d="M487 10 H3923 A96 96 0 0 1 4019 106 V2424 A24 24 0 0 1 3995 2448 H415 A24 24 0 0 1 391 2424 V106 A96 96 0 0 1 487 10 Z" fill="url(#fk_macbook-pro-16_silver_alum)"/>
+<path d="M487 20 H3923 A86 86 0 0 1 4009 106 V2422 A16 16 0 0 1 3993 2438 H417 A16 16 0 0 1 401 2422 V106 A86 86 0 0 1 487 20 Z" fill="#050506"/>
+<path d="M24 2448 H4386 A14 14 0 0 1 4400 2462 V2508 A58 58 0 0 1 4342 2566 H68 A58 58 0 0 1 10 2508 V2462 A14 14 0 0 1 24 2448 Z" fill="url(#fk_macbook-pro-16_silver_deck)"/>
+<path d="M1915 2448 H2495 V2452 A30 30 0 0 1 2465 2482 H1945 A30 30 0 0 1 1915 2452 V2448 Z" fill="#00000022"/>
+<rect x="10" y="2448" width="4390" height="6" fill="#ffffff" opacity="0.14"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_macbook-pro-16_silver_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#1e40af"/></linearGradient>
+<radialGradient id="fk_scr_macbook-pro-16_silver_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#c4b5fd" stop-opacity="0.95"/><stop offset="1" stop-color="#c4b5fd" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_macbook-pro-16_silver_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M503 96 H3907 A26 26 0 0 1 3933 122 V2330 H477 V122 A26 26 0 0 1 503 96 Z" fill="url(#fk_scr_macbook-pro-16_silver_a)"/>
+<path d="M503 96 H3907 A26 26 0 0 1 3933 122 V2330 H477 V122 A26 26 0 0 1 503 96 Z" fill="url(#fk_scr_macbook-pro-16_silver_b)"/>
+<path d="M503 96 H3907 A26 26 0 0 1 3933 122 V2330 H477 V122 A26 26 0 0 1 503 96 Z" fill="url(#fk_scr_macbook-pro-16_silver_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<path d="M2025 96 H2385 V156 A18 18 0 0 1 2367 174 H2043 A18 18 0 0 1 2025 156 V96 Z" fill="#000000"/>
+<circle cx="2205" cy="135" r="12.48" fill="#101418"/>
+<circle cx="2205" cy="135" r="6.24" fill="#1d2b3a"/><!--/OVERLAY-->
+</svg>

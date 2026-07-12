@@ -1,0 +1,50 @@
+{
+  "id": "macbook-pro-16",
+  "name": "MacBook Pro 16″",
+  "brand": "apple",
+  "category": "laptop",
+  "released": "2024-10",
+  "screen": {
+    "width": 3456,
+    "height": 2234,
+    "cornerRadius": 28
+  },
+  "aliases": [
+    "macbook pro 16 m4",
+    "macbook pro 16 mockup"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "macbook pro 16 mockup"
+    ]
+  },
+  "wallpaper": [
+    "#7c3aed",
+    "#1e40af",
+    "#c4b5fd"
+  ],
+  "frame": {
+    "width": 4410,
+    "height": 2576,
+    "screenRect": {
+      "x": 477,
+      "y": 96,
+      "width": 3456,
+      "height": 2234
+    },
+    "maskPath": "M503 96 H3907 A26 26 0 0 1 3933 122 V2330 H477 V122 A26 26 0 0 1 503 96 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "space-black",
+      "label": "Space Black",
+      "svg": "frame-space-black.svg"
+    },
+    {
+      "id": "silver",
+      "label": "Silver",
+      "svg": "frame-silver.svg"
+    }
+  ]
+}

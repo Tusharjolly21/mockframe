@@ -1,0 +1,50 @@
+{
+  "id": "iphone-16-pro",
+  "name": "iPhone 16 Pro",
+  "brand": "apple",
+  "category": "phone",
+  "released": "2024-09",
+  "screen": {
+    "width": 1206,
+    "height": 2622,
+    "cornerRadius": 165
+  },
+  "aliases": [
+    "apple iphone 16 pro"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "iphone 16 pro mockup",
+      "iphone mockup png"
+    ]
+  },
+  "wallpaper": [
+    "#5b21b6",
+    "#2563eb",
+    "#c084fc"
+  ],
+  "frame": {
+    "width": 1302,
+    "height": 2718,
+    "screenRect": {
+      "x": 48,
+      "y": 48,
+      "width": 1206,
+      "height": 2622
+    },
+    "maskPath": "M213 48 H1089 A165 165 0 0 1 1254 213 V2505 A165 165 0 0 1 1089 2670 H213 A165 165 0 0 1 48 2505 V213 A165 165 0 0 1 213 48 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "black-titanium",
+      "label": "Black Titanium",
+      "svg": "frame-black-titanium.svg"
+    },
+    {
+      "id": "natural-titanium",
+      "label": "Natural Titanium",
+      "svg": "frame-natural-titanium.svg"
+    }
+  ]
+}

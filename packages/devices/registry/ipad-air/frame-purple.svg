@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1820 2540">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_ipad-air_purple_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8d2ea"/><stop offset="0.5" stop-color="#a89fc9"/><stop offset="1" stop-color="#cbc4e0"/></linearGradient>
+<linearGradient id="fk_ipad-air_purple_btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d8d2ea"/><stop offset="1" stop-color="#cbc4e0"/></linearGradient>
+<radialGradient id="fk_ipad-air_purple_sheen" cx="0.25" cy="0.05" r="1.4">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect x="1802" y="202" width="16" height="150" rx="7" fill="url(#fk_ipad-air_purple_btn)"/>
+<path d="M116 12 H1704 A104 104 0 0 1 1808 116 V2424 A104 104 0 0 1 1704 2528 H116 A104 104 0 0 1 12 2424 V116 A104 104 0 0 1 116 12 Z" fill="url(#fk_ipad-air_purple_rail)"/>
+<path d="M116 19 H1704 A97 97 0 0 1 1801 116 V2424 A97 97 0 0 1 1704 2521 H116 A97 97 0 0 1 19 2424 V116 A97 97 0 0 1 116 19 Z" fill="#100e16"/>
+<path d="M116 19 H1704 A97 97 0 0 1 1801 116 V2424 A97 97 0 0 1 1704 2521 H116 A97 97 0 0 1 19 2424 V116 A97 97 0 0 1 116 19 Z" fill="url(#fk_ipad-air_purple_sheen)"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_ipad-air_purple_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#1e3a8a"/></linearGradient>
+<radialGradient id="fk_scr_ipad-air_purple_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#93c5fd" stop-opacity="0.95"/><stop offset="1" stop-color="#93c5fd" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_ipad-air_purple_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M128 90 H1692 A38 38 0 0 1 1730 128 V2412 A38 38 0 0 1 1692 2450 H128 A38 38 0 0 1 90 2412 V128 A38 38 0 0 1 128 90 Z" fill="url(#fk_scr_ipad-air_purple_a)"/>
+<path d="M128 90 H1692 A38 38 0 0 1 1730 128 V2412 A38 38 0 0 1 1692 2450 H128 A38 38 0 0 1 90 2412 V128 A38 38 0 0 1 128 90 Z" fill="url(#fk_scr_ipad-air_purple_b)"/>
+<path d="M128 90 H1692 A38 38 0 0 1 1730 128 V2412 A38 38 0 0 1 1692 2450 H128 A38 38 0 0 1 90 2412 V128 A38 38 0 0 1 128 90 Z" fill="url(#fk_scr_ipad-air_purple_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<circle cx="910" cy="54.5" r="14" fill="#020204"/>
+<circle cx="910" cy="54.5" r="7" fill="#101623"/><!--/OVERLAY-->
+</svg>

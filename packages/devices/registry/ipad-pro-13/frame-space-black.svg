@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2260 2948">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_ipad-pro-13_space-black_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4a4e"/><stop offset="0.5" stop-color="#242427"/><stop offset="1" stop-color="#3d3d41"/></linearGradient>
+<linearGradient id="fk_ipad-pro-13_space-black_btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4a4a4e"/><stop offset="1" stop-color="#3d3d41"/></linearGradient>
+<radialGradient id="fk_ipad-pro-13_space-black_sheen" cx="0.25" cy="0.05" r="1.4">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect x="2242" y="232" width="16" height="180" rx="7" fill="url(#fk_ipad-pro-13_space-black_btn)"/>
+<path d="M130 12 H2130 A118 118 0 0 1 2248 130 V2818 A118 118 0 0 1 2130 2936 H130 A118 118 0 0 1 12 2818 V130 A118 118 0 0 1 130 12 Z" fill="url(#fk_ipad-pro-13_space-black_rail)"/>
+<path d="M130 19 H2130 A111 111 0 0 1 2241 130 V2818 A111 111 0 0 1 2130 2929 H130 A111 111 0 0 1 19 2818 V130 A111 111 0 0 1 130 19 Z" fill="#0a0a0c"/>
+<path d="M130 19 H2130 A111 111 0 0 1 2241 130 V2818 A111 111 0 0 1 2130 2929 H130 A111 111 0 0 1 19 2818 V130 A111 111 0 0 1 130 19 Z" fill="url(#fk_ipad-pro-13_space-black_sheen)"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_ipad-pro-13_space-black_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0ea5e9"/><stop offset="1" stop-color="#1e3a8a"/></linearGradient>
+<radialGradient id="fk_scr_ipad-pro-13_space-black_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#a5f3fc" stop-opacity="0.95"/><stop offset="1" stop-color="#a5f3fc" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_ipad-pro-13_space-black_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M142 98 H2118 A44 44 0 0 1 2162 142 V2806 A44 44 0 0 1 2118 2850 H142 A44 44 0 0 1 98 2806 V142 A44 44 0 0 1 142 98 Z" fill="url(#fk_scr_ipad-pro-13_space-black_a)"/>
+<path d="M142 98 H2118 A44 44 0 0 1 2162 142 V2806 A44 44 0 0 1 2118 2850 H142 A44 44 0 0 1 98 2806 V142 A44 44 0 0 1 142 98 Z" fill="url(#fk_scr_ipad-pro-13_space-black_b)"/>
+<path d="M142 98 H2118 A44 44 0 0 1 2162 142 V2806 A44 44 0 0 1 2118 2850 H142 A44 44 0 0 1 98 2806 V142 A44 44 0 0 1 142 98 Z" fill="url(#fk_scr_ipad-pro-13_space-black_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<circle cx="1130" cy="58.5" r="14" fill="#020204"/>
+<circle cx="1130" cy="58.5" r="7" fill="#101623"/><!--/OVERLAY-->
+</svg>

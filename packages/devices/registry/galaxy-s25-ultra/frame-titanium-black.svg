@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1524 3204">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_galaxy-s25-ultra_titanium-black_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3f3f44"/><stop offset="0.5" stop-color="#1d1d21"/><stop offset="1" stop-color="#333338"/></linearGradient>
+<linearGradient id="fk_galaxy-s25-ultra_titanium-black_btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3f3f44"/><stop offset="1" stop-color="#333338"/></linearGradient>
+<radialGradient id="fk_galaxy-s25-ultra_titanium-black_sheen" cx="0.25" cy="0.05" r="1.4">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect x="1506" y="712" width="16" height="200" rx="7" fill="url(#fk_galaxy-s25-ultra_titanium-black_btn)"/>
+<rect x="1506" y="962" width="16" height="320" rx="7" fill="url(#fk_galaxy-s25-ultra_titanium-black_btn)"/>
+<path d="M104 12 H1420 A92 92 0 0 1 1512 104 V3100 A92 92 0 0 1 1420 3192 H104 A92 92 0 0 1 12 3100 V104 A92 92 0 0 1 104 12 Z" fill="url(#fk_galaxy-s25-ultra_titanium-black_rail)"/>
+<path d="M104 19 H1420 A85 85 0 0 1 1505 104 V3100 A85 85 0 0 1 1420 3185 H104 A85 85 0 0 1 19 3100 V104 A85 85 0 0 1 104 19 Z" fill="#08080a"/>
+<path d="M104 19 H1420 A85 85 0 0 1 1505 104 V3100 A85 85 0 0 1 1420 3185 H104 A85 85 0 0 1 19 3100 V104 A85 85 0 0 1 104 19 Z" fill="url(#fk_galaxy-s25-ultra_titanium-black_sheen)"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_galaxy-s25-ultra_titanium-black_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#312e81"/><stop offset="1" stop-color="#0f172a"/></linearGradient>
+<radialGradient id="fk_scr_galaxy-s25-ultra_titanium-black_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#a5b4fc" stop-opacity="0.95"/><stop offset="1" stop-color="#a5b4fc" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_galaxy-s25-ultra_titanium-black_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M98 42 H1426 A56 56 0 0 1 1482 98 V3106 A56 56 0 0 1 1426 3162 H98 A56 56 0 0 1 42 3106 V98 A56 56 0 0 1 98 42 Z" fill="url(#fk_scr_galaxy-s25-ultra_titanium-black_a)"/>
+<path d="M98 42 H1426 A56 56 0 0 1 1482 98 V3106 A56 56 0 0 1 1426 3162 H98 A56 56 0 0 1 42 3106 V98 A56 56 0 0 1 98 42 Z" fill="url(#fk_scr_galaxy-s25-ultra_titanium-black_b)"/>
+<path d="M98 42 H1426 A56 56 0 0 1 1482 98 V3106 A56 56 0 0 1 1426 3162 H98 A56 56 0 0 1 42 3106 V98 A56 56 0 0 1 98 42 Z" fill="url(#fk_scr_galaxy-s25-ultra_titanium-black_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<circle cx="762" cy="138" r="38" fill="#020204"/>
+<circle cx="762" cy="138" r="20.900000000000002" fill="#0c0e16"/>
+<circle cx="753.64" cy="128.5" r="6.08" fill="#28304a" opacity="0.9"/><!--/OVERLAY-->
+</svg>

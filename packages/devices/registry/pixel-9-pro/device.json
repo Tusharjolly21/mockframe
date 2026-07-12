@@ -1,0 +1,50 @@
+{
+  "id": "pixel-9-pro",
+  "name": "Pixel 9 Pro",
+  "brand": "google",
+  "category": "phone",
+  "released": "2024-08",
+  "screen": {
+    "width": 1280,
+    "height": 2856,
+    "cornerRadius": 96
+  },
+  "aliases": [
+    "google pixel 9 pro"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "pixel 9 pro mockup",
+      "pixel 9 pro png frame"
+    ]
+  },
+  "wallpaper": [
+    "#0f766e",
+    "#134e4a",
+    "#5eead4"
+  ],
+  "frame": {
+    "width": 1400,
+    "height": 2976,
+    "screenRect": {
+      "x": 60,
+      "y": 60,
+      "width": 1280,
+      "height": 2856
+    },
+    "maskPath": "M156 60 H1244 A96 96 0 0 1 1340 156 V2820 A96 96 0 0 1 1244 2916 H156 A96 96 0 0 1 60 2820 V156 A96 96 0 0 1 156 60 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "obsidian",
+      "label": "Obsidian",
+      "svg": "frame-obsidian.svg"
+    },
+    {
+      "id": "porcelain",
+      "label": "Porcelain",
+      "svg": "frame-porcelain.svg"
+    }
+  ]
+}

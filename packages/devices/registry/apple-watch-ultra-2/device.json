@@ -1,0 +1,50 @@
+{
+  "id": "apple-watch-ultra-2",
+  "name": "Apple Watch Ultra 2",
+  "brand": "apple",
+  "category": "watch",
+  "released": "2024-09",
+  "screen": {
+    "width": 410,
+    "height": 502,
+    "cornerRadius": 90
+  },
+  "aliases": [
+    "apple watch ultra"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "apple watch ultra mockup",
+      "watch mockup"
+    ]
+  },
+  "wallpaper": [
+    "#0f172a",
+    "#1e293b",
+    "#f97316"
+  ],
+  "frame": {
+    "width": 536,
+    "height": 942,
+    "screenRect": {
+      "x": 50,
+      "y": 220,
+      "width": 410,
+      "height": 502
+    },
+    "maskPath": "M140 220 H370 A90 90 0 0 1 460 310 V632 A90 90 0 0 1 370 722 H140 A90 90 0 0 1 50 632 V310 A90 90 0 0 1 140 220 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "natural-alpine",
+      "label": "Natural · Alpine",
+      "svg": "frame-natural-alpine.svg"
+    },
+    {
+      "id": "black-dark",
+      "label": "Black · Dark",
+      "svg": "frame-black-dark.svg"
+    }
+  ]
+}

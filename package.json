@@ -1,0 +1,19 @@
+{
+  "name": "framekit",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "tooling/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w web",
+    "build": "npm run build -w web",
+    "gen:devices": "node packages/devices/scripts/generate-frames.mjs && node packages/devices/scripts/build-registry.mjs",
+    "validate:frames": "node tooling/frame-validate/validate.mjs",
+    "typecheck": "tsc -p packages/scene && tsc -p packages/devices && tsc -p packages/renderer && tsc -p apps/web --noEmit"
+  },
+  "dependencies": {
+    "firebase": "^12.16.0"
+  }
+}

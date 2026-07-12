@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1852 2604">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_ipad-pro-11_space-black_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4a4e"/><stop offset="0.5" stop-color="#242427"/><stop offset="1" stop-color="#3d3d41"/></linearGradient>
+<linearGradient id="fk_ipad-pro-11_space-black_btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4a4a4e"/><stop offset="1" stop-color="#3d3d41"/></linearGradient>
+<radialGradient id="fk_ipad-pro-11_space-black_sheen" cx="0.25" cy="0.05" r="1.4">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect x="1834" y="212" width="16" height="160" rx="7" fill="url(#fk_ipad-pro-11_space-black_btn)"/>
+<path d="M118 12 H1734 A106 106 0 0 1 1840 118 V2486 A106 106 0 0 1 1734 2592 H118 A106 106 0 0 1 12 2486 V118 A106 106 0 0 1 118 12 Z" fill="url(#fk_ipad-pro-11_space-black_rail)"/>
+<path d="M118 19 H1734 A99 99 0 0 1 1833 118 V2486 A99 99 0 0 1 1734 2585 H118 A99 99 0 0 1 19 2486 V118 A99 99 0 0 1 118 19 Z" fill="#0a0a0c"/>
+<path d="M118 19 H1734 A99 99 0 0 1 1833 118 V2486 A99 99 0 0 1 1734 2585 H118 A99 99 0 0 1 19 2486 V118 A99 99 0 0 1 118 19 Z" fill="url(#fk_ipad-pro-11_space-black_sheen)"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_ipad-pro-11_space-black_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#1d4ed8"/></linearGradient>
+<radialGradient id="fk_scr_ipad-pro-11_space-black_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#f0abfc" stop-opacity="0.95"/><stop offset="1" stop-color="#f0abfc" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_ipad-pro-11_space-black_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M132 92 H1720 A40 40 0 0 1 1760 132 V2472 A40 40 0 0 1 1720 2512 H132 A40 40 0 0 1 92 2472 V132 A40 40 0 0 1 132 92 Z" fill="url(#fk_scr_ipad-pro-11_space-black_a)"/>
+<path d="M132 92 H1720 A40 40 0 0 1 1760 132 V2472 A40 40 0 0 1 1720 2512 H132 A40 40 0 0 1 92 2472 V132 A40 40 0 0 1 132 92 Z" fill="url(#fk_scr_ipad-pro-11_space-black_b)"/>
+<path d="M132 92 H1720 A40 40 0 0 1 1760 132 V2472 A40 40 0 0 1 1720 2512 H132 A40 40 0 0 1 92 2472 V132 A40 40 0 0 1 132 92 Z" fill="url(#fk_scr_ipad-pro-11_space-black_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<circle cx="926" cy="55.5" r="14" fill="#020204"/>
+<circle cx="926" cy="55.5" r="7" fill="#101623"/><!--/OVERLAY-->
+</svg>

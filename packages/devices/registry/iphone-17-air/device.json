@@ -1,0 +1,54 @@
+{
+  "id": "iphone-17-air",
+  "name": "iPhone 17 Air",
+  "brand": "apple",
+  "category": "phone",
+  "released": "2025-09",
+  "screen": {
+    "width": 1260,
+    "height": 2736,
+    "cornerRadius": 160
+  },
+  "aliases": [
+    "apple iphone 17 air"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "iphone 17 air mockup"
+    ]
+  },
+  "wallpaper": [
+    "#0ea5e9",
+    "#6366f1",
+    "#a5f3fc"
+  ],
+  "frame": {
+    "width": 1352,
+    "height": 2828,
+    "screenRect": {
+      "x": 46,
+      "y": 46,
+      "width": 1260,
+      "height": 2736
+    },
+    "maskPath": "M206 46 H1146 A160 160 0 0 1 1306 206 V2622 A160 160 0 0 1 1146 2782 H206 A160 160 0 0 1 46 2622 V206 A160 160 0 0 1 206 46 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "sky-blue",
+      "label": "Sky Blue",
+      "svg": "frame-sky-blue.svg"
+    },
+    {
+      "id": "space-black",
+      "label": "Space Black",
+      "svg": "frame-space-black.svg"
+    },
+    {
+      "id": "cloud-white",
+      "label": "Cloud White",
+      "svg": "frame-cloud-white.svg"
+    }
+  ]
+}

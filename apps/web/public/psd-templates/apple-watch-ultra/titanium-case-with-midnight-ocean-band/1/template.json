@@ -1,0 +1,151 @@
+{
+  "id": "titanium-case-with-midnight-ocean-band-1",
+  "sourceLayerPath": [
+    "Titanium Case with Midnight Ocean Band",
+    "1",
+    "Change This"
+  ],
+  "renderMode": "perspective-smart-object-fallback",
+  "sourcePsd": "Apple Watch Ultra - Realistic, PSD.psd",
+  "preservesSourcePsd": true,
+  "canvas": {
+    "width": 2380,
+    "height": 2595
+  },
+  "screen": {
+    "smartObjectName": "Change This",
+    "smartObjectFile": "smart-object.psb",
+    "sourceSize": [
+      410,
+      502
+    ],
+    "bounds": [
+      628,
+      1455,
+      1445,
+      3064
+    ],
+    "quad": [
+      [
+        64.0227,
+        537.3657
+      ],
+      [
+        876.1511,
+        360.0257
+      ],
+      [
+        878.5531,
+        1908.9424
+      ],
+      [
+        61.3155,
+        1969.1806
+      ]
+    ],
+    "mask": "screen-mask.png",
+    "cornerRadius": 36,
+    "clippingMask": true
+  },
+  "layers": {
+    "name": "1",
+    "kind": "group",
+    "visible": true,
+    "opacity": 255,
+    "blendMode": "BlendMode.PASS_THROUGH",
+    "clipping": false,
+    "bounds": {
+      "left": 567,
+      "top": 1095,
+      "right": 2947,
+      "bottom": 3690
+    },
+    "localBounds": {
+      "left": 0,
+      "top": 0,
+      "right": 2380,
+      "bottom": 2595
+    },
+    "children": [
+      {
+        "name": "Titanium Case with Midnight Ocean Band",
+        "kind": "pixel",
+        "visible": true,
+        "opacity": 255,
+        "blendMode": "BlendMode.NORMAL",
+        "clipping": false,
+        "bounds": {
+          "left": 567,
+          "top": 1095,
+          "right": 2947,
+          "bottom": 3690
+        },
+        "localBounds": {
+          "left": 0,
+          "top": 0,
+          "right": 2380,
+          "bottom": 2595
+        }
+      },
+      {
+        "name": "Change This",
+        "kind": "smartobject",
+        "visible": true,
+        "opacity": 255,
+        "blendMode": "BlendMode.NORMAL",
+        "clipping": false,
+        "bounds": {
+          "left": 628,
+          "top": 1455,
+          "right": 1445,
+          "bottom": 3064
+        },
+        "localBounds": {
+          "left": 61,
+          "top": 360,
+          "right": 878,
+          "bottom": 1969
+        },
+        "smartObject": {
+          "filename": "Change This.psb",
+          "filetype": "8bpb",
+          "bytes": 387616,
+          "transformBox": [
+            [
+              631.0226969614948,
+              1632.365675506281
+            ],
+            [
+              1443.1510738023844,
+              1455.0256574338991
+            ],
+            [
+              1445.5531209817425,
+              3003.942366010804
+            ],
+            [
+              628.3155392365993,
+              3064.180566073224
+            ]
+          ],
+          "maskBounds": [
+            626,
+            1512,
+            1445,
+            3047
+          ]
+        }
+      }
+    ]
+  },
+  "assets": {
+    "deviceBase": "device-base.png",
+    "screenMask": "screen-mask.png",
+    "foreground": "foreground.png",
+    "reflection": "reflection.png"
+  },
+  "notes": [
+    "The PSD contains no separate named reflection layer; case highlights, shadows and bezel shading are baked into the case pixel layer.",
+    "The original PSD and embedded PSB are preserved; the fallback replaces only the screen content at render time."
+  ]
+}

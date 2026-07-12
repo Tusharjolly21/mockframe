@@ -1,0 +1,51 @@
+{
+  "id": "macbook-pro-14",
+  "name": "MacBook Pro 14″",
+  "brand": "apple",
+  "category": "laptop",
+  "released": "2024-10",
+  "screen": {
+    "width": 3024,
+    "height": 1964,
+    "cornerRadius": 26
+  },
+  "aliases": [
+    "macbook pro 14 m4",
+    "macbook mockup"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "macbook pro mockup",
+      "macbook mockup png"
+    ]
+  },
+  "wallpaper": [
+    "#f97316",
+    "#db2777",
+    "#a78bfa"
+  ],
+  "frame": {
+    "width": 3873,
+    "height": 2292,
+    "screenRect": {
+      "x": 424.5,
+      "y": 90,
+      "width": 3024,
+      "height": 1964
+    },
+    "maskPath": "M450.5 90 H3422.5 A26 26 0 0 1 3448.5 116 V2054 H424.5 V116 A26 26 0 0 1 450.5 90 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "space-black",
+      "label": "Space Black",
+      "svg": "frame-space-black.svg"
+    },
+    {
+      "id": "silver",
+      "label": "Silver",
+      "svg": "frame-silver.svg"
+    }
+  ]
+}

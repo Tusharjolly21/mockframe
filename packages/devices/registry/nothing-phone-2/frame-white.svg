@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1164 2496">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_nothing-phone-2_white_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ececed"/><stop offset="0.5" stop-color="#c6c6c9"/><stop offset="1" stop-color="#e0e0e2"/></linearGradient>
+<linearGradient id="fk_nothing-phone-2_white_btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ececed"/><stop offset="1" stop-color="#e0e0e2"/></linearGradient>
+<radialGradient id="fk_nothing-phone-2_white_sheen" cx="0.25" cy="0.05" r="1.4">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect x="2" y="732" width="16" height="200" rx="7" fill="url(#fk_nothing-phone-2_white_btn)"/>
+<rect x="1146" y="652" width="16" height="150" rx="7" fill="url(#fk_nothing-phone-2_white_btn)"/>
+<path d="M180 12 H984 A168 168 0 0 1 1152 180 V2316 A168 168 0 0 1 984 2484 H180 A168 168 0 0 1 12 2316 V180 A168 168 0 0 1 180 12 Z" fill="url(#fk_nothing-phone-2_white_rail)"/>
+<path d="M180 19 H984 A161 161 0 0 1 1145 180 V2316 A161 161 0 0 1 984 2477 H180 A161 161 0 0 1 19 2316 V180 A161 161 0 0 1 180 19 Z" fill="#eff0f1"/>
+<path d="M180 19 H984 A161 161 0 0 1 1145 180 V2316 A161 161 0 0 1 984 2477 H180 A161 161 0 0 1 19 2316 V180 A161 161 0 0 1 180 19 Z" fill="url(#fk_nothing-phone-2_white_sheen)"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_nothing-phone-2_white_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3f3f46"/><stop offset="1" stop-color="#111113"/></linearGradient>
+<radialGradient id="fk_scr_nothing-phone-2_white_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#e4e4e7" stop-opacity="0.95"/><stop offset="1" stop-color="#e4e4e7" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_nothing-phone-2_white_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M162 42 H1002 A120 120 0 0 1 1122 162 V2334 A120 120 0 0 1 1002 2454 H162 A120 120 0 0 1 42 2334 V162 A120 120 0 0 1 162 42 Z" fill="url(#fk_scr_nothing-phone-2_white_a)"/>
+<path d="M162 42 H1002 A120 120 0 0 1 1122 162 V2334 A120 120 0 0 1 1002 2454 H162 A120 120 0 0 1 42 2334 V162 A120 120 0 0 1 162 42 Z" fill="url(#fk_scr_nothing-phone-2_white_b)"/>
+<path d="M162 42 H1002 A120 120 0 0 1 1122 162 V2334 A120 120 0 0 1 1002 2454 H162 A120 120 0 0 1 42 2334 V162 A120 120 0 0 1 162 42 Z" fill="url(#fk_scr_nothing-phone-2_white_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<circle cx="582" cy="120" r="34" fill="#020204"/>
+<circle cx="582" cy="120" r="18.700000000000003" fill="#0c0e16"/>
+<circle cx="574.52" cy="111.5" r="5.44" fill="#28304a" opacity="0.9"/><!--/OVERLAY-->
+</svg>

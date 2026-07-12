@@ -1,0 +1,54 @@
+{
+  "id": "iphone-15-pro",
+  "name": "iPhone 15 Pro",
+  "brand": "apple",
+  "category": "phone",
+  "released": "2023-09",
+  "screen": {
+    "width": 1179,
+    "height": 2556,
+    "cornerRadius": 150
+  },
+  "aliases": [
+    "apple iphone 15 pro"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "iphone 15 pro mockup"
+    ]
+  },
+  "wallpaper": [
+    "#5b21b6",
+    "#2563eb",
+    "#a5b4fc"
+  ],
+  "frame": {
+    "width": 1279,
+    "height": 2656,
+    "screenRect": {
+      "x": 50,
+      "y": 50,
+      "width": 1179,
+      "height": 2556
+    },
+    "maskPath": "M200 50 H1079 A150 150 0 0 1 1229 200 V2456 A150 150 0 0 1 1079 2606 H200 A150 150 0 0 1 50 2456 V200 A150 150 0 0 1 200 50 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "natural-titanium",
+      "label": "Natural Titanium",
+      "svg": "frame-natural-titanium.svg"
+    },
+    {
+      "id": "blue-titanium",
+      "label": "Blue Titanium",
+      "svg": "frame-blue-titanium.svg"
+    },
+    {
+      "id": "white-titanium",
+      "label": "White Titanium",
+      "svg": "frame-white-titanium.svg"
+    }
+  ]
+}

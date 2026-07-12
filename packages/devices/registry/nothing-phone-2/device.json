@@ -1,0 +1,50 @@
+{
+  "id": "nothing-phone-2",
+  "name": "Nothing Phone (2)",
+  "brand": "nothing",
+  "category": "phone",
+  "released": "2023-07",
+  "screen": {
+    "width": 1080,
+    "height": 2412,
+    "cornerRadius": 120
+  },
+  "aliases": [
+    "nothing phone",
+    "nothing phone 2"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "nothing phone mockup"
+    ]
+  },
+  "wallpaper": [
+    "#3f3f46",
+    "#111113",
+    "#e4e4e7"
+  ],
+  "frame": {
+    "width": 1164,
+    "height": 2496,
+    "screenRect": {
+      "x": 42,
+      "y": 42,
+      "width": 1080,
+      "height": 2412
+    },
+    "maskPath": "M162 42 H1002 A120 120 0 0 1 1122 162 V2334 A120 120 0 0 1 1002 2454 H162 A120 120 0 0 1 42 2334 V162 A120 120 0 0 1 162 42 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "white",
+      "label": "White",
+      "svg": "frame-white.svg"
+    },
+    {
+      "id": "dark-grey",
+      "label": "Dark Grey",
+      "svg": "frame-dark-grey.svg"
+    }
+  ]
+}

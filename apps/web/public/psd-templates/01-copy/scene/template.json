@@ -1,0 +1,64 @@
+{
+  "id": "01-copy-scene",
+  "sourceLayerPath": [
+    "REPLACE THIS SCREEN - 416 X 496 (SCALED BY X4)",
+    "01 - REPLACE THIS SCREEN"
+  ],
+  "renderMode": "masked-composite-smart-object-fallback",
+  "sourcePsd": "01 copy.psd",
+  "preservesSourcePsd": true,
+  "canvas": {
+    "width": 4000,
+    "height": 2666
+  },
+  "screen": {
+    "smartObjectName": "01 - REPLACE THIS SCREEN",
+    "smartObjectFile": "smart-object.psb",
+    "sourceSize": [
+      1664,
+      1984
+    ],
+    "bounds": [
+      1772,
+      1069,
+      2138,
+      1507
+    ],
+    "quad": [
+      [
+        1772.2628,
+        1069.117
+      ],
+      [
+        2137.7372,
+        1069.117
+      ],
+      [
+        2137.7372,
+        1506.883
+      ],
+      [
+        1772.2628,
+        1506.883
+      ]
+    ],
+    "mask": "screen-mask.png",
+    "cornerRadius": 0,
+    "clippingMask": true
+  },
+  "layers": {
+    "name": "full-document-composite",
+    "kind": "document",
+    "childrenParsed": true
+  },
+  "assets": {
+    "deviceBase": "device-base.png",
+    "screenMask": "screen-mask.png",
+    "foreground": "foreground.png",
+    "reflection": "reflection.png"
+  },
+  "notes": [
+    "The full Photoshop composite is preserved as the base; only the nested replace-screen region is alpha-cleared.",
+    "The separate MASK SCREEN Smart Object is extracted as the browser alpha mask."
+  ]
+}

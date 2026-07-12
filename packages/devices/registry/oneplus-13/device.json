@@ -1,0 +1,49 @@
+{
+  "id": "oneplus-13",
+  "name": "OnePlus 13",
+  "brand": "oneplus",
+  "category": "phone",
+  "released": "2025-01",
+  "screen": {
+    "width": 1440,
+    "height": 3168,
+    "cornerRadius": 120
+  },
+  "aliases": [
+    "oneplus 13"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "oneplus 13 mockup"
+    ]
+  },
+  "wallpaper": [
+    "#b91c1c",
+    "#7f1d1d",
+    "#fb923c"
+  ],
+  "frame": {
+    "width": 1532,
+    "height": 3260,
+    "screenRect": {
+      "x": 46,
+      "y": 46,
+      "width": 1440,
+      "height": 3168
+    },
+    "maskPath": "M166 46 H1366 A120 120 0 0 1 1486 166 V3094 A120 120 0 0 1 1366 3214 H166 A120 120 0 0 1 46 3094 V166 A120 120 0 0 1 166 46 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "black-eclipse",
+      "label": "Black Eclipse",
+      "svg": "frame-black-eclipse.svg"
+    },
+    {
+      "id": "arctic-dawn",
+      "label": "Arctic Dawn",
+      "svg": "frame-arctic-dawn.svg"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1664 2442">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_ipad-mini_starlight_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1ece3"/><stop offset="0.5" stop-color="#c7c0b2"/><stop offset="1" stop-color="#e6e0d4"/></linearGradient>
+<linearGradient id="fk_ipad-mini_starlight_btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f1ece3"/><stop offset="1" stop-color="#e6e0d4"/></linearGradient>
+<radialGradient id="fk_ipad-mini_starlight_sheen" cx="0.25" cy="0.05" r="1.4">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect x="1646" y="192" width="16" height="140" rx="7" fill="url(#fk_ipad-mini_starlight_btn)"/>
+<path d="M112 12 H1552 A100 100 0 0 1 1652 112 V2330 A100 100 0 0 1 1552 2430 H112 A100 100 0 0 1 12 2330 V112 A100 100 0 0 1 112 12 Z" fill="url(#fk_ipad-mini_starlight_rail)"/>
+<path d="M112 19 H1552 A93 93 0 0 1 1645 112 V2330 A93 93 0 0 1 1552 2423 H112 A93 93 0 0 1 19 2330 V112 A93 93 0 0 1 112 19 Z" fill="#12100c"/>
+<path d="M112 19 H1552 A93 93 0 0 1 1645 112 V2330 A93 93 0 0 1 1552 2423 H112 A93 93 0 0 1 19 2330 V112 A93 93 0 0 1 112 19 Z" fill="url(#fk_ipad-mini_starlight_sheen)"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_ipad-mini_starlight_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ea580c"/><stop offset="1" stop-color="#9a3412"/></linearGradient>
+<radialGradient id="fk_scr_ipad-mini_starlight_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#fdba74" stop-opacity="0.95"/><stop offset="1" stop-color="#fdba74" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_ipad-mini_starlight_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M130 88 H1534 A42 42 0 0 1 1576 130 V2312 A42 42 0 0 1 1534 2354 H130 A42 42 0 0 1 88 2312 V130 A42 42 0 0 1 130 88 Z" fill="url(#fk_scr_ipad-mini_starlight_a)"/>
+<path d="M130 88 H1534 A42 42 0 0 1 1576 130 V2312 A42 42 0 0 1 1534 2354 H130 A42 42 0 0 1 88 2312 V130 A42 42 0 0 1 130 88 Z" fill="url(#fk_scr_ipad-mini_starlight_b)"/>
+<path d="M130 88 H1534 A42 42 0 0 1 1576 130 V2312 A42 42 0 0 1 1534 2354 H130 A42 42 0 0 1 88 2312 V130 A42 42 0 0 1 130 88 Z" fill="url(#fk_scr_ipad-mini_starlight_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<circle cx="832" cy="53.5" r="14" fill="#020204"/>
+<circle cx="832" cy="53.5" r="7" fill="#101623"/><!--/OVERLAY-->
+</svg>

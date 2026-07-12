@@ -1,0 +1,151 @@
+{
+  "id": "natural-titanium-1",
+  "sourceLayerPath": [
+    "Natural Titanium",
+    "1",
+    "Change This"
+  ],
+  "renderMode": "perspective-smart-object-fallback",
+  "sourcePsd": "Free_iPhone_16_Pro_Mockup.psd",
+  "preservesSourcePsd": true,
+  "canvas": {
+    "width": 1299,
+    "height": 3086
+  },
+  "screen": {
+    "smartObjectName": "Change This",
+    "smartObjectFile": "smart-object.psb",
+    "sourceSize": [
+      1206,
+      2622
+    ],
+    "bounds": [
+      1561,
+      326,
+      2715,
+      3344
+    ],
+    "quad": [
+      [
+        29.4781,
+        95.7618
+      ],
+      [
+        1183.2567,
+        31.2486
+      ],
+      [
+        1183.2181,
+        3049.3741
+      ],
+      [
+        29.4395,
+        3008.2591
+      ]
+    ],
+    "mask": "screen-mask.png",
+    "cornerRadius": 0,
+    "clippingMask": true
+  },
+  "layers": {
+    "name": "1",
+    "kind": "group",
+    "visible": true,
+    "opacity": 255,
+    "blendMode": "BlendMode.PASS_THROUGH",
+    "clipping": false,
+    "bounds": {
+      "left": 1532,
+      "top": 295,
+      "right": 2831,
+      "bottom": 3381
+    },
+    "localBounds": {
+      "left": 0,
+      "top": 0,
+      "right": 1299,
+      "bottom": 3086
+    },
+    "children": [
+      {
+        "name": "iPhone 16 Pro",
+        "kind": "pixel",
+        "visible": true,
+        "opacity": 255,
+        "blendMode": "BlendMode.NORMAL",
+        "clipping": false,
+        "bounds": {
+          "left": 1532,
+          "top": 295,
+          "right": 2831,
+          "bottom": 3381
+        },
+        "localBounds": {
+          "left": 0,
+          "top": 0,
+          "right": 1299,
+          "bottom": 3086
+        }
+      },
+      {
+        "name": "Change This",
+        "kind": "smartobject",
+        "visible": true,
+        "opacity": 255,
+        "blendMode": "BlendMode.NORMAL",
+        "clipping": false,
+        "bounds": {
+          "left": 1561,
+          "top": 326,
+          "right": 2715,
+          "bottom": 3344
+        },
+        "localBounds": {
+          "left": 29,
+          "top": 31,
+          "right": 1183,
+          "bottom": 3049
+        },
+        "smartObject": {
+          "filename": "Change This.psb",
+          "filetype": "8bpb",
+          "bytes": 7091274,
+          "transformBox": [
+            [
+              1561.4781165123318,
+              390.7618495450125
+            ],
+            [
+              2715.256720853692,
+              326.24856218216166
+            ],
+            [
+              2715.2180997378728,
+              3344.3741425561866
+            ],
+            [
+              1561.4394953965125,
+              3303.259065345163
+            ]
+          ],
+          "maskBounds": [
+            1562,
+            340,
+            2715,
+            3335
+          ]
+        }
+      }
+    ]
+  },
+  "assets": {
+    "deviceBase": "device-base.png",
+    "screenMask": "screen-mask.png",
+    "foreground": "foreground.png",
+    "reflection": "reflection.png"
+  },
+  "notes": [
+    "The PSD contains no separate named reflection layer; case highlights, shadows and bezel shading are baked into the case pixel layer.",
+    "The original PSD and embedded PSB are preserved; the fallback replaces only the screen content at render time."
+  ]
+}

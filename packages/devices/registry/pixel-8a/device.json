@@ -1,0 +1,54 @@
+{
+  "id": "pixel-8a",
+  "name": "Pixel 8a",
+  "brand": "google",
+  "category": "phone",
+  "released": "2024-05",
+  "screen": {
+    "width": 1080,
+    "height": 2400,
+    "cornerRadius": 110
+  },
+  "aliases": [
+    "google pixel 8a"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "pixel 8a mockup"
+    ]
+  },
+  "wallpaper": [
+    "#16a34a",
+    "#065f46",
+    "#a7f3d0"
+  ],
+  "frame": {
+    "width": 1216,
+    "height": 2536,
+    "screenRect": {
+      "x": 68,
+      "y": 68,
+      "width": 1080,
+      "height": 2400
+    },
+    "maskPath": "M178 68 H1038 A110 110 0 0 1 1148 178 V2358 A110 110 0 0 1 1038 2468 H178 A110 110 0 0 1 68 2358 V178 A110 110 0 0 1 178 68 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "obsidian",
+      "label": "Obsidian",
+      "svg": "frame-obsidian.svg"
+    },
+    {
+      "id": "aloe",
+      "label": "Aloe",
+      "svg": "frame-aloe.svg"
+    },
+    {
+      "id": "bay",
+      "label": "Bay",
+      "svg": "frame-bay.svg"
+    }
+  ]
+}

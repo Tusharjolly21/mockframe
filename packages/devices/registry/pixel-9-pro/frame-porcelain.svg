@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 2976">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_pixel-9-pro_porcelain_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#efece6"/><stop offset="0.5" stop-color="#c9c5bd"/><stop offset="1" stop-color="#e4e0d8"/></linearGradient>
+<linearGradient id="fk_pixel-9-pro_porcelain_btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#efece6"/><stop offset="1" stop-color="#e4e0d8"/></linearGradient>
+<radialGradient id="fk_pixel-9-pro_porcelain_sheen" cx="0.25" cy="0.05" r="1.4">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect x="1382" y="572" width="16" height="210" rx="7" fill="url(#fk_pixel-9-pro_porcelain_btn)"/>
+<rect x="1382" y="832" width="16" height="330" rx="7" fill="url(#fk_pixel-9-pro_porcelain_btn)"/>
+<path d="M162 12 H1238 A150 150 0 0 1 1388 162 V2814 A150 150 0 0 1 1238 2964 H162 A150 150 0 0 1 12 2814 V162 A150 150 0 0 1 162 12 Z" fill="url(#fk_pixel-9-pro_porcelain_rail)"/>
+<path d="M162 19 H1238 A143 143 0 0 1 1381 162 V2814 A143 143 0 0 1 1238 2957 H162 A143 143 0 0 1 19 2814 V162 A143 143 0 0 1 162 19 Z" fill="#101013"/>
+<path d="M162 19 H1238 A143 143 0 0 1 1381 162 V2814 A143 143 0 0 1 1238 2957 H162 A143 143 0 0 1 19 2814 V162 A143 143 0 0 1 162 19 Z" fill="url(#fk_pixel-9-pro_porcelain_sheen)"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_pixel-9-pro_porcelain_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f766e"/><stop offset="1" stop-color="#134e4a"/></linearGradient>
+<radialGradient id="fk_scr_pixel-9-pro_porcelain_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#5eead4" stop-opacity="0.95"/><stop offset="1" stop-color="#5eead4" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_pixel-9-pro_porcelain_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M156 60 H1244 A96 96 0 0 1 1340 156 V2820 A96 96 0 0 1 1244 2916 H156 A96 96 0 0 1 60 2820 V156 A96 96 0 0 1 156 60 Z" fill="url(#fk_scr_pixel-9-pro_porcelain_a)"/>
+<path d="M156 60 H1244 A96 96 0 0 1 1340 156 V2820 A96 96 0 0 1 1244 2916 H156 A96 96 0 0 1 60 2820 V156 A96 96 0 0 1 156 60 Z" fill="url(#fk_scr_pixel-9-pro_porcelain_b)"/>
+<path d="M156 60 H1244 A96 96 0 0 1 1340 156 V2820 A96 96 0 0 1 1244 2916 H156 A96 96 0 0 1 60 2820 V156 A96 96 0 0 1 156 60 Z" fill="url(#fk_scr_pixel-9-pro_porcelain_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<circle cx="700" cy="160" r="42" fill="#020204"/>
+<circle cx="700" cy="160" r="23.1" fill="#0c0e16"/>
+<circle cx="690.76" cy="149.5" r="6.72" fill="#28304a" opacity="0.9"/><!--/OVERLAY-->
+</svg>

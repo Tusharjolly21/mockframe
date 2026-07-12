@@ -1,0 +1,55 @@
+{
+  "id": "ipad-air",
+  "name": "iPad Air (M2)",
+  "brand": "apple",
+  "category": "tablet",
+  "released": "2024-05",
+  "screen": {
+    "width": 1640,
+    "height": 2360,
+    "cornerRadius": 38
+  },
+  "aliases": [
+    "apple ipad air",
+    "ipad air m2"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "ipad air mockup"
+    ]
+  },
+  "wallpaper": [
+    "#2563eb",
+    "#1e3a8a",
+    "#93c5fd"
+  ],
+  "frame": {
+    "width": 1820,
+    "height": 2540,
+    "screenRect": {
+      "x": 90,
+      "y": 90,
+      "width": 1640,
+      "height": 2360
+    },
+    "maskPath": "M128 90 H1692 A38 38 0 0 1 1730 128 V2412 A38 38 0 0 1 1692 2450 H128 A38 38 0 0 1 90 2412 V128 A38 38 0 0 1 128 90 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "blue",
+      "label": "Blue",
+      "svg": "frame-blue.svg"
+    },
+    {
+      "id": "starlight",
+      "label": "Starlight",
+      "svg": "frame-starlight.svg"
+    },
+    {
+      "id": "purple",
+      "label": "Purple",
+      "svg": "frame-purple.svg"
+    }
+  ]
+}

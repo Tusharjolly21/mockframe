@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1394 2900">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_iphone-16-plus_teal_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9fdcd6"/><stop offset="0.5" stop-color="#5aa8a0"/><stop offset="1" stop-color="#8fd0c9"/></linearGradient>
+<linearGradient id="fk_iphone-16-plus_teal_btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9fdcd6"/><stop offset="1" stop-color="#8fd0c9"/></linearGradient>
+<radialGradient id="fk_iphone-16-plus_teal_sheen" cx="0.25" cy="0.05" r="1.4">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect x="2" y="543" width="16" height="103" rx="7" fill="url(#fk_iphone-16-plus_teal_btn)"/>
+<rect x="2" y="739" width="16" height="193" rx="7" fill="url(#fk_iphone-16-plus_teal_btn)"/>
+<rect x="2" y="963" width="16" height="193" rx="7" fill="url(#fk_iphone-16-plus_teal_btn)"/>
+<rect x="1376" y="683" width="16" height="322" rx="7" fill="url(#fk_iphone-16-plus_teal_btn)"/>
+<path d="M206 12 H1188 A194 194 0 0 1 1382 206 V2694 A194 194 0 0 1 1188 2888 H206 A194 194 0 0 1 12 2694 V206 A194 194 0 0 1 206 12 Z" fill="url(#fk_iphone-16-plus_teal_rail)"/>
+<path d="M206 19 H1188 A187 187 0 0 1 1375 206 V2694 A187 187 0 0 1 1188 2881 H206 A187 187 0 0 1 19 2694 V206 A187 187 0 0 1 206 19 Z" fill="#0c1615"/>
+<path d="M206 19 H1188 A187 187 0 0 1 1375 206 V2694 A187 187 0 0 1 1188 2881 H206 A187 187 0 0 1 19 2694 V206 A187 187 0 0 1 206 19 Z" fill="url(#fk_iphone-16-plus_teal_sheen)"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_iphone-16-plus_teal_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0ea5e9"/><stop offset="1" stop-color="#7c3aed"/></linearGradient>
+<radialGradient id="fk_scr_iphone-16-plus_teal_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#f9a8d4" stop-opacity="0.95"/><stop offset="1" stop-color="#f9a8d4" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_iphone-16-plus_teal_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M206 52 H1188 A154 154 0 0 1 1342 206 V2694 A154 154 0 0 1 1188 2848 H206 A154 154 0 0 1 52 2694 V206 A154 154 0 0 1 206 52 Z" fill="url(#fk_scr_iphone-16-plus_teal_a)"/>
+<path d="M206 52 H1188 A154 154 0 0 1 1342 206 V2694 A154 154 0 0 1 1188 2848 H206 A154 154 0 0 1 52 2694 V206 A154 154 0 0 1 206 52 Z" fill="url(#fk_scr_iphone-16-plus_teal_b)"/>
+<path d="M206 52 H1188 A154 154 0 0 1 1342 206 V2694 A154 154 0 0 1 1188 2848 H206 A154 154 0 0 1 52 2694 V206 A154 154 0 0 1 206 52 Z" fill="url(#fk_scr_iphone-16-plus_teal_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<rect x="523" y="84" width="348" height="104" rx="52" fill="#020204"/>
+<circle cx="819" cy="136" r="31.2" fill="#08080d"/>
+<circle cx="819" cy="136" r="14.560000000000002" fill="#141824"/>
+<circle cx="809.64" cy="124.56" r="5.2" fill="#2d3550" opacity="0.9"/><!--/OVERLAY-->
+</svg>

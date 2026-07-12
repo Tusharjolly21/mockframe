@@ -1,0 +1,54 @@
+{
+  "id": "iphone-17",
+  "name": "iPhone 17",
+  "brand": "apple",
+  "category": "phone",
+  "released": "2025-09",
+  "screen": {
+    "width": 1206,
+    "height": 2622,
+    "cornerRadius": 158
+  },
+  "aliases": [
+    "apple iphone 17"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "iphone 17 mockup"
+    ]
+  },
+  "wallpaper": [
+    "#16a34a",
+    "#0891b2",
+    "#86efac"
+  ],
+  "frame": {
+    "width": 1310,
+    "height": 2726,
+    "screenRect": {
+      "x": 52,
+      "y": 52,
+      "width": 1206,
+      "height": 2622
+    },
+    "maskPath": "M210 52 H1100 A158 158 0 0 1 1258 210 V2516 A158 158 0 0 1 1100 2674 H210 A158 158 0 0 1 52 2516 V210 A158 158 0 0 1 210 52 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "sage",
+      "label": "Sage",
+      "svg": "frame-sage.svg"
+    },
+    {
+      "id": "lavender",
+      "label": "Lavender",
+      "svg": "frame-lavender.svg"
+    },
+    {
+      "id": "black",
+      "label": "Black",
+      "svg": "frame-black.svg"
+    }
+  ]
+}

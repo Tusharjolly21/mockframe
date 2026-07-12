@@ -1,0 +1,47 @@
+{
+  "id": "safari-browser",
+  "name": "Safari",
+  "brand": "apple",
+  "category": "browser",
+  "released": "2026-01",
+  "screen": {
+    "width": 2560,
+    "height": 1600,
+    "cornerRadius": 0
+  },
+  "aliases": [
+    "safari browser mockup",
+    "safari frame"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "safari mockup",
+      "safari browser png"
+    ]
+  },
+  "urlBarText": "mockframe.app",
+  "frame": {
+    "width": 2580,
+    "height": 1724,
+    "screenRect": {
+      "x": 10,
+      "y": 114,
+      "width": 2560,
+      "height": 1600
+    },
+    "maskPath": "M10 114 H2570 V1688 A26 26 0 0 1 2544 1714 H36 A26 26 0 0 1 10 1688 V114 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "light",
+      "label": "Light",
+      "svg": "frame-light.svg"
+    },
+    {
+      "id": "dark",
+      "label": "Dark",
+      "svg": "frame-dark.svg"
+    }
+  ]
+}

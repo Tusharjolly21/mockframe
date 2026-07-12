@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1216 2536">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_pixel-8a_obsidian_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4d52"/><stop offset="0.5" stop-color="#232528"/><stop offset="1" stop-color="#3c3f44"/></linearGradient>
+<linearGradient id="fk_pixel-8a_obsidian_btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4a4d52"/><stop offset="1" stop-color="#3c3f44"/></linearGradient>
+<radialGradient id="fk_pixel-8a_obsidian_sheen" cx="0.25" cy="0.05" r="1.4">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect x="1198" y="492" width="16" height="180" rx="7" fill="url(#fk_pixel-8a_obsidian_btn)"/>
+<rect x="1198" y="712" width="16" height="290" rx="7" fill="url(#fk_pixel-8a_obsidian_btn)"/>
+<path d="M182 12 H1034 A170 170 0 0 1 1204 182 V2354 A170 170 0 0 1 1034 2524 H182 A170 170 0 0 1 12 2354 V182 A170 170 0 0 1 182 12 Z" fill="url(#fk_pixel-8a_obsidian_rail)"/>
+<path d="M182 19 H1034 A163 163 0 0 1 1197 182 V2354 A163 163 0 0 1 1034 2517 H182 A163 163 0 0 1 19 2354 V182 A163 163 0 0 1 182 19 Z" fill="#0b0b0d"/>
+<path d="M182 19 H1034 A163 163 0 0 1 1197 182 V2354 A163 163 0 0 1 1034 2517 H182 A163 163 0 0 1 19 2354 V182 A163 163 0 0 1 182 19 Z" fill="url(#fk_pixel-8a_obsidian_sheen)"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_pixel-8a_obsidian_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16a34a"/><stop offset="1" stop-color="#065f46"/></linearGradient>
+<radialGradient id="fk_scr_pixel-8a_obsidian_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#a7f3d0" stop-opacity="0.95"/><stop offset="1" stop-color="#a7f3d0" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_pixel-8a_obsidian_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M178 68 H1038 A110 110 0 0 1 1148 178 V2358 A110 110 0 0 1 1038 2468 H178 A110 110 0 0 1 68 2358 V178 A110 110 0 0 1 178 68 Z" fill="url(#fk_scr_pixel-8a_obsidian_a)"/>
+<path d="M178 68 H1038 A110 110 0 0 1 1148 178 V2358 A110 110 0 0 1 1038 2468 H178 A110 110 0 0 1 68 2358 V178 A110 110 0 0 1 178 68 Z" fill="url(#fk_scr_pixel-8a_obsidian_b)"/>
+<path d="M178 68 H1038 A110 110 0 0 1 1148 178 V2358 A110 110 0 0 1 1038 2468 H178 A110 110 0 0 1 68 2358 V178 A110 110 0 0 1 178 68 Z" fill="url(#fk_scr_pixel-8a_obsidian_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<circle cx="608" cy="160" r="36" fill="#020204"/>
+<circle cx="608" cy="160" r="19.8" fill="#0c0e16"/>
+<circle cx="600.08" cy="151" r="5.76" fill="#28304a" opacity="0.9"/><!--/OVERLAY-->
+</svg>

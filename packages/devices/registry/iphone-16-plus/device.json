@@ -1,0 +1,54 @@
+{
+  "id": "iphone-16-plus",
+  "name": "iPhone 16 Plus",
+  "brand": "apple",
+  "category": "phone",
+  "released": "2024-09",
+  "screen": {
+    "width": 1290,
+    "height": 2796,
+    "cornerRadius": 154
+  },
+  "aliases": [
+    "apple iphone 16 plus"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "iphone 16 plus mockup"
+    ]
+  },
+  "wallpaper": [
+    "#0ea5e9",
+    "#7c3aed",
+    "#f9a8d4"
+  ],
+  "frame": {
+    "width": 1394,
+    "height": 2900,
+    "screenRect": {
+      "x": 52,
+      "y": 52,
+      "width": 1290,
+      "height": 2796
+    },
+    "maskPath": "M206 52 H1188 A154 154 0 0 1 1342 206 V2694 A154 154 0 0 1 1188 2848 H206 A154 154 0 0 1 52 2694 V206 A154 154 0 0 1 206 52 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "ultramarine",
+      "label": "Ultramarine",
+      "svg": "frame-ultramarine.svg"
+    },
+    {
+      "id": "teal",
+      "label": "Teal",
+      "svg": "frame-teal.svg"
+    },
+    {
+      "id": "pink",
+      "label": "Pink",
+      "svg": "frame-pink.svg"
+    }
+  ]
+}

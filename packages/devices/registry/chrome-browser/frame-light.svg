@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2580 1770">
+<!--BODY-->
+<defs></defs>
+<path d="M36 8 H2544 A28 28 0 0 1 2572 36 V1734 A28 28 0 0 1 2544 1762 H36 A28 28 0 0 1 8 1734 V36 A28 28 0 0 1 36 8 Z" fill="#c8ccd2"/>
+
+<path d="M36 10 H2544 A26 26 0 0 1 2570 36 V160 H10 V36 A26 26 0 0 1 36 10 Z" fill="#dee1e6"/>
+
+<circle cx="54" cy="48" r="13" fill="#ff5f57"/>
+<circle cx="98" cy="48" r="13" fill="#febc2e"/>
+<circle cx="142" cy="48" r="13" fill="#28c840"/>
+<path d="M208 26 H692 A18 18 0 0 1 710 44 V86 H190 V44 A18 18 0 0 1 208 26 Z" fill="#ffffff"/>
+<circle cx="226" cy="56" r="15" fill="#8ab4f8"/>
+<rect x="256" y="46" width="300" height="20" rx="10" fill="#9aa0a6"/>
+<rect x="10" y="86" width="2560" height="74" fill="#ffffff"/>
+<rect x="180" y="98" width="2140" height="52" rx="26" fill="#f1f3f4"/>
+<circle cx="210" cy="124" r="10" fill="none" stroke="#9aa0a6" stroke-width="4"/>
+<text x="236" y="133" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="30" fill="#3c4043" id="fk_urltext_fk_chrome-browser_light">framekit.app</text>
+<g fill="#9aa0a6">
+  <circle cx="70" cy="124" r="3.6"/><circle cx="70" cy="124" r="3.6"/>
+  <path d="M106 114 l-12 10 12 10" stroke="#9aa0a6" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M134 114 l12 10 -12 10" stroke="#9aa0a6" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.45"/>
+  <circle cx="2400" cy="124" r="4"/><circle cx="2418" cy="124" r="4"/><circle cx="2436" cy="124" r="4"/>
+</g>
+<rect x="10" y="158" width="2560" height="2" fill="#e8eaed"/>
+<rect x="10" y="160" width="2560" height="1600" fill="#ffffff"/>
+<!--/BODY-->
+<!--SCREEN--><path d="M10 160 H2570 V1734 A26 26 0 0 1 2544 1760 H36 A26 26 0 0 1 10 1734 V160 Z" fill="#f6f7f9"/>
+<rect x="163.6" y="288" width="1075.2" height="96" rx="48" fill="#e2e5ea"/>
+<rect x="163.6" y="480" width="2252.8" height="640" rx="28" fill="#e9ecf1"/>
+<rect x="163.6" y="1216" width="1075.2" height="352" rx="24" fill="#eef0f4"/>
+<rect x="1341.2" y="1216" width="1075.2" height="352" rx="24" fill="#eef0f4"/><!--/SCREEN-->
+<!--OVERLAY--><!--/OVERLAY-->
+</svg>

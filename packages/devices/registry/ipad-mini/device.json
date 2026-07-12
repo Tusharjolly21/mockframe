@@ -1,0 +1,49 @@
+{
+  "id": "ipad-mini",
+  "name": "iPad Mini",
+  "brand": "apple",
+  "category": "tablet",
+  "released": "2024-10",
+  "screen": {
+    "width": 1488,
+    "height": 2266,
+    "cornerRadius": 42
+  },
+  "aliases": [
+    "apple ipad mini 7"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "ipad mini mockup"
+    ]
+  },
+  "wallpaper": [
+    "#ea580c",
+    "#9a3412",
+    "#fdba74"
+  ],
+  "frame": {
+    "width": 1664,
+    "height": 2442,
+    "screenRect": {
+      "x": 88,
+      "y": 88,
+      "width": 1488,
+      "height": 2266
+    },
+    "maskPath": "M130 88 H1534 A42 42 0 0 1 1576 130 V2312 A42 42 0 0 1 1534 2354 H130 A42 42 0 0 1 88 2312 V130 A42 42 0 0 1 130 88 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "starlight",
+      "label": "Starlight",
+      "svg": "frame-starlight.svg"
+    },
+    {
+      "id": "purple",
+      "label": "Purple",
+      "svg": "frame-purple.svg"
+    }
+  ]
+}
