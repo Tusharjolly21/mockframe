@@ -19,9 +19,21 @@ import {
   type User,
 } from "firebase/auth";
 
+/**
+ * Firebase's `authDomain` MUST be a bare host (e.g. "mockframe.app"), never a
+ * URL. If a scheme or path leaks in (a common env-var mistake — "https://…"),
+ * the SDK builds a garbage handler URL like `http://https/…` and sign-in dies
+ * with NXDOMAIN. Strip any scheme/path/whitespace so a bad value can't break it.
+ */
+function bareHost(v: string | undefined): string | undefined {
+  if (!v) return v;
+  const host = v.trim().replace(/^https?:\/\//i, "").replace(/\/.*$/, "").trim();
+  return host || undefined;
+}
+
 const config = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  authDomain: bareHost(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN),
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
