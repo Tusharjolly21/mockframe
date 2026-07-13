@@ -24,7 +24,7 @@ import { ColorRow, Popover, Section, Seg, SliderRow } from "./ui";
 /* PostSpark-style hub → detail navigation: the Frame tab shows a compact hub
    (size, background, one "Style" chip grid); each style feature opens its own
    focused sub-view with a back header. Kills the mile-long scroll. */
-type FrameView = "hub" | "pattern" | "overlay" | "portrait" | "effects" | "border";
+type FrameView = "hub" | "background" | "pattern" | "overlay" | "portrait" | "effects" | "border";
 
 function DetailView({ label, onBack, children }: { label: string; onBack: () => void; children: React.ReactNode }) {
   return (
@@ -106,6 +106,7 @@ export function FrameControls() {
   /* ------------------------------ detail views ------------------------------ */
   if (view !== "hub") {
     const labels: Record<Exclude<FrameView, "hub">, string> = {
+      background: "Background library",
       overlay: "Overlay · light & shadow",
       effects: "Effects",
       pattern: "Pattern",
@@ -114,6 +115,7 @@ export function FrameControls() {
     };
     return (
       <DetailView label={labels[view]} onBack={() => setView("hub")}>
+        {view === "background" && <BackgroundDetail />}
         {view === "pattern" && <PatternDetail />}
         {view === "overlay" && <OverlayDetail />}
         {view === "portrait" && <PortraitDetail />}
@@ -143,6 +145,13 @@ export function FrameControls() {
       <div className="px-4 pt-4">
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">Style</p>
         <div className="grid grid-cols-2 gap-1.5">
+          <button
+            onClick={() => setView("background")}
+            className="fk-press flex items-center gap-1.5 rounded-full border border-[#e4e4ec] bg-white px-3 py-2 text-[12px] font-semibold text-[#3c3c46] hover:border-[#c9c9d4]"
+          >
+            <ImageIcon size={14} />
+            Backgrounds
+          </button>
           {styleChips.map((c) => (
             <button
               key={c.id}
@@ -159,7 +168,7 @@ export function FrameControls() {
         </div>
       </div>
 
-      <Section title="Background">
+      <Section title="Background" collapsible defaultOpen={false}>
         {/* mode chips: transparent / custom color / image */}
         <div className="mb-4 grid grid-cols-3 gap-2">
           <button
@@ -321,6 +330,118 @@ export function FrameControls() {
   );
 }
 
+function BackgroundDetail() {
+  const scene = useSceneStore((s) => s.scene);
+  const setScene = useSceneStore((s) => s.setScene);
+  const bumpAssets = useViewStore((s) => s.bumpAssets);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [tab, setTab] = useState<"gradients" | "wallpapers" | "textures" | "all">("gradients");
+  const bg = scene.canvas.background;
+  const setBg = (background: Background) => setScene((s) => ({ ...s, canvas: { ...s.canvas, background } }));
+  const categories = BG_CATEGORIES.filter((category) => {
+    if (tab === "all") return true;
+    if (tab === "textures") return category.id === "texture";
+    if (tab === "wallpapers") return ["desktop", "abstract", "earth"].includes(category.id);
+    return ["gradient", "spectral", "prism", "radiant", "cosmic", "mystic", "glass", "refract"].includes(category.id);
+  });
+  const swatchStyle = (swatch: BgSwatch): React.CSSProperties =>
+    swatch.bg.type === "image"
+      ? { backgroundImage: `url("${resolveAsset(swatch.bg.assetId)?.url ?? ""}")`, backgroundSize: "cover", backgroundPosition: "center" }
+      : (backgroundToCss(swatch.bg) as React.CSSProperties);
+
+  return (
+    <div className="pb-2">
+      <div className="mb-3 grid grid-cols-2 gap-2">
+        <button
+          onClick={() => setBg({ type: "transparent" })}
+          className={`fk-press rounded-xl border px-2 py-2 text-[11px] font-semibold ${bg.type === "transparent" ? "border-[#17171c] bg-[#17171c] text-white" : "border-[#e4e4ec] bg-white text-[#3c3c46]"}`}
+        >
+          No backdrop
+        </button>
+        <button onClick={() => fileRef.current?.click()} className="fk-press rounded-xl border border-[#e4e4ec] bg-white px-2 py-2 text-[11px] font-semibold text-[#3c3c46]">
+          Upload image
+        </button>
+      </div>
+      <Seg
+        id="background-library"
+        options={[
+          { value: "gradients", label: "Gradients" },
+          { value: "wallpapers", label: "Wallpapers" },
+          { value: "textures", label: "Textures" },
+          { value: "all", label: "All" },
+        ]}
+        value={tab}
+        onChange={(value) => setTab(value as typeof tab)}
+      />
+      <div className="mb-3 grid grid-cols-2 gap-2">
+        <button
+          onClick={() => {
+            const first = BG_CATEGORIES.flatMap((category) => category.swatches)[0];
+            if (first) setBg(first.bg);
+          }}
+          className="fk-press rounded-xl border border-[#e4e4ec] bg-white py-2 text-[11px] font-semibold"
+        >
+          <Sparkles size={13} className="mr-1 inline text-amber-500" /> Auto
+        </button>
+        <button
+          onClick={() => {
+            const swatches = categories.flatMap((category) => category.swatches);
+            const pick = swatches[Math.floor(Math.random() * swatches.length)];
+            if (pick) setBg(pick.bg);
+          }}
+          className="fk-press rounded-xl border border-[#e4e4ec] bg-white py-2 text-[11px] font-semibold"
+        >
+          Shuffle
+        </button>
+      </div>
+      {tab === "wallpapers" && (
+        <UnsplashPhotos
+          onPick={(assetId) => {
+            bumpAssets();
+            setBg({ type: "image", assetId, fit: "cover", blur: 0, opacity: 1 });
+          }}
+        />
+      )}
+      {categories.map((category) => (
+        <div key={category.id} className="mb-4">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-[12px] font-bold text-[#17171c]">{category.label}</p>
+            <span className="text-[10px] text-[#9a9aa4]">{category.swatches.length} styles</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {category.swatches.map((swatch) => {
+              const active = JSON.stringify(swatch.bg) === JSON.stringify(bg);
+              return (
+                <button
+                  key={swatch.id}
+                  onClick={() => setBg(swatch.bg)}
+                  title={swatch.id}
+                  className={`fk-tile h-14 rounded-xl border ${active ? "border-[#17171c] shadow-[0_0_0_1.5px_#17171c]" : "border-[#e4e4ec]"}`}
+                  style={swatchStyle(swatch)}
+                />
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={async (event) => {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          const asset = await ingestFile(file);
+          bumpAssets();
+          setBg({ type: "image", assetId: asset.id, fit: "cover", blur: 0, opacity: 1 });
+          event.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
+
 /* ------------------------------- Unsplash gallery ---------------------------
    Curated Unsplash CDN images keep the picker keyless for now. A selected image
    is downloaded and registered locally, so exports never depend on the CDN. */
@@ -465,16 +586,25 @@ const PATTERN_PRESETS: Array<{ id: string; label: string; kind: PatternKind; col
   { id: "soft-noise", label: "Soft noise", kind: "noise", color: "#ffffff", intensity: 0.08, thickness: 0.2 },
 ];
 
-const OVERLAY_KINDS: { id: OverlayKind; label: string }[] = [
-  { id: "blinds", label: "Blinds" },
-  { id: "leaves", label: "Leaves" },
-  { id: "branch", label: "Branch" },
-  { id: "palm", label: "Palm" },
-  { id: "window-grid", label: "Panes" },
-  { id: "window", label: "Window" },
-  { id: "diagonal", label: "Streak" },
-  { id: "spotlight", label: "Spotlight" },
-  { id: "top-light", label: "Top light" },
+const OVERLAY_PRESETS: Array<{ id: string; label: string; kind: OverlayKind; intensity: number }> = [
+  { id: "overlay-window-soft", label: "Window soft", kind: "window", intensity: 0.42 },
+  { id: "overlay-window-hard", label: "Window hard", kind: "window", intensity: 0.78 },
+  { id: "overlay-panes", label: "Panes", kind: "window-grid", intensity: 0.42 },
+  { id: "overlay-panes-deep", label: "Panes deep", kind: "window-grid", intensity: 0.72 },
+  { id: "overlay-diagonal", label: "Diagonal", kind: "diagonal", intensity: 0.48 },
+  { id: "overlay-streak", label: "Streak", kind: "diagonal", intensity: 0.78 },
+  { id: "overlay-blinds-light", label: "Blinds light", kind: "blinds", intensity: 0.32 },
+  { id: "overlay-blinds-deep", label: "Blinds deep", kind: "blinds", intensity: 0.68 },
+  { id: "overlay-spot-left", label: "Spot left", kind: "spotlight", intensity: 0.5 },
+  { id: "overlay-spot-right", label: "Spot right", kind: "spotlight", intensity: 0.82 },
+  { id: "overlay-top-light", label: "Top light", kind: "top-light", intensity: 0.48 },
+  { id: "overlay-top-glow", label: "Top glow", kind: "top-light", intensity: 0.82 },
+  { id: "overlay-leaves-soft", label: "Leaves soft", kind: "leaves", intensity: 0.36 },
+  { id: "overlay-leaves-deep", label: "Leaves deep", kind: "leaves", intensity: 0.7 },
+  { id: "overlay-branch-soft", label: "Branch soft", kind: "branch", intensity: 0.34 },
+  { id: "overlay-branch-deep", label: "Branch deep", kind: "branch", intensity: 0.66 },
+  { id: "overlay-palm-soft", label: "Palm soft", kind: "palm", intensity: 0.36 },
+  { id: "overlay-palm-deep", label: "Palm deep", kind: "palm", intensity: 0.7 },
 ];
 
 /** Strip a backdrop layer's absolute positioning so it can tile a demo swatch. */
@@ -531,22 +661,23 @@ function PatternDetail() {
 function OverlayDetail() {
   const { backdrop, patch } = useBackdrop();
   const overlay = backdrop?.overlay;
-  const setOverlay = (kind: OverlayKind) =>
-    patch({ overlay: overlay?.kind === kind ? undefined : { kind, intensity: 0.6 } });
+  const setOverlay = (preset: (typeof OVERLAY_PRESETS)[number]) =>
+    patch({ overlay: overlay?.kind === preset.kind && overlay.intensity === preset.intensity ? undefined : { kind: preset.kind, intensity: preset.intensity } });
   return (
     <div className="pb-2">
-      <div className="grid grid-cols-3 gap-1.5">
-        {OVERLAY_KINDS.map((k) => {
-          const active = overlay?.kind === k.id;
+      <p className="mb-2 text-[10.5px] leading-relaxed text-[#9a9aa4]">Add realistic window light, foliage shadows, blinds, or soft studio streaks over the scene.</p>
+      <div className="grid grid-cols-3 gap-2">
+        {OVERLAY_PRESETS.map((preset) => {
+          const active = overlay?.kind === preset.kind && overlay.intensity === preset.intensity;
           return (
             <button
-              key={k.id}
-              onClick={() => setOverlay(k.id)}
-              className={`fk-tile rounded-lg border p-1 ${active ? "border-[#17171c] shadow-[0_0_0_1.5px_#17171c]" : "border-[#e8e8ef]"}`}
+              key={preset.id}
+              onClick={() => setOverlay(preset)}
+              className={`fk-tile rounded-xl border p-1 ${active ? "border-[#17171c] shadow-[0_0_0_1.5px_#17171c]" : "border-[#e8e8ef]"}`}
               style={{ background: "linear-gradient(135deg,#8a8fb0,#c7cad8)" }}
             >
-              <span className="block h-10 rounded-md" style={demoStyle(overlayStyle({ kind: k.id, intensity: 1 }))} />
-              <span className="mt-0.5 block text-center text-[9.5px] font-medium text-white/90">{k.label}</span>
+              <span className="block h-12 rounded-lg" style={demoStyle(overlayStyle({ kind: preset.kind, intensity: 1 }))} />
+              <span className="mt-1 block truncate text-center text-[9.5px] font-medium text-white/90">{preset.label}</span>
             </button>
           );
         })}
