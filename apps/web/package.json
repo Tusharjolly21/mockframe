@@ -12,6 +12,7 @@
     "@framekit/devices": "*",
     "@framekit/renderer": "*",
     "@framekit/scene": "*",
+    "@iconify-json/solar": "^1.2.5",
     "@icons-pack/react-simple-icons": "^13.13.0",
     "firebase": "^12.16.0",
     "firebase-admin": "^14.1.0",
