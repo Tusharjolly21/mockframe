@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ingestFile } from "@/lib/assets";
-import { loadCustomDevices } from "@/lib/customDevices";
+import { loadCustomDevices, syncCustomDevicesFromServer } from "@/lib/customDevices";
 import { buildDeviceScene } from "@/lib/deviceScene";
 import { saveCurrentDraft } from "@/lib/drafts";
 import { useShotBatchStore } from "@/lib/shotBatch";
@@ -21,10 +21,12 @@ export function EditorShell({ initialDeviceId, openCalibrate = false }: { initia
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const [toast, setToast] = useState<string | null>(null);
 
-  // user-created custom mockup devices persist in localStorage — register them
-  // into the runtime device registry before anything renders a layer
+  // user-created custom mockup devices: register the instant localStorage
+  // copies first, then merge the account's cloud set (devices made on other
+  // browsers appear; local-only ones get uploaded)
   useEffect(() => {
     loadCustomDevices();
+    void syncCustomDevicesFromServer();
   }, []);
 
   // Deep-link: /editor?device=<id> (from the /mockups pSEO pages) opens a fresh

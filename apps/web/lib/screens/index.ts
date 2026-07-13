@@ -98,6 +98,7 @@ export interface AnimShot {
   typing: boolean;
   holdMs: number; // dwell after fade-in
   fadeMs: number; // crossfade in from the previous shot
+  easing?: "linear" | "ease-in-out" | "spring";
   /** show the newest message's reaction (used for the final "settle" beat) */
   settled?: boolean;
 }
@@ -124,16 +125,16 @@ export function buildAnimPlan(doc: ScreenDoc): AnimShot[] {
     const gap = msgs[i].delayMs ?? (i === 0 ? 300 : incoming ? 1050 : 650);
     if (incoming) {
       // the other person "types" for the gap, then the message lands
-      shots.push({ kind: "typing", k: i, typing: true, holdMs: Math.max(300, gap), fadeMs: shots.length ? 200 : 160 });
-      shots.push({ kind: "reveal", k: i + 1, typing: false, holdMs: 380, fadeMs: 260 });
+      shots.push({ kind: "typing", k: i, typing: true, holdMs: Math.max(300, gap), fadeMs: shots.length ? 200 : 160, easing: "ease-in-out" });
+      shots.push({ kind: "reveal", k: i + 1, typing: false, holdMs: 380, fadeMs: 260, easing: "spring" });
     } else {
       // you pause, then send
       bump(gap);
-      shots.push({ kind: "reveal", k: i + 1, typing: false, holdMs: 420, fadeMs: 220 });
+      shots.push({ kind: "reveal", k: i + 1, typing: false, holdMs: 420, fadeMs: 220, easing: "spring" });
     }
   }
   // final "settle" beat: fade in the last message's reaction (if any) + linger
-  shots.push({ kind: "reveal", k: total, typing: false, settled: true, holdMs: 1300, fadeMs: 300 });
+  shots.push({ kind: "reveal", k: total, typing: false, settled: true, holdMs: 1300, fadeMs: 300, easing: "ease-in-out" });
   return shots;
 }
 

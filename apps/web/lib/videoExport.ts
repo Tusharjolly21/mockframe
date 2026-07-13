@@ -31,7 +31,11 @@ export interface VideoExportOpts {
 }
 
 const DOT_MS = 170; // dot-phase cycle during a typing beat
-const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+const easeProgress = (t: number, easing: "linear" | "ease-in-out" | "spring" = "ease-in-out") => {
+  if (easing === "linear") return t;
+  if (easing === "spring") return 1 - Math.pow(1 - t, 3);
+  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+};
 
 const settle = () => new Promise<void>((r) => requestAnimationFrame(() => setTimeout(r, 45)));
 const keyOf = (k: number, typing: boolean, phase: number, settled: boolean) =>
@@ -129,7 +133,7 @@ export async function exportSceneVideo(o: VideoExportOpts): Promise<void> {
         // eased crossfade from the previous shot's final frame
         const prev = timeline[idx - 1].shot;
         draw(shotFrame(prev, 0), 1);
-        draw(cur, easeOut(into / seg.shot.fadeMs));
+        draw(cur, easeProgress(into / seg.shot.fadeMs, seg.shot.easing));
       } else {
         draw(cur, 1);
       }

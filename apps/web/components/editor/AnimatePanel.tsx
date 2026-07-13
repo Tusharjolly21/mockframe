@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Clapperboard, ImageIcon, Play, Video } from "lucide-react";
+import { Clapperboard, ImageIcon, Play, Scissors, Video } from "lucide-react";
 import type { MockupLayer } from "@framekit/scene";
 import {
   animMessageCount,
@@ -12,6 +12,7 @@ import {
   encodeScreenAsset,
   isScreenAsset,
   SCREEN_APP_LABELS,
+  type AnimShot,
 } from "@/lib/screens";
 import { exportSceneVideo } from "@/lib/videoExport";
 import { exportSceneGif } from "@/lib/gifExport";
@@ -26,6 +27,7 @@ export function AnimatePanel() {
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<null | { pct: number; label: string }>(null);
+  const [plan, setPlan] = useState<AnimShot[]>([]);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,6 +59,10 @@ export function AnimatePanel() {
 
   const total = anim ? animMessageCount(anim.doc) : 0;
 
+  useEffect(() => {
+    setPlan(anim ? buildAnimPlan(anim.doc) : []);
+  }, [anim]);
+
   const renderState = (s: { k: number; typing: boolean; dotPhase: number; settled: boolean }) => {
     if (!anim) return;
     withTransientHistory(() =>
@@ -79,7 +85,7 @@ export function AnimatePanel() {
   const play = async () => {
     if (!anim || busy) return;
     setBusy({ pct: 0, label: "Playing…" });
-    for (const shot of buildAnimPlan(anim.doc)) {
+    for (const shot of plan) {
       if (shot.typing) {
         // cycle the typing dots for the hold duration
         const cycles = Math.max(1, Math.round(shot.holdMs / 180));
@@ -105,7 +111,7 @@ export function AnimatePanel() {
       await exportSceneVideo({
         node,
         scene,
-        plan: buildAnimPlan(anim.doc),
+        plan,
         renderState,
         restore,
         onProgress: (pct, label) => setBusy({ pct, label }),
@@ -129,7 +135,7 @@ export function AnimatePanel() {
     try {
       await exportSceneGif({
         node,
-        plan: buildAnimPlan(anim.doc),
+        plan,
         canvasW: scene.canvas.width,
         renderState,
         restore,
@@ -179,6 +185,31 @@ export function AnimatePanel() {
                   Reveals {total} messages of your {SCREEN_APP_LABELS[anim.doc.app]} chat one at a time — replies
                   land with the sender&apos;s rhythm.
                 </p>
+
+                <div className="mb-3 rounded-xl border border-[#e8e8ef] bg-[#fafafd] p-2.5">
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#17171c]"><Clapperboard size={12} /> Timeline</div>
+                    <span className="text-[10px] tabular-nums text-[#9a9aa4]">{(plan.reduce((sum, shot) => sum + shot.holdMs + shot.fadeMs, 0) / 1000).toFixed(1)}s</span>
+                  </div>
+                  <div className="panel-scroll max-h-52 space-y-1.5 overflow-y-auto pr-0.5">
+                    {plan.map((shot, index) => (
+                      <div key={`${index}-${shot.k}-${shot.kind}`} className="rounded-lg border border-[#e4e4ec] bg-white p-2">
+                        <div className="mb-1.5 flex items-center gap-1.5">
+                          <span className={`h-1.5 w-1.5 rounded-full ${shot.typing ? "bg-violet-500" : "bg-emerald-500"}`} />
+                          <span className="min-w-0 flex-1 truncate text-[10.5px] font-semibold text-[#3c3c46]">{shot.typing ? "Typing" : shot.settled ? "Final settle" : `Message ${shot.k}`}</span>
+                          <button title="Jump cut" onClick={() => setPlan((current) => current.filter((_, i) => i !== index))} disabled={plan.length <= 1} className="fk-press rounded p-0.5 text-[#9a9aa4] hover:text-red-600 disabled:opacity-30"><Scissors size={12} /></button>
+                        </div>
+                        <div className="grid grid-cols-[1fr_1fr_76px] gap-2">
+                          <label className="text-[9.5px] text-[#8a8a94]">Hold <input type="range" min={200} max={3000} step={50} value={shot.holdMs} onChange={(event) => setPlan((current) => current.map((item, i) => i === index ? { ...item, holdMs: Number(event.target.value) } : item))} className="mt-0.5 w-full" /></label>
+                          <label className="text-[9.5px] text-[#8a8a94]">Fade <input type="range" min={0} max={1000} step={25} value={shot.fadeMs} onChange={(event) => setPlan((current) => current.map((item, i) => i === index ? { ...item, fadeMs: Number(event.target.value) } : item))} className="mt-0.5 w-full" /></label>
+                          <label className="text-[9.5px] text-[#8a8a94]">Easing <select value={shot.easing ?? "ease-in-out"} onChange={(event) => setPlan((current) => current.map((item, i) => i === index ? { ...item, easing: event.target.value as AnimShot["easing"] } : item))} className="mt-0.5 w-full rounded border border-[#e4e4ec] bg-white px-1 py-1 text-[9px] text-[#3c3c46]"><option value="linear">Linear</option><option value="ease-in-out">Smooth</option><option value="spring">Spring</option></select></label>
+                        </div>
+                        <div className="mt-1 flex justify-between text-[9px] tabular-nums text-[#b0b0ba]"><span>{(shot.holdMs / 1000).toFixed(2)}s hold</span><span>{(shot.fadeMs / 1000).toFixed(2)}s fade</span></div>
+                      </div>
+                    ))}
+                  </div>
+                  {plan.length === 0 && <p className="py-2 text-center text-[10px] text-[#9a9aa4]">All segments removed. Add the replay again to restore them.</p>}
+                </div>
 
                 {busy ? (
                   <div className="py-1">
