@@ -196,6 +196,7 @@ export const StickerLayerSchema = z.union([
     id: z.string(),
     stickerId: z.string(),
     tint: z.string().optional(),
+    size: z.object({ width: z.number().positive(), height: z.number().positive() }).optional(),
     transform: TransformSchema,
   }),
   z.object({

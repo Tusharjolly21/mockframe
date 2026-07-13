@@ -340,7 +340,7 @@ const LayerView = memo(function LayerView({ layer, resolveAsset, entrance }: { l
   if (layer.type === "sticker" && "stickerId" in layer) {
     return (
       <div data-layer-id={layer.id} style={wrapper}>
-        <BuiltinSticker id={layer.stickerId} tint={layer.tint ?? "#7c3aed"} />
+      <BuiltinSticker id={layer.stickerId} tint={layer.tint ?? "#7c3aed"} size={layer.size} />
       </div>
     );
   }
@@ -350,7 +350,7 @@ const LayerView = memo(function LayerView({ layer, resolveAsset, entrance }: { l
 
 export const SceneRenderer = memo(SceneRendererImpl);
 
-function BuiltinSticker({ id, tint }: { id: string; tint: string }) {
+function BuiltinSticker({ id, tint, size }: { id: string; tint: string; size?: { width: number; height: number } }) {
   if (id === "annot-arrow") {
     // contrast casing under the stroke so the arrow stays visible on ANY
     // background (user report: arrows disappearing on same-tone backdrops)
@@ -406,8 +406,8 @@ function BuiltinSticker({ id, tint }: { id: string; tint: string }) {
     return (
       <div
         style={{
-          width: 360,
-          height: 118,
+          width: size?.width ?? 360,
+          height: size?.height ?? 118,
           borderRadius: 22,
           background: hexToRgba(tint, 0.18),
           border: `1px solid ${hexToRgba(tint, 0.46)}`,

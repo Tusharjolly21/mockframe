@@ -29,24 +29,38 @@ export const PLANS: Record<PlanId, PlanDef> = {
     kind: "subscription",
     period: "monthly",
     totalCount: 120, // 10 years of cycles — effectively "until cancelled"
-    price: { INR: 39900, USD: 600 },
-    blurb: "Watermark-free exports, cancel anytime",
+    price: { INR: 49900, USD: 599 },
+    blurb: "Cancel anytime",
   },
   yearly: {
-    label: "Yearly",
+    label: "Annual",
     kind: "subscription",
     period: "yearly",
     totalCount: 20,
-    price: { INR: 299900, USD: 4900 },
-    blurb: "2 months free vs monthly",
+    // exactly half the monthly run-rate: ₹499×12=5,988 → 2,999 · $5.99×12=71.88 → 35.99
+    price: { INR: 299900, USD: 3599 },
+    blurb: "Half the monthly price",
   },
   lifetime: {
     label: "Lifetime",
     kind: "one_time",
-    price: { INR: 699900, USD: 11900 },
+    price: { INR: 499900, USD: 5999 },
     blurb: "Pay once, Pro forever",
   },
 };
+
+/** per-month equivalent for annual framing (PostSpark-style "₹250 / month") */
+export function perMonthPrice(plan: PlanId, currency: Currency): string | null {
+  if (PLANS[plan].period !== "yearly") return null;
+  const monthly = PLANS[plan].price[currency] / 12 / 100;
+  return currency === "INR" ? `₹${Math.round(monthly)}` : `$${monthly.toFixed(2)}`;
+}
+
+/** discount vs paying monthly for the same period, e.g. 50 for -50% */
+export function yearlySavingsPct(currency: Currency): number {
+  const monthlyRun = PLANS.monthly.price[currency] * 12;
+  return Math.round((1 - PLANS.yearly.price[currency] / monthlyRun) * 100);
+}
 
 export function isPlanId(v: unknown): v is PlanId {
   return v === "monthly" || v === "yearly" || v === "lifetime";
@@ -57,9 +71,9 @@ export function isCurrency(v: unknown): v is Currency {
 }
 
 export function formatPrice(plan: PlanId, currency: Currency): string {
-  const minor = PLANS[plan].price[currency];
-  const major = minor / 100;
+  const major = PLANS[plan].price[currency] / 100;
+  const digits = Number.isInteger(major) ? 0 : 2; // $5.99 keeps its cents, ₹499 stays clean
   return currency === "INR"
-    ? `₹${major.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`
-    : `$${major.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+    ? `₹${major.toLocaleString("en-IN", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`
+    : `$${major.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
 }

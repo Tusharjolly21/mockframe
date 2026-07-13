@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "motion/react";
-import { ArrowUpRight, Baseline, Box, EyeOff, Highlighter, Keyboard, ListOrdered, Move, Palette, RotateCcw, ScanEye, SlidersHorizontal, SmilePlus } from "lucide-react";
+import { ArrowUpRight, Baseline, Box, EyeOff, Highlighter, Keyboard, ListOrdered, Move, Palette, RotateCcw, ScanEye, Search, SlidersHorizontal, SmilePlus } from "lucide-react";
 import { getDevice } from "@framekit/devices";
 import type { MockupLayer } from "@framekit/scene";
 import { resolveAsset } from "@/lib/assets";
@@ -251,26 +251,7 @@ export function BottomBar() {
         )}
 
         {/* -------------------------------- emoji -------------------------------- */}
-        {openPop === "emoji" && (
-          <Popover className="bottom-[calc(100%+10px)] left-1/2 w-56 -translate-x-1/2 p-2">
-            <div className="grid grid-cols-6 gap-0.5">
-              {EMOJI.map((e) => (
-                <button
-                  key={e}
-                  onClick={() => {
-                    const r = addEmoji(useSceneStore.getState().scene, e);
-                    setScene(() => r.scene);
-                    select(r.layerId);
-                    setOpenPop(null);
-                  }}
-                  className="fk-press grid h-8 w-8 place-items-center rounded-lg text-[18px] hover:bg-black/5"
-                >
-                  {e}
-                </button>
-              ))}
-            </div>
-          </Popover>
-        )}
+        {openPop === "emoji" && <StickerLibrary onClose={() => setOpenPop(null)} />}
 
         {/* ----------------------------- annotations ---------------------------- */}
         {openPop === "annotate" && (
@@ -309,6 +290,90 @@ export function BottomBar() {
         {openPop === "themes" && <ThemesPopover onClose={() => setOpenPop(null)} />}
       </AnimatePresence>
     </div>
+  );
+}
+
+type LibraryItem = { glyph: string; label: string; kind?: "annotation"; id?: AnnotationStickerId };
+
+const STICKER_GROUPS: Array<{ id: string; label: string; items: LibraryItem[] }> = [
+  { id: "emoji", label: "Emoji", items: EMOJI.map((glyph) => ({ glyph, label: glyph })) },
+  {
+    id: "arrows",
+    label: "Arrows",
+    items: ["↗", "➜", "➤", "↪", "↻", "⇢", "↯", "➚", "⤴", "⤵", "⇆", "⬆", "⬇", "⬅", "➡", "↔", "↕", "➳", "➵", "➶"].map((glyph) => ({ glyph, label: `Arrow ${glyph}` })),
+  },
+  {
+    id: "markup",
+    label: "Markup",
+    items: [
+      { glyph: "↗", label: "Hand arrow", kind: "annotation", id: "annot-arrow" },
+      { glyph: "1", label: "Step marker", kind: "annotation", id: "annot-step-1" },
+      { glyph: "▰", label: "Highlight", kind: "annotation", id: "annot-highlight" },
+      { glyph: "▮", label: "Redact", kind: "annotation", id: "annot-redact" },
+      { glyph: "◌", label: "Blur patch", kind: "annotation", id: "annot-blur" },
+      { glyph: "⌘K", label: "Shortcut", kind: "annotation", id: "annot-kbd" },
+    ],
+  },
+  { id: "underlines", label: "Underlines", items: ["〰", "﹏", "⌁", "〽", "︴", "▱", "━━", "≋", "﹌", "⌇", "╱", "╲"].map((glyph) => ({ glyph, label: `Underline ${glyph}` })) },
+  { id: "people", label: "People", items: ["👋", "🖐️", "👏", "🙌", "👍", "👎", "👌", "🤝", "✍️", "🙏", "💪", "🫶", "🧠", "👀", "🧑‍💻", "👨‍🎨"].map((glyph) => ({ glyph, label: glyph })) },
+  { id: "nature", label: "Nature", items: ["🌿", "🍃", "🌱", "🌸", "🌻", "🌈", "☀️", "🌙", "⭐", "🔥", "❄️", "🌊", "☁️", "🍂", "🪴", "🌵"].map((glyph) => ({ glyph, label: glyph })) },
+  { id: "food", label: "Food", items: ["🍎", "🍊", "🍋", "🍉", "🍇", "🍓", "🥑", "🍕", "🍔", "🍜", "🍩", "☕", "🍰", "🍪", "🥤", "🍣"].map((glyph) => ({ glyph, label: glyph })) },
+  { id: "travel", label: "Travel", items: ["🌍", "🗺️", "🧭", "✈️", "🚗", "🚲", "🚀", "🏕️", "⛰️", "🏝️", "🏠", "📍", "🗽", "🎒", "🚢", "🚂"].map((glyph) => ({ glyph, label: glyph })) },
+  { id: "objects", label: "Objects", items: ["👓", "🕶️", "🧥", "👕", "👖", "🧣", "🧤", "🎧", "📱", "💻", "⌚", "📷", "✏️", "📌", "🔑", "💡"].map((glyph) => ({ glyph, label: glyph })) },
+  { id: "symbols", label: "Symbols", items: ["ⓘ", "ⓘ", "✓", "✕", "⚠️", "ⓘ", "♿", "🚻", "ⓘ", "⌘", "#️⃣", "©️", "®️", "™️", "∞", "✦"].map((glyph) => ({ glyph, label: glyph })) },
+  { id: "activities", label: "Activities", items: ["🎉", "🎈", "🎁", "🎨", "🎵", "🎬", "🏆", "🥇", "🎯", "🎮", "🎸", "🎤", "🎊", "🎃", "🎄", "🎆"].map((glyph) => ({ glyph, label: glyph })) },
+];
+
+function StickerLibrary({ onClose }: { onClose: () => void }) {
+  const [groupId, setGroupId] = useState("emoji");
+  const [query, setQuery] = useState("");
+  const setScene = useSceneStore((s) => s.setScene);
+  const select = useViewStore((s) => s.select);
+  const group = STICKER_GROUPS.find((item) => item.id === groupId) ?? STICKER_GROUPS[0];
+  const items = query.trim()
+    ? STICKER_GROUPS.flatMap((item) => item.items.map((entry) => ({ ...entry, group: item.id }))).filter((item) => `${item.label} ${item.group}`.toLowerCase().includes(query.toLowerCase()))
+    : group.items;
+
+  const insert = (item: LibraryItem) => {
+    const scene = useSceneStore.getState().scene;
+    const result = item.kind === "annotation" && item.id ? addAnnotation(scene, item.id) : addEmoji(scene, item.glyph);
+    setScene(() => result.scene);
+    select(result.layerId);
+  };
+
+  return (
+    <Popover className="bottom-[calc(100%+10px)] left-1/2 w-[360px] max-w-[calc(100vw-24px)] -translate-x-1/2 overflow-hidden p-0">
+      <div className="border-b border-[#ececf2] px-3 pb-2.5 pt-3">
+        <div className="mb-2 flex items-center justify-between">
+          <div>
+            <p className="text-[13px] font-bold text-[#17171c]">Stickers</p>
+            <p className="text-[10px] text-[#9a9aa4]">Add multiple elements without closing this panel</p>
+          </div>
+          <button title="Close stickers" onClick={onClose} className="fk-press rounded-lg px-2 py-1 text-lg leading-none text-[#8a8a94] hover:bg-black/5">×</button>
+        </div>
+        <label className="flex items-center gap-2 rounded-xl border border-[#e4e4ec] bg-[#f7f7fa] px-2.5 py-2">
+          <Search size={15} className="text-[#8a8a94]" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search stickers" className="min-w-0 flex-1 bg-transparent text-xs outline-none" />
+        </label>
+        <div className="panel-scroll mt-2 flex gap-1 overflow-x-auto pb-0.5">
+          {STICKER_GROUPS.map((item) => (
+            <button key={item.id} onClick={() => { setGroupId(item.id); setQuery(""); }} className={`fk-press shrink-0 rounded-full px-2.5 py-1.5 text-[10.5px] font-semibold ${groupId === item.id && !query ? "bg-[#17171c] text-white" : "bg-[#f1f1f5] text-[#5a5a66] hover:bg-[#e8e8ee]"}`}>
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="panel-scroll max-h-[360px] overflow-y-auto px-3 py-3">
+        <div className="grid grid-cols-4 gap-1.5">
+          {items.map((item, index) => (
+            <button key={`${item.label}-${index}`} title={item.label} onClick={() => insert(item)} className="fk-press grid min-h-14 place-items-center rounded-xl border border-transparent bg-[#f7f7fa] px-1 py-2 text-[27px] leading-none hover:border-[#c9c9d4] hover:bg-white">
+              <span className={item.kind === "annotation" ? "font-semibold text-[#17171c]" : ""}>{item.glyph}</span>
+            </button>
+          ))}
+        </div>
+        {items.length === 0 && <p className="py-10 text-center text-xs text-[#9a9aa4]">No stickers found.</p>}
+      </div>
+    </Popover>
   );
 }
 

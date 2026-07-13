@@ -18,7 +18,20 @@ import { MediaEditor } from "./MediaEditor";
 import { ScreenStudio } from "./ScreenStudio";
 import { FrameControls } from "./FramePanel";
 
-const FONTS = ["Inter", "DM Sans", "Space Grotesk", "Playfair Display", "JetBrains Mono"];
+const FONTS = [
+  "Inter",
+  "DM Sans",
+  "Manrope",
+  "Outfit",
+  "Sora",
+  "Plus Jakarta Sans",
+  "Space Grotesk",
+  "IBM Plex Sans",
+  "Playfair Display",
+  "Lora",
+  "Merriweather",
+  "JetBrains Mono",
+];
 
 /** Warn when a dropped screenshot's aspect badly mismatches the device screen —
  *  e.g. a tall phone shot on a Watch — so the user picks a device it actually fits.
@@ -700,6 +713,12 @@ function AnnotationControls({ layer }: { layer: AnnotationLayer }) {
           />
         </>
       )}
+      {layer.stickerId === "annot-blur" && (
+        <>
+          <SliderRow label="Width" value={layer.size?.width ?? 360} min={80} max={900} onChange={(width) => patch({ size: { width, height: layer.size?.height ?? 118 } })} />
+          <SliderRow label="Height" value={layer.size?.height ?? 118} min={40} max={500} onChange={(height) => patch({ size: { width: layer.size?.width ?? 360, height } })} />
+        </>
+      )}
     </Section>
   );
 }
@@ -749,7 +768,14 @@ function TextControls({ layer }: { layer: TextLayer }) {
           { value: "right", label: "Right" },
         ]}
         value={layer.align}
-        onChange={(align) => patch({ align })}
+        onChange={(align) =>
+          patch({
+            align,
+            // Alignment needs a real text box. max-content left no room for
+            // left/right alignment to produce a visible difference.
+            maxWidth: layer.maxWidth ?? Math.max(480, Math.min(1000, layer.font.size * 8)),
+          })
+        }
       />
       <SliderRow label="Size" value={layer.font.size} min={12} max={300} onChange={(size) => patchFont({ size })} />
       <SliderRow
