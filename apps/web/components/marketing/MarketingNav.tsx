@@ -17,7 +17,7 @@ export function MarketingNav() {
           {[
             ["/mockups", "Mockups"],
             ["/templates", "Templates"],
-            ["/mockups", "Devices"],
+            ["/editor", "Editor"],
           ].map(([href, label], i) => (
             <Link key={i} href={href} className="text-[13.5px] text-zinc-400 transition-colors hover:text-white">
               {label}
