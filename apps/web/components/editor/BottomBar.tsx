@@ -298,6 +298,13 @@ type LibraryItem = { glyph: string; label: string; kind?: "annotation" | "icon";
 
 const ICON_TINTS = ["#17171c", "#ffffff", "#7c3aed", "#ff3b30", "#10b981", "#f59e0b", "#0ea5e9"];
 
+/** relative luminance of a #rrggbb tint — light tints preview on a dark tile */
+function tintLuma(hex: string): number {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return 0.5;
+  const n = parseInt(hex.slice(1), 16);
+  return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
+}
+
 const STICKER_GROUPS: Array<{ id: string; label: string; items: LibraryItem[] }> = [
   { id: "emoji", label: "Emoji", items: EMOJI.map((glyph) => ({ glyph, label: glyph })) },
   {
@@ -411,23 +418,39 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
         )}
       </div>
       <div className="panel-scroll max-h-[360px] overflow-y-auto px-3 py-3">
-        <div className="grid grid-cols-4 gap-1.5">
-          {items.map((item, index) => (
-            <button key={`${item.label}-${index}`} title={item.label} onClick={() => insert(item)} className="fk-press grid min-h-14 place-items-center rounded-xl border border-transparent bg-[#f7f7fa] px-1 py-2 text-[27px] leading-none hover:border-[#c9c9d4] hover:bg-white">
-              {item.kind === "icon" && item.icon ? (
+        <div className="grid grid-cols-5 gap-1.5">
+          {items.map((item, index) =>
+            item.kind === "icon" && item.icon ? (
+              <button
+                key={`${item.label}-${index}`}
+                title={item.label}
+                onClick={() => insert(item)}
+                className={`fk-press grid aspect-square place-items-center rounded-xl border transition-all hover:scale-105 hover:shadow-[0_4px_14px_rgba(20,20,40,0.12)] ${
+                  tintLuma(tint) > 0.72
+                    ? "border-transparent bg-[#17171c] hover:border-[#17171c]"
+                    : "border-[#ececf2] bg-white hover:border-[#b9b9c6]"
+                }`}
+              >
                 <svg
                   viewBox={ICON_VIEWBOX}
-                  width={26}
-                  height={26}
+                  width={30}
+                  height={30}
                   style={{ color: tint }}
                   aria-hidden
                   dangerouslySetInnerHTML={{ __html: iconBody(item.icon) ?? "" }}
                 />
-              ) : (
+              </button>
+            ) : (
+              <button
+                key={`${item.label}-${index}`}
+                title={item.label}
+                onClick={() => insert(item)}
+                className="fk-press grid aspect-square place-items-center rounded-xl border border-transparent bg-[#f7f7fa] text-[26px] leading-none hover:border-[#c9c9d4] hover:bg-white"
+              >
                 <span className={item.kind === "annotation" ? "font-semibold text-[#17171c]" : ""}>{item.glyph}</span>
-              )}
-            </button>
-          ))}
+              </button>
+            )
+          )}
         </div>
         {items.length === 0 && <p className="py-10 text-center text-xs text-[#9a9aa4]">No stickers found.</p>}
       </div>

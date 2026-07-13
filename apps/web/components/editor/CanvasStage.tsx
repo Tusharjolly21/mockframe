@@ -564,7 +564,7 @@ export function CanvasStage() {
             emptyPickRef.current?.click();
           }}
           onPointerDown={(e) => e.stopPropagation()}
-          className="fk-press absolute z-30 grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-[#17171c] shadow-[0_6px_20px_rgba(20,20,40,0.3)] ring-1 ring-black/5 hover:scale-105"
+          className="fk-press absolute z-10 grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-[#17171c] shadow-[0_6px_20px_rgba(20,20,40,0.3)] ring-1 ring-black/5 hover:scale-105"
           style={{ left: b.x, top: b.y }}
         >
           <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
@@ -592,7 +592,7 @@ export function CanvasStage() {
       />
 
       {dropHint && (
-        <div className="pointer-events-none absolute inset-3 z-30 grid place-items-center rounded-3xl border-2 border-dashed border-violet-500/70 bg-violet-500/5">
+        <div className="pointer-events-none absolute inset-3 z-10 grid place-items-center rounded-3xl border-2 border-dashed border-violet-500/70 bg-violet-500/5">
           <p className="fk-card rounded-full px-5 py-2.5 text-sm font-medium text-[#17171c]">
             Drop screenshots — matching devices are detected automatically
           </p>
@@ -601,7 +601,7 @@ export function CanvasStage() {
 
       {/* 3D mode hint — dragging a device rotates it in 3D (toggle in the top toolbar) */}
       {threeD && (
-        <div className="pointer-events-none absolute left-1/2 top-4 z-40 -translate-x-1/2">
+        <div className="pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2">
           <span className="fk-card flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11.5px] font-semibold text-[#17171c]">
             <Box size={13} className="text-violet-600" />
             3D — drag the device to rotate · toggle off to move
