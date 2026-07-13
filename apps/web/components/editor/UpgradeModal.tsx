@@ -55,7 +55,7 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
             <Sparkles size={14} className="text-[#7c3aed]" /> Upgrade to Pro
           </h3>
           <p className="mt-0.5 text-[11px] text-[#9a9aa4]">
-            Watermark-free exports on every path — single, copy, and bulk.
+            Watermark-free exports — or stamp your own brand with custom watermarks (logo, badge, or tiled).
           </p>
         </div>
 

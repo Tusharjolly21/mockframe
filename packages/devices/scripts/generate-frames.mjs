@@ -779,47 +779,6 @@ const DEVICES = [
   },
   {
     meta: {
-      id: "apple-watch-ultra-2", name: "Apple Watch Ultra 2", brand: "apple", category: "watch",
-      released: "2024-09",
-      screen: { width: 410, height: 502, cornerRadius: 90 },
-      aliases: ["apple watch ultra"],
-      seo: { monthlyQueries: ["apple watch ultra mockup", "watch mockup"] },
-      wallpaper: ["#0f172a", "#1e293b", "#f97316"],
-    },
-    gen: (variant, colors) =>
-      watch({
-        id: "apple-watch-ultra-2", variant,
-        screenW: 410, screenH: 502, screenR: 90, bezel: 36,
-        rail: colors.rail, bodyFill: colors.body, band: colors.band, ultra: true,
-      }),
-    variants: [
-      { id: "natural-alpine", label: "Natural · Alpine", colors: { rail: [[0, "#d8d4cb"], [0.5, "#a29d92"], [1, "#c9c5bc"]], body: "#0b0b0d", band: [[0, "#e8e2d4"], [1, "#b8b2a2"]] } },
-      { id: "black-dark", label: "Black · Dark", colors: { rail: [[0, "#55565a"], [0.5, "#26272a"], [1, "#47484c"]], body: "#0a0a0c", band: [[0, "#3a3b40"], [1, "#1d1e22"]] } },
-    ],
-  },
-  {
-    meta: {
-      id: "apple-watch-s10", name: "Apple Watch 10 46mm", brand: "apple", category: "watch",
-      released: "2024-09",
-      screen: { width: 416, height: 496, cornerRadius: 96 },
-      aliases: ["apple watch series 10"],
-      seo: { monthlyQueries: ["apple watch mockup", "apple watch 10 mockup"] },
-      wallpaper: ["#312e81", "#0c0a2e", "#e879f9"],
-    },
-    gen: (variant, colors) =>
-      watch({
-        id: "apple-watch-s10", variant,
-        screenW: 416, screenH: 496, screenR: 96, bezel: 28,
-        rail: colors.rail, bodyFill: colors.body, band: colors.band, ultra: false,
-      }),
-    variants: [
-      { id: "jet-black", label: "Jet Black", colors: { rail: [[0, "#3c3d41"], [0.5, "#141518"], [1, "#2e2f33"]], body: "#08080a", band: [[0, "#232429"], [1, "#101114"]] } },
-      { id: "rose-gold", label: "Rose Gold", colors: { rail: [[0, "#f3d5c8"], [0.5, "#d3a794"], [1, "#ecc8b9"]], body: "#120e0d", band: [[0, "#f2ddd3"], [1, "#d0ac9c"]] } },
-      { id: "silver", label: "Silver", colors: { rail: [[0, "#eceef1"], [0.5, "#bfc3c9"], [1, "#e0e2e6"]], body: "#0e0e11", band: [[0, "#e8eaee"], [1, "#c0c4ca"]] } },
-    ],
-  },
-  {
-    meta: {
       id: "chrome-browser", name: "Chrome", brand: "google", category: "browser",
       released: "2026-01",
       screen: { width: 2560, height: 1600, cornerRadius: 0 },

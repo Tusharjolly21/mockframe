@@ -3,6 +3,7 @@
 import { toCanvas } from "html-to-image";
 import type { SceneDocument } from "@framekit/scene";
 import { applyWatermark } from "./watermark";
+import { exportWatermarkOpts } from "./customWatermark";
 
 export type ExportFormat = "png" | "jpeg" | "webp";
 export type ExportQuality = "best" | "balanced" | "compact";
@@ -44,9 +45,9 @@ export async function exportScene(
     style: { transform: "none" }, // neutralize any inherited editor transform on the clone
   });
 
-  // Free tier: visible tile + badge + forensic. Pro: forensic layer only —
-  // invisible, keeps exports traceable even with the visible marks removed.
-  applyWatermark(canvas, opts.watermark ? {} : { tile: false, badge: false });
+  // Free tier: visible tile + badge + forensic. Pro: their custom brand
+  // watermark (if configured) or forensic layer only.
+  await applyWatermark(canvas, exportWatermarkOpts(!opts.watermark));
 
   const mime = `image/${opts.format}`;
   const encoderQuality =

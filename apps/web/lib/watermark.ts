@@ -25,6 +25,21 @@ export interface WatermarkOptions {
   forensicKey?: string | null;
   /** brand string for tile + badge */
   brand?: string;
+  /** Pro custom brand watermark — replaces the MockFrame visible marks */
+  custom?: CustomBrandWatermark;
+}
+
+/** structurally matches lib/customWatermark's CustomWatermarkCfg — kept here
+ *  so this module stays dependency-free */
+export interface CustomBrandWatermark {
+  mode: "badge" | "tiled";
+  text: string;
+  logo: string | null;
+  position: "tl" | "tc" | "tr" | "ml" | "mc" | "mr" | "bl" | "bc" | "br";
+  size: number;
+  opacity: number;
+  color: string;
+  pill: boolean;
 }
 
 export const FORENSIC_KEY = "mockframe-v1"; // rotate if ever leaked
@@ -206,16 +221,114 @@ export function detectForensicWatermark(
   return { z, detected: z > 5 };
 }
 
+/* --------------------------- custom brand (Pro) --------------------------- */
+
+function loadLogo(dataUrl: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null); // a broken logo must never kill an export
+    img.src = dataUrl;
+  });
+}
+
+async function drawCustomWatermark(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  cfg: CustomBrandWatermark
+): Promise<void> {
+  const fs = Math.max(14, Math.round(Math.min(w, h) * 0.028 * cfg.size));
+  const logo = cfg.logo ? await loadLogo(cfg.logo) : null;
+  const text = cfg.text.trim();
+  if (!text && !logo) return;
+
+  if (cfg.mode === "tiled") {
+    const stepX = fs * 10;
+    const stepY = fs * 5.5;
+    ctx.save();
+    ctx.globalAlpha = cfg.opacity * 0.35; // tiles read best well below badge opacity
+    ctx.font = `700 ${fs}px Inter, system-ui, sans-serif`;
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = cfg.color;
+    ctx.translate(w / 2, h / 2);
+    ctx.rotate((-28 * Math.PI) / 180);
+    const reach = Math.hypot(w, h) / 2 + stepX;
+    const logoS = fs * 1.3;
+    const textW = text ? ctx.measureText(text).width : 0;
+    let row = 0;
+    for (let y = -reach; y <= reach; y += stepY, row++) {
+      const offset = (row % 2) * (stepX / 2);
+      for (let x = -reach - offset; x <= reach; x += stepX) {
+        let cx = x;
+        if (logo) {
+          ctx.drawImage(logo, cx, y - logoS / 2, logoS, logoS);
+          cx += logoS + fs * 0.4;
+        }
+        if (text) ctx.fillText(text, cx, y);
+        void textW;
+      }
+    }
+    ctx.restore();
+    return;
+  }
+
+  // badge mode — measure content, place on the 9-grid
+  ctx.save();
+  ctx.font = `700 ${fs}px Inter, system-ui, sans-serif`;
+  ctx.textBaseline = "middle";
+  const logoS = logo ? fs * 1.6 : 0;
+  const gap = logo && text ? fs * 0.45 : 0;
+  const textW = text ? ctx.measureText(text).width : 0;
+  const padX = cfg.pill ? fs * 0.8 : 0;
+  const padY = cfg.pill ? fs * 0.5 : 0;
+  const bw = padX * 2 + logoS + gap + textW;
+  const bh = padY * 2 + Math.max(logoS, fs * 1.4);
+  const margin = Math.round(Math.min(w, h) * 0.025);
+
+  const bx = cfg.position.endsWith("l") ? margin : cfg.position.endsWith("c") ? (w - bw) / 2 : w - margin - bw;
+  const by = cfg.position.startsWith("t") ? margin : cfg.position.startsWith("m") ? (h - bh) / 2 : h - margin - bh;
+
+  ctx.globalAlpha = cfg.opacity;
+  if (cfg.pill) {
+    ctx.fillStyle = "rgba(15,16,22,0.62)";
+    ctx.beginPath();
+    ctx.roundRect(bx, by, bw, bh, bh / 2);
+    ctx.fill();
+  }
+  let cx = bx + padX;
+  const cy = by + bh / 2;
+  if (logo) {
+    ctx.drawImage(logo, cx, cy - logoS / 2, logoS, logoS);
+    cx += logoS + gap;
+  }
+  if (text) {
+    ctx.fillStyle = cfg.color;
+    if (!cfg.pill) {
+      // no pill → soft shadow keeps light text readable on light backgrounds
+      ctx.shadowColor = "rgba(0,0,0,0.45)";
+      ctx.shadowBlur = fs * 0.35;
+    }
+    ctx.fillText(text, cx, cy + fs * 0.05);
+  }
+  ctx.restore();
+}
+
 /* --------------------------------- pipeline --------------------------------- */
 
 /** Bake watermark layers into an export canvas, in place. */
-export function applyWatermark(canvas: HTMLCanvasElement, opts: WatermarkOptions = {}): HTMLCanvasElement {
-  const { tile = true, badge = true, forensicKey = FORENSIC_KEY, brand = "MockFrame" } = opts;
+export async function applyWatermark(canvas: HTMLCanvasElement, opts: WatermarkOptions = {}): Promise<HTMLCanvasElement> {
+  const { tile = true, badge = true, forensicKey = FORENSIC_KEY, brand = "MockFrame", custom } = opts;
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas;
   const { width: w, height: h } = canvas;
-  if (tile) drawTiles(ctx, w, h, brand);
-  if (badge) drawBadge(ctx, w, h, brand);
+  if (custom) {
+    // Pro brand watermark replaces the MockFrame visible marks entirely
+    await drawCustomWatermark(ctx, w, h, custom);
+  } else {
+    if (tile) drawTiles(ctx, w, h, brand);
+    if (badge) drawBadge(ctx, w, h, brand);
+  }
   if (forensicKey) embedForensic(ctx, w, h, forensicKey);
   return canvas;
 }

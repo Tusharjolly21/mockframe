@@ -5,6 +5,7 @@ import { SceneRenderer } from "@framekit/renderer";
 import type { SceneDocument } from "@framekit/scene";
 import { resolveAsset } from "./assets";
 import { applyWatermark } from "./watermark";
+import { exportWatermarkOpts } from "./customWatermark";
 import { buildZip, type ZipEntry } from "./zip";
 
 /**
@@ -32,7 +33,7 @@ async function renderSceneToPng(scene: SceneDocument, scale: number, watermark: 
       canvasWidth: Math.round(scene.canvas.width * scale),
       canvasHeight: Math.round(scene.canvas.height * scale),
     });
-    applyWatermark(canvas, watermark ? {} : { tile: false, badge: false });
+    await applyWatermark(canvas, exportWatermarkOpts(!watermark));
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
     if (!blob) throw new Error("rasterize failed");
     return new Uint8Array(await blob.arrayBuffer());

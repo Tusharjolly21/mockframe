@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { getDevice } from "@framekit/devices";
 import type { MockupLayer, SceneDocument } from "@framekit/scene";
-import { Check, Copy, Dices, Download, Link2, Loader2, RotateCcw, Settings2, Share2, Sparkles, Upload } from "lucide-react";
+import { Check, Copy, Dices, Download, Link2, Loader2, RotateCcw, Settings2, Share2, Sparkles, Stamp, Upload } from "lucide-react";
 import { resolveAsset } from "@/lib/assets";
 import { exportScene, type ExportFormat, type ExportQuality } from "@/lib/export";
 import type { CodeDoc } from "@/lib/screens";
@@ -15,7 +15,9 @@ import { applyVariation, VARIATIONS } from "@/lib/variations";
 import { applyLayout, DEFAULT_MODS, LAYOUT_PRESETS, modifyPreset, type LayoutMods } from "@/lib/layouts";
 import { useSceneStore, useViewStore } from "@/lib/store";
 import { useEntitlementSync } from "@/lib/billing/client";
+import { loadCustomWatermark } from "@/lib/customWatermark";
 import { UpgradeModal } from "./UpgradeModal";
+import { WatermarkPanel } from "./WatermarkPanel";
 import { Popover, Seg, SliderRow } from "./ui";
 import { toast } from "./Toolbar";
 import { StaticScenePreview } from "./StaticScenePreview";
@@ -62,6 +64,9 @@ export function RightPanel() {
 
   const removeWatermark = useViewStore((s) => s.removeWatermark);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [watermarkOpen, setWatermarkOpen] = useState(false);
+  const [watermarkOn, setWatermarkOn] = useState(false);
+  useEffect(() => setWatermarkOn(loadCustomWatermark().enabled), []);
   useEntitlementSync();
 
   const runExport = async () => {
@@ -82,12 +87,13 @@ export function RightPanel() {
   const renderPng = async (node: HTMLElement): Promise<Blob> => {
     const { toCanvas } = await import("html-to-image");
     const { applyWatermark } = await import("@/lib/watermark");
+    const { exportWatermarkOpts } = await import("@/lib/customWatermark");
     const canvas = await toCanvas(node, {
       pixelRatio: 1,
       canvasWidth: scene.canvas.width,
       canvasHeight: scene.canvas.height,
     });
-    applyWatermark(canvas, removeWatermark ? { tile: false, badge: false } : {});
+    await applyWatermark(canvas, exportWatermarkOpts(removeWatermark));
     return new Promise<Blob>((resolve, reject) =>
       canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("render failed"))), "image/png")
     );
@@ -234,22 +240,34 @@ export function RightPanel() {
         </div>
       </div>
 
-      {/* free-tier watermark — removing it is the Pro upgrade */}
+      {/* free tier: upsell · Pro: custom brand watermark settings */}
       <div className="px-3 pt-2">
         {removeWatermark ? (
-          <div className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#c9ecd4] bg-[#effaf2] py-1.5 text-[11px] font-semibold text-[#1a7f3c]">
-            <Sparkles size={12} /> Pro — exports are watermark-free
-          </div>
+          <button
+            onClick={() => setWatermarkOpen(true)}
+            className="fk-press flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#c9ecd4] bg-[#effaf2] py-1.5 text-[11px] font-semibold text-[#1a7f3c] hover:border-[#1a7f3c]"
+          >
+            <Stamp size={12} />
+            {watermarkOn ? "Custom watermark · on" : "Pro — add your own watermark"}
+          </button>
         ) : (
           <button
             onClick={() => setUpgradeOpen(true)}
             className="fk-press flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#e4c34d] bg-[#fdf7de] py-1.5 text-[11px] font-semibold text-[#8a6d12] hover:border-[#d4a72c]"
           >
-            <Sparkles size={12} /> Remove watermark
+            <Sparkles size={12} /> Remove watermark · add your own
           </button>
         )}
       </div>
       {upgradeOpen && <UpgradeModal onClose={() => setUpgradeOpen(false)} />}
+      {watermarkOpen && (
+        <WatermarkPanel
+          onClose={() => {
+            setWatermarkOpen(false);
+            setWatermarkOn(loadCustomWatermark().enabled);
+          }}
+        />
+      )}
 
       {!hideLayouts && <>
       {/* mockup count */}

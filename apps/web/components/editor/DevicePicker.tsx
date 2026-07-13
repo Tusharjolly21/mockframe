@@ -65,6 +65,34 @@ export function DevicePicker({
     return () => window.removeEventListener("mousedown", onDown);
   }, [open]);
 
+  // Keep the picker beside the trigger when there is room, otherwise lift it
+  // above the trigger. This matters on shorter laptop screens where the old
+  // fixed `bottom + 8px` anchor pushed most of the device catalog below view.
+  useEffect(() => {
+    if (!open) return;
+    const reposition = () => {
+      const trigger = rootRef.current?.getBoundingClientRect();
+      const popup = popRef.current?.getBoundingClientRect();
+      if (!trigger || !popup) return;
+      const gutter = 12;
+      const roomBelow = trigger.bottom + popup.height + gutter <= window.innerHeight;
+      const roomAbove = trigger.top - popup.height - gutter >= gutter;
+      const top = roomBelow || !roomAbove ? trigger.bottom + 8 : trigger.top - popup.height - 8;
+      const left = Math.min(Math.max(gutter, trigger.left), Math.max(gutter, window.innerWidth - popup.width - gutter));
+      setAnchor((previous) =>
+        previous && Math.abs(previous.x - left) < 1 && Math.abs(previous.y - top) < 1 ? previous : { x: left, y: top }
+      );
+    };
+    const frame = window.requestAnimationFrame(reposition);
+    window.addEventListener("resize", reposition);
+    window.addEventListener("scroll", reposition, true);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", reposition);
+      window.removeEventListener("scroll", reposition, true);
+    };
+  }, [open, cat, regBump]);
+
   // /calibrate (and /editor?calibrate=1) lands here: open the calibration
   // modal directly without hunting for the picker tile
   useEffect(() => {
@@ -274,13 +302,7 @@ function DeviceCard({
         </span>
       </div>
       <div className="h-36 overflow-hidden p-2">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={previewDataUri(device)}
-          alt={device.name}
-          className="drop-shadow-[0_6px_12px_rgba(20,20,40,0.18)]"
-          style={{ width: "100%", height: "100%", objectFit: "contain" }}
-        />
+        <DevicePreview device={device} />
       </div>
       <div className="mt-1 flex items-center gap-1.5">
         {shown.map((v) => (
@@ -293,8 +315,7 @@ function DeviceCard({
             }}
             className="fk-press h-8 w-8 overflow-hidden rounded-lg border border-[#e4e4ec] bg-[#f6f6fa] p-0.5"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewDataUri(device, v.id)} alt={v.label} className="h-full w-full object-contain" />
+            <DevicePreview device={device} variantId={v.id} compact />
           </button>
         ))}
         {extra > 0 && (
@@ -303,6 +324,56 @@ function DeviceCard({
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+const PICKER_WALLPAPERS = [
+  "linear-gradient(145deg, #0f172a 0%, #155e75 48%, #67e8f9 100%)",
+  "radial-gradient(circle at 25% 20%, #f0abfc 0%, transparent 42%), linear-gradient(145deg, #312e81, #111827 72%)",
+  "linear-gradient(135deg, #111827 0%, #7c2d12 42%, #fbbf24 100%)",
+  "radial-gradient(circle at 75% 78%, #34d399 0%, transparent 42%), linear-gradient(145deg, #052e16, #164e63 68%)",
+  "linear-gradient(135deg, #020617 0%, #1d4ed8 48%, #22d3ee 100%)",
+  "radial-gradient(circle at 70% 22%, #fb7185 0%, transparent 36%), linear-gradient(145deg, #450a0a, #7c3aed 100%)",
+  "linear-gradient(135deg, #fdf2f8 0%, #c4b5fd 46%, #38bdf8 100%)",
+  "repeating-linear-gradient(135deg, rgba(255,255,255,.14) 0 3px, transparent 3px 12px), linear-gradient(145deg, #172554, #0f766e)",
+];
+
+function wallpaperFor(device: Device, variantId?: string) {
+  const seed = `${device.id}:${variantId ?? device.variants[0]?.id ?? "default"}`;
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  return PICKER_WALLPAPERS[Math.abs(hash) % PICKER_WALLPAPERS.length];
+}
+
+function DevicePreview({ device, variantId, compact = false }: { device: Device; variantId?: string; compact?: boolean }) {
+  const { width, height, screenRect } = device.frame;
+  const radius = Math.min(24, (device.screen.cornerRadius / height) * 100);
+  return (
+    <div
+      className={`relative mx-auto ${compact ? "h-full w-full" : "h-full max-w-full"}`}
+      style={{ aspectRatio: `${width} / ${height}` }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={previewDataUri(device, variantId)}
+        alt={compact ? "" : device.name}
+        className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_6px_12px_rgba(20,20,40,0.18)]"
+      />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute overflow-hidden"
+        style={{
+          left: `${(screenRect.x / width) * 100}%`,
+          top: `${(screenRect.y / height) * 100}%`,
+          width: `${(screenRect.width / width) * 100}%`,
+          height: `${(screenRect.height / height) * 100}%`,
+          borderRadius: `${radius}%`,
+          background: wallpaperFor(device, variantId),
+          boxShadow: "inset 0 0 0 1px rgba(255,255,255,.14), inset 0 -10px 18px rgba(0,0,0,.18)",
+          zIndex: 1,
+        }}
+      />
     </div>
   );
 }

@@ -13,7 +13,21 @@ export type { Device, DeviceVariant, DeviceCategory, FrameSpec, ScreenSpec, Rast
 
 // parametric SVG frames + hand-authored SVG frame devices + raster photo scenes
 // (Pixeden-sourced) + CC0/free-commercial photo scenes
-const DEVICES: Device[] = [...PARAMETRIC_DEVICES, ...SVG_DEVICES, ...SCENE_DEVICES, ...CC0_SCENES, ...PSD_WATCH_SCENES, ...PSD_IPHONE16_SCENES, ...PSD_IPAD_PRO_SCENES, ...PSD_COMPOSITE_SCENES, ...PSD_MACBOOK_SCENES];
+// These legacy AI-generated watch frames are intentionally hidden in favour of
+// the calibrated PSD watch scenes. Keep the ids here as a migration guard for
+// old generated registries and saved projects.
+const REMOVED_DEVICE_IDS = new Set(["apple-watch-s10", "apple-watch-ultra-2", "watch-front"]);
+const DEVICES: Device[] = [
+  ...PARAMETRIC_DEVICES,
+  ...SVG_DEVICES,
+  ...SCENE_DEVICES,
+  ...CC0_SCENES,
+  ...PSD_WATCH_SCENES,
+  ...PSD_IPHONE16_SCENES,
+  ...PSD_IPAD_PRO_SCENES,
+  ...PSD_COMPOSITE_SCENES,
+  ...PSD_MACBOOK_SCENES,
+].filter((device) => !REMOVED_DEVICE_IDS.has(device.id));
 
 const byId = new Map(DEVICES.map((d) => [d.id, d]));
 
