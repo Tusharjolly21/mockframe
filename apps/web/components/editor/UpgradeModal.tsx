@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, LogIn, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { AuthModal } from "@/components/AuthModal";
@@ -38,7 +39,10 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
     }
   };
 
-  return (
+  // portal to body — rendered inline, a transformed editor ancestor would trap
+  // the fixed overlay in its stacking context and canvas chrome (the ⊕ add-media
+  // button) paints on top of the modal
+  const ui = (
     <div
       className="fixed inset-0 z-[70] flex items-center justify-center bg-black/45 p-4"
       onMouseDown={(e) => {
@@ -151,4 +155,6 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
     </div>
   );
+
+  return typeof document !== "undefined" ? createPortal(ui, document.body) : null;
 }
