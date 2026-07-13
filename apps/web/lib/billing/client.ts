@@ -86,12 +86,16 @@ export class CheckoutCancelled extends Error {
  * Full purchase flow: create order/subscription server-side, open Razorpay
  * Checkout, then verify the signature server-side. Resolves once the server
  * has confirmed payment and written the entitlement.
+ *
+ * `expectedPrice` is the minor-unit price the UI DISPLAYED — the server
+ * rejects the checkout if its current price differs, so a stale tab can
+ * never charge a price the user didn't see.
  */
-export async function purchasePlan(plan: PlanId, currency: Currency): Promise<void> {
+export async function purchasePlan(plan: PlanId, currency: Currency, expectedPrice: number): Promise<void> {
   const checkoutRes = await firebaseFetch("/api/billing/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ plan, currency }),
+    body: JSON.stringify({ plan, currency, expectedPrice }),
   });
   const checkout = await checkoutRes.json();
   if (!checkoutRes.ok) throw new Error(checkout.error ?? "Checkout failed");

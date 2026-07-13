@@ -50,16 +50,16 @@ export const PLANS: Record<PlanId, PlanDef> = {
 };
 
 /** per-month equivalent for annual framing (PostSpark-style "₹250 / month") */
-export function perMonthPrice(plan: PlanId, currency: Currency): string | null {
-  if (PLANS[plan].period !== "yearly") return null;
-  const monthly = PLANS[plan].price[currency] / 12 / 100;
+export function perMonthPrice(plan: PlanId, currency: Currency, plans: Record<PlanId, PlanDef> = PLANS): string | null {
+  if (plans[plan].period !== "yearly") return null;
+  const monthly = plans[plan].price[currency] / 12 / 100;
   return currency === "INR" ? `₹${Math.round(monthly)}` : `$${monthly.toFixed(2)}`;
 }
 
 /** discount vs paying monthly for the same period, e.g. 50 for -50% */
-export function yearlySavingsPct(currency: Currency): number {
-  const monthlyRun = PLANS.monthly.price[currency] * 12;
-  return Math.round((1 - PLANS.yearly.price[currency] / monthlyRun) * 100);
+export function yearlySavingsPct(currency: Currency, plans: Record<PlanId, PlanDef> = PLANS): number {
+  const monthlyRun = plans.monthly.price[currency] * 12;
+  return Math.round((1 - plans.yearly.price[currency] / monthlyRun) * 100);
 }
 
 export function isPlanId(v: unknown): v is PlanId {
@@ -70,8 +70,8 @@ export function isCurrency(v: unknown): v is Currency {
   return v === "INR" || v === "USD";
 }
 
-export function formatPrice(plan: PlanId, currency: Currency): string {
-  const major = PLANS[plan].price[currency] / 100;
+export function formatPrice(plan: PlanId, currency: Currency, plans: Record<PlanId, PlanDef> = PLANS): string {
+  const major = plans[plan].price[currency] / 100;
   const digits = Number.isInteger(major) ? 0 : 2; // $5.99 keeps its cents, ₹499 stays clean
   return currency === "INR"
     ? `₹${major.toLocaleString("en-IN", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`

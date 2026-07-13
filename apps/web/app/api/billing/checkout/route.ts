@@ -26,12 +26,20 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { plan, currency } = body ?? {};
+    const { plan, currency, expectedPrice } = body ?? {};
     if (!isPlanId(plan) || !isCurrency(currency)) {
       return NextResponse.json({ error: "Invalid plan or currency" }, { status: 400 });
     }
 
     const def = PLANS[plan];
+    // the client must state the price it DISPLAYED — a browser running a
+    // pre-price-change bundle gets a refresh prompt instead of a surprise charge
+    if (expectedPrice !== def.price[currency]) {
+      return NextResponse.json(
+        { error: "Prices were updated — refresh the page to see current pricing" },
+        { status: 409 }
+      );
+    }
     const notes = { uid: owner.uid, plan };
 
     if (def.kind === "one_time") {

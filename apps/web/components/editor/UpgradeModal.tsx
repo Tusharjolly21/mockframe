@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, Globe, Infinity as InfinityIcon, LogIn, Sparkles, Stamp, Wand2, Zap } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { AuthModal } from "@/components/AuthModal";
 import { useViewStore } from "@/lib/store";
 import { CheckoutCancelled, defaultCurrency, purchasePlan } from "@/lib/billing/client";
-import { formatPrice, perMonthPrice, PLANS, yearlySavingsPct, type Currency, type PlanId } from "@/lib/billing/plans";
+import { formatPrice, perMonthPrice, PLANS, yearlySavingsPct, type Currency, type PlanDef, type PlanId } from "@/lib/billing/plans";
 import { toast } from "./Toolbar";
 
 const PLAN_ORDER: PlanId[] = ["monthly", "yearly", "lifetime"];
@@ -29,12 +29,21 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
   const [currency, setCurrency] = useState<Currency>(() => defaultCurrency());
   const [busy, setBusy] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const savings = yearlySavingsPct(currency);
+  // live catalog: the bundled prices render instantly, then the server's
+  // current prices take over — a stale deploy in this tab can't show old ones
+  const [plans, setPlans] = useState<Record<PlanId, PlanDef>>(PLANS);
+  useEffect(() => {
+    fetch("/api/billing/plans")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => j?.plans && setPlans(j.plans))
+      .catch(() => {});
+  }, []);
+  const savings = yearlySavingsPct(currency, plans);
 
   const pay = async () => {
     setBusy(true);
     try {
-      await purchasePlan(plan, currency);
+      await purchasePlan(plan, currency, plans[plan].price[currency]);
       setRemoveWatermark(true);
       toast("You're Pro — welcome aboard ✨");
       onClose();
@@ -101,9 +110,9 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
 
         <div className="p-4">
           {PLAN_ORDER.map((id) => {
-            const def = PLANS[id];
+            const def = plans[id];
             const on = plan === id;
-            const perMo = perMonthPrice(id, currency);
+            const perMo = perMonthPrice(id, currency, plans);
             return (
               <button
                 key={id}
@@ -135,12 +144,12 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
                           <span className="text-[10.5px] font-medium text-[#9a9aa4]">/mo</span>
                         </span>
                         <span className="block text-[10px] tabular-nums text-[#9a9aa4]">
-                          {formatPrice(id, currency)} billed yearly
+                          {formatPrice(id, currency, plans)} billed yearly
                         </span>
                       </>
                     ) : (
                       <span className="text-[15px] font-extrabold tabular-nums text-[#17171c]">
-                        {formatPrice(id, currency)}
+                        {formatPrice(id, currency, plans)}
                         <span className="text-[10.5px] font-medium text-[#9a9aa4]">{PERIOD_SUFFIX[id]}</span>
                       </span>
                     )}
@@ -171,7 +180,7 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
             >
               {busy
                 ? "Opening secure checkout…"
-                : `Go Pro — ${perMonthPrice(plan, currency) ? `${perMonthPrice(plan, currency)}/mo` : formatPrice(plan, currency) + PERIOD_SUFFIX[plan]}`}
+                : `Go Pro — ${perMonthPrice(plan, currency, plans) ? `${perMonthPrice(plan, currency, plans)}/mo` : formatPrice(plan, currency, plans) + PERIOD_SUFFIX[plan]}`}
             </button>
           ) : (
             <button
