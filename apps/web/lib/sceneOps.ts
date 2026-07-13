@@ -151,32 +151,49 @@ export type AnnotationStickerId =
   | "annot-highlight"
   | "annot-redact"
   | "annot-blur"
-  | `annot-step-${1 | 2 | 3 | 4 | 5}`;
+  | "annot-kbd"
+  | `annot-step-${number}`;
 
-const ANNOTATION_DEFAULTS: Record<AnnotationStickerId, { tint: string; scale: number; x: number; y: number; rotate?: number }> = {
+const ANNOTATION_DEFAULTS: Record<string, { tint: string; scale: number; x: number; y: number; rotate?: number }> = {
   "annot-arrow": { tint: "#ff3b30", scale: 1.1, x: 0.18, y: -0.12, rotate: -8 },
   "annot-highlight": { tint: "#ffe066", scale: 1.05, x: 0, y: 0.16 },
   "annot-redact": { tint: "#111111", scale: 1.05, x: 0, y: 0.08 },
   "annot-blur": { tint: "#ffffff", scale: 1.05, x: 0, y: 0.08 },
-  "annot-step-1": { tint: "#7c3aed", scale: 1, x: -0.18, y: -0.18 },
-  "annot-step-2": { tint: "#7c3aed", scale: 1, x: -0.18, y: -0.18 },
-  "annot-step-3": { tint: "#7c3aed", scale: 1, x: -0.18, y: -0.18 },
-  "annot-step-4": { tint: "#7c3aed", scale: 1, x: -0.18, y: -0.18 },
-  "annot-step-5": { tint: "#7c3aed", scale: 1, x: -0.18, y: -0.18 },
+  "annot-kbd": { tint: "#17171c", scale: 1, x: 0.14, y: -0.16 },
+  "annot-step": { tint: "#7c3aed", scale: 1, x: -0.18, y: -0.18 },
 };
 
-/** Built-in annotation stickers: arrows, steps, highlights, redaction, blur. */
+/** Highest step number already on the canvas (0 when there are none). */
+export function maxStepNumber(scene: SceneDocument): number {
+  return scene.layers.reduce((max, l) => {
+    if (l.type !== "sticker" || !("stickerId" in l)) return max;
+    const m = l.stickerId.match(/^annot-step-(\d+)$/);
+    return m ? Math.max(max, +m[1]) : max;
+  }, 0);
+}
+
+/** Built-in annotation stickers: arrows, steps, highlights, redaction, blur, shortcut bubbles. */
 export function addAnnotation(scene: SceneDocument, stickerId: AnnotationStickerId): { scene: SceneDocument; layerId: string } {
   const id = createId();
-  const d = ANNOTATION_DEFAULTS[stickerId];
+  let finalId: string = stickerId;
+  let cascade = 0;
+  if (stickerId.startsWith("annot-step-")) {
+    // "Next points 1️⃣2️⃣3️⃣": each new step continues from the highest on canvas,
+    // cascaded slightly so consecutive steps don't stack on the same spot
+    const next = maxStepNumber(scene) + 1;
+    finalId = `annot-step-${next}`;
+    cascade = (next - 1) % 5;
+  }
+  if (stickerId === "annot-kbd") finalId = "annot-kbd-⌘+K"; // editable in the inspector
+  const d = ANNOTATION_DEFAULTS[stickerId.startsWith("annot-step-") ? "annot-step" : stickerId] ?? ANNOTATION_DEFAULTS["annot-step"];
   const layer: StickerLayer = {
     type: "sticker",
     id,
-    stickerId,
+    stickerId: finalId,
     tint: d.tint,
     transform: {
-      x: Math.round(scene.canvas.width * d.x),
-      y: Math.round(scene.canvas.height * d.y),
+      x: Math.round(scene.canvas.width * (d.x + cascade * 0.07)),
+      y: Math.round(scene.canvas.height * (d.y + cascade * 0.07)),
       scale: d.scale,
       rotate: d.rotate ?? 0,
       tiltX: 0,

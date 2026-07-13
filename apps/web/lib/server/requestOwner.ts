@@ -8,6 +8,7 @@ const GUEST_RE = /^[a-zA-Z0-9_-]{12,80}$/;
 export type RequestOwner = {
   ownerId: string;
   uid: string | null;
+  email?: string | null;
   isGuest: boolean;
   /** Firebase sign_in_provider — "anonymous" for guest sessions, "google.com" / "password" / "emailLink" for real accounts */
   signInProvider?: string;
@@ -28,6 +29,7 @@ export async function getRequestOwner(req: NextRequest): Promise<RequestOwner> {
       return {
         ownerId: `user_${safeOwnerPart(decoded.uid)}`,
         uid: decoded.uid,
+        email: decoded.email ?? null,
         isGuest: false,
         signInProvider: decoded.firebase?.sign_in_provider,
       };

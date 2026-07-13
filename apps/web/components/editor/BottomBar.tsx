@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "motion/react";
-import { ArrowUpRight, Baseline, Box, EyeOff, Highlighter, ListOrdered, Move, Palette, RotateCcw, ScanEye, SlidersHorizontal, SmilePlus } from "lucide-react";
+import { ArrowUpRight, Baseline, Box, EyeOff, Highlighter, Keyboard, ListOrdered, Move, Palette, RotateCcw, ScanEye, SlidersHorizontal, SmilePlus } from "lucide-react";
 import { getDevice } from "@framekit/devices";
 import type { MockupLayer } from "@framekit/scene";
 import { resolveAsset } from "@/lib/assets";
@@ -34,6 +34,7 @@ const ANNOTATIONS: {
   { id: "annot-highlight", label: "Highlight", icon: Highlighter, tint: "#ffe066" },
   { id: "annot-redact", label: "Redact", icon: EyeOff, tint: "#111111" },
   { id: "annot-blur", label: "Blur", icon: ScanEye, tint: "#ffffff" },
+  { id: "annot-kbd", label: "Shortcut", icon: Keyboard, tint: "#17171c" },
 ];
 
 export function BottomBar() {
@@ -54,6 +55,17 @@ export function BottomBar() {
     window.addEventListener("mousedown", onDown);
     return () => window.removeEventListener("mousedown", onDown);
   }, [openPop]);
+
+  // keyboard shortcuts (E / T / A in EditorShell) open panels via this event —
+  // pressing the same key again toggles the panel closed
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const panel = (e as CustomEvent<ExtendedPop>).detail;
+      setOpenPop((cur) => (cur === panel ? null : panel));
+    };
+    window.addEventListener("framekit:open-panel", onOpen);
+    return () => window.removeEventListener("framekit:open-panel", onOpen);
+  }, []);
 
   const mockups = scene.layers.filter((l): l is MockupLayer => l.type === "mockup");
   const target =
@@ -315,6 +327,41 @@ function ThemesPopover({ onClose }: { onClose: () => void }) {
   const all = [...BUILTIN_THEMES, ...saved];
   const current = all.find((t) => themeMatches(scene, t));
 
+  // keyboard theme switching (user request): ↑/↓ moves focus, Enter applies,
+  // Esc closes — focus starts on the active theme
+  const [focusIdx, setFocusIdx] = useState(() => Math.max(0, all.findIndex((t) => t.id === current?.id)));
+  const listRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).matches("input, textarea, select")) return;
+      if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+        e.preventDefault();
+        e.stopPropagation();
+        setFocusIdx((i) => Math.min(all.length - 1, i + 1));
+      } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        e.stopPropagation();
+        setFocusIdx((i) => Math.max(0, i - 1));
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        const t = all[focusIdx];
+        if (t) {
+          setScene((s) => applyTheme(s, t));
+          onClose();
+        }
+      } else if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    // capture phase so the editor's global nudge handler doesn't move layers
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [all, focusIdx, onClose, setScene]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    listRef.current?.children[focusIdx]?.scrollIntoView({ block: "nearest" });
+  }, [focusIdx]);
+
   const cardBg = (t: StyleTheme): React.CSSProperties => {
     const bg = t.background;
     if (bg.type === "solid") return { background: bg.color };
@@ -348,16 +395,21 @@ function ThemesPopover({ onClose }: { onClose: () => void }) {
           +
         </button>
       </div>
-      <div className="flex flex-col gap-2">
-        {all.map((t) => (
+      <div ref={listRef} className="flex flex-col gap-2">
+        {all.map((t, i) => (
           <button
             key={t.id}
             onClick={() => {
               setScene((s) => applyTheme(s, t));
               onClose();
             }}
+            onMouseEnter={() => setFocusIdx(i)}
             className={`fk-press flex h-14 items-end rounded-2xl border-2 px-3 pb-2 text-left text-[13px] font-semibold ${
-              current?.id === t.id ? "border-teal-500 shadow-[0_0_0_2px_rgba(20,184,166,0.25)]" : "border-black/5"
+              current?.id === t.id
+                ? "border-teal-500 shadow-[0_0_0_2px_rgba(20,184,166,0.25)]"
+                : focusIdx === i
+                  ? "border-[#17171c] shadow-[0_0_0_2px_rgba(23,23,28,0.2)]"
+                  : "border-black/5"
             }`}
             style={cardBg(t)}
           >
@@ -365,6 +417,7 @@ function ThemesPopover({ onClose }: { onClose: () => void }) {
           </button>
         ))}
       </div>
+      <p className="mt-2 text-center text-[10px] text-[#9a9aa4]">↑↓ to browse · Enter to apply · T to toggle</p>
     </Popover>
   );
 }

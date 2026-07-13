@@ -96,6 +96,16 @@ export function EditorShell({ initialDeviceId }: { initialDeviceId?: string }) {
         setScene((s) => duplicateLayer(s, primary));
         return;
       }
+      // panel shortcuts — deliberately modifier-free so they behave identically
+      // on Mac and Windows (user report: panel shortcuts misconfigured on Mac)
+      if (!mod && !e.altKey) {
+        const panel = { e: "emoji", t: "themes", a: "annotate" }[e.key.toLowerCase()];
+        if (panel) {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent("framekit:open-panel", { detail: panel }));
+          return;
+        }
+      }
       if (selectedIds.length === 0) return;
       if (e.key === "Backspace" || e.key === "Delete") {
         e.preventDefault();

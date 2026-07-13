@@ -26,6 +26,13 @@ export async function exportScene(
   scene: SceneDocument,
   opts: { format: ExportFormat; scale: number; quality?: ExportQuality; watermark?: boolean }
 ): Promise<void> {
+  // browsers silently fail or downscale beyond canvas limits — surface it
+  // instead ("export resolution not being respected" user report)
+  const outW = Math.round(scene.canvas.width * opts.scale);
+  const outH = Math.round(scene.canvas.height * opts.scale);
+  if (outW * outH > 33_000_000) {
+    throw new Error(`${outW}×${outH} exceeds the browser canvas limit — pick a smaller size`);
+  }
   const canvas = await toCanvas(node, {
     // canvasWidth/Height alone define the output size — combining them with
     // pixelRatio would multiply the two and double-scale the export

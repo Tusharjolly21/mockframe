@@ -265,6 +265,9 @@ const LayerView = memo(function LayerView({ layer, resolveAsset, entrance }: { l
       textTransform: layer.uppercase ? "uppercase" : undefined,
       textAlign: layer.align,
       whiteSpace: layer.maxWidth ? "pre-wrap" : "pre",
+      // RTL support: paragraph direction follows the content's first strong
+      // character, so Arabic/Hebrew text lays out correctly with zero config
+      unicodeBidi: "plaintext",
       width: layer.maxWidth ?? "max-content",
       maxWidth: layer.maxWidth ?? undefined,
       textShadow: layer.shadow ? `${layer.shadow.x}px ${layer.shadow.y}px ${layer.shadow.blur}px ${layer.shadow.color}` : undefined,
@@ -349,8 +352,13 @@ export const SceneRenderer = memo(SceneRendererImpl);
 
 function BuiltinSticker({ id, tint }: { id: string; tint: string }) {
   if (id === "annot-arrow") {
+    // contrast casing under the stroke so the arrow stays visible on ANY
+    // background (user report: arrows disappearing on same-tone backdrops)
+    const casing = tintLuma(tint) > 0.55 ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.85)";
     return (
       <svg width="330" height="150" viewBox="0 0 330 150" fill="none" style={{ display: "block", overflow: "visible" }}>
+        <path d="M24 112 C94 42 172 35 285 41" stroke={casing} strokeWidth="24" strokeLinecap="round" />
+        <path d="M278 21 L321 43 L278 63 Z" fill={casing} stroke={casing} strokeWidth="6" strokeLinejoin="round" />
         <path
           d="M24 112 C94 42 172 35 285 41"
           stroke={tint}
@@ -411,6 +419,65 @@ function BuiltinSticker({ id, tint }: { id: string; tint: string }) {
     );
   }
 
+  if (id.startsWith("annot-kbd-")) {
+    // shortcut hint in a speech bubble — keys split on "+" render as kbd chips
+    const combo = id.slice("annot-kbd-".length) || "⌘+K";
+    const keys = combo.split("+").map((k) => k.trim()).filter(Boolean);
+    return (
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "18px 22px",
+          background: "#ffffff",
+          borderRadius: 20,
+          border: "1px solid rgba(0,0,0,0.06)",
+          boxShadow: "0 12px 30px rgba(20,20,40,0.25)",
+        }}
+      >
+        {keys.map((k, i) => (
+          <span
+            key={i}
+            style={{
+              display: "grid",
+              placeItems: "center",
+              minWidth: 44,
+              height: 46,
+              padding: "0 12px",
+              borderRadius: 10,
+              background: "#f4f4f8",
+              border: "1px solid #d9d9e3",
+              borderBottom: "3px solid #c6c6d4",
+              fontFamily: "Inter, system-ui, sans-serif",
+              fontSize: 24,
+              fontWeight: 700,
+              color: tint,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {k}
+          </span>
+        ))}
+        <span
+          style={{
+            position: "absolute",
+            left: 26,
+            bottom: -9,
+            width: 20,
+            height: 20,
+            background: "#ffffff",
+            borderRight: "1px solid rgba(0,0,0,0.06)",
+            borderBottom: "1px solid rgba(0,0,0,0.06)",
+            borderRadius: 4,
+            transform: "rotate(45deg)",
+          }}
+        />
+      </div>
+    );
+  }
+
   if (id.startsWith("annot-step-")) {
     const n = id.slice("annot-step-".length);
     return (
@@ -420,10 +487,10 @@ function BuiltinSticker({ id, tint }: { id: string; tint: string }) {
         <circle cx="64" cy="64" r="55" fill="none" stroke="rgba(0,0,0,0.14)" strokeWidth="2" />
         <text
           x="64"
-          y="78"
+          y={n.length > 1 ? 74 : 78}
           textAnchor="middle"
           fontFamily="Inter, system-ui, sans-serif"
-          fontSize="50"
+          fontSize={n.length > 1 ? 40 : 50}
           fontWeight="850"
           fill="#ffffff"
         >
@@ -438,6 +505,13 @@ function BuiltinSticker({ id, tint }: { id: string; tint: string }) {
       <rect x="14" y="14" width="132" height="132" rx="28" fill={tint} />
     </svg>
   );
+}
+
+/** relative luminance 0..1 of a #rrggbb tint (non-hex → treat as mid) */
+function tintLuma(hex: string): number {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return 0.5;
+  const n = parseInt(hex.slice(1), 16);
+  return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
 }
 
 function hexToRgba(hex: string, alpha: number) {

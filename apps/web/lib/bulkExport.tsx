@@ -29,8 +29,8 @@ async function renderSceneToPng(scene: SceneDocument, scale: number, watermark: 
     const { toCanvas } = await import("html-to-image");
     const canvas = await toCanvas(node, {
       pixelRatio: 1,
-      canvasWidth: scene.canvas.width * scale,
-      canvasHeight: scene.canvas.height * scale,
+      canvasWidth: Math.round(scene.canvas.width * scale),
+      canvasHeight: Math.round(scene.canvas.height * scale),
     });
     applyWatermark(canvas, watermark ? {} : { tile: false, badge: false });
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));

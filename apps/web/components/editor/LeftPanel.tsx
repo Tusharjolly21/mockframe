@@ -493,6 +493,50 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
                 patch({ shadow: { ...layer.shadow!, ...p } });
               }}
             />
+            {/* fine controls (top user request): full access to the lighting model */}
+            <div className="mt-2 rounded-xl bg-[#f6f6fa] p-2.5">
+              <SliderRow
+                label="Light angle"
+                value={layer.shadow.lightAngle}
+                min={0}
+                max={360}
+                step={1}
+                format={(v) => `${Math.round(v)}°`}
+                onChange={(lightAngle) => patch({ shadow: { ...layer.shadow!, lightAngle } })}
+              />
+              <SliderRow
+                label="Distance"
+                value={layer.shadow.distance}
+                min={0}
+                max={120}
+                step={1}
+                format={(v) => `${Math.round(v)}px`}
+                onChange={(distance) => patch({ shadow: { ...layer.shadow!, distance } })}
+              />
+              <SliderRow
+                label="Softness"
+                value={layer.shadow.softness}
+                min={0}
+                max={160}
+                step={1}
+                format={(v) => `${Math.round(v)}px`}
+                onChange={(softness) => patch({ shadow: { ...layer.shadow!, softness } })}
+              />
+              <SliderRow
+                label="Opacity"
+                value={layer.shadow.opacity}
+                min={0}
+                max={1}
+                step={0.01}
+                format={(v) => `${Math.round(v * 100)}%`}
+                onChange={(opacity) => patch({ shadow: { ...layer.shadow!, opacity } })}
+              />
+              <ColorRow
+                label="Color"
+                value={layer.shadow.color}
+                onChange={(color) => patch({ shadow: { ...layer.shadow!, color } })}
+              />
+            </div>
           </div>
         )}
       </Section>
@@ -604,6 +648,7 @@ function annotationLabel(id: string) {
   if (id === "annot-redact") return "Redaction";
   if (id === "annot-blur") return "Blur patch";
   if (id.startsWith("annot-step-")) return "Step marker";
+  if (id.startsWith("annot-kbd-")) return "Shortcut bubble";
   return "Annotation";
 }
 
@@ -620,17 +665,38 @@ function AnnotationControls({ layer }: { layer: AnnotationLayer }) {
       {layer.stickerId.startsWith("annot-step-") && (
         <>
           <span className="mb-1.5 block text-xs text-[#6b6b76]">Number</span>
-          <Seg
-            id="annotation-step"
-            options={[
-              { value: "annot-step-1", label: "1" },
-              { value: "annot-step-2", label: "2" },
-              { value: "annot-step-3", label: "3" },
-              { value: "annot-step-4", label: "4" },
-              { value: "annot-step-5", label: "5" },
-            ]}
-            value={layer.stickerId as "annot-step-1" | "annot-step-2" | "annot-step-3" | "annot-step-4" | "annot-step-5"}
-            onChange={(stickerId) => patch({ stickerId })}
+          <div className="flex items-center gap-2">
+            {(() => {
+              const n = parseInt(layer.stickerId.slice("annot-step-".length), 10) || 1;
+              return (
+                <>
+                  <button
+                    onClick={() => patch({ stickerId: `annot-step-${Math.max(1, n - 1)}` })}
+                    className="fk-press grid h-8 w-8 place-items-center rounded-lg border border-[#e4e4ec] bg-white text-sm font-bold text-[#17171c] hover:border-[#17171c]"
+                  >
+                    −
+                  </button>
+                  <span className="min-w-8 text-center text-[13px] font-bold tabular-nums text-[#17171c]">{n}</span>
+                  <button
+                    onClick={() => patch({ stickerId: `annot-step-${Math.min(99, n + 1)}` })}
+                    className="fk-press grid h-8 w-8 place-items-center rounded-lg border border-[#e4e4ec] bg-white text-sm font-bold text-[#17171c] hover:border-[#17171c]"
+                  >
+                    +
+                  </button>
+                </>
+              );
+            })()}
+          </div>
+        </>
+      )}
+      {layer.stickerId.startsWith("annot-kbd-") && (
+        <>
+          <span className="mb-1.5 block text-xs text-[#6b6b76]">Keys — separate with +</span>
+          <input
+            value={layer.stickerId.slice("annot-kbd-".length)}
+            onChange={(e) => patch({ stickerId: `annot-kbd-${e.target.value}` })}
+            placeholder="⌘+K"
+            className="w-full rounded-xl border border-[#e4e4ec] bg-white px-3 py-2 text-sm text-[#17171c] focus:border-[#17171c] focus:outline-none"
           />
         </>
       )}

@@ -4,12 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { getDevice } from "@framekit/devices";
 import type { MockupLayer, SceneDocument } from "@framekit/scene";
-import { Check, Copy, Dices, Link2, Loader2, RotateCcw, Settings2, Sparkles, Upload } from "lucide-react";
+import { Check, Copy, Dices, Download, Link2, Loader2, RotateCcw, Settings2, Share2, Sparkles, Upload } from "lucide-react";
 import { resolveAsset } from "@/lib/assets";
 import { exportScene, type ExportFormat, type ExportQuality } from "@/lib/export";
 import type { CodeDoc } from "@/lib/screens";
 import { CODE_THEME_LABELS, CODE_THEMES } from "@/lib/screens/code";
-import { applyTheme, BUILTIN_THEMES, deleteTheme, loadSavedThemes, saveTheme, syncThemesFromServer, themeMatches, type StyleTheme } from "@/lib/themes";
+import { applyTheme, BUILTIN_THEMES, createSharedTheme, deleteTheme, exportTheme, importThemeFile, loadSavedThemes, saveTheme, syncThemesFromServer, themeMatches, updateSharedTheme, type StyleTheme } from "@/lib/themes";
 import { bulkExportZip, type BulkItem } from "@/lib/bulkExport";
 import { applyVariation, VARIATIONS } from "@/lib/variations";
 import { applyLayout, DEFAULT_MODS, LAYOUT_PRESETS, modifyPreset, type LayoutMods } from "@/lib/layouts";
@@ -71,6 +71,8 @@ export function RightPanel() {
     await new Promise((r) => setTimeout(r, 30));
     try {
       await exportScene(node, scene, { format, scale, quality, watermark: !removeWatermark });
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Export failed");
     } finally {
       setBusy(null);
     }
@@ -700,6 +702,13 @@ function ThemeBar() {
   const [naming, setNaming] = useState(false);
   const [name, setName] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
+  const importRef = useRef<HTMLInputElement>(null);
+  const [shareTheme, setShareTheme] = useState<StyleTheme | null>(null);
+  const [shareEmail, setShareEmail] = useState("");
+  const [shareRole, setShareRole] = useState<"read" | "contribute">("read");
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareLink, setShareLink] = useState<string | null>(null);
+  const [shareError, setShareError] = useState<string | null>(null);
 
   useEffect(() => {
     setSaved(loadSavedThemes());
@@ -733,6 +742,69 @@ function ThemeBar() {
     setNaming(false);
     setName("");
     toast(`Theme "${t.name}" saved ✓`);
+  };
+
+  const openShare = (theme: StyleTheme) => {
+    setShareTheme(theme);
+    setShareEmail("");
+    setShareRole("read");
+    setShareLink(null);
+    setShareError(null);
+  };
+
+  const publishCurrent = async () => {
+    if (!shareTheme?.shared) return;
+    setShareBusy(true);
+    setShareError(null);
+    try {
+      await updateSharedTheme(shareTheme.shared.shareId, {
+        ...shareTheme,
+        background: scene.canvas.background,
+        backdrop: scene.canvas.backdrop,
+        effects: scene.canvas.effects,
+        cornerRadius: scene.canvas.cornerRadius,
+        border: scene.canvas.border,
+      });
+      toast("Shared theme updated ✓");
+      setSaved(await syncThemesFromServer());
+    } catch (error) {
+      setShareError(error instanceof Error ? error.message : "Could not update this theme.");
+    } finally {
+      setShareBusy(false);
+    }
+  };
+
+  const invite = async () => {
+    if (!shareTheme || !shareEmail.trim()) return;
+    setShareBusy(true);
+    setShareError(null);
+    try {
+      const result = await createSharedTheme(shareTheme, shareEmail, shareRole);
+      const url = `${window.location.origin}${result.shareUrl}`;
+      setShareLink(url);
+      setSaved(await syncThemesFromServer());
+      toast("Theme shared ✓");
+    } catch (error) {
+      setShareError(error instanceof Error ? error.message : "Could not share this theme.");
+    } finally {
+      setShareBusy(false);
+    }
+  };
+
+  const inviteMember = async () => {
+    if (!shareTheme?.shared || !shareEmail.trim()) return;
+    setShareBusy(true);
+    setShareError(null);
+    try {
+      await updateSharedTheme(shareTheme.shared.shareId, shareTheme, shareEmail, shareRole);
+      setShareEmail("");
+      setSaved(await syncThemesFromServer());
+      toast("Member added ✓");
+    } catch (error) {
+      setShareError(error instanceof Error ? error.message : "Could not add this member.");
+    } finally {
+      setShareBusy(false);
+    }
   };
 
   return (
@@ -771,6 +843,31 @@ function ThemeBar() {
             Save
           </button>
         )}
+        <input
+          ref={importRef}
+          type="file"
+          accept="application/json,.json"
+          hidden
+          onChange={async (event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            try {
+              await importThemeFile(file);
+              setSaved(loadSavedThemes());
+              toast(`Imported "${file.name}" ✓`);
+            } catch (error) {
+              toast(error instanceof Error ? error.message : "Could not import this theme");
+            }
+            event.target.value = "";
+          }}
+        />
+        <button
+          title="Import theme JSON"
+          onClick={() => importRef.current?.click()}
+          className="fk-press grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[#e4e4ec] bg-white text-[#3c3c46] hover:border-[#17171c]"
+        >
+          <Upload size={15} />
+        </button>
       </div>
 
       <AnimatePresence>
@@ -793,18 +890,34 @@ function ThemeBar() {
                     <span className="truncate">{t.name}</span>
                     {!t.builtin && <span className={`ml-auto text-[9px] font-semibold uppercase ${active ? "text-white/60" : "text-[#b0b0ba]"}`}>saved</span>}
                   </button>
-                  {!t.builtin && (
+                  <div className="ml-auto flex items-center gap-0.5">
                     <button
-                      title="Delete theme"
-                      onClick={() => {
-                        deleteTheme(t.id);
-                        setSaved(loadSavedThemes());
-                      }}
-                      className="fk-press hidden rounded-md p-1 text-[#b0b0ba] hover:text-[#e5443b] group-hover:block"
+                      title="Share theme"
+                      onClick={() => openShare(t)}
+                      className={`fk-press rounded-md p-1 ${active ? "text-white/70 hover:text-white" : "text-[#b0b0ba] hover:text-[#17171c]"}`}
                     >
-                      ×
+                      <Share2 size={13} />
                     </button>
-                  )}
+                    <button
+                      title="Export theme JSON"
+                      onClick={() => exportTheme(t)}
+                      className={`fk-press rounded-md p-1 ${active ? "text-white/70 hover:text-white" : "text-[#b0b0ba] hover:text-[#17171c]"}`}
+                    >
+                      <Download size={13} />
+                    </button>
+                    {!t.builtin && (
+                      <button
+                        title="Delete theme"
+                        onClick={() => {
+                          deleteTheme(t.id);
+                          setSaved(loadSavedThemes());
+                        }}
+                        className={`fk-press rounded-md p-1 ${active ? "text-white/70 hover:text-white" : "text-[#b0b0ba] hover:text-[#e5443b]"}`}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -812,6 +925,58 @@ function ThemeBar() {
               Save captures the current background, backdrop &amp; effects as a reusable theme.
             </p>
           </Popover>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {shareTheme && (
+          <div className="fixed inset-0 z-[80] grid place-items-center bg-black/20 px-4 backdrop-blur-[2px]" onMouseDown={() => setShareTheme(null)}>
+            <div className="fk-card w-full max-w-sm rounded-2xl bg-white p-4 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
+              <div className="mb-1 flex items-center justify-between">
+                <div>
+                  <p className="text-[14px] font-bold text-[#17171c]">Share “{shareTheme.name}”</p>
+                  <p className="mt-0.5 text-[11px] text-[#8a8a94]">Keep the same visual language across your team.</p>
+                </div>
+                <button onClick={() => setShareTheme(null)} className="fk-press rounded-lg px-2 py-1 text-lg text-[#8a8a94]">×</button>
+              </div>
+              <div className="mt-4 space-y-2.5">
+                <label className="block text-[11px] font-semibold text-[#6b6b76]">
+                  Employee email
+                  <input value={shareEmail} onChange={(event) => setShareEmail(event.target.value)} placeholder="designer@company.com" className="mt-1.5 w-full rounded-xl border border-[#e4e4ec] px-3 py-2 text-[12px] outline-none focus:border-[#17171c]" />
+                </label>
+                <label className="block text-[11px] font-semibold text-[#6b6b76]">
+                  Permission
+                  <select value={shareRole} onChange={(event) => setShareRole(event.target.value as "read" | "contribute")} className="mt-1.5 w-full rounded-xl border border-[#e4e4ec] bg-white px-3 py-2 text-[12px] outline-none">
+                    <option value="read">Read-only · can use, cannot change</option>
+                    <option value="contribute">Contributor · can publish changes</option>
+                  </select>
+                </label>
+                {shareTheme.shared && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button onClick={inviteMember} disabled={shareBusy || shareTheme.shared.role === "read" || !shareEmail.trim()} className="fk-press rounded-xl border border-[#e4e4ec] bg-white py-2.5 text-[11px] font-semibold text-[#17171c] disabled:opacity-40">
+                      Add member
+                    </button>
+                    <button onClick={publishCurrent} disabled={shareBusy || shareTheme.shared.role === "read"} className="fk-press rounded-xl bg-[#17171c] py-2.5 text-[11px] font-semibold text-white disabled:opacity-40">
+                      {shareBusy ? "Saving…" : shareTheme.shared.role === "read" ? "Read-only" : "Publish changes"}
+                    </button>
+                  </div>
+                )}
+                {!shareTheme.shared && (
+                  <button onClick={invite} disabled={shareBusy || !shareEmail.trim()} className="fk-press w-full rounded-xl bg-[#17171c] py-2.5 text-[12px] font-semibold text-white disabled:opacity-40">
+                    {shareBusy ? "Creating share…" : "Create shared theme"}
+                  </button>
+                )}
+                {shareLink && (
+                  <button onClick={() => navigator.clipboard?.writeText(shareLink)} className="fk-press flex w-full items-center gap-2 rounded-xl border border-[#e4e4ec] px-3 py-2 text-left text-[11px] text-[#5a5a66]">
+                    <Link2 size={13} />
+                    <span className="truncate">{shareLink}</span>
+                    <Copy size={13} className="ml-auto shrink-0" />
+                  </button>
+                )}
+                {shareError && <p className="text-[11px] font-medium text-[#c2413b]">{shareError}</p>}
+                <p className="text-[10.5px] leading-relaxed text-[#9a9aa4]">Read-only teammates can apply the theme. Contributors can publish updated styling for everyone with access.</p>
+              </div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
     </div>

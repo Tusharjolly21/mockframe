@@ -200,7 +200,14 @@ export function CanvasStage() {
       if (d.kind === "rotate") {
         const angle = (Math.atan2(e.clientY - d.centerY, e.clientX - d.centerX) * 180) / Math.PI;
         let next = d.rotate + (angle - d.startAngle);
-        if (e.shiftKey) next = Math.round(next / 15) * 15;
+        if (e.shiftKey) {
+          // arrows snap to horizontal/vertical with Shift (user request);
+          // everything else keeps the 15° ticks
+          const l = useSceneStore.getState().scene.layers.find((x) => x.id === d.id);
+          const isArrow = l?.type === "sticker" && "stickerId" in l && l.stickerId === "annot-arrow";
+          const step = isArrow ? 90 : 15;
+          next = Math.round(next / step) * step;
+        }
         next = Math.round(next * 10) / 10;
         d.currentRotate = next;
         setDragStyle(d.id, { "--fk-drag-rotate": `${next - d.rotate}deg` });

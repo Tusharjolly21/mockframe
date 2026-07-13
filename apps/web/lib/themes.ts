@@ -1,6 +1,7 @@
 "use client";
 
 import type { Backdrop, Background, Effect, SceneDocument } from "@framekit/scene";
+import { firebaseFetch } from "./firebaseClient";
 
 /**
  * Saved style Themes (PostSpark's "Sand Light · Save"): a named snapshot of the
@@ -19,6 +20,14 @@ export interface StyleTheme {
   border?: { width: number; color: string };
   /** built-ins can't be deleted */
   builtin?: boolean;
+  shared?: { shareId: string; role: "read" | "contribute"; ownerEmail?: string | null };
+}
+
+export interface ThemeExportFile {
+  format: "mockframe-theme";
+  version: 1;
+  exportedAt: string;
+  theme: StyleTheme;
 }
 
 /** PostSpark-inspired starter themes (they ship Sand Light/Dark, Midnight, Neon). */
@@ -101,20 +110,58 @@ export async function syncThemesFromServer(): Promise<StyleTheme[]> {
   try {
     const r = await fetch("/api/store/themes");
     const server = (await r.json()) as StyleTheme[] | null;
-    if (!Array.isArray(server)) return loadSavedThemes();
     const local = loadSavedThemes();
     const byId = new Map(local.map((t) => [t.id, t]));
-    for (const t of server) if (!byId.has(t.id)) byId.set(t.id, t);
+    for (const t of Array.isArray(server) ? server : []) if (!byId.has(t.id)) byId.set(t.id, t);
     const merged = [...byId.values()];
     try {
       window.localStorage.setItem(LS_KEY, JSON.stringify(merged));
     } catch {
       /* best-effort */
     }
-    return merged;
+    try {
+      const sharedResponse = await firebaseFetch("/api/themes/share");
+      if (sharedResponse.ok) {
+        const shared = (await sharedResponse.json()) as { id: string; theme: StyleTheme; role: "read" | "contribute"; ownerEmail?: string | null }[];
+        for (const item of shared) {
+          const theme = { ...item.theme, id: item.id, shared: { shareId: item.id, role: item.role, ownerEmail: item.ownerEmail } };
+          byId.set(item.id, theme);
+        }
+      }
+    } catch {
+      /* signed-out users still get local themes */
+    }
+    const withShared = [...byId.values()];
+    try {
+      window.localStorage.setItem(LS_KEY, JSON.stringify(withShared));
+    } catch {
+      /* best-effort */
+    }
+    return withShared;
   } catch {
     return loadSavedThemes();
   }
+}
+
+export async function createSharedTheme(theme: StyleTheme, email: string, role: "read" | "contribute") {
+  const response = await firebaseFetch("/api/themes/share", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ theme, name: theme.name, email, role }),
+  });
+  const body = (await response.json()) as { id?: string; shareUrl?: string; error?: string };
+  if (!response.ok) throw new Error(body.error || "Could not share this theme.");
+  return body as { id: string; shareUrl: string };
+}
+
+export async function updateSharedTheme(shareId: string, theme: StyleTheme, email?: string, role?: "read" | "contribute") {
+  const response = await firebaseFetch(`/api/themes/share/${encodeURIComponent(shareId)}`, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ theme, email, role }),
+  });
+  const body = (await response.json()) as { error?: string };
+  if (!response.ok) throw new Error(body.error || "Could not update the shared theme.");
 }
 
 /** Snapshot the current canvas styling as a named theme and persist it. */
@@ -135,6 +182,48 @@ export function saveTheme(scene: SceneDocument, name: string): StyleTheme {
 
 export function deleteTheme(id: string) {
   persist(loadSavedThemes().filter((t) => t.id !== id));
+}
+
+/** Download one theme as a portable, human-readable JSON file. */
+export function exportTheme(theme: StyleTheme) {
+  if (typeof window === "undefined") return;
+  const payload: ThemeExportFile = {
+    format: "mockframe-theme",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    theme: { ...theme, builtin: false },
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${payload.theme.name.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "mockframe-theme"}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function isTheme(value: unknown): value is StyleTheme {
+  if (!value || typeof value !== "object") return false;
+  const theme = value as Partial<StyleTheme>;
+  return typeof theme.name === "string" && !!theme.background && typeof theme.background === "object";
+}
+
+/** Import a theme export, normalize its identity, and persist it locally/server-side. */
+export async function importThemeFile(file: File): Promise<StyleTheme> {
+  const raw = JSON.parse(await file.text()) as Partial<ThemeExportFile> | StyleTheme;
+  const isEnvelope = !!raw && typeof raw === "object" && "theme" in raw;
+  const candidate = isEnvelope ? (raw as Partial<ThemeExportFile>).theme : raw;
+  if ((isEnvelope && (raw as Partial<ThemeExportFile>).format !== "mockframe-theme") || !isTheme(candidate)) {
+    throw new Error("This is not a valid MockFrame theme file.");
+  }
+  const theme: StyleTheme = {
+    ...candidate,
+    id: `t_${Date.now().toString(36)}_${Math.floor(Math.random() * 1e6).toString(36)}`,
+    name: candidate.name.trim() || "Imported theme",
+    builtin: false,
+  };
+  persist([...loadSavedThemes(), theme]);
+  return theme;
 }
 
 /** Apply a theme's styling — layers, media and canvas size stay untouched. */
