@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Download, Layers, Smartphone, Sparkles } from "lucide-react";
 import { getDevice, listDevices, previewDataUri } from "@framekit/devices";
-import { DeviceShot } from "@/components/DeviceShot";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { SITE_NAME, SITE_URL, cleanDeviceName } from "@/lib/site";
@@ -99,45 +98,37 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 3D device stage */}
-        <div className="relative mx-auto mt-16 max-w-6xl px-6" style={{ perspective: "2200px" }}>
-          <div
-            className="relative mx-auto h-[360px] sm:h-[520px]"
-            style={{ transformStyle: "preserve-3d", transform: "rotateX(6deg)" }}
-          >
-            {/* MacBook — center, showing a website */}
-            <DeviceShot
-              deviceId="macbook-pro-16"
-              src="/hero/web-laptop.png"
-              imgW={3120}
-              imgH={2016}
-              width={660}
-              className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
+        {/* photoreal device stage — pre-rendered scene mockups (real device
+            photos with real screenshots warped into the screen) */}
+        <div className="relative mx-auto mt-12 max-w-5xl px-6">
+          <div className="relative mx-auto h-[300px] sm:h-[540px]">
+            {/* iPad Pro — angled centerpiece, showing the /mockups page */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/hero/shot-ipad.webp"
+              alt="iPad Pro mockup showing the MockFrame device library"
+              className="absolute left-1/2 top-2 z-10 w-[82%] max-w-[720px] -translate-x-1/2 drop-shadow-[0_50px_90px_rgba(0,0,0,0.55)]"
             />
-            {/* iPhone — front-right, showing an app */}
-            <DeviceShot
-              deviceId="iphone-16-pro"
-              src="/hero/app-phone.png"
-              imgW={940}
-              imgH={2044}
-              width={196}
-              className="absolute bottom-0 right-[8%] z-20 hidden sm:block"
+            {/* iPhone — leaning, front-right, showing the /templates page */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/hero/shot-iphone.webp"
+              alt="iPhone mockup showing MockFrame templates"
+              className="absolute bottom-0 right-[3%] z-20 hidden w-[23%] max-w-[220px] drop-shadow-[0_36px_56px_rgba(0,0,0,0.6)] sm:block"
             />
-            {/* Apple Watch — front-left */}
-            <DeviceShot
-              deviceId="apple-watch-ultra-2"
-              src="/screens/apple-watch-ultra-2.jpg"
-              imgW={735}
-              imgH={900}
-              width={104}
-              className="absolute bottom-6 left-[10%] z-20 hidden sm:block"
+            {/* Apple Watch Ultra — front-left */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/hero/shot-watch.webp"
+              alt="Apple Watch Ultra mockup"
+              className="absolute bottom-4 left-[5%] z-20 hidden w-[14%] max-w-[128px] drop-shadow-[0_22px_40px_rgba(0,0,0,0.6)] sm:block"
             />
           </div>
           {/* fade the stage into the page */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-40"
-            style={{ background: "linear-gradient(to top, #09090b 12%, transparent)" }}
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-28"
+            style={{ background: "linear-gradient(to top, #09090b 8%, transparent)" }}
           />
         </div>
 
