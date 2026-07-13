@@ -30,8 +30,8 @@ export async function exportScene(
     // canvasWidth/Height alone define the output size — combining them with
     // pixelRatio would multiply the two and double-scale the export
     pixelRatio: 1,
-    canvasWidth: scene.canvas.width * opts.scale,
-    canvasHeight: scene.canvas.height * opts.scale,
+    canvasWidth: Math.round(scene.canvas.width * opts.scale),
+    canvasHeight: Math.round(scene.canvas.height * opts.scale),
     // JPEG has no alpha: fill behind transparent backgrounds AND rounded corners
     backgroundColor: opts.format === "jpeg" ? "#ffffff" : undefined,
     style: { transform: "none" }, // neutralize any inherited editor transform on the clone
@@ -51,7 +51,7 @@ export async function exportScene(
 
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `mockframe-${scene.canvas.width * opts.scale}x${scene.canvas.height * opts.scale}.${opts.format === "jpeg" ? "jpg" : opts.format}`;
+  a.download = `mockframe-${Math.round(scene.canvas.width * opts.scale)}x${Math.round(scene.canvas.height * opts.scale)}.${opts.format === "jpeg" ? "jpg" : opts.format}`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }

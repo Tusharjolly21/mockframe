@@ -9,6 +9,7 @@ import {
   type Layer,
   type SceneDocument,
 } from "@framekit/scene";
+import { presentationForDevice } from "./deviceScene";
 
 /* ------------------------------- scene store ------------------------------- */
 /* One hot object mutated during drags. Undo/redo via zundo; drags pause the
@@ -22,8 +23,9 @@ interface SceneState {
 }
 
 function initialScene(): SceneDocument {
-  const scene = createScene({ width: 1920, height: 1080 });
   const iphone = getDevice("iphone-16-pro") ?? listDevices()[0];
+  const presentation = presentationForDevice(iphone);
+  const scene = createScene({ width: presentation.width, height: presentation.height, background: presentation.background, backdrop: presentation.backdrop });
   const layer = createMockupLayer({
     deviceId: iphone.id,
     frameHeight: iphone.frame.height,

@@ -5,12 +5,14 @@ import { motion } from "motion/react";
 import { getDevice, previewDataUri } from "@framekit/devices";
 import type { MockupLayer, Shadow, StickerLayer, TextLayer } from "@framekit/scene";
 import { DEFAULT_SHADOW } from "@framekit/scene";
-import { Crop, Plus, TriangleAlert, X } from "lucide-react";
+import { Crop, Globe, Plus, TriangleAlert, X } from "lucide-react";
 import { ingestFile, resolveAsset } from "@/lib/assets";
 import { renderScreenshotIntoMockup } from "@/lib/mockuuups";
+import { presentationForDevice } from "@/lib/deviceScene";
 import { isScreenAsset } from "@/lib/screens";
 import { useSceneStore, useViewStore } from "@/lib/store";
 import { ColorRow, Section, Seg, SliderRow } from "./ui";
+import { CaptureUrlDialog } from "./CaptureUrlDialog";
 import { DevicePicker } from "./DevicePicker";
 import { MediaEditor } from "./MediaEditor";
 import { ScreenStudio } from "./ScreenStudio";
@@ -169,6 +171,7 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [applyMode, setApplyMode] = useState<"selected" | "all">("selected");
   const [editing, setEditing] = useState(false);
+  const [capturing, setCapturing] = useState(false);
   const deviceLayerCount = scene.layers.filter((l) => l.type === "mockup").length;
   const patch = (p: Partial<MockupLayer>) => updateLayer(layer.id, (l) => ({ ...(l as MockupLayer), ...p }));
 
@@ -200,22 +203,29 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
           onApplyModeChange={setApplyMode}
           onPick={(deviceId, variantId) => {
             const next = getDevice(deviceId);
-            const scale = next
-              ? Math.round(((scene.canvas.height * 0.78) / next.frame.height) * 1000) / 1000
-              : layer.transform.scale;
+            if (!next) return;
+            const presentation = presentationForDevice(next);
+            const canvasWidth = next.category === "scene" && next.plate ? Math.round(next.plate.width * 1.22) : presentation.width;
+            const canvasHeight = next.category === "scene" && next.plate ? Math.round(next.plate.height * 1.22) : presentation.height;
+            const scale = Math.round(((canvasHeight * 0.78) / next.frame.height) * 1000) / 1000;
             const applyToLayer = (l: MockupLayer): MockupLayer => ({
               ...l,
               deviceId,
               frameVariant: variantId,
-              transform: { ...l.transform, scale },
+              transform: { ...l.transform, x: 0, y: 0, scale },
             });
             if (applyMode === "all" && deviceLayerCount > 1) {
               setScene((s) => ({
                 ...s,
+                canvas: { ...s.canvas, width: canvasWidth, height: canvasHeight, background: presentation.background, backdrop: presentation.backdrop },
                 layers: s.layers.map((l) => (l.type === "mockup" ? applyToLayer(l as MockupLayer) : l)),
               }));
             } else {
-              updateLayer(layer.id, (l) => applyToLayer(l as MockupLayer));
+              setScene((s) => ({
+                ...s,
+                canvas: { ...s.canvas, width: canvasWidth, height: canvasHeight, background: presentation.background, backdrop: presentation.backdrop },
+                layers: s.layers.map((l) => (l.id === layer.id ? applyToLayer(l as MockupLayer) : l)),
+              }));
             }
             select(layer.id);
             triggerEntrance(layer.id);
@@ -261,6 +271,23 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
         <p className="mt-2 text-center text-[11px] text-[#9a9aa4]">
           {asset ? asset.name.slice(0, 34) : "Drop media or click to choose"}
         </p>
+        <button
+          onClick={() => setCapturing(true)}
+          className="fk-press mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#e4e4ec] bg-white py-1.5 text-[11.5px] font-semibold text-[#17171c] hover:border-[#17171c]"
+        >
+          <Globe size={12} /> Capture a website by URL
+        </button>
+        {capturing && (
+          <CaptureUrlDialog
+            onClose={() => setCapturing(false)}
+            onCaptured={async (file) => {
+              const a = await ingestFile(file);
+              bumpAssets();
+              patch({ media: { assetId: a.id, kind: "image", fit: "cover", offsetX: 0, offsetY: 0, scale: 1 } });
+              triggerEntrance(layer.id);
+            }}
+          />
+        )}
         {layer.media && (
           <div className="mt-2">
             {/* Fill/Fit/Stretch only make sense with a device SCREEN to fit into.

@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
   // jwks-rsa) — every firebase-admin API route 500s at cold start. Listing it
   // here opts it back into webpack bundling, which compiles the ESM away.
   transpilePackages: ["@framekit/scene", "@framekit/devices", "@framekit/renderer", "firebase-admin"],
+  // headless-chromium stack must stay unbundled — it ships platform binaries
+  serverExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
   async rewrites() {
     return [
       { source: "/__/auth/:path*", destination: `https://${FIREBASE_APP_DOMAIN}/__/auth/:path*` },

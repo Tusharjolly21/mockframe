@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { getDevice } from "@framekit/devices";
 import type { MockupLayer, SceneDocument } from "@framekit/scene";
-import { Check, Copy, Dices, RotateCcw, Settings2, Sparkles, Upload } from "lucide-react";
+import { Check, Copy, Dices, Link2, Loader2, RotateCcw, Settings2, Sparkles, Upload } from "lucide-react";
 import { resolveAsset } from "@/lib/assets";
 import { exportScene, type ExportFormat, type ExportQuality } from "@/lib/export";
 import type { CodeDoc } from "@/lib/screens";
@@ -33,7 +33,7 @@ export function RightPanel() {
   const [scale, setScale] = useState(1);
   const [quality, setQuality] = useState<ExportQuality>("balanced");
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [busy, setBusy] = useState<"export" | "copy" | null>(null);
+  const [busy, setBusy] = useState<"export" | "copy" | "share" | null>(null);
   const [copied, setCopied] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -76,25 +76,47 @@ export function RightPanel() {
     }
   };
 
+  // rendered + watermarked PNG of the current scene (shared by copy + share-link)
+  const renderPng = async (node: HTMLElement): Promise<Blob> => {
+    const { toCanvas } = await import("html-to-image");
+    const { applyWatermark } = await import("@/lib/watermark");
+    const canvas = await toCanvas(node, {
+      pixelRatio: 1,
+      canvasWidth: scene.canvas.width,
+      canvasHeight: scene.canvas.height,
+    });
+    applyWatermark(canvas, removeWatermark ? { tile: false, badge: false } : {});
+    return new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("render failed"))), "image/png")
+    );
+  };
+
+  const runShare = async () => {
+    const node = exportNode();
+    if (!node) return;
+    setBusy("share");
+    try {
+      const png = await renderPng(node);
+      const { firebaseFetch } = await import("@/lib/firebaseClient");
+      const res = await firebaseFetch("/api/share", { method: "POST", body: png });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error ?? "Could not create link");
+      await navigator.clipboard.writeText(j.url);
+      toast(`Share link copied — valid for ${j.expiresInDays} days 🔗`);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Could not create link");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const runCopy = async () => {
     const node = exportNode();
     if (!node) return;
     setBusy("copy");
     try {
-      const { toCanvas } = await import("html-to-image");
-      const { applyWatermark } = await import("@/lib/watermark");
-      const blob = toCanvas(node, {
-        pixelRatio: 1,
-        canvasWidth: scene.canvas.width,
-        canvasHeight: scene.canvas.height,
-      }).then(
-        (canvas) =>
-          new Promise<Blob>((resolve, reject) => {
-            applyWatermark(canvas, removeWatermark ? { tile: false, badge: false } : {});
-            canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("copy failed"))), "image/png");
-          })
-      );
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob as Promise<Blob> })]);
+      const blob = renderPng(node);
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } finally {
@@ -114,7 +136,7 @@ export function RightPanel() {
           <Upload size={14} />
           {busy === "export" ? "Exporting…" : "Export"}
           <span className="text-[11px] font-medium text-white/60">
-            {scale}x · {format.toUpperCase()}
+            {Number.isInteger(scale) ? `${scale}x` : `${Math.round(Math.max(scene.canvas.width, scene.canvas.height) * scale)}px`} · {format.toUpperCase()}
           </span>
         </button>
         <button
@@ -124,6 +146,14 @@ export function RightPanel() {
           className="fk-press grid h-10 w-10 place-items-center rounded-xl border border-[#e4e4ec] bg-white text-[#5a5a66] hover:border-[#c9c9d4]"
         >
           {copied ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
+        </button>
+        <button
+          title="Copy a shareable link (valid 7 days)"
+          onClick={runShare}
+          disabled={!!busy}
+          className="fk-press grid h-10 w-10 place-items-center rounded-xl border border-[#e4e4ec] bg-white text-[#5a5a66] hover:border-[#c9c9d4]"
+        >
+          {busy === "share" ? <Loader2 size={15} className="animate-spin" /> : <Link2 size={15} />}
         </button>
         <div className="relative z-60" ref={settingsRef}>
           <button
@@ -173,8 +203,28 @@ export function RightPanel() {
                   value={String(scale) as "1" | "2" | "3"}
                   onChange={(v) => setScale(Number(v))}
                 />
+                {/* named targets (PostSpark-style HD/4K/6K): scale derived from
+                    the canvas long edge, so every canvas hits the exact target */}
+                <div className="mb-2 grid grid-cols-3 gap-1">
+                  {([["HD", 1920], ["4K", 3840], ["6K", 5760]] as const).map(([label, target]) => {
+                    const longEdge = Math.max(scene.canvas.width, scene.canvas.height);
+                    const s = Math.round((target / longEdge) * 1000) / 1000;
+                    const active = Math.abs(scale - s) < 0.002;
+                    return (
+                      <button
+                        key={label}
+                        onClick={() => setScale(s)}
+                        className={`fk-press rounded-lg border py-1.5 text-[11px] font-semibold ${
+                          active ? "border-[#17171c] bg-[#17171c] text-white" : "border-[#e4e4ec] bg-white text-[#5a5a66] hover:border-[#c9c9d4]"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
                 <p className="text-[10.5px] tabular-nums text-[#9a9aa4]">
-                  {scene.canvas.width * scale} × {scene.canvas.height * scale} px
+                  {Math.round(scene.canvas.width * scale)} × {Math.round(scene.canvas.height * scale)} px
                 </p>
               </Popover>
             )}
