@@ -122,7 +122,11 @@ function SceneRendererImpl({
       {/* Pattern — repeating decoration behind the subject */}
       {backdrop?.pattern && <div style={patternStyle(backdrop.pattern)} />}
 
-      {scene.layers.map((layer) => (
+      {[...scene.layers].sort((a, b) => {
+        const aBackground = a.type === "sticker" && "assetId" in a && a.placement === "background";
+        const bBackground = b.type === "sticker" && "assetId" in b && b.placement === "background";
+        return Number(aBackground) - Number(bBackground);
+      }).map((layer) => (
         <LayerView
           key={`${layer.id}-${animateLayerId === layer.id ? animationNonce : 0}`}
           layer={layer}

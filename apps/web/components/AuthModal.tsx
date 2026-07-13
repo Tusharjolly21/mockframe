@@ -2,8 +2,26 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { KeyRound, Loader2, Mail, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { ICON_VIEWBOX, iconBody } from "@/lib/iconStickers";
+import { icons as iconifyLogos } from "@iconify-json/logos";
+
+function IconifyIcon({ name, size = 20, color = "#17171c", className = "" }: { name: string; size?: number; color?: string; className?: string }) {
+  return (
+    <svg viewBox={ICON_VIEWBOX} width={size} height={size} className={className} aria-hidden>
+      <g dangerouslySetInnerHTML={{ __html: iconBody(name, [color]) ?? "" }} />
+    </svg>
+  );
+}
+
+function GoogleIcon({ size = 18 }: { size?: number }) {
+  const icon = iconifyLogos.icons["google-icon"];
+  return (
+    <svg viewBox="0 0 256 262" width={size} height={size} aria-hidden>
+      <g dangerouslySetInnerHTML={{ __html: icon?.body ?? "" }} />
+    </svg>
+  );
+}
 
 /** Sign-in modal: Google OAuth + passwordless email magic-link + email/password. */
 export function AuthModal({ onClose }: { onClose: () => void }) {
@@ -57,104 +75,81 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
 
   const ui = (
     <div
-      className="fixed inset-0 z-[80] grid place-items-center bg-black/45 p-4"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-[#0c0d12]/70 p-4 backdrop-blur-md"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-[min(400px,94vw)] overflow-hidden rounded-2xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-[#ececf2] px-5 py-3.5">
-          <h2 className="text-[15px] font-bold text-[#17171c]">Sign in to MockFrame</h2>
-          <button onClick={onClose} className="fk-press grid h-7 w-7 place-items-center rounded-lg text-[#9a9aa4] hover:bg-black/6 hover:text-[#17171c]">
-            <X size={15} />
-          </button>
-        </div>
+      <div className="relative max-h-[min(680px,calc(100vh-32px))] w-[min(760px,96vw)] overflow-y-auto rounded-[24px] border border-white/70 bg-[#f8f8fb] shadow-[0_32px_100px_rgba(0,0,0,0.38)]">
+        <button onClick={onClose} title="Close" className="fk-press absolute right-5 top-5 z-10 grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/10 hover:bg-white/20">
+          <IconifyIcon name="close-circle" size={20} color="#ffffff" />
+        </button>
 
-        <div className="px-5 py-5">
-          {sent ? (
-            <div className="py-4 text-center">
-              <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full bg-emerald-50 text-emerald-600">
-                <Mail size={20} />
+        <div className="grid md:grid-cols-[0.82fr_1.18fr]">
+          <section className="relative overflow-hidden bg-[#11131b] px-7 pb-8 pt-9 text-white md:px-9 md:pt-10">
+            <div className="pointer-events-none absolute -bottom-24 -left-20 h-64 w-64 rounded-full bg-[#4338ca]/25 blur-3xl" />
+            <div className="relative">
+              <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white">
+                <IconifyIcon name="monitor" size={23} color="#7c3aed" />
               </div>
-              <p className="text-[14px] font-semibold text-[#17171c]">Check your inbox</p>
-              <p className="mt-1 text-[12.5px] leading-snug text-[#8a8a94]">
-                We sent a magic sign-in link to <span className="font-semibold text-[#4a4a55]">{email}</span>. Open it on
-                this device to finish — your current work carries over.
-              </p>
+              <p className="mt-7 text-[11px] font-bold uppercase tracking-[0.18em] text-[#a5b4fc]">MockFrame</p>
+              <h1 className="mt-2 max-w-[260px] text-[30px] font-bold leading-[1.06] tracking-[-0.05em]">Your work, wherever you create.</h1>
+              <p className="mt-4 max-w-[270px] text-[13px] leading-6 text-white/55">Save your scenes, return to your drafts, and keep every mockup ready across devices.</p>
+              <div className="mt-9 space-y-3.5">
+                {[
+                  ["shield-check", "Private by default"],
+                  ["refresh-circle", "Pick up where you left off"],
+                  ["magic-stick-3", "Build faster with reusable scenes"],
+                ].map(([icon, label]) => (
+                  <div key={label} className="flex items-center gap-2.5 text-[12px] text-white/70">
+                    <IconifyIcon name={icon} size={17} color="#c4b5fd" />
+                    {label}
+                  </div>
+                ))}
+              </div>
             </div>
-          ) : (
-            <>
-              <p className="mb-4 text-[12.5px] leading-snug text-[#8a8a94]">
-                Save your work to a real account and pick it up on any device. Everything you&apos;ve made as a guest
-                comes with you.
-              </p>
+          </section>
 
-              <button
-                onClick={google}
-                disabled={busy !== null}
-                className="fk-press flex w-full items-center justify-center gap-2.5 rounded-xl border border-[#e4e4ec] bg-white py-2.5 text-[13.5px] font-semibold text-[#17171c] hover:border-[#c9c9d6] disabled:opacity-50"
-              >
-                {busy === "google" ? <Loader2 size={16} className="animate-spin" /> : <GoogleG />}
-                Continue with Google
-              </button>
+          <section className="px-6 py-8 md:px-10 md:py-10">
+            <div className="pr-8">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#7c3aed]">Welcome back</p>
+              <h2 className="mt-1 text-[25px] font-bold tracking-[-0.04em] text-[#17171c]">Sign in to MockFrame</h2>
+              <p className="mt-2 text-[12px] leading-5 text-[#858592]">Your guest work will stay with you when you create an account.</p>
+            </div>
 
-              <div className="my-4 flex items-center gap-3 text-[11px] font-medium uppercase tracking-wide text-[#b0b0ba]">
-                <span className="h-px flex-1 bg-[#ececf2]" /> or <span className="h-px flex-1 bg-[#ececf2]" />
+            {sent ? (
+              <div className="mt-9 rounded-2xl border border-[#d9f3e5] bg-[#f2fcf6] p-5 text-center">
+                <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#d9f3e5]"><IconifyIcon name="letter" size={23} color="#059669" /></div>
+                <p className="mt-4 text-[14px] font-bold text-[#17171c]">Check your inbox</p>
+                <p className="mt-1 text-[12px] leading-5 text-[#6f7d75]">We sent a sign-in link to <strong className="text-[#37443c]">{email}</strong>. Open it on this device to finish.</p>
               </div>
-
-              <form onSubmit={submitEmail} className="flex flex-col gap-2">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="rounded-xl border border-[#e4e4ec] bg-[#f8f8fb] px-3 py-2.5 text-[13px] text-[#17171c] outline-none placeholder:text-[#a0a0aa] focus:border-[#17171c]"
-                />
-                {usePassword && (
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password (6+ characters)"
-                    className="rounded-xl border border-[#e4e4ec] bg-[#f8f8fb] px-3 py-2.5 text-[13px] text-[#17171c] outline-none placeholder:text-[#a0a0aa] focus:border-[#17171c]"
-                  />
-                )}
-                <button
-                  type="submit"
-                  disabled={busy !== null}
-                  className="fk-press flex items-center justify-center gap-2 rounded-xl bg-[#17171c] py-2.5 text-[13px] font-semibold text-white hover:bg-black disabled:opacity-50"
-                >
-                  {busy === "email" ? <Loader2 size={15} className="animate-spin" /> : usePassword ? <KeyRound size={15} /> : <Mail size={15} />}
-                  {usePassword ? "Sign in / create account" : "Email me a magic link"}
+            ) : (
+              <>
+                <button onClick={google} disabled={busy !== null} className="fk-press mt-8 flex w-full items-center justify-center gap-2.5 rounded-xl border border-[#dedee8] bg-white py-3 text-[13px] font-bold text-[#17171c] hover:border-[#bdbdca] disabled:opacity-50">
+                  {busy === "google" ? <IconifyIcon name="refresh-circle" size={17} color="#7c3aed" className="animate-spin" /> : <GoogleIcon size={18} />}
+                  Continue with Google
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUsePassword((v) => !v);
-                    setErr(null);
-                  }}
-                  className="text-center text-[11.5px] font-medium text-[#8a8a94] hover:text-[#17171c]"
-                >
-                  {usePassword ? "Use a magic link instead" : "Use a password instead"}
-                </button>
-              </form>
-            </>
-          )}
 
-          {err && <p className="mt-3 text-center text-[12px] text-[#c0392b]">{err}</p>}
+                <div className="my-5 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[#b0b0ba]"><span className="h-px flex-1 bg-[#e7e7ee]" /> or <span className="h-px flex-1 bg-[#e7e7ee]" /></div>
+
+                <form onSubmit={submitEmail} className="flex flex-col gap-2.5">
+                  <label className="text-[11px] font-semibold text-[#555561]">Email address</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="rounded-xl border border-[#dedee8] bg-white px-3.5 py-3 text-[13px] text-[#17171c] outline-none placeholder:text-[#a0a0aa] focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/10" />
+                  {usePassword && <><label className="mt-1 text-[11px] font-semibold text-[#555561]">Password</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="6+ characters" className="rounded-xl border border-[#dedee8] bg-white px-3.5 py-3 text-[13px] text-[#17171c] outline-none placeholder:text-[#a0a0aa] focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/10" /></>}
+                  <button type="submit" disabled={busy !== null} className="fk-press mt-1 flex items-center justify-center gap-2 rounded-xl bg-[#17171c] py-3 text-[13px] font-bold text-white hover:bg-[#2d2d36] disabled:opacity-50">
+                    {busy === "email" ? <IconifyIcon name="refresh-circle" size={16} color="#ffffff" className="animate-spin" /> : <IconifyIcon name={usePassword ? "key" : "letter"} size={16} color="#ffffff" />}
+                    {usePassword ? "Sign in / create account" : "Email me a magic link"}
+                  </button>
+                  <button type="button" onClick={() => { setUsePassword((v) => !v); setErr(null); }} className="pt-1 text-center text-[11.5px] font-semibold text-[#7c3aed] hover:text-[#5b21b6]">
+                    {usePassword ? "Use a magic link instead" : "Use a password instead"}
+                  </button>
+                </form>
+              </>
+            )}
+            {err && <p className="mt-4 rounded-xl bg-[#fff1f0] px-3 py-2 text-center text-[12px] leading-5 text-[#b42318]">{err}</p>}
+          </section>
         </div>
       </div>
     </div>
   );
 
   return typeof document !== "undefined" ? createPortal(ui, document.body) : null;
-}
-
-function GoogleG() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden>
-      <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.4 5.4 2.6 13.2l7.9 6.1C12.4 13.2 17.7 9.5 24 9.5z" />
-      <path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-2.8-.4-4.1H24v7.8h12.4c-.3 2.1-1.6 5.2-4.6 7.3l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16.5z" />
-      <path fill="#FBBC05" d="M10.5 28.3a14.5 14.5 0 0 1 0-9.3l-7.9-6.1a24 24 0 0 0 0 21.5l7.9-6.1z" />
-      <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.1-5.5c-2 1.4-4.7 2.3-8.8 2.3-6.3 0-11.6-3.7-13.5-9.1l-7.9 6.1C6.4 42.6 14.6 48 24 48z" />
-    </svg>
-  );
 }

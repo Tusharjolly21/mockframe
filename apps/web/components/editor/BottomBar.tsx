@@ -6,7 +6,7 @@ import { ArrowUpRight, Baseline, Box, EyeOff, Highlighter, Keyboard, ListOrdered
 import { getDevice } from "@framekit/devices";
 import type { MockupLayer } from "@framekit/scene";
 import { ingestGenerated, resolveAsset } from "@/lib/assets";
-import { ICON_VIEWBOX, iconBody, iconDataUrl, searchIcons } from "@/lib/iconStickers";
+import { ICON_COLLECTIONS, ICON_PALETTES, ICON_VIEWBOX, iconBody, iconDataUrl, searchIcons, type IconPalette } from "@/lib/iconStickers";
 import { addAnnotation, addEmoji, addIconSticker, type AnnotationStickerId } from "@/lib/sceneOps";
 import { applyTheme, BUILTIN_THEMES, loadSavedThemes, saveTheme, syncThemesFromServer, themeMatches, type StyleTheme } from "@/lib/themes";
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
@@ -338,6 +338,7 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
   const [groupId, setGroupId] = useState("icons");
   const [query, setQuery] = useState("");
   const [tint, setTint] = useState("#17171c");
+  const [paletteKey, setPaletteKey] = useState<keyof typeof ICON_PALETTES>("aurora");
   const setScene = useSceneStore((s) => s.setScene);
   const select = useViewStore((s) => s.select);
   const group = STICKER_GROUPS.find((item) => item.id === groupId) ?? STICKER_GROUPS[0];
@@ -347,7 +348,12 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
   const PAGE = 120;
   const [visibleCount, setVisibleCount] = useState(PAGE);
   useEffect(() => setVisibleCount(PAGE), [groupId, query]);
-  const iconBases = groupId === "icons" || query.trim() ? searchIcons(query) : [];
+  const palette: IconPalette = ICON_PALETTES[paletteKey];
+  const collectionBases = groupId.startsWith("icon-")
+    ? [...(ICON_COLLECTIONS[groupId.slice(5) as keyof typeof ICON_COLLECTIONS] ?? [])]
+    : null;
+  const iconBases = (groupId === "icons" || collectionBases || query.trim() ? searchIcons(query) : [])
+    .filter((base) => !collectionBases || collectionBases.includes(base as never));
   const iconItems: LibraryItem[] = iconBases.slice(0, visibleCount).map((base) => ({
     kind: "icon" as const,
     icon: base,
@@ -367,7 +373,7 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
     const scene = useSceneStore.getState().scene;
     let result: { scene: typeof scene; layerId: string };
     if (item.kind === "icon" && item.icon) {
-      const url = iconDataUrl(item.icon, tint);
+      const url = iconDataUrl(item.icon, tint, palette);
       if (!url) return;
       const asset = ingestGenerated(`icon-${item.icon}`, url, 512, 512);
       useViewStore.getState().bumpAssets();
@@ -396,7 +402,7 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search stickers" className="min-w-0 flex-1 bg-transparent text-xs outline-none" />
         </label>
         <div className="panel-scroll mt-2 flex max-h-16 flex-wrap gap-1 overflow-y-auto pb-0.5">
-          {[{ id: "icons", label: "Icons" }, ...STICKER_GROUPS].map((item) => (
+          {[{ id: "icons", label: "Icons" }, { id: "icon-space", label: "Space" }, { id: "icon-nature", label: "Nature" }, { id: "icon-animals", label: "Animals" }, ...STICKER_GROUPS].map((item) => (
             <button key={item.id} onClick={() => { setGroupId(item.id); setQuery(""); }} className={`fk-press shrink-0 rounded-full px-2.5 py-1.5 text-[10.5px] font-semibold ${groupId === item.id && !query ? "bg-[#17171c] text-white" : "bg-[#f1f1f5] text-[#5a5a66] hover:bg-[#e8e8ee]"}`}>
               {item.label}
             </button>
@@ -404,6 +410,15 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
         </div>
         {showTints && (
           <div className="mt-2 flex items-center gap-1.5">
+            {(Object.keys(ICON_PALETTES) as Array<keyof typeof ICON_PALETTES>).map((key) => (
+              <button
+                key={key}
+                onClick={() => setPaletteKey(key)}
+                title={`${key} palette`}
+                className={`h-5 w-8 rounded-full border ${paletteKey === key ? "ring-2 ring-[#17171c] ring-offset-1" : "border-black/15"}`}
+                style={{ background: `linear-gradient(135deg, ${ICON_PALETTES[key].join(", ")})` }}
+              />
+            ))}
             {ICON_TINTS.map((c) => (
               <button
                 key={c}
@@ -447,7 +462,7 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
                   height={30}
                   style={{ color: tint }}
                   aria-hidden
-                  dangerouslySetInnerHTML={{ __html: iconBody(item.icon) ?? "" }}
+                  dangerouslySetInnerHTML={{ __html: iconBody(item.icon, palette) ?? "" }}
                 />
               </button>
             ) : (

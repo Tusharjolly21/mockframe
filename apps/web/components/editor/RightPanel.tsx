@@ -134,8 +134,10 @@ export function RightPanel() {
 
   return (
     <div className="fk-card panel-scroll pointer-events-auto flex max-h-full w-[min(300px,46vw)] flex-col overflow-y-auto pb-4">
-      {/* export header */}
-      <div className="flex items-center gap-2 px-3 pt-3">
+      {/* export header and inline settings: opening settings reflows the panel
+          instead of covering the watermark and layout controls below it. */}
+      <div className="relative px-3 pt-3" ref={settingsRef}>
+        <div className="flex items-center gap-2">
         <button
           onClick={runExport}
           disabled={!!busy}
@@ -144,7 +146,7 @@ export function RightPanel() {
           <Upload size={14} />
           {busy === "export" ? "Exporting…" : "Export"}
           <span className="text-[11px] font-medium text-white/60">
-            {Number.isInteger(scale) ? `${scale}x` : `${Math.round(Math.max(scene.canvas.width, scene.canvas.height) * scale)}px`} · {format.toUpperCase()}
+            {Number.isInteger(scale) ? `${scale}x` : `${Math.round(Math.max(scene.canvas.width, scene.canvas.height) * scale)}px`} · {format === "jpeg" ? "JPG" : format.toUpperCase()}
           </span>
         </button>
         <button
@@ -163,7 +165,7 @@ export function RightPanel() {
         >
           {busy === "share" ? <Loader2 size={15} className="animate-spin" /> : <Link2 size={15} />}
         </button>
-        <div className="relative z-60" ref={settingsRef}>
+        <div className="relative z-60">
           <button
             title="Export settings"
             onClick={() => setSettingsOpen((v) => !v)}
@@ -171,9 +173,21 @@ export function RightPanel() {
           >
             <Settings2 size={15} />
           </button>
-          <AnimatePresence>
-            {settingsOpen && (
-              <Popover className="right-0 top-[calc(100%+8px)] w-52 p-3" >
+        </div>
+        </div>
+        <AnimatePresence>
+          {settingsOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, y: -4 }}
+              animate={{ opacity: 1, height: "auto", y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -4 }}
+              transition={{ duration: 0.18 }}
+              className="fk-card mt-2 overflow-hidden rounded-2xl border border-[#e5e5ed] bg-[#fbfbfd] p-3"
+            >
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-[12px] font-bold text-[#17171c]">Export settings</p>
+                  <button onClick={() => setSettingsOpen(false)} className="text-[11px] font-semibold text-[#7c3aed] hover:text-[#5b21b6]">Done</button>
+                </div>
                 <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#9a9aa4]">Format</p>
                 <Seg
                   id="fmt"
@@ -200,7 +214,7 @@ export function RightPanel() {
                     />
                   </>
                 )}
-                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#9a9aa4]">Size</p>
+                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#9a9aa4]">Output size</p>
                 <Seg
                   id="scl"
                   options={[
@@ -234,10 +248,9 @@ export function RightPanel() {
                 <p className="text-[10.5px] tabular-nums text-[#9a9aa4]">
                   {Math.round(scene.canvas.width * scale)} × {Math.round(scene.canvas.height * scale)} px
                 </p>
-              </Popover>
-            )}
-          </AnimatePresence>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* free tier: upsell · Pro: custom brand watermark settings */}

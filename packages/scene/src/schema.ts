@@ -204,6 +204,8 @@ export const StickerLayerSchema = z.union([
     id: z.string(),
     assetId: z.string(),
     transform: TransformSchema,
+    /** Decorative assets sit between the canvas background and mockups. */
+    placement: z.enum(["background", "foreground"]).optional(),
     /** render as an app icon: squircle mask + subtle shadow, fixed square size */
     iconMask: z.enum(["ios", "android", "square"]).optional(),
   }),

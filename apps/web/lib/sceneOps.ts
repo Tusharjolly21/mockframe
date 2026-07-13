@@ -137,6 +137,7 @@ export function addIconSticker(scene: SceneDocument, assetId: string): { scene: 
     type: "sticker",
     id,
     assetId,
+    placement: "background",
     transform: {
       x: ((n % 5) - 2) * scene.canvas.width * 0.08,
       y: -scene.canvas.height * 0.22 + (n % 3) * scene.canvas.height * 0.06,

@@ -48,16 +48,39 @@ export function searchIcons(query: string): string[] {
   return allBases().filter((base) => tokens.every((t) => base.includes(t)));
 }
 
-/** inline SVG markup for the picker grid (tinted via currentColor + CSS color) */
-export function iconBody(base: string): string | null {
-  return solar.icons[base + STYLE_SUFFIX]?.body ?? null;
-}
-
 export const ICON_VIEWBOX = `0 0 ${solar.width ?? 24} ${solar.height ?? 24}`;
 
+export const ICON_PALETTES = {
+  aurora: ["#7c3aed", "#06b6d4", "#a7f3d0"],
+  sunset: ["#f43f5e", "#f97316", "#facc15"],
+  meadow: ["#166534", "#22c55e", "#bef264"],
+  ocean: ["#1d4ed8", "#06b6d4", "#bae6fd"],
+  cosmic: ["#312e81", "#9333ea", "#f0abfc"],
+} as const;
+
+export const ICON_COLLECTIONS = {
+  space: ["planet", "planet-2", "planet-3", "planet-4", "moon-stars", "moon", "star", "star-fall", "satellite", "ufo", "rocket", "rocket-2", "atom"],
+  nature: ["earth", "leaf", "sun", "sun-2", "cloud", "cloud-sun", "cloud-rain", "water", "waterdrop", "wind", "snowflake", "fire"],
+  animals: ["cat", "paw", "bug", "bug-minimalistic"],
+} as const;
+
+export type IconPalette = readonly string[];
+
+/** Color Solar's duotone paths in sequence for a crisp, multicolor sticker. */
+export function colorizeIconBody(body: string, palette: IconPalette): string {
+  let index = 0;
+  return body.replaceAll("currentColor", () => palette[index++ % palette.length]);
+}
+
+/** inline SVG markup for the picker grid. */
+export function iconBody(base: string, palette?: IconPalette): string | null {
+  const body = solar.icons[base + STYLE_SUFFIX]?.body;
+  return body ? (palette?.length ? colorizeIconBody(body, palette) : body) : null;
+}
+
 /** 512px tinted SVG data URL — the sticker asset baked at insertion time */
-export function iconDataUrl(base: string, color: string): string | null {
-  const body = iconBody(base);
+export function iconDataUrl(base: string, color: string, palette?: IconPalette): string | null {
+  const body = iconBody(base, palette);
   if (!body) return null;
   const svg =
     `<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='${ICON_VIEWBOX}' color='${color}'>` +
