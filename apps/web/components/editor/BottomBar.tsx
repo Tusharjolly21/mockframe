@@ -342,17 +342,18 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
   const select = useViewStore((s) => s.select);
   const group = STICKER_GROUPS.find((item) => item.id === groupId) ?? STICKER_GROUPS[0];
 
-  // Iconify (Solar) — 7,000+ proper vector icons, searchable by name; shown as
-  // its own group and merged first into cross-group search results
-  const iconItems: LibraryItem[] =
-    groupId === "icons" || query.trim()
-      ? searchIcons(query, query.trim() ? 24 : 48).map((base) => ({
-          kind: "icon" as const,
-          icon: base,
-          glyph: "",
-          label: base.replaceAll("-", " "),
-        }))
-      : [];
+  // Iconify (Solar) — the FULL catalog is browsable/searchable; the grid
+  // windows itself (visibleCount grows as the user scrolls near the bottom)
+  const PAGE = 120;
+  const [visibleCount, setVisibleCount] = useState(PAGE);
+  useEffect(() => setVisibleCount(PAGE), [groupId, query]);
+  const iconBases = groupId === "icons" || query.trim() ? searchIcons(query) : [];
+  const iconItems: LibraryItem[] = iconBases.slice(0, visibleCount).map((base) => ({
+    kind: "icon" as const,
+    icon: base,
+    glyph: "",
+    label: base.replaceAll("-", " "),
+  }));
   const glyphItems = query.trim()
     ? STICKER_GROUPS.flatMap((item) => item.items.map((entry) => ({ ...entry, group: item.id }))).filter((item) => `${item.label} ${item.group}`.toLowerCase().includes(query.toLowerCase()))
     : groupId === "icons"
@@ -360,6 +361,7 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
       : group.items;
   const items = [...iconItems, ...glyphItems];
   const showTints = items.some((i) => i.kind === "icon");
+  const moreIcons = iconBases.length - Math.min(visibleCount, iconBases.length);
 
   const insert = (item: LibraryItem) => {
     const scene = useSceneStore.getState().scene;
@@ -417,7 +419,15 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
           </div>
         )}
       </div>
-      <div className="panel-scroll max-h-[360px] overflow-y-auto px-3 py-3">
+      <div
+        className="panel-scroll max-h-[400px] overflow-y-auto px-3 py-3"
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          if (moreIcons > 0 && el.scrollTop + el.clientHeight > el.scrollHeight - 320) {
+            setVisibleCount((c) => c + PAGE);
+          }
+        }}
+      >
         <div className="grid grid-cols-5 gap-1.5">
           {items.map((item, index) =>
             item.kind === "icon" && item.icon ? (
@@ -453,6 +463,11 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
           )}
         </div>
         {items.length === 0 && <p className="py-10 text-center text-xs text-[#9a9aa4]">No stickers found.</p>}
+        {moreIcons > 0 && (
+          <p className="pb-1 pt-3 text-center text-[10.5px] text-[#9a9aa4]">
+            Scroll for {moreIcons.toLocaleString()} more icons…
+          </p>
+        )}
       </div>
     </Popover>
   );

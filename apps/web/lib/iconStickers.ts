@@ -23,20 +23,29 @@ const CURATED = [
   "calendar", "clock-circle", "map-point", "planet", "cloud", "moon-stars", "sun-2", "leaf",
 ];
 
-export function searchIcons(query: string, limit = 48): string[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return CURATED.filter((n) => solar.icons[n + STYLE_SUFFIX]).slice(0, limit);
-  const tokens = q.split(/\s+/);
-  const out: string[] = [];
-  for (const key of Object.keys(solar.icons)) {
-    if (!key.endsWith(STYLE_SUFFIX)) continue;
-    const base = key.slice(0, -STYLE_SUFFIX.length);
-    if (tokens.every((t) => base.includes(t))) {
-      out.push(base);
-      if (out.length >= limit) break;
-    }
+// full catalog in browse order: curated favourites first, then everything
+// else alphabetically — computed once
+let ALL_BASES: string[] | null = null;
+function allBases(): string[] {
+  if (!ALL_BASES) {
+    const curated = CURATED.filter((n) => solar.icons[n + STYLE_SUFFIX]);
+    const curatedSet = new Set(curated);
+    const rest = Object.keys(solar.icons)
+      .filter((k) => k.endsWith(STYLE_SUFFIX))
+      .map((k) => k.slice(0, -STYLE_SUFFIX.length))
+      .filter((b) => !curatedSet.has(b))
+      .sort();
+    ALL_BASES = [...curated, ...rest];
   }
-  return out;
+  return ALL_BASES;
+}
+
+/** Every matching icon — the picker windows the list itself (scroll batching). */
+export function searchIcons(query: string): string[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return allBases();
+  const tokens = q.split(/\s+/);
+  return allBases().filter((base) => tokens.every((t) => base.includes(t)));
 }
 
 /** inline SVG markup for the picker grid (tinted via currentColor + CSS color) */
