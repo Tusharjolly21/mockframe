@@ -1,11 +1,22 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "MockFrame — Screenshot Mockup Studio",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "MockFrame — Screenshot Mockup Studio",
+    template: `%s — ${SITE_NAME}`,
+  },
   description:
     "Place screenshots in pixel-accurate device and browser frames, style the scene, and export production-quality images.",
+  openGraph: {
+    siteName: SITE_NAME,
+    type: "website",
+    url: SITE_URL,
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -27,6 +27,9 @@ export default function TemplatesPage() {
           <span className="text-[16px] font-bold tracking-tight">MockFrame</span>
         </Link>
         <nav className="flex items-center gap-1 text-[13px] font-semibold">
+          <Link href="/mockups" className="rounded-lg px-3 py-1.5 text-[#6b6b76] hover:bg-white/70 hover:text-[#17171c]">
+            Mockups
+          </Link>
           <span className="rounded-lg bg-white px-3 py-1.5 shadow-sm">Templates</span>
           <Link href="/editor" className="rounded-lg px-3 py-1.5 text-[#6b6b76] hover:bg-white/70 hover:text-[#17171c]">
             Editor

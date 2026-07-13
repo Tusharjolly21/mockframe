@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ingestFile } from "@/lib/assets";
 import { loadCustomDevices } from "@/lib/customDevices";
+import { buildDeviceScene } from "@/lib/deviceScene";
 import { saveCurrentDraft } from "@/lib/drafts";
 import { useShotBatchStore } from "@/lib/shotBatch";
 import { duplicateLayer, placeAsset, removeLayer } from "@/lib/sceneOps";
@@ -15,7 +16,7 @@ import { LeftPanel } from "./LeftPanel";
 import { RightPanel } from "./RightPanel";
 import { LogoChip, Toolbar } from "./Toolbar";
 
-export function EditorShell() {
+export function EditorShell({ initialDeviceId }: { initialDeviceId?: string }) {
   const setScene = useSceneStore((s) => s.setScene);
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const [toast, setToast] = useState<string | null>(null);
@@ -25,6 +26,20 @@ export function EditorShell() {
   useEffect(() => {
     loadCustomDevices();
   }, []);
+
+  // Deep-link: /editor?device=<id> (from the /mockups pSEO pages) opens a fresh
+  // scene with that device selected. One-shot on mount — clears undo history so
+  // the injected scene is the baseline, and drops the param so a later refresh
+  // doesn't clobber the user's edits.
+  useEffect(() => {
+    if (!initialDeviceId) return;
+    const scene = buildDeviceScene(initialDeviceId);
+    if (!scene) return;
+    useSceneStore.setState({ scene });
+    useSceneStore.temporal.getState().clear();
+    window.history.replaceState({}, "", "/editor");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDeviceId]);
 
   // The batch is a list of independent scene documents. Keep the active shot
   // current without making the editor shell re-render for every control tweak.
