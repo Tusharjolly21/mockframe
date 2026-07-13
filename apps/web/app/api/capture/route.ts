@@ -80,7 +80,10 @@ export async function POST(req: NextRequest) {
     const page = await browser.newPage();
     await page.setViewport({ width: viewportWidth, height: 900, deviceScaleFactor: 2 });
     await page.emulateMediaFeatures([{ name: "prefers-color-scheme", value: dark ? "dark" : "light" }]);
-    await page.goto(target.href, { waitUntil: "networkidle2", timeout: 30_000 });
+    // commit on DOM ready, then wait for network quiet on a best-effort basis —
+    // heavy pages (ads, analytics, streams) never go idle and would 502 forever
+    await page.goto(target.href, { waitUntil: "domcontentloaded", timeout: 30_000 });
+    await page.waitForNetworkIdle({ idleTime: 500, timeout: 12_000 }).catch(() => {});
     if (settleDelay) await new Promise((r) => setTimeout(r, settleDelay));
 
     let png: Uint8Array;

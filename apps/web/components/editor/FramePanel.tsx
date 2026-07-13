@@ -334,6 +334,17 @@ const UNSPLASH_PHOTOS = [
   { id: "lake-blue", label: "Lake blue", photo: "photo-1470770841072-f978cf4d019e" },
   { id: "tropical-shadow", label: "Tropical shadow", photo: "photo-1497250681960-ef046c08a56e" },
   { id: "fern-dark", label: "Fern dark", photo: "photo-1511497584788-876760111969" },
+  { id: "coastal-blue", label: "Coastal blue", photo: "photo-1507525428034-b723cf961d3e" },
+  { id: "architecture-shadow", label: "Architecture shadow", photo: "photo-1487958449943-2429e8be8625" },
+  { id: "pink-sky", label: "Pink sky", photo: "photo-1499346030926-9a72daac6c63" },
+  { id: "deep-sea", label: "Deep sea", photo: "photo-1469474968028-56623f02e42e" },
+  { id: "snow-ridge", label: "Snow ridge", photo: "photo-1454496522488-7a8e488e8606" },
+  { id: "warm-dunes", label: "Warm dunes", photo: "photo-1473580044384-7ba9967e16a0" },
+  { id: "green-leaves", label: "Green leaves", photo: "photo-1441974231531-c6227db76b6e" },
+  { id: "paper-texture", label: "Paper texture", photo: "photo-1517841905240-472988babdf9" },
+  { id: "dark-stone", label: "Dark stone", photo: "photo-1518709268805-4e9042af9f23" },
+  { id: "soft-cloud", label: "Soft cloud", photo: "photo-1534088568595-a066f410bcda" },
+  { id: "blue-mist", label: "Blue mist", photo: "photo-1483347756197-71ef80e95f73" },
 ] as const;
 
 function UnsplashPhotos({ onPick }: { onPick: (assetId: string) => void }) {
@@ -441,6 +452,17 @@ const PATTERN_PRESETS: Array<{ id: string; label: string; kind: PatternKind; col
   { id: "spot-rays", label: "Spot rays", kind: "rays", color: "#ffffff", intensity: 0.1, thickness: 0.78 },
   { id: "diagonal-soft", label: "Diagonal", kind: "stripes", color: "#ffffff", intensity: 0.11, thickness: 0.28 },
   { id: "film-noise", label: "Film grain", kind: "noise", color: "#ffffff", intensity: 0.12, thickness: 0.5 },
+  { id: "micro-grid", label: "Micro grid", kind: "grid", color: "#e0e7ff", intensity: 0.12, thickness: 0.18 },
+  { id: "blueprint-fine", label: "Fine blueprint", kind: "grid", color: "#67e8f9", intensity: 0.18, thickness: 0.22 },
+  { id: "constellation", label: "Constellation", kind: "dots", color: "#fef3c7", intensity: 0.14, thickness: 0.14 },
+  { id: "bubble-field", label: "Bubble field", kind: "circles", color: "#bae6fd", intensity: 0.12, thickness: 0.46 },
+  { id: "fine-silk", label: "Fine silk", kind: "waves", color: "#ffffff", intensity: 0.11, thickness: 0.22 },
+  { id: "neon-wave", label: "Neon wave", kind: "waves", color: "#22d3ee", intensity: 0.15, thickness: 0.86 },
+  { id: "sunburst", label: "Sunburst", kind: "rays", color: "#fef08a", intensity: 0.12, thickness: 0.62 },
+  { id: "radial-rays", label: "Radial rays", kind: "rays", color: "#c4b5fd", intensity: 0.16, thickness: 0.24 },
+  { id: "pinstripe", label: "Pinstripe", kind: "stripes", color: "#e0f2fe", intensity: 0.1, thickness: 0.12 },
+  { id: "wide-stripe", label: "Wide stripe", kind: "stripes", color: "#fbcfe8", intensity: 0.12, thickness: 0.72 },
+  { id: "soft-noise", label: "Soft noise", kind: "noise", color: "#ffffff", intensity: 0.08, thickness: 0.2 },
 ];
 
 const OVERLAY_KINDS: { id: OverlayKind; label: string }[] = [

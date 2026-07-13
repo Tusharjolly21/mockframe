@@ -177,6 +177,28 @@ export const BG_CATEGORIES: BgCategory[] = [
     ],
   },
   {
+    id: "spectral",
+    label: "Spectral",
+    swatches: [
+      lin("sp-cosmic-pink", 124, ["#020617", "#1e1b4b", "#7e22ce", "#ec4899"]),
+      lin("sp-cyan-violet", 138, ["#0c4a6e", "#06b6d4", "#6366f1", "#c026d3"]),
+      lin("sp-lagoon", 154, ["#042f2e", "#0f766e", "#0891b2", "#1d4ed8"]),
+      lin("sp-polar", 112, ["#172554", "#38bdf8", "#e0f2fe", "#a5b4fc"]),
+      lin("sp-coral-night", 145, ["#1f2937", "#7f1d1d", "#f43f5e", "#fdba74"]),
+      lin("sp-lime-orbit", 132, ["#052e16", "#16a34a", "#a3e635", "#fef08a"]),
+      lin("sp-royal-fire", 160, ["#111827", "#3730a3", "#c026d3", "#fb923c"]),
+      lin("sp-blue-hour", 175, ["#020617", "#1e3a8a", "#2563eb", "#67e8f9"]),
+      mesh("sp-neon-water", 81, ["#082f49", "#0e7490", "#4f46e5", "#db2777"]),
+      mesh("sp-ember-glass", 87, ["#1c1917", "#9a3412", "#ea580c", "#fef3c7"]),
+      mesh("sp-forest-light", 93, ["#022c22", "#166534", "#14b8a6", "#d9f99d"]),
+      mesh("sp-iris-cloud", 101, ["#1e1b4b", "#4338ca", "#a855f7", "#f5d0fe"]),
+      lin("sp-sandstorm", 168, ["#292524", "#92400e", "#f59e0b", "#fef3c7"]),
+      lin("sp-rose-steel", 118, ["#1f2937", "#475569", "#e11d48", "#fda4af"]),
+      lin("sp-mint-dusk", 146, ["#134e4a", "#14b8a6", "#818cf8", "#312e81"]),
+      lin("sp-electric-sun", 102, ["#172554", "#2563eb", "#facc15", "#fff7ed"]),
+    ],
+  },
+  {
     id: "texture",
     label: "Texture",
     swatches: [
