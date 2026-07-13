@@ -103,19 +103,38 @@ export function CustomMockupModal({ onClose, onCreated, onToast }: {
   const boxH = useMemo(() => (quad ? Math.max(...quad.map((c) => c[1])) - Math.min(...quad.map((c) => c[1])) : 0), [quad]);
   const grid = useMemo(() => (boxW && boxH ? gridUri(Math.round(boxW), Math.round(boxH)) : null), [boxW, boxH]);
 
+  // crossed corners produce a garbage warp — block saving until fixed
+  const selfIntersects = useMemo(() => {
+    if (!quad) return false;
+    const cross = (o: number[], a: number[], b: number[]) =>
+      (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const signs = [
+      cross(quad[0], quad[1], quad[2]),
+      cross(quad[1], quad[2], quad[3]),
+      cross(quad[2], quad[3], quad[0]),
+      cross(quad[3], quad[0], quad[1]),
+    ].map(Math.sign);
+    return !(signs.every((s) => s >= 0) || signs.every((s) => s <= 0));
+  }, [quad]);
+
   function save() {
-    if (!photo || !quad) return;
+    if (!photo || !quad || selfIntersects) return;
     const id = `custom-${createId()}`;
-    saveCustomDevice({
-      id,
-      name: name.trim() || "My device",
-      plate: photo.url,
-      plateW: photo.width,
-      plateH: photo.height,
-      quad,
-      radius,
-      createdAt: Date.now(),
-    });
+    try {
+      saveCustomDevice({
+        id,
+        name: name.trim() || "My device",
+        plate: photo.url,
+        plateW: photo.width,
+        plateH: photo.height,
+        quad,
+        radius,
+        createdAt: Date.now(),
+      });
+    } catch (e) {
+      onToast(e instanceof Error ? e.message : "Couldn't save the mockup");
+      return;
+    }
     onCreated(id);
     onToast(`"${name.trim() || "My device"}" added to Mockups ✨`);
     onClose();
@@ -180,7 +199,7 @@ export function CustomMockupModal({ onClose, onCreated, onToast }: {
                   <polygon
                     points={quad.map((c) => `${c[0] * scale},${c[1] * scale}`).join(" ")}
                     fill="none"
-                    stroke="#10b981"
+                    stroke={selfIntersects ? "#ef4444" : "#10b981"}
                     strokeWidth={2}
                     strokeDasharray="6 4"
                   />
@@ -269,9 +288,14 @@ export function CustomMockupModal({ onClose, onCreated, onToast }: {
           <button onClick={onClose} className="fk-press rounded-xl px-4 py-2 text-[13px] font-semibold text-[#6b6b76] hover:bg-black/5">
             Cancel
           </button>
+          {selfIntersects && (
+            <span className="mr-auto text-[11.5px] font-medium text-red-500">
+              Corners are crossed — drag them into TL · TR · BR · BL order.
+            </span>
+          )}
           <button
             onClick={save}
-            disabled={!photo || !quad}
+            disabled={!photo || !quad || selfIntersects}
             className="fk-press flex items-center gap-2 rounded-xl bg-[#17171c] px-5 py-2.5 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Sparkles size={14} />

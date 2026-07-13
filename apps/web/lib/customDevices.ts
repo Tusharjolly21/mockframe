@@ -69,19 +69,36 @@ function toDevice(def: CustomDeviceDef): Device {
 }
 
 export function loadCustomDevices(): CustomDeviceDef[] {
+  let defs: CustomDeviceDef[];
   try {
-    const defs = JSON.parse(localStorage.getItem(LS_KEY) ?? "[]") as CustomDeviceDef[];
-    for (const def of defs) registerDevice(toDevice(def));
-    return defs;
-  } catch {
+    defs = JSON.parse(localStorage.getItem(LS_KEY) ?? "[]") as CustomDeviceDef[];
+  } catch (err) {
+    console.warn("[customDevices] stored defs unreadable:", err);
     return [];
   }
+  const ok: CustomDeviceDef[] = [];
+  for (const def of defs) {
+    // one corrupt entry must not take down the rest
+    try {
+      registerDevice(toDevice(def));
+      ok.push(def);
+    } catch (err) {
+      console.warn(`[customDevices] skipping "${def?.id}":`, err);
+    }
+  }
+  return ok;
 }
 
 export function saveCustomDevice(def: CustomDeviceDef): void {
   const defs = loadRaw().filter((d) => d.id !== def.id);
   defs.push(def);
-  localStorage.setItem(LS_KEY, JSON.stringify(defs));
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(defs));
+  } catch {
+    // QuotaExceeded — persist first, register second: a device that silently
+    // vanishes on reload is worse than a clear error now
+    throw new Error("Storage is full — delete an older custom mockup first (each photo uses ~0.5MB).");
+  }
   registerDevice(toDevice(def));
 }
 

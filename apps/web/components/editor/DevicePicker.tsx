@@ -49,13 +49,10 @@ export function DevicePicker({
   const popRef = useRef<HTMLDivElement>(null);
   const current = deviceId ? getDevice(deviceId) : undefined;
 
-  // Keep the picker useful for PSD-backed scenes: open directly in the active
-  // device family instead of making users hunt through the generic Mockups tab.
-  useEffect(() => {
-    if (open && current && cat === "scene" && current.category !== "scene") {
-      setCat(current.category);
-    }
-  }, [open, current, cat]);
+  // (the old effect-based version of this re-ran on every category change and
+  // snapped the user BACK out of the Mockups tab — making custom mockups and
+  // the calibration tile unreachable; category defaulting now happens once
+  // per open, inside toggle())
 
   useEffect(() => {
     if (!open) return;
@@ -68,10 +65,21 @@ export function DevicePicker({
     return () => window.removeEventListener("mousedown", onDown);
   }, [open]);
 
+  // /calibrate (and /editor?calibrate=1) lands here: open the calibration
+  // modal directly without hunting for the picker tile
+  useEffect(() => {
+    const onOpenCustom = () => setCustomOpen(true);
+    window.addEventListener("framekit:open-custom-mockup", onOpenCustom);
+    return () => window.removeEventListener("framekit:open-custom-mockup", onOpenCustom);
+  }, []);
+
   const toggle = () => {
     if (!open && rootRef.current) {
       const r = rootRef.current.getBoundingClientRect();
       setAnchor({ x: r.left, y: r.bottom + 8 });
+      // open in the active device's family — but only ONCE per open, so the
+      // user can still browse to any other tab afterwards
+      if (current && current.category !== "scene" && cat === "scene") setCat(current.category);
     }
     setOpen((v) => !v);
   };
@@ -157,9 +165,10 @@ export function DevicePicker({
             </div>
 
             <div className="panel-scroll grid max-h-[52vh] grid-cols-2 gap-3 overflow-y-auto pr-1">
-              {(cat === "scene" || cat === "all") && (
-                <button
-                  onClick={() => setCustomOpen(true)}
+              {/* always visible — the picker auto-opens on the current device's
+                  family, which used to hide this tile behind the Mockups tab */}
+              <button
+                onClick={() => setCustomOpen(true)}
                   className="fk-tile grid min-h-44 place-items-center gap-1 rounded-2xl border-2 border-dashed border-[#d6d6e0] bg-[#fafafc] p-3.5 text-center hover:border-[#a9a9ba]"
                 >
                   <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 text-white">
@@ -168,7 +177,6 @@ export function DevicePicker({
                   <span className="text-[13.5px] font-bold text-[#17171c]">Your device photo</span>
                   <span className="text-[11px] leading-snug text-[#8a8a94]">Photograph your device, mark the screen — yours forever</span>
                 </button>
-              )}
               {devices.map((d) => (
                 <DeviceCard
                   key={d.id}

@@ -716,6 +716,13 @@ function ThemeBar() {
   }, []);
   useEffect(() => {
     if (!open) return;
+    const refresh = () => syncThemesFromServer().then(setSaved);
+    refresh();
+    const timer = window.setInterval(refresh, 10000);
+    return () => window.clearInterval(timer);
+  }, [open]);
+  useEffect(() => {
+    if (!open) return;
     const onDown = (e: MouseEvent) => {
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
     };

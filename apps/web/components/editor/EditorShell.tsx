@@ -16,7 +16,7 @@ import { LeftPanel } from "./LeftPanel";
 import { RightPanel } from "./RightPanel";
 import { LogoChip, Toolbar } from "./Toolbar";
 
-export function EditorShell({ initialDeviceId }: { initialDeviceId?: string }) {
+export function EditorShell({ initialDeviceId, openCalibrate = false }: { initialDeviceId?: string; openCalibrate?: boolean }) {
   const setScene = useSceneStore((s) => s.setScene);
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const [toast, setToast] = useState<string | null>(null);
@@ -40,6 +40,17 @@ export function EditorShell({ initialDeviceId }: { initialDeviceId?: string }) {
     window.history.replaceState({}, "", "/editor");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialDeviceId]);
+
+  // /calibrate entry: open the custom-mockup calibration modal once the panels
+  // have mounted, then drop the param so refresh doesn't reopen it
+  useEffect(() => {
+    if (!openCalibrate) return;
+    const t = setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("framekit:open-custom-mockup"));
+      window.history.replaceState({}, "", "/editor");
+    }, 400);
+    return () => clearTimeout(t);
+  }, [openCalibrate]);
 
   // The batch is a list of independent scene documents. Keep the active shot
   // current without making the editor shell re-render for every control tweak.
