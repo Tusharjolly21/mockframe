@@ -8,7 +8,11 @@ import type { NextConfig } from "next";
 const FIREBASE_APP_DOMAIN = "mockframe-f59a3.firebaseapp.com";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@framekit/scene", "@framekit/devices", "@framekit/renderer"],
+  // firebase-admin is on Next's default server-externals list, but Vercel's
+  // function loader can't require() its ESM-only jose dependency (via
+  // jwks-rsa) — every firebase-admin API route 500s at cold start. Listing it
+  // here opts it back into webpack bundling, which compiles the ESM away.
+  transpilePackages: ["@framekit/scene", "@framekit/devices", "@framekit/renderer", "firebase-admin"],
   async rewrites() {
     return [
       { source: "/__/auth/:path*", destination: `https://${FIREBASE_APP_DOMAIN}/__/auth/:path*` },
