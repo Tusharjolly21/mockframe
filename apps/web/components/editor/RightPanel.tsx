@@ -182,7 +182,7 @@ export function RightPanel() {
               animate={{ opacity: 1, height: "auto", y: 0 }}
               exit={{ opacity: 0, height: 0, y: -4 }}
               transition={{ duration: 0.18 }}
-              className="fk-card mt-2 overflow-hidden rounded-2xl border border-[#e5e5ed] bg-[#fbfbfd] p-3"
+              className="mt-2 overflow-hidden rounded-2xl border border-[#e5e5ed] bg-[#fbfbfd] p-3"
             >
                 <div className="mb-3 flex items-center justify-between">
                   <p className="text-[12px] font-bold text-[#17171c]">Export settings</p>
