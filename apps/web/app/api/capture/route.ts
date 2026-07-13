@@ -34,9 +34,11 @@ const LOCAL_CHROME_CANDIDATES = [
 
 // chromium-min downloads this self-contained pack into /tmp on cold start —
 // no lambda file-tracing of shared libs (which is what broke @sparticuz/chromium)
+// v149 ships AL2023 libs — older packs (≤v131) only carried AL2 and died on
+// Vercel's Node 24 runtime with "libnss3.so: cannot open shared object file"
 const CHROMIUM_PACK =
   process.env.CHROMIUM_PACK_URL ??
-  "https://github.com/Sparticuz/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar";
+  "https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar";
 
 async function launchBrowser() {
   const puppeteer = await import("puppeteer-core");

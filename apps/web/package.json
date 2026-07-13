@@ -14,7 +14,7 @@
     "@framekit/scene": "*",
     "@iconify-json/solar": "^1.2.5",
     "@icons-pack/react-simple-icons": "^13.13.0",
-    "@sparticuz/chromium-min": "131.0.1",
+    "@sparticuz/chromium-min": "149.0.0",
     "firebase": "^12.16.0",
     "firebase-admin": "^14.1.0",
     "gifenc": "^1.0.3",
