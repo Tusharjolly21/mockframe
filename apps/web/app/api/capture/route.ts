@@ -32,13 +32,19 @@ const LOCAL_CHROME_CANDIDATES = [
   "/usr/bin/chromium-browser",
 ].filter((p): p is string => !!p);
 
+// chromium-min downloads this self-contained pack into /tmp on cold start —
+// no lambda file-tracing of shared libs (which is what broke @sparticuz/chromium)
+const CHROMIUM_PACK =
+  process.env.CHROMIUM_PACK_URL ??
+  "https://github.com/Sparticuz/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar";
+
 async function launchBrowser() {
   const puppeteer = await import("puppeteer-core");
   if (process.env.VERCEL) {
-    const chromium = (await import("@sparticuz/chromium")).default;
+    const chromium = (await import("@sparticuz/chromium-min")).default;
     return puppeteer.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath(),
+      executablePath: await chromium.executablePath(CHROMIUM_PACK),
       headless: true,
     });
   }

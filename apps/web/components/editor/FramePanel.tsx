@@ -295,7 +295,7 @@ export function FrameControls() {
 
         {/* stock photo backdrops — downloaded + ingested locally so exports
             never depend on a remote URL (html-to-image needs local assets) */}
-        <StockPhotos
+        <UnsplashPhotos
           onPick={(assetId) => {
             bumpAssets();
             setBg({ type: "image", assetId, fit: "cover", blur: 0, opacity: 1 });
@@ -321,22 +321,31 @@ export function FrameControls() {
   );
 }
 
-/* ------------------------------- stock photos --------------------------------
-   PostSpark ships Unsplash; we use Lorem Picsum (keyless, CORS-open). Clicking
-   fetches the full-res photo and registers it as a LOCAL asset. */
+/* ------------------------------- Unsplash gallery ---------------------------
+   Curated Unsplash CDN images keep the picker keyless for now. A selected image
+   is downloaded and registered locally, so exports never depend on the CDN. */
 
-const STOCK_IDS = [1015, 1016, 1018, 1036, 1039, 1043, 1053, 1080];
+const UNSPLASH_PHOTOS = [
+  { id: "mountain-light", label: "Mountain light", photo: "photo-1519608487953-e999c86e7455" },
+  { id: "blue-horizon", label: "Blue horizon", photo: "photo-1500534623283-312aade485b7" },
+  { id: "forest-mist", label: "Forest mist", photo: "photo-1493246507139-91e8fad9978e" },
+  { id: "ocean-glass", label: "Ocean glass", photo: "photo-1518837695005-2083093ee35b" },
+  { id: "desert-dusk", label: "Desert dusk", photo: "photo-1500530855697-b586d89ba3ee" },
+  { id: "lake-blue", label: "Lake blue", photo: "photo-1470770841072-f978cf4d019e" },
+  { id: "tropical-shadow", label: "Tropical shadow", photo: "photo-1497250681960-ef046c08a56e" },
+  { id: "fern-dark", label: "Fern dark", photo: "photo-1511497584788-876760111969" },
+] as const;
 
-function StockPhotos({ onPick }: { onPick: (assetId: string) => void }) {
-  const [loading, setLoading] = useState<number | null>(null);
-  const pick = async (id: number) => {
+function UnsplashPhotos({ onPick }: { onPick: (assetId: string) => void }) {
+  const [loading, setLoading] = useState<string | null>(null);
+  const pick = async (photo: (typeof UNSPLASH_PHOTOS)[number]) => {
     if (loading) return;
-    setLoading(id);
+    setLoading(photo.id);
     try {
-      const res = await fetch(`https://picsum.photos/id/${id}/1920/1280`);
+      const res = await fetch(`https://images.unsplash.com/${photo.photo}?auto=format&fit=crop&w=2400&q=88`);
       if (!res.ok) throw new Error();
       const blob = await res.blob();
-      const asset = await ingestFile(new File([blob], `stock-${id}.jpg`, { type: "image/jpeg" }));
+      const asset = await ingestFile(new File([blob], `unsplash-${photo.id}.jpg`, { type: blob.type || "image/jpeg" }));
       onPick(asset.id);
     } catch {
       /* offline — thumbnails simply won't apply */
@@ -346,18 +355,21 @@ function StockPhotos({ onPick }: { onPick: (assetId: string) => void }) {
   };
   return (
     <div className="mb-4">
-      <p className="mb-2 text-[13px] font-bold text-[#17171c]">Photos</p>
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-[13px] font-bold text-[#17171c]">Unsplash</p>
+        <span className="text-[10px] text-[#9a9aa4]">curated photos</span>
+      </div>
       <div className="grid grid-cols-4 gap-2">
-        {STOCK_IDS.map((id) => (
+        {UNSPLASH_PHOTOS.map((photo) => (
           <button
-            key={id}
-            onClick={() => pick(id)}
-            className={`fk-tile relative h-12 overflow-hidden rounded-xl border border-[#e4e4ec] ${loading === id ? "opacity-60" : ""}`}
-            title="Stock photo"
+            key={photo.id}
+            onClick={() => pick(photo)}
+            className={`fk-tile relative h-14 overflow-hidden rounded-xl border border-[#e4e4ec] ${loading === photo.id ? "opacity-60" : ""}`}
+            title={`${photo.label} · Unsplash`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`https://picsum.photos/id/${id}/120/80`} alt="" loading="lazy" className="h-full w-full object-cover" />
-            {loading === id && <span className="absolute inset-0 grid place-items-center bg-black/30 text-[10px] font-bold text-white">…</span>}
+            <img src={`https://images.unsplash.com/${photo.photo}?auto=format&fit=crop&w=240&q=70`} alt={photo.label} loading="lazy" className="h-full w-full object-cover" />
+            {loading === photo.id && <span className="absolute inset-0 grid place-items-center bg-black/30 text-[10px] font-bold text-white">Loading</span>}
           </button>
         ))}
       </div>
@@ -416,14 +428,19 @@ function BorderDetail() {
 type PatternKind = NonNullable<Backdrop["pattern"]>["kind"];
 type OverlayKind = NonNullable<Backdrop["overlay"]>["kind"];
 
-const PATTERN_KINDS: { id: PatternKind; label: string }[] = [
-  { id: "circles", label: "Circles" },
-  { id: "waves", label: "Waves" },
-  { id: "dots", label: "Dots" },
-  { id: "rays", label: "Rays" },
-  { id: "grid", label: "Grid" },
-  { id: "stripes", label: "Stripes" },
-  { id: "noise", label: "Noise" },
+const PATTERN_PRESETS: Array<{ id: string; label: string; kind: PatternKind; color: string; intensity: number; thickness: number }> = [
+  { id: "soft-grid", label: "Soft grid", kind: "grid", color: "#ffffff", intensity: 0.18, thickness: 0.34 },
+  { id: "blueprint", label: "Blueprint", kind: "grid", color: "#7dd3fc", intensity: 0.3, thickness: 0.62 },
+  { id: "halo-dots", label: "Halo dots", kind: "dots", color: "#ffffff", intensity: 0.2, thickness: 0.24 },
+  { id: "studio-dots", label: "Studio dots", kind: "dots", color: "#0f172a", intensity: 0.16, thickness: 0.52 },
+  { id: "orbit", label: "Orbit", kind: "circles", color: "#c4b5fd", intensity: 0.18, thickness: 0.28 },
+  { id: "concentric", label: "Concentric", kind: "circles", color: "#ffffff", intensity: 0.14, thickness: 0.7 },
+  { id: "silk", label: "Silk", kind: "waves", color: "#f0abfc", intensity: 0.16, thickness: 0.7 },
+  { id: "waterline", label: "Waterline", kind: "waves", color: "#67e8f9", intensity: 0.18, thickness: 0.35 },
+  { id: "prism-rays", label: "Prism rays", kind: "rays", color: "#fde68a", intensity: 0.13, thickness: 0.4 },
+  { id: "spot-rays", label: "Spot rays", kind: "rays", color: "#ffffff", intensity: 0.1, thickness: 0.78 },
+  { id: "diagonal-soft", label: "Diagonal", kind: "stripes", color: "#ffffff", intensity: 0.11, thickness: 0.28 },
+  { id: "film-noise", label: "Film grain", kind: "noise", color: "#ffffff", intensity: 0.12, thickness: 0.5 },
 ];
 
 const OVERLAY_KINDS: { id: OverlayKind; label: string }[] = [
@@ -454,21 +471,22 @@ function useBackdrop() {
 function PatternDetail() {
   const { backdrop, patch } = useBackdrop();
   const pattern = backdrop?.pattern;
-  const setPattern = (kind: PatternKind) =>
-    patch({ pattern: pattern?.kind === kind ? undefined : { kind, intensity: 0.5, thickness: 0.5, color: "#5b6472" } });
+  const setPattern = (preset: (typeof PATTERN_PRESETS)[number]) =>
+    patch({ pattern: pattern?.kind === preset.kind && pattern.color === preset.color ? undefined : { kind: preset.kind, intensity: preset.intensity, thickness: preset.thickness, color: preset.color } });
   return (
     <div className="pb-2">
-      <div className="grid grid-cols-3 gap-1.5">
-        {PATTERN_KINDS.map((k) => {
-          const active = pattern?.kind === k.id;
+      <p className="mb-2 text-[10.5px] leading-relaxed text-[#9a9aa4]">Layer a subtle material, grid, or light texture behind the mockup. Every preset stays editable.</p>
+      <div className="grid grid-cols-3 gap-2">
+        {PATTERN_PRESETS.map((preset) => {
+          const active = pattern?.kind === preset.kind && pattern.color === preset.color;
           return (
             <button
-              key={k.id}
-              onClick={() => setPattern(k.id)}
-              className={`fk-tile rounded-lg border bg-white p-1 ${active ? "border-[#17171c] shadow-[0_0_0_1.5px_#17171c]" : "border-[#e8e8ef]"}`}
+              key={preset.id}
+              onClick={() => setPattern(preset)}
+              className={`fk-tile rounded-xl border bg-white p-1 ${active ? "border-[#17171c] shadow-[0_0_0_1.5px_#17171c]" : "border-[#e8e8ef]"}`}
             >
-              <span className="block h-10 rounded-md border border-black/5 bg-[#eef0f4]" style={demoStyle(patternStyle({ kind: k.id, intensity: 1, thickness: 0.5, color: "#5b6472" }))} />
-              <span className="mt-0.5 block text-center text-[9.5px] font-medium text-[#6b6b76]">{k.label}</span>
+              <span className="block h-12 rounded-lg border border-black/5 bg-[linear-gradient(135deg,#172554,#7c3aed)]" style={demoStyle(patternStyle({ kind: preset.kind, intensity: 0.72, thickness: preset.thickness, color: preset.color }))} />
+              <span className="mt-1 block truncate text-center text-[9.5px] font-medium text-[#6b6b76]">{preset.label}</span>
             </button>
           );
         })}

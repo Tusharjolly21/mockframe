@@ -153,6 +153,18 @@ export const BG_CATEGORIES: BgCategory[] = [
     ],
   },
   {
+    id: "prism",
+    label: "Prism",
+    swatches: [
+      lin("p-electric", 118, ["#020617", "#1d4ed8", "#7c3aed", "#ec4899"]),
+      lin("p-cyan-flare", 142, ["#082f49", "#06b6d4", "#a7f3d0", "#f8fafc"]),
+      lin("p-solar", 128, ["#172554", "#2563eb", "#f59e0b", "#fef3c7"]),
+      lin("p-magenta-void", 156, ["#111827", "#581c87", "#db2777", "#fb7185"]),
+      mesh("p-aurora", 67, ["#042f2e", "#0f766e", "#22d3ee", "#312e81"]),
+      mesh("p-ultraviolet", 73, ["#0f172a", "#312e81", "#9333ea", "#f0abfc"]),
+    ],
+  },
+  {
     id: "earth",
     label: "Earth",
     swatches: [
