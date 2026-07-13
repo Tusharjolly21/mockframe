@@ -77,7 +77,11 @@ export function DevicePicker({
       const gutter = 12;
       const roomBelow = trigger.bottom + popup.height + gutter <= window.innerHeight;
       const roomAbove = trigger.top - popup.height - gutter >= gutter;
-      const top = roomBelow || !roomAbove ? trigger.bottom + 8 : trigger.top - popup.height - 8;
+      const top = roomBelow
+        ? trigger.bottom + 8
+        : roomAbove
+          ? trigger.top - popup.height - 8
+          : Math.max(gutter, Math.min(trigger.bottom + 8, window.innerHeight - popup.height - gutter));
       const left = Math.min(Math.max(gutter, trigger.left), Math.max(gutter, window.innerWidth - popup.width - gutter));
       setAnchor((previous) =>
         previous && Math.abs(previous.x - left) < 1 && Math.abs(previous.y - top) < 1 ? previous : { x: left, y: top }
@@ -348,7 +352,48 @@ function wallpaperFor(device: Device, variantId?: string) {
 
 function DevicePreview({ device, variantId, compact = false }: { device: Device; variantId?: string; compact?: boolean }) {
   const { width, height, screenRect } = device.frame;
+  const quad = device.plate?.screenQuad;
+  const quadBounds = quad
+    ? {
+        left: Math.min(...quad.map(([x]) => x)),
+        top: Math.min(...quad.map(([, y]) => y)),
+        right: Math.max(...quad.map(([x]) => x)),
+        bottom: Math.max(...quad.map(([, y]) => y)),
+      }
+    : undefined;
   const radius = Math.min(24, (device.screen.cornerRadius / height) * 100);
+  const screenStyle = device.plate?.screenMask
+    ? {
+        inset: 0,
+        // PSD scenes ship the exact screen alpha from Photoshop. Applying it
+        // in plate space preserves rounded corners and the photographed glass
+        // shape instead of approximating the hole with a rectangle or polygon.
+        maskImage: `url(${device.plate.screenMask})`,
+        WebkitMaskImage: `url(${device.plate.screenMask})`,
+        maskSize: "100% 100%",
+        WebkitMaskSize: "100% 100%",
+        maskRepeat: "no-repeat",
+        WebkitMaskRepeat: "no-repeat",
+      }
+    : quad && quadBounds
+    ? {
+        left: `${(quadBounds.left / width) * 100}%`,
+        top: `${(quadBounds.top / height) * 100}%`,
+        width: `${((quadBounds.right - quadBounds.left) / width) * 100}%`,
+        height: `${((quadBounds.bottom - quadBounds.top) / height) * 100}%`,
+        // PSD scenes provide the four Smart Object corners. The polygon keeps
+        // the preview wallpaper on the photographed glass instead of turning
+        // the perspective screen into a flat rectangle.
+        clipPath: `polygon(${quad.map(([x, y]) => `${((x - quadBounds.left) / (quadBounds.right - quadBounds.left)) * 100}% ${((y - quadBounds.top) / (quadBounds.bottom - quadBounds.top)) * 100}%`).join(", ")})`,
+        borderRadius: `${radius}%`,
+      }
+    : {
+        left: `${(screenRect.x / width) * 100}%`,
+        top: `${(screenRect.y / height) * 100}%`,
+        width: `${(screenRect.width / width) * 100}%`,
+        height: `${(screenRect.height / height) * 100}%`,
+        borderRadius: `${radius}%`,
+      };
   return (
     <div
       className={`relative mx-auto ${compact ? "h-full w-full" : "h-full max-w-full"}`}
@@ -364,11 +409,7 @@ function DevicePreview({ device, variantId, compact = false }: { device: Device;
         aria-hidden="true"
         className="pointer-events-none absolute overflow-hidden"
         style={{
-          left: `${(screenRect.x / width) * 100}%`,
-          top: `${(screenRect.y / height) * 100}%`,
-          width: `${(screenRect.width / width) * 100}%`,
-          height: `${(screenRect.height / height) * 100}%`,
-          borderRadius: `${radius}%`,
+          ...screenStyle,
           background: wallpaperFor(device, variantId),
           boxShadow: "inset 0 0 0 1px rgba(255,255,255,.14), inset 0 -10px 18px rgba(0,0,0,.18)",
           zIndex: 1,

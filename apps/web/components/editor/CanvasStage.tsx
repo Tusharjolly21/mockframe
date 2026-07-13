@@ -89,41 +89,75 @@ export function CanvasStage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene.canvas.width, scene.canvas.height]);
 
-  /* --------------------------- selection overlay --------------------------- */
-  useLayoutEffect(() => {
-    const host = containerRef.current;
-    if (!host || selectedIds.length === 0) {
-      setOverlayBoxes([]);
-      return;
-    }
-    const hostRect = host.getBoundingClientRect();
-    const boxes = selectedIds.flatMap((id) => {
-      const node = host.querySelector(`[data-layer-id="${id}"]`);
-      if (!node) return [];
-      const r = (node as HTMLElement).getBoundingClientRect();
-      return [{ id, x: r.left - hostRect.left, y: r.top - hostRect.top, w: r.width, h: r.height }];
-    });
-    setOverlayBoxes(boxes);
-  }, [selectedIds, scene, zoom, pan]);
-
-  /* --------------------- ⊕ on empty device screens ------------------------- */
-  useLayoutEffect(() => {
+  /* ------------------ selection overlay + ⊕ empty screens ------------------
+     One measurement pass for both. DOM rects lie while a layer is mid-entrance
+     animation (fk-device-enter translates/scales it) or before its plate image
+     has loaded — so besides re-measuring on state changes, we re-measure on
+     animation end + image load, and rAF-track during the entrance so the
+     overlay FOLLOWS the device instead of freezing at its start position. */
+  const measureOverlays = useCallback(() => {
     const host = containerRef.current;
     if (!host) return;
     const hostRect = host.getBoundingClientRect();
-    const empties = scene.layers
-      .filter((l) => l.type === "mockup" && l.deviceId && !l.media)
-      .flatMap((l) => {
-        const node = host.querySelector(`[data-layer-id="${l.id}"]`);
+
+    setOverlayBoxes(
+      selectedIds.flatMap((id) => {
+        const node = host.querySelector(`[data-layer-id="${id}"]`);
         if (!node) return [];
-        // anchor to the true SCREEN centre when the renderer exposes it (off-centre
-        // screens — e.g. an angled watch — would otherwise put ⊕ on the body/band)
-        const anchor = (node as HTMLElement).querySelector("[data-screen-anchor]") ?? node;
-        const r = (anchor as HTMLElement).getBoundingClientRect();
-        return [{ id: l.id, x: r.left - hostRect.left + r.width / 2, y: r.top - hostRect.top + r.height / 2 }];
-      });
-    setEmptyBoxes(empties);
-  }, [scene, zoom, pan]);
+        const r = (node as HTMLElement).getBoundingClientRect();
+        return [{ id, x: r.left - hostRect.left, y: r.top - hostRect.top, w: r.width, h: r.height }];
+      })
+    );
+
+    setEmptyBoxes(
+      scene.layers
+        .filter((l) => l.type === "mockup" && l.deviceId && !l.media)
+        .flatMap((l) => {
+          const node = host.querySelector(`[data-layer-id="${l.id}"]`);
+          if (!node) return [];
+          // anchor to the true SCREEN centre when the renderer exposes it (off-centre
+          // screens — e.g. an angled watch — would otherwise put ⊕ on the body/band)
+          const anchor = (node as HTMLElement).querySelector("[data-screen-anchor]") ?? node;
+          const r = (anchor as HTMLElement).getBoundingClientRect();
+          return [{ id: l.id, x: r.left - hostRect.left + r.width / 2, y: r.top - hostRect.top + r.height / 2 }];
+        })
+    );
+  }, [selectedIds, scene.layers]);
+
+  useLayoutEffect(() => {
+    measureOverlays();
+  }, [measureOverlays, zoom, pan]);
+
+  // late layout shifts the state deps can't see: entrance animation settling,
+  // plate/screenshot images finishing their load
+  useEffect(() => {
+    const host = containerRef.current;
+    if (!host) return;
+    const onAnimEnd = () => measureOverlays();
+    const onLoad = (e: Event) => {
+      if ((e.target as HTMLElement)?.tagName === "IMG") measureOverlays();
+    };
+    host.addEventListener("animationend", onAnimEnd);
+    host.addEventListener("load", onLoad, true); // load doesn't bubble — capture
+    return () => {
+      host.removeEventListener("animationend", onAnimEnd);
+      host.removeEventListener("load", onLoad, true);
+    };
+  }, [measureOverlays]);
+
+  // while a device is animating in, track it frame-by-frame (~1s covers the
+  // fk-device-enter timeline with margin)
+  useEffect(() => {
+    if (!entrance.layerId) return;
+    let raf = 0;
+    const start = performance.now();
+    const tick = (t: number) => {
+      measureOverlays();
+      if (t - start < 1100) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [entrance.nonce, entrance.layerId, measureOverlays]);
 
   /* ------------------------------ coordinates ------------------------------ */
   const toCanvasPt = useCallback(
