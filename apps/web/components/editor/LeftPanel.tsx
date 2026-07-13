@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { motion } from "motion/react";
 import { getDevice, previewDataUri } from "@framekit/devices";
 import type { MockupLayer, Shadow, StickerLayer, TextLayer } from "@framekit/scene";
 import { DEFAULT_SHADOW } from "@framekit/scene";
@@ -110,37 +111,45 @@ function PhoneSlots({
   activeId: string;
   onSelect: (id: string | null) => void;
 }) {
-  if (layers.length < 2) return null;
+  if (layers.length === 0) return null;
   return (
     <section className="border-b border-[#ececf2] px-3 pb-3 pt-2">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">Phone slots</h3>
-        <span className="text-[10px] font-medium text-[#a0a0aa]">{layers.length} phones</span>
+        <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">Screenshots</h3>
+        <span className="text-[10px] font-medium text-[#a0a0aa]">{layers.length} shots</span>
       </div>
       <div className="grid grid-cols-3 gap-1.5">
         {layers.slice(0, 3).map((layer, index) => {
           const device = layer.deviceId ? getDevice(layer.deviceId) : undefined;
+          const asset = layer.media ? resolveAsset(layer.media.assetId) : undefined;
           const active = layer.id === activeId;
           return (
-            <button
+            <motion.button
               key={layer.id}
+              layout
+              initial={{ opacity: 0, y: 18, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 420, damping: 28 }}
               onClick={() => onSelect(layer.id)}
               className={`fk-press min-w-0 rounded-lg border p-1.5 text-left ${
                 active ? "border-[#17171c] bg-[#f4f4f8] shadow-[0_0_0_1px_#17171c]" : "border-[#e4e4ec] bg-white hover:border-[#a9a9b3]"
               }`}
-              title={`Edit phone ${index + 1}`}
+              title={`Edit shot ${index + 1}`}
             >
               <span className="grid h-12 place-items-center overflow-hidden rounded-md bg-[#ececf2]">
-                {device ? (
+                {asset ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={asset.url} alt="" className="max-h-11 max-w-full rounded object-contain" draggable={false} />
+                ) : device ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={previewDataUri(device, layer.frameVariant)} alt="" className="h-10 max-w-full object-contain" draggable={false} />
                 ) : (
                   <span className="h-7 w-10 rounded bg-white shadow-sm" />
                 )}
               </span>
-              <span className="mt-1 block truncate text-[10px] font-semibold text-[#31313a]">Phone {index + 1}</span>
+              <span className="mt-1 block truncate text-[10px] font-semibold text-[#31313a]">Shot {index + 1}</span>
               <span className="block truncate text-[9px] text-[#92929d]">{layer.media ? "Screenshot set" : "Add screenshot"}</span>
-            </button>
+            </motion.button>
           );
         })}
       </div>
@@ -156,6 +165,7 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
   const setScene = useSceneStore((s) => s.setScene);
   const select = useViewStore((s) => s.select);
   const bumpAssets = useViewStore((s) => s.bumpAssets);
+  const triggerEntrance = useViewStore((s) => s.triggerEntrance);
   const fileRef = useRef<HTMLInputElement>(null);
   const [applyMode, setApplyMode] = useState<"selected" | "all">("selected");
   const [editing, setEditing] = useState(false);
@@ -208,6 +218,7 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
               updateLayer(layer.id, (l) => applyToLayer(l as MockupLayer));
             }
             select(layer.id);
+            triggerEntrance(layer.id);
           }}
         />
       </div>
@@ -361,6 +372,7 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
             const a = await ingestFile(f);
             bumpAssets();
             patch({ media: { assetId: a.id, kind: "image", fit: "cover", offsetX: 0, offsetY: 0, scale: 1 } });
+            triggerEntrance(layer.id);
             e.target.value = "";
           }}
         />
@@ -369,7 +381,7 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
       <ScreenStudio layer={layer} />
 
       {device && device.variants.length > 1 && (
-        <Section title="Style">
+        <Section title="Style" collapsible defaultOpen={false}>
           <div className="grid grid-cols-3 gap-2">
             {device.variants.map((v) => {
               const active = (layer.frameVariant ?? device.variants[0].id) === v.id;
@@ -418,7 +430,7 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
         </Section>
       )}
 
-      <Section title="Shadow">
+      <Section title="Shadow" collapsible defaultOpen={false}>
         <div className="grid grid-cols-4 gap-2">
           {SHADOW_PRESETS.map((p) => (
             <button
@@ -458,7 +470,7 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
         )}
       </Section>
 
-      <Section title="Border">
+      <Section title="Border" collapsible defaultOpen={false}>
         <Seg
           id="border-toggle"
           options={[

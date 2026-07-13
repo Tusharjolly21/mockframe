@@ -1,0 +1,65 @@
+{
+  "id": "02-macbook-air-13-clay-mockup-scene",
+  "sourceLayerPath": [
+    "REPLACE THIS SCREEN - 2560 X 1664",
+    "01 - REPLACE THIS SCREEN"
+  ],
+  "renderMode": "masked-composite-smart-object-fallback",
+  "sourcePsd": "02 - Macbook Air 13\" Clay Mockup.psd",
+  "preservesSourcePsd": true,
+  "canvas": {
+    "width": 7500,
+    "height": 5000
+  },
+  "screen": {
+    "smartObjectName": "01 - REPLACE THIS SCREEN",
+    "smartObjectFile": "smart-object.psb",
+    "sourceSize": [
+      2560,
+      1664
+    ],
+    "bounds": [
+      2029,
+      1206,
+      5474,
+      3448
+    ],
+    "quad": [
+      [
+        2029.3646,
+        1205.6328
+      ],
+      [
+        5473.6354,
+        1205.6328
+      ],
+      [
+        5473.6354,
+        3448.3672
+      ],
+      [
+        2029.3646,
+        3448.3672
+      ]
+    ],
+    "mask": "screen-mask.png",
+    "cornerRadius": 0,
+    "clippingMask": true
+  },
+  "layers": {
+    "name": "full-document-composite",
+    "kind": "document",
+    "childrenParsed": true
+  },
+  "assets": {
+    "deviceBase": "device-base.png",
+    "screenMask": "screen-mask.png",
+    "foreground": "foreground.png",
+    "reflection": "reflection.png"
+  },
+  "notes": [
+    "The PSD background is omitted so the editor canvas background remains user-controlled.",
+    "Device body, shadows, lighting, and the nested replace-screen region are preserved.",
+    "The separate MASK SCREEN layer is extracted as the browser alpha mask."
+  ]
+}

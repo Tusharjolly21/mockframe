@@ -3,6 +3,7 @@ import { PSD_WATCH_SCENES } from "./psdWatchScenes";
 import { PSD_IPHONE16_SCENES } from "./psdIPhone16Scenes";
 import { PSD_IPAD_PRO_SCENES } from "./psdIPadProScenes";
 import { PSD_COMPOSITE_SCENES } from "./psdCompositeScenes";
+import { PSD_MACBOOK_SCENES } from "./psdMacbookScenes";
 import { DEVICES as PARAMETRIC_DEVICES } from "./generated/registry";
 import { SCENE_DEVICES } from "./scenes";
 import { SVG_DEVICES } from "./svgDevices";
@@ -12,7 +13,7 @@ export type { Device, DeviceVariant, DeviceCategory, FrameSpec, ScreenSpec, Rast
 
 // parametric SVG frames + hand-authored SVG frame devices + raster photo scenes
 // (Pixeden-sourced) + CC0/free-commercial photo scenes
-const DEVICES: Device[] = [...PARAMETRIC_DEVICES, ...SVG_DEVICES, ...SCENE_DEVICES, ...CC0_SCENES, ...PSD_WATCH_SCENES, ...PSD_IPHONE16_SCENES, ...PSD_IPAD_PRO_SCENES, ...PSD_COMPOSITE_SCENES];
+const DEVICES: Device[] = [...PARAMETRIC_DEVICES, ...SVG_DEVICES, ...SCENE_DEVICES, ...CC0_SCENES, ...PSD_WATCH_SCENES, ...PSD_IPHONE16_SCENES, ...PSD_IPAD_PRO_SCENES, ...PSD_COMPOSITE_SCENES, ...PSD_MACBOOK_SCENES];
 
 const byId = new Map(DEVICES.map((d) => [d.id, d]));
 

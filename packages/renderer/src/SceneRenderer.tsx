@@ -22,6 +22,8 @@ function SceneRendererImpl({
   className,
   style,
   watermark = false,
+  animateLayerId,
+  animationNonce = 0,
 }: {
   scene: SceneDocument;
   resolveAsset: ResolveAsset;
@@ -29,6 +31,9 @@ function SceneRendererImpl({
   style?: CSSProperties;
   /** free-tier watermark baked into the export (removed by a paid plan later) */
   watermark?: boolean;
+  /** Editor-only entrance animation. Omitted for deterministic exports. */
+  animateLayerId?: string | null;
+  animationNonce?: number;
 }) {
   const { canvas } = scene;
   const bg = canvas.background;
@@ -118,7 +123,12 @@ function SceneRendererImpl({
       {backdrop?.pattern && <div style={patternStyle(backdrop.pattern)} />}
 
       {scene.layers.map((layer) => (
-        <LayerView key={layer.id} layer={layer} resolveAsset={resolveAsset} />
+        <LayerView
+          key={`${layer.id}-${animateLayerId === layer.id ? animationNonce : 0}`}
+          layer={layer}
+          resolveAsset={resolveAsset}
+          entrance={animateLayerId === layer.id}
+        />
       ))}
 
       {/* Overlay — cast light / shadow over the whole scene, blended */}
@@ -220,7 +230,7 @@ function SceneRendererImpl({
   );
 }
 
-const LayerView = memo(function LayerView({ layer, resolveAsset }: { layer: Layer; resolveAsset: ResolveAsset }) {
+const LayerView = memo(function LayerView({ layer, resolveAsset, entrance }: { layer: Layer; resolveAsset: ResolveAsset; entrance?: boolean }) {
   const t = layer.transform;
   const wrapper: CSSProperties = {
     position: "absolute",
@@ -228,6 +238,7 @@ const LayerView = memo(function LayerView({ layer, resolveAsset }: { layer: Laye
     top: "50%",
     transform: `translate(-50%, -50%) translate(calc(${t.x}px + var(--fk-drag-x, 0px)), calc(${t.y}px + var(--fk-drag-y, 0px))) rotate(calc(${t.rotate}deg + var(--fk-drag-rotate, 0deg))) scale(calc(${t.scale} * var(--fk-drag-scale, 1)))`,
     transformOrigin: "center",
+    animation: entrance ? "fk-device-enter 620ms cubic-bezier(0.2, 0.85, 0.25, 1) both" : undefined,
   };
 
   if (layer.type === "mockup") {

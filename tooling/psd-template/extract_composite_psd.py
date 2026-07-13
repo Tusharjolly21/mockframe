@@ -37,6 +37,18 @@ def find_smart(root, text):
     return next((layer for layer, _ in walk(root) if text in layer.name.lower()), None)
 
 
+def find_named_layer(root, text):
+    text = text.lower()
+    if text in root.name.lower():
+        return root
+    if root.kind == "group":
+        for child in root:
+            found = find_named_layer(child, text)
+            if found:
+                return found
+    return None
+
+
 def extract(psd_path: Path, output: Path):
     psd = PSDImage.open(psd_path)
     output.mkdir(parents=True, exist_ok=True)
@@ -56,7 +68,7 @@ def extract(psd_path: Path, output: Path):
         if not screen_group:
             continue
         screen = find_smart(screen_group, "REPLACE THIS SCREEN")
-        mask_source = find_smart(screen_group, "MASK SCREEN")
+        mask_source = find_named_layer(screen_group, "MASK SCREEN")
         if not screen or not mask_source:
             continue
 
@@ -65,17 +77,32 @@ def extract(psd_path: Path, output: Path):
         width, height = psd.size
 
         # These PSDs place the replace-screen group at document root beside
-        # the hand/device layers. Render the complete document, then remove
-        # only the screen mask region so every scene layer remains intact.
-        base = psd.composite(force=True).convert("RGBA")
+        # the device layers. Keep the device, shadows, bezel, and lighting,
+        # but omit the editable PSD background so the editor canvas controls
+        # the final backdrop.
+        excluded_top = {"BACKGROUND", "COLORS", "OPTIONAL REFLECTION LIGHT SCREEN", "FLOATING SHADOW"}
+
+        def keep(layer):
+            if layer.name.strip().upper() in excluded_top:
+                return False
+            if layer is screen_group:
+                return False
+            return layer.visible
+
+        base = psd.composite(force=True, layer_filter=keep).convert("RGBA")
         if base.size != (width, height):
             normalized = Image.new("RGBA", (width, height), (0, 0, 0, 0))
             normalized.alpha_composite(base, (0, 0))
             base = normalized
         screen_mask = Image.new("L", (width, height), 0)
-        with mask_source.smart_object.open() as mask_file:
-            mask_psb = PSDImage.open(mask_file)
-            mask_image = mask_psb.composite(force=True).convert("RGBA")
+        if mask_source.kind == "smartobject":
+            with mask_source.smart_object.open() as mask_file:
+                mask_psb = PSDImage.open(mask_file)
+                mask_image = mask_psb.composite(force=True).convert("RGBA")
+        else:
+            # Vector MASK SCREEN layers rasterize cleanly through psd-tools'
+            # compositor (with aggdraw), preserving rounded display corners.
+            mask_image = mask_source.composite(force=True).convert("RGBA")
         mask_alpha = mask_image.getchannel("A")
         if mask_alpha.getbbox() is None:
             mask_alpha = mask_image.convert("L").point(lambda value: 255 if value > 30 else 0)
@@ -122,8 +149,9 @@ def extract(psd_path: Path, output: Path):
                 "reflection": "reflection.png",
             },
             "notes": [
-                "The full Photoshop composite is preserved as the base; only the nested replace-screen region is alpha-cleared.",
-                "The separate MASK SCREEN Smart Object is extracted as the browser alpha mask.",
+                "The PSD background is omitted so the editor canvas background remains user-controlled.",
+                "Device body, shadows, lighting, and the nested replace-screen region are preserved.",
+                "The separate MASK SCREEN layer is extracted as the browser alpha mask.",
             ],
         }
         (target / "smart-object.psb").write_bytes(screen_bytes)

@@ -62,6 +62,7 @@ export function EditorShell({ initialDeviceId }: { initialDeviceId?: string }) {
       });
       setScene(() => r.scene);
       useViewStore.getState().select(r.layerId);
+      useViewStore.getState().triggerEntrance(r.layerId);
     };
 
     const onKey = (e: KeyboardEvent) => {

@@ -54,6 +54,31 @@ body {
   transition-duration: 70ms;
 }
 
+/* A new device should feel placed into the composition, not teleported onto it. */
+@keyframes fk-device-enter {
+  0% {
+    opacity: 0;
+    translate: 0 42px;
+    scale: 0.82;
+    rotate: -3deg;
+    filter: blur(7px);
+  }
+  62% {
+    opacity: 1;
+    translate: 0 -5px;
+    scale: 1.015;
+    rotate: 0.4deg;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+    rotate: 0deg;
+    filter: blur(0);
+  }
+}
+
 /* range inputs */
 input[type="range"] {
   -webkit-appearance: none;

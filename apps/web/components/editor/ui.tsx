@@ -1,16 +1,28 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { ChevronDown } from "lucide-react";
 import { motion } from "motion/react";
 
-export function Section({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
+export function Section({ title, children, action, collapsible = false, defaultOpen = true }: { title: string; children: ReactNode; action?: ReactNode; collapsible?: boolean; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <section className="px-4 pt-4 pb-1">
-      <h3 className="mb-2.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">
-        {title}
+      <div className="mb-2.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">
+        {collapsible ? (
+          <button
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+            className="fk-press flex min-w-0 flex-1 items-center justify-between text-left"
+            aria-expanded={open}
+          >
+            {title}
+            <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+          </button>
+        ) : title}
         {action}
-      </h3>
-      {children}
+      </div>
+      {(!collapsible || open) && children}
     </section>
   );
 }

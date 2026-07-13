@@ -77,6 +77,8 @@ interface ViewState {
   assetVersion: number;
   activeLayoutId: string | null;
   layoutMods: { spread: number; angle: number; tilt: number; scale: number };
+  /** Latest layer that should play the editor-only entrance animation. */
+  entrance: { layerId: string | null; nonce: number };
   /** when on, dragging a mockup on the canvas rotates it in 3D (tiltX/tiltY) */
   threeD: boolean;
   setThreeD: (v: boolean) => void;
@@ -89,6 +91,7 @@ interface ViewState {
   bumpAssets: () => void;
   setActiveLayout: (id: string | null) => void;
   setLayoutMods: (m: { spread: number; angle: number; tilt: number; scale: number }) => void;
+  triggerEntrance: (layerId: string) => void;
   fitToView: (viewport: { width: number; height: number }, canvas: { width: number; height: number }) => void;
 }
 
@@ -99,6 +102,7 @@ export const useViewStore = create<ViewState>()((set) => ({
   assetVersion: 0,
   activeLayoutId: null,
   layoutMods: { spread: 1, angle: 0, tilt: 0, scale: 1 },
+  entrance: { layerId: null, nonce: 0 },
   threeD: false,
   setThreeD: (threeD) => set({ threeD }),
   removeWatermark: false,
@@ -121,6 +125,7 @@ export const useViewStore = create<ViewState>()((set) => ({
   setActiveLayout: (activeLayoutId) =>
     set({ activeLayoutId, layoutMods: { spread: 1, angle: 0, tilt: 0, scale: 1 } }),
   setLayoutMods: (layoutMods) => set({ layoutMods }),
+  triggerEntrance: (layerId) => set((s) => ({ entrance: { layerId, nonce: s.entrance.nonce + 1 } })),
   fitToView: (viewport, canvas) => {
     const zoom = Math.min(
       (viewport.width - 96) / canvas.width,

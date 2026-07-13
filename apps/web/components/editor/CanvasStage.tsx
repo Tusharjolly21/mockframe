@@ -44,7 +44,7 @@ export function CanvasStage() {
   const scene = useSceneStore((s) => s.scene);
   const setScene = useSceneStore((s) => s.setScene);
   const updateLayer = useSceneStore((s) => s.updateLayer);
-  const { zoom, pan, selectedIds, setZoom, setPan, select, bumpAssets, threeD, removeWatermark } = useViewStore();
+  const { zoom, pan, selectedIds, setZoom, setPan, select, bumpAssets, threeD, removeWatermark, entrance } = useViewStore();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<Drag | null>(null);
@@ -400,6 +400,7 @@ export function CanvasStage() {
         });
         setScene(() => r.scene);
         select(r.layerId);
+        useViewStore.getState().triggerEntrance(r.layerId);
       } catch (err) {
         console.error(err);
       }
@@ -442,7 +443,13 @@ export function CanvasStage() {
           className={transparent ? "checkerboard" : undefined}
           style={{ boxShadow: "0 24px 80px rgba(20,20,60,0.22)", borderRadius: 6, overflow: "hidden" }}
         >
-          <SceneRenderer scene={scene} resolveAsset={resolveAsset} watermark={!removeWatermark} />
+        <SceneRenderer
+          scene={scene}
+          resolveAsset={resolveAsset}
+          watermark={!removeWatermark}
+          animateLayerId={entrance.layerId}
+          animationNonce={entrance.nonce}
+        />
         </div>
 
         {/* snap guides in canvas space */}
