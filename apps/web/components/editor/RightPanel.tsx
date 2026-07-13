@@ -14,6 +14,8 @@ import { bulkExportZip, type BulkItem } from "@/lib/bulkExport";
 import { applyVariation, VARIATIONS } from "@/lib/variations";
 import { applyLayout, DEFAULT_MODS, LAYOUT_PRESETS, modifyPreset, type LayoutMods } from "@/lib/layouts";
 import { useSceneStore, useViewStore } from "@/lib/store";
+import { useEntitlementSync } from "@/lib/billing/client";
+import { UpgradeModal } from "./UpgradeModal";
 import { Popover, Seg, SliderRow } from "./ui";
 import { toast } from "./Toolbar";
 import { StaticScenePreview } from "./StaticScenePreview";
@@ -46,6 +48,10 @@ export function RightPanel() {
 
   const mockups = scene.layers.filter((l): l is MockupLayer => l.type === "mockup");
   const arity = (Math.min(3, Math.max(1, mockups.length)) as 1 | 2 | 3) ?? 1;
+  const hideLayouts = mockups.some((layer) => {
+    const category = layer.deviceId ? getDevice(layer.deviceId)?.category : undefined;
+    return category === "laptop" || category === "desktop";
+  });
   const presets = LAYOUT_PRESETS.filter((p) => p.arity === arity);
   const selectedMockups = selectedIds
     .map((id) => scene.layers.find((l) => l.id === id))
@@ -54,13 +60,17 @@ export function RightPanel() {
   const exportNode = () =>
     document.querySelector<HTMLElement>("#scene-canvas [data-scene-id]");
 
+  const removeWatermark = useViewStore((s) => s.removeWatermark);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  useEntitlementSync();
+
   const runExport = async () => {
     const node = exportNode();
     if (!node) return;
     setBusy("export");
     await new Promise((r) => setTimeout(r, 30));
     try {
-      await exportScene(node, scene, { format, scale, quality });
+      await exportScene(node, scene, { format, scale, quality, watermark: !removeWatermark });
     } finally {
       setBusy(null);
     }
@@ -71,12 +81,19 @@ export function RightPanel() {
     if (!node) return;
     setBusy("copy");
     try {
-      const { toBlob } = await import("html-to-image");
-      const blob = toBlob(node, {
+      const { toCanvas } = await import("html-to-image");
+      const { applyWatermark } = await import("@/lib/watermark");
+      const blob = toCanvas(node, {
         pixelRatio: 1,
         canvasWidth: scene.canvas.width,
         canvasHeight: scene.canvas.height,
-      });
+      }).then(
+        (canvas) =>
+          new Promise<Blob>((resolve, reject) => {
+            applyWatermark(canvas, removeWatermark ? { tile: false, badge: false } : {});
+            canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("copy failed"))), "image/png");
+          })
+      );
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob as Promise<Blob> })]);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
@@ -165,16 +182,24 @@ export function RightPanel() {
         </div>
       </div>
 
-      {/* free-tier watermark — removing it is a paid feature (billing lands later) */}
+      {/* free-tier watermark — removing it is the Pro upgrade */}
       <div className="px-3 pt-2">
-        <button
-          onClick={() => toast("Remove watermark is a Pro feature — coming soon ✨")}
-          className="fk-press flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#e4c34d] bg-[#fdf7de] py-1.5 text-[11px] font-semibold text-[#8a6d12] hover:border-[#d4a72c]"
-        >
-          <Sparkles size={12} /> Remove watermark
-        </button>
+        {removeWatermark ? (
+          <div className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#c9ecd4] bg-[#effaf2] py-1.5 text-[11px] font-semibold text-[#1a7f3c]">
+            <Sparkles size={12} /> Pro — exports are watermark-free
+          </div>
+        ) : (
+          <button
+            onClick={() => setUpgradeOpen(true)}
+            className="fk-press flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#e4c34d] bg-[#fdf7de] py-1.5 text-[11px] font-semibold text-[#8a6d12] hover:border-[#d4a72c]"
+          >
+            <Sparkles size={12} /> Remove watermark
+          </button>
+        )}
       </div>
+      {upgradeOpen && <UpgradeModal onClose={() => setUpgradeOpen(false)} />}
 
+      {!hideLayouts && <>
       {/* mockup count */}
       <div className="px-3 pt-3">
         <Seg
@@ -281,6 +306,7 @@ export function RightPanel() {
         />
         )}
       </div>
+      </>}
     </div>
   );
 }

@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, Mail, X } from "lucide-react";
+import { KeyRound, Loader2, Mail, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
-/** Sign-in modal: Google OAuth + passwordless email magic-link. */
+/** Sign-in modal: Google OAuth + passwordless email magic-link + email/password. */
 export function AuthModal({ onClose }: { onClose: () => void }) {
-  const { signInGoogle, sendMagicLink } = useAuth();
+  const { signInGoogle, sendMagicLink, signInPassword } = useAuth();
   const [busy, setBusy] = useState<"google" | "email" | null>(null);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [usePassword, setUsePassword] = useState(false);
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -26,19 +28,28 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
     }
   }
 
-  async function magicLink(e: React.FormEvent) {
+  async function submitEmail(e: React.FormEvent) {
     e.preventDefault();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       setErr("Enter a valid email address.");
       return;
     }
+    if (usePassword && password.length < 6) {
+      setErr("Password must be at least 6 characters.");
+      return;
+    }
     setBusy("email");
     setErr(null);
     try {
-      await sendMagicLink(email.trim());
-      setSent(true);
+      if (usePassword) {
+        await signInPassword(email.trim(), password);
+        onClose();
+      } else {
+        await sendMagicLink(email.trim());
+        setSent(true);
+      }
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Couldn't send the link.");
+      setErr(e instanceof Error ? e.message : usePassword ? "Couldn't sign in." : "Couldn't send the link.");
     } finally {
       setBusy(null);
     }
@@ -89,7 +100,7 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
                 <span className="h-px flex-1 bg-[#ececf2]" /> or <span className="h-px flex-1 bg-[#ececf2]" />
               </div>
 
-              <form onSubmit={magicLink} className="flex flex-col gap-2">
+              <form onSubmit={submitEmail} className="flex flex-col gap-2">
                 <input
                   type="email"
                   value={email}
@@ -97,13 +108,32 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
                   placeholder="you@example.com"
                   className="rounded-xl border border-[#e4e4ec] bg-[#f8f8fb] px-3 py-2.5 text-[13px] text-[#17171c] outline-none placeholder:text-[#a0a0aa] focus:border-[#17171c]"
                 />
+                {usePassword && (
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password (6+ characters)"
+                    className="rounded-xl border border-[#e4e4ec] bg-[#f8f8fb] px-3 py-2.5 text-[13px] text-[#17171c] outline-none placeholder:text-[#a0a0aa] focus:border-[#17171c]"
+                  />
+                )}
                 <button
                   type="submit"
                   disabled={busy !== null}
                   className="fk-press flex items-center justify-center gap-2 rounded-xl bg-[#17171c] py-2.5 text-[13px] font-semibold text-white hover:bg-black disabled:opacity-50"
                 >
-                  {busy === "email" ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />}
-                  Email me a magic link
+                  {busy === "email" ? <Loader2 size={15} className="animate-spin" /> : usePassword ? <KeyRound size={15} /> : <Mail size={15} />}
+                  {usePassword ? "Sign in / create account" : "Email me a magic link"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUsePassword((v) => !v);
+                    setErr(null);
+                  }}
+                  className="text-center text-[11.5px] font-medium text-[#8a8a94] hover:text-[#17171c]"
+                >
+                  {usePassword ? "Use a magic link instead" : "Use a password instead"}
                 </button>
               </form>
             </>

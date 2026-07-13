@@ -2,6 +2,7 @@
 
 import { getApp, getApps, initializeApp } from "firebase/app";
 import {
+  createUserWithEmailAndPassword,
   EmailAuthProvider,
   getAuth,
   GoogleAuthProvider,
@@ -12,6 +13,7 @@ import {
   sendSignInLinkToEmail,
   signInAnonymously,
   signInWithCredential,
+  signInWithEmailAndPassword,
   signInWithEmailLink,
   signInWithPopup,
   signOut,
@@ -96,6 +98,53 @@ export async function signInWithGoogle(): Promise<User> {
       const cred = GoogleAuthProvider.credentialFromError(e as never);
       const res = cred ? await signInWithCredential(auth, cred) : await signInWithPopup(auth, provider);
       return res.user;
+    }
+    throw e;
+  }
+}
+
+/**
+ * Email + password sign-in (needed for payment-gateway verification, where a
+ * reviewer must log in with shared test credentials — magic links won't do).
+ * Signs into an existing account, or creates one if the email is new — LINKING
+ * onto the anonymous guest session when possible so the uid (and all guest
+ * work) carries over, mirroring the Google flow. Requires the Email/Password
+ * provider to be enabled in the Firebase console.
+ */
+export async function signInWithPassword(email: string, password: string): Promise<User> {
+  const auth = getFirebaseAuth();
+  if (!auth) throw new Error("Sign-in isn't configured.");
+  const current = auth.currentUser;
+
+  if (current && current.isAnonymous) {
+    try {
+      // new email → password credential lands on the guest uid (work carries over)
+      const res = await linkWithCredential(current, EmailAuthProvider.credential(email, password));
+      return res.user;
+    } catch (e) {
+      const code = (e as { code?: string }).code;
+      // account already exists — fall through to a plain sign-in with these credentials
+      if (code !== "auth/email-already-in-use" && code !== "auth/credential-already-in-use") throw e;
+    }
+  }
+
+  try {
+    const res = await signInWithEmailAndPassword(auth, email, password);
+    return res.user;
+  } catch (e) {
+    const code = (e as { code?: string }).code;
+    // unknown email (enumeration protection reports it as invalid-credential) → try creating
+    if (code === "auth/user-not-found" || code === "auth/invalid-credential") {
+      try {
+        const res = await createUserWithEmailAndPassword(auth, email, password);
+        return res.user;
+      } catch (createErr) {
+        // email DID exist → the original failure was a wrong password
+        if ((createErr as { code?: string }).code === "auth/email-already-in-use") {
+          throw new Error("Wrong password for this email.");
+        }
+        throw createErr;
+      }
     }
     throw e;
   }

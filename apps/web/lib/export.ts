@@ -2,6 +2,7 @@
 
 import { toCanvas } from "html-to-image";
 import type { SceneDocument } from "@framekit/scene";
+import { applyWatermark } from "./watermark";
 
 export type ExportFormat = "png" | "jpeg" | "webp";
 export type ExportQuality = "best" | "balanced" | "compact";
@@ -23,7 +24,7 @@ const QUALITY: Record<ExportQuality, { jpeg: number; webp: number }> = {
 export async function exportScene(
   node: HTMLElement,
   scene: SceneDocument,
-  opts: { format: ExportFormat; scale: number; quality?: ExportQuality }
+  opts: { format: ExportFormat; scale: number; quality?: ExportQuality; watermark?: boolean }
 ): Promise<void> {
   const canvas = await toCanvas(node, {
     // canvasWidth/Height alone define the output size — combining them with
@@ -35,6 +36,10 @@ export async function exportScene(
     backgroundColor: opts.format === "jpeg" ? "#ffffff" : undefined,
     style: { transform: "none" }, // neutralize any inherited editor transform on the clone
   });
+
+  // Free tier: visible tile + badge + forensic. Pro: forensic layer only —
+  // invisible, keeps exports traceable even with the visible marks removed.
+  applyWatermark(canvas, opts.watermark ? {} : { tile: false, badge: false });
 
   const mime = `image/${opts.format}`;
   const encoderQuality =

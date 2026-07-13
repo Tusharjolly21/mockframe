@@ -9,6 +9,7 @@ import {
   onAuthChange,
   sendEmailSignInLink,
   signInWithGoogle,
+  signInWithPassword,
   signOutToGuest,
 } from "./firebaseClient";
 
@@ -21,6 +22,7 @@ type AuthValue = {
   account: Account | null;
   signInGoogle: () => Promise<void>;
   sendMagicLink: (email: string) => Promise<void>;
+  signInPassword: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -70,6 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       sendMagicLink: async (email: string) => {
         await sendEmailSignInLink(email);
+      },
+      signInPassword: async (email: string, password: string) => {
+        await signInWithPassword(email, password);
       },
       signOut: async () => {
         await signOutToGuest();

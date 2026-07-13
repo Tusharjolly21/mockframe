@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { SceneRenderer } from "@framekit/renderer";
 import type { SceneDocument } from "@framekit/scene";
 import { resolveAsset } from "./assets";
+import { applyWatermark } from "./watermark";
 import { buildZip, type ZipEntry } from "./zip";
 
 /**
@@ -18,17 +19,21 @@ async function renderSceneToPng(scene: SceneDocument, scale: number, watermark: 
   document.body.appendChild(holder);
   const root = createRoot(holder);
   try {
-    root.render(<SceneRenderer scene={scene} resolveAsset={resolveAsset} watermark={watermark} />);
+    // watermark is baked at the canvas stage (tiles + badge + forensic layer),
+    // not via the renderer's DOM badge — keeps all export paths identical
+    root.render(<SceneRenderer scene={scene} resolveAsset={resolveAsset} />);
     // let React commit + local data-URL images decode
     await new Promise((r) => setTimeout(r, 120));
     const node = holder.firstElementChild as HTMLElement | null;
     if (!node) throw new Error("render failed");
-    const { toBlob } = await import("html-to-image");
-    const blob = await toBlob(node, {
+    const { toCanvas } = await import("html-to-image");
+    const canvas = await toCanvas(node, {
       pixelRatio: 1,
       canvasWidth: scene.canvas.width * scale,
       canvasHeight: scene.canvas.height * scale,
     });
+    applyWatermark(canvas, watermark ? {} : { tile: false, badge: false });
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
     if (!blob) throw new Error("rasterize failed");
     return new Uint8Array(await blob.arrayBuffer());
   } finally {
