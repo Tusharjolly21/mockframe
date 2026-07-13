@@ -95,6 +95,14 @@ export function onAssetsChange(fn: () => void): () => void {
   return () => listeners.delete(fn);
 }
 
+/** Register an app-generated data-URL image (e.g. a tinted icon sticker). */
+export function ingestGenerated(name: string, url: string, width: number, height: number): GuestAsset {
+  const asset: GuestAsset = { id: createId(), name, url, width, height };
+  assets.set(asset.id, asset);
+  listeners.forEach((fn) => fn());
+  return asset;
+}
+
 export async function ingestFile(file: File): Promise<GuestAsset> {
   if (!file.type.startsWith("image/")) throw new Error("Only image files are supported");
   if (file.size > 40 * 1024 * 1024) throw new Error("Image exceeds 40MB");

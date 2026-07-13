@@ -5,8 +5,9 @@ import { AnimatePresence } from "motion/react";
 import { ArrowUpRight, Baseline, Box, EyeOff, Highlighter, Keyboard, ListOrdered, Move, Palette, RotateCcw, ScanEye, Search, SlidersHorizontal, SmilePlus } from "lucide-react";
 import { getDevice } from "@framekit/devices";
 import type { MockupLayer } from "@framekit/scene";
-import { resolveAsset } from "@/lib/assets";
-import { addAnnotation, addEmoji, type AnnotationStickerId } from "@/lib/sceneOps";
+import { ingestGenerated, resolveAsset } from "@/lib/assets";
+import { ICON_VIEWBOX, iconBody, iconDataUrl, searchIcons } from "@/lib/iconStickers";
+import { addAnnotation, addEmoji, addIconSticker, type AnnotationStickerId } from "@/lib/sceneOps";
 import { applyTheme, BUILTIN_THEMES, loadSavedThemes, saveTheme, syncThemesFromServer, themeMatches, type StyleTheme } from "@/lib/themes";
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
 import { useDraftsUi } from "@/lib/drafts";
@@ -293,7 +294,9 @@ export function BottomBar() {
   );
 }
 
-type LibraryItem = { glyph: string; label: string; kind?: "annotation"; id?: AnnotationStickerId };
+type LibraryItem = { glyph: string; label: string; kind?: "annotation" | "icon"; id?: AnnotationStickerId; icon?: string };
+
+const ICON_TINTS = ["#17171c", "#ffffff", "#7c3aed", "#ff3b30", "#10b981", "#f59e0b", "#0ea5e9"];
 
 const STICKER_GROUPS: Array<{ id: string; label: string; items: LibraryItem[] }> = [
   { id: "emoji", label: "Emoji", items: EMOJI.map((glyph) => ({ glyph, label: glyph })) },
@@ -325,24 +328,52 @@ const STICKER_GROUPS: Array<{ id: string; label: string; items: LibraryItem[] }>
 ];
 
 function StickerLibrary({ onClose }: { onClose: () => void }) {
-  const [groupId, setGroupId] = useState("emoji");
+  const [groupId, setGroupId] = useState("icons");
   const [query, setQuery] = useState("");
+  const [tint, setTint] = useState("#17171c");
   const setScene = useSceneStore((s) => s.setScene);
   const select = useViewStore((s) => s.select);
   const group = STICKER_GROUPS.find((item) => item.id === groupId) ?? STICKER_GROUPS[0];
-  const items = query.trim()
+
+  // Iconify (Solar) — 7,000+ proper vector icons, searchable by name; shown as
+  // its own group and merged first into cross-group search results
+  const iconItems: LibraryItem[] =
+    groupId === "icons" || query.trim()
+      ? searchIcons(query, query.trim() ? 24 : 48).map((base) => ({
+          kind: "icon" as const,
+          icon: base,
+          glyph: "",
+          label: base.replaceAll("-", " "),
+        }))
+      : [];
+  const glyphItems = query.trim()
     ? STICKER_GROUPS.flatMap((item) => item.items.map((entry) => ({ ...entry, group: item.id }))).filter((item) => `${item.label} ${item.group}`.toLowerCase().includes(query.toLowerCase()))
-    : group.items;
+    : groupId === "icons"
+      ? []
+      : group.items;
+  const items = [...iconItems, ...glyphItems];
+  const showTints = items.some((i) => i.kind === "icon");
 
   const insert = (item: LibraryItem) => {
     const scene = useSceneStore.getState().scene;
-    const result = item.kind === "annotation" && item.id ? addAnnotation(scene, item.id) : addEmoji(scene, item.glyph);
+    let result: { scene: typeof scene; layerId: string };
+    if (item.kind === "icon" && item.icon) {
+      const url = iconDataUrl(item.icon, tint);
+      if (!url) return;
+      const asset = ingestGenerated(`icon-${item.icon}`, url, 512, 512);
+      useViewStore.getState().bumpAssets();
+      result = addIconSticker(scene, asset.id);
+    } else if (item.kind === "annotation" && item.id) {
+      result = addAnnotation(scene, item.id);
+    } else {
+      result = addEmoji(scene, item.glyph);
+    }
     setScene(() => result.scene);
     select(result.layerId);
   };
 
   return (
-    <Popover className="bottom-[calc(100%+10px)] left-1/2 w-[360px] max-w-[calc(100vw-24px)] -translate-x-1/2 overflow-hidden p-0">
+    <Popover className="!z-[200] bottom-[calc(100%+10px)] left-1/2 w-[360px] max-w-[calc(100vw-24px)] -translate-x-1/2 overflow-hidden p-0">
       <div className="border-b border-[#ececf2] px-3 pb-2.5 pt-3">
         <div className="mb-2 flex items-center justify-between">
           <div>
@@ -355,19 +386,46 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
           <Search size={15} className="text-[#8a8a94]" />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search stickers" className="min-w-0 flex-1 bg-transparent text-xs outline-none" />
         </label>
-        <div className="panel-scroll mt-2 flex gap-1 overflow-x-auto pb-0.5">
-          {STICKER_GROUPS.map((item) => (
+        <div className="panel-scroll mt-2 flex max-h-16 flex-wrap gap-1 overflow-y-auto pb-0.5">
+          {[{ id: "icons", label: "Icons" }, ...STICKER_GROUPS].map((item) => (
             <button key={item.id} onClick={() => { setGroupId(item.id); setQuery(""); }} className={`fk-press shrink-0 rounded-full px-2.5 py-1.5 text-[10.5px] font-semibold ${groupId === item.id && !query ? "bg-[#17171c] text-white" : "bg-[#f1f1f5] text-[#5a5a66] hover:bg-[#e8e8ee]"}`}>
               {item.label}
             </button>
           ))}
         </div>
+        {showTints && (
+          <div className="mt-2 flex items-center gap-1.5">
+            {ICON_TINTS.map((c) => (
+              <button
+                key={c}
+                onClick={() => setTint(c)}
+                title={c}
+                className={`h-5 w-5 rounded-full border ${tint === c ? "ring-2 ring-[#17171c] ring-offset-1" : "border-black/15"}`}
+                style={{ background: c }}
+              />
+            ))}
+            <label className="relative h-5 w-5 cursor-pointer overflow-hidden rounded-full border border-black/15" style={{ background: ICON_TINTS.includes(tint) ? "conic-gradient(red,yellow,lime,cyan,blue,magenta,red)" : tint }} title="Custom color">
+              <input type="color" value={tint} onChange={(e) => setTint(e.target.value)} className="absolute inset-0 cursor-pointer opacity-0" />
+            </label>
+          </div>
+        )}
       </div>
       <div className="panel-scroll max-h-[360px] overflow-y-auto px-3 py-3">
         <div className="grid grid-cols-4 gap-1.5">
           {items.map((item, index) => (
             <button key={`${item.label}-${index}`} title={item.label} onClick={() => insert(item)} className="fk-press grid min-h-14 place-items-center rounded-xl border border-transparent bg-[#f7f7fa] px-1 py-2 text-[27px] leading-none hover:border-[#c9c9d4] hover:bg-white">
-              <span className={item.kind === "annotation" ? "font-semibold text-[#17171c]" : ""}>{item.glyph}</span>
+              {item.kind === "icon" && item.icon ? (
+                <svg
+                  viewBox={ICON_VIEWBOX}
+                  width={26}
+                  height={26}
+                  style={{ color: tint }}
+                  aria-hidden
+                  dangerouslySetInnerHTML={{ __html: iconBody(item.icon) ?? "" }}
+                />
+              ) : (
+                <span className={item.kind === "annotation" ? "font-semibold text-[#17171c]" : ""}>{item.glyph}</span>
+              )}
             </button>
           ))}
         </div>

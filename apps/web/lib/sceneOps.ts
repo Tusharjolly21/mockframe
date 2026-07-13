@@ -128,6 +128,28 @@ export function addEmoji(scene: SceneDocument, emoji: string): { scene: SceneDoc
   return { scene: addLayer(scene, layer), layerId: layer.id };
 }
 
+/** Drop an Iconify icon sticker (a 512px tinted-SVG asset — crisp at any scale). */
+export function addIconSticker(scene: SceneDocument, assetId: string): { scene: SceneDocument; layerId: string } {
+  const id = createId();
+  const scale = Math.round(((scene.canvas.height * 0.14) / 512) * 1000) / 1000;
+  const n = scene.layers.length;
+  const layer: StickerLayer = {
+    type: "sticker",
+    id,
+    assetId,
+    transform: {
+      x: ((n % 5) - 2) * scene.canvas.width * 0.08,
+      y: -scene.canvas.height * 0.22 + (n % 3) * scene.canvas.height * 0.06,
+      scale,
+      rotate: 0,
+      tiltX: 0,
+      tiltY: 0,
+      perspective: 1200,
+    },
+  };
+  return { scene: addLayer(scene, layer), layerId: id };
+}
+
 /** Place an uploaded image as a masked app icon (App Store / Play Store shots). */
 export function addAppIcon(
   scene: SceneDocument,
