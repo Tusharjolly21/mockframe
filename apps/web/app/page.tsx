@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Boxes, Download, ImageIcon, Layers, Sparkles, Wand2 } from "lucide-react";
 import { getDevice, listDevices, previewDataUri } from "@framekit/devices";
+import { HeroMockups } from "@/components/HeroMockups";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { SITE_NAME, SITE_URL, cleanDeviceName } from "@/lib/site";
 
@@ -43,11 +44,6 @@ const FEATURES = [
 export default function HomePage() {
   const devices = listDevices();
   const popular = POPULAR.map((id) => getDevice(id)).filter((d): d is NonNullable<typeof d> => Boolean(d));
-  const [heroPhone, heroLaptop, heroWatch] = [
-    getDevice("iphone-16-pro"),
-    getDevice("macbook-pro-16"),
-    getDevice("apple-watch-ultra-2"),
-  ];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -62,28 +58,41 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-dvh bg-[#e9e9f0] text-[#17171c]">
+    <main className="relative min-h-dvh overflow-hidden bg-[#e9e9f0] text-[#17171c]">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {/* ambient page-top wash for depth */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[720px]"
+        style={{
+          background:
+            "radial-gradient(60% 50% at 82% 8%, rgba(124,58,237,0.14), transparent 60%), radial-gradient(50% 40% at 8% 20%, rgba(6,182,212,0.12), transparent 60%), linear-gradient(180deg, #f3f3f7, #e9e9f0 60%)",
+        }}
+      />
       <SiteHeader />
 
       {/* hero */}
-      <section className="mx-auto grid max-w-6xl gap-10 px-6 pt-10 pb-6 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:pt-16">
+      <section className="mx-auto grid max-w-6xl gap-12 px-6 pt-10 pb-8 lg:grid-cols-[1fr_1.08fr] lg:items-center lg:pt-20">
         <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[12px] font-semibold text-[#6b6b76] shadow-sm">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white/80 px-3 py-1 text-[12px] font-semibold text-[#6b6b76] shadow-sm backdrop-blur">
             <Sparkles size={13} className="text-violet-600" />
             {devices.length} device frames · free forever
           </span>
-          <h1 className="mt-4 text-[40px] font-extrabold leading-[1.05] tracking-tight sm:text-[56px]">
-            Beautiful device mockups, in seconds.
+          <h1 className="mt-5 text-[42px] font-extrabold leading-[1.03] tracking-[-0.03em] sm:text-[58px]">
+            Screenshots into
+            <br />
+            <span className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-cyan-500 bg-clip-text text-transparent">
+              stunning mockups.
+            </span>
           </h1>
-          <p className="mt-4 max-w-lg text-[16px] leading-relaxed text-[#5b5b66] sm:text-[17px]">
-            Drop your screenshot into a pixel-perfect iPhone, MacBook, iPad or Apple Watch frame, style the background,
-            and export a production-ready image. Free, online, no watermark.
+          <p className="mt-5 max-w-md text-[16px] leading-relaxed text-[#5b5b66] sm:text-[17px]">
+            Drop your screenshot into a pixel-perfect iPhone, MacBook, iPad or Apple Watch, style the scene, and export a
+            production-ready image. Free, online, no watermark.
           </p>
-          <div className="mt-7 flex flex-wrap items-center gap-3">
+          <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               href="/editor"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#17171c] px-6 py-3.5 text-[15px] font-semibold text-white transition hover:bg-black"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#17171c] px-6 py-3.5 text-[15px] font-semibold text-white shadow-[0_8px_24px_rgba(20,20,45,0.2)] transition hover:bg-black hover:shadow-[0_12px_30px_rgba(20,20,45,0.28)]"
             >
               Open the editor
               <ArrowRight size={18} />
@@ -95,38 +104,22 @@ export default function HomePage() {
               Browse {devices.length} devices
             </Link>
           </div>
+          <div className="mt-7 flex items-center gap-5 text-[12.5px] font-medium text-[#8a8a94]">
+            <span className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> No sign-up
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> No watermark
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Instant export
+            </span>
+          </div>
         </div>
 
-        {/* hero device cluster */}
-        <div className="relative h-[340px] sm:h-[440px]">
-          <div
-            className="absolute inset-0 rounded-[32px]"
-            style={{ background: "radial-gradient(120% 100% at 70% 30%, #7c3aed26, transparent 60%), linear-gradient(135deg, #06b6d41f, transparent)" }}
-          />
-          {heroLaptop && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={previewDataUri(heroLaptop)}
-              alt="MacBook mockup"
-              className="absolute left-[6%] top-[30%] w-[62%] drop-shadow-[0_30px_60px_rgba(20,20,45,0.28)]"
-            />
-          )}
-          {heroPhone && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={previewDataUri(heroPhone)}
-              alt="iPhone mockup"
-              className="absolute right-[10%] top-[4%] h-[92%] drop-shadow-[0_30px_60px_rgba(20,20,45,0.3)]"
-            />
-          )}
-          {heroWatch && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={previewDataUri(heroWatch)}
-              alt="Apple Watch mockup"
-              className="absolute bottom-[2%] left-[26%] w-[20%] drop-shadow-[0_20px_40px_rgba(20,20,45,0.32)]"
-            />
-          )}
+        {/* hero device cluster — real UI inside each device */}
+        <div className="lg:pl-4">
+          <HeroMockups />
         </div>
       </section>
 
