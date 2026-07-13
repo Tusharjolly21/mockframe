@@ -1,0 +1,5 @@
+# Never upload raw Photoshop sources — Vercel has a 100MB/file limit
+# (they are extraction sources, not runtime assets; extracted PNGs live in public/)
+psd/
+*.psd
+*.psb
