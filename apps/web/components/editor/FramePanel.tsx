@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence } from "motion/react";
 import type { Background, Backdrop, Effect, MockupLayer } from "@framekit/scene";
 import { backgroundToCss, noiseTile, overlayStyle, patternStyle } from "@framekit/renderer";
-import { Aperture, ArrowLeft, ArrowUpDown, Ban, ChevronDown, Grid3x3, Image as ImageIcon, Pipette, SlidersHorizontal, Sparkles, Square, Sun } from "lucide-react";
+import { Aperture, ArrowLeft, ArrowUpDown, Ban, Check, ChevronDown, Grid3x3, Image as ImageIcon, Pipette, SlidersHorizontal, Sparkles, Square, Sun } from "lucide-react";
 import {
   SiAppstore,
   SiDribbble,
@@ -47,6 +47,8 @@ export function FrameControls() {
   const bumpAssets = useViewStore((s) => s.bumpAssets);
   const fileRef = useRef<HTMLInputElement>(null);
   const colorRef = useRef<HTMLInputElement>(null);
+  // previous look, so the transparent-background toggle is reversible
+  const stashRef = useRef<{ background: Background; backdrop?: Backdrop; effects?: Effect[] } | null>(null);
   const [view, setView] = useState<FrameView>("hub");
 
   const bg = scene.canvas.background;
@@ -135,10 +137,69 @@ export function FrameControls() {
     { id: "border", label: "Border", icon: <Square size={14} />, on: (scene.canvas.cornerRadius ?? 0) > 0 || (scene.canvas.border?.width ?? 0) > 0 },
   ];
 
+  // "Transparent background" — remove the whole canvas behind the device so
+  // the export is just the mockup (browser / code / any device) on
+  // transparency. Clears the backdrop + effects too, and stashes the previous
+  // look so toggling back off restores it.
+  const isClean =
+    bg.type === "transparent" && !backdrop?.pattern && !backdrop?.overlay && !backdrop?.portrait && !(scene.canvas.effects?.length);
+  const toggleTransparent = () => {
+    setScene((s) => {
+      if (isClean) {
+        const prev = stashRef.current;
+        return {
+          ...s,
+          canvas: {
+            ...s.canvas,
+            background: prev?.background ?? { type: "mesh-gradient", seed: 7, colors: ["#6d28d9", "#4f46e5", "#0e7490"] },
+            backdrop: prev?.backdrop,
+            effects: prev?.effects,
+          },
+        };
+      }
+      stashRef.current = { background: s.canvas.background, backdrop: s.canvas.backdrop, effects: s.canvas.effects };
+      return { ...s, canvas: { ...s.canvas, background: { type: "transparent" }, backdrop: undefined, effects: undefined } };
+    });
+  };
+
   return (
     <>
       <div className="px-3 pt-1">
         <SizeSelector />
+      </div>
+
+      {/* Transparent-canvas toggle — export the device alone on transparency */}
+      <div className="px-4 pt-4">
+        <button
+          onClick={toggleTransparent}
+          role="switch"
+          aria-checked={isClean}
+          className={`fk-press flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left ${
+            isClean ? "border-[#17171c] bg-[#f4f4f8]" : "border-[#e4e4ec] bg-white hover:border-[#c9c9d4]"
+          }`}
+        >
+          <span
+            className="h-6 w-6 shrink-0 rounded-md border border-black/10"
+            style={{
+              backgroundImage:
+                "linear-gradient(45deg,#d4d4dc 25%,transparent 25%),linear-gradient(-45deg,#d4d4dc 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#d4d4dc 75%),linear-gradient(-45deg,transparent 75%,#d4d4dc 75%)",
+              backgroundSize: "8px 8px",
+              backgroundPosition: "0 0,0 4px,4px -4px,-4px 0",
+              backgroundColor: "#fff",
+            }}
+          />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[12.5px] font-semibold text-[#17171c]">Transparent background</span>
+            <span className="block text-[10.5px] leading-tight text-[#9a9aa4]">Export just the device — no canvas behind it</span>
+          </span>
+          <span
+            className={`grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border-2 ${
+              isClean ? "border-[#17171c] bg-[#17171c] text-white" : "border-[#d4d4de]"
+            }`}
+          >
+            {isClean && <Check size={11} strokeWidth={3.5} />}
+          </span>
+        </button>
       </div>
 
       {/* Style hub — each chip opens a focused sub-view (PostSpark Backdrop) */}
