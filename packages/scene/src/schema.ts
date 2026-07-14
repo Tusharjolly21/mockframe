@@ -152,6 +152,8 @@ export const MockupLayerSchema = z.object({
   shadow: ShadowSchema.nullable(),
   /** persistent grouping: layers sharing a group id select & move together */
   group: z.string().optional(),
+  /** address shown in a browser-frame device's URL bar (Chrome/Safari) */
+  browserUrl: z.string().optional(),
   cornerRadius: z.number().min(0).optional(), // frameless only
   border: z
     .object({

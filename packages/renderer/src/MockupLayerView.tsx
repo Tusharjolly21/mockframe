@@ -75,6 +75,18 @@ function ScreenPlaceholder({ device, layerId }: { device: Device; layerId: strin
   );
 }
 
+/** Swap the address shown in a Chrome/Safari frame's URL bar. The frame SVG
+ *  tags its address <text> with id="fk_urltext_…"; replace only that text. */
+function browserUrlOverlay(overlay: string, url: string | undefined): string {
+  if (!url) return overlay;
+  const clean = url.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+  const esc = clean.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return overlay.replace(
+    /(<text\b[^>]*id="fk_urltext_[^"]*"[^>]*>)[^<]*(<\/text>)/g,
+    (_m, open: string, close: string) => `${open}${esc}${close}`
+  );
+}
+
 /** Diagonal glass-glare streak: a wide main band + a thin echo band, both
  *  scaled by intensity. Same stops feed the CSS overlay and the SVG gradient. */
 function glareStops(intensity: number): { offset: number; alpha: number }[] {
@@ -366,7 +378,7 @@ export function MockupLayerView({
         height={frame.height}
         style={{ display: "block" }}
       >
-        <g dangerouslySetInnerHTML={{ __html: variant.body }} />
+        <g dangerouslySetInnerHTML={{ __html: browserUrlOverlay(variant.body, layer.browserUrl) }} />
         <clipPath id={clipId}>
           <path d={frame.maskPath} />
         </clipPath>
@@ -404,7 +416,7 @@ export function MockupLayerView({
             </>
           )}
         </g>
-        <g dangerouslySetInnerHTML={{ __html: variant.overlay }} />
+        <g dangerouslySetInnerHTML={{ __html: browserUrlOverlay(variant.overlay, layer.browserUrl) }} />
       </svg>
       </div>
       </div>

@@ -20,7 +20,7 @@ export function presentationForDevice(device: DeviceLike): {
   const portrait = frameRatio < 0.82;
   const wide = frameRatio > 1.45;
 
-  if (category === "laptop" || category === "desktop") {
+  if (category === "laptop" || category === "desktop" || category === "browser") {
     return {
       width: 1600,
       height: 1000,

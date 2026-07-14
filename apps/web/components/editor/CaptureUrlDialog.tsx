@@ -15,7 +15,7 @@ export function CaptureUrlDialog({
   onCaptured,
 }: {
   onClose: () => void;
-  onCaptured: (file: File) => Promise<void> | void;
+  onCaptured: (file: File, meta: { desktop: boolean; url: string; dark: boolean }) => Promise<void> | void;
 }) {
   const [url, setUrl] = useState("");
   const [dark, setDark] = useState(false);
@@ -45,7 +45,12 @@ export function CaptureUrlDialog({
       }
       const blob = await res.blob();
       const host = url.trim().replace(/^https?:\/\//i, "").split("/")[0];
-      await onCaptured(new File([blob], `${host}.png`, { type: "image/png" }));
+      // desktop captures land inside a Chrome browser window; mobile on the phone
+      await onCaptured(new File([blob], `${host}.png`, { type: "image/png" }), {
+        desktop: width === 1440,
+        url: host,
+        dark,
+      });
       onClose();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Capture failed");

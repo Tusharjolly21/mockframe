@@ -293,10 +293,28 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
         {capturing && (
           <CaptureUrlDialog
             onClose={() => setCapturing(false)}
-            onCaptured={async (file) => {
+            onCaptured={async (file, meta) => {
               const a = await ingestFile(file);
               bumpAssets();
-              patch({ media: { assetId: a.id, kind: "image", fit: "cover", offsetX: 0, offsetY: 0, scale: 1 } });
+              const media = { assetId: a.id, kind: "image" as const, fit: "cover" as const, offsetX: 0, offsetY: 0, scale: 1 };
+              // desktop capture → drop it inside a real Chrome browser window
+              const browser = meta.desktop ? getDevice("chrome-browser") : undefined;
+              if (browser) {
+                const p = presentationForDevice(browser);
+                const scale = Math.round(((p.height * 0.78) / browser.frame.height) * 1000) / 1000;
+                setScene((s) => ({
+                  ...s,
+                  canvas: { ...s.canvas, width: p.width, height: p.height, background: p.background, backdrop: p.backdrop },
+                  layers: s.layers.map((l) =>
+                    l.id === layer.id
+                      ? { ...(l as MockupLayer), deviceId: "chrome-browser", frameVariant: meta.dark ? "dark" : "light", browserUrl: meta.url, media, transform: { ...(l as MockupLayer).transform, x: 0, y: 0, scale } }
+                      : l
+                  ),
+                }));
+                select(layer.id);
+              } else {
+                patch({ media });
+              }
               triggerEntrance(layer.id);
             }}
           />
