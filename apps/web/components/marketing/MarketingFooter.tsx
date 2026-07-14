@@ -26,6 +26,7 @@ const COLS: { title: string; links: [string, string][] }[] = [
       ["/mockups/galaxy-s25-ultra", "Galaxy S25 Ultra"],
       ["/mockups/pixel-9-pro", "Pixel 9 Pro"],
       ["/mockups", "All 63 devices"],
+      ["/privacy", "Privacy policy"],
     ],
   },
 ];

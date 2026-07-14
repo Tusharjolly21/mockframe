@@ -109,6 +109,11 @@ export function RightPanel() {
   };
 
   const runShare = async () => {
+    // hosted share links are Pro (user request) — storage + bandwidth on us
+    if (!removeWatermark) {
+      openUpgrade();
+      return;
+    }
     const node = exportNode();
     if (!node) return;
     setBusy("share");
@@ -1107,7 +1112,6 @@ function CountGlyph({ n }: { n: number }) {
    stickers — screenshots stripped) as a reusable template that follows the
    account; applying one restyles the CURRENT shots. */
 function MyTemplates() {
-  const scene = useSceneStore((s) => s.scene);
   const setScene = useSceneStore((s) => s.setScene);
   const isPro = useViewStore((s) => s.removeWatermark);
   const select = useViewStore((s) => s.select);

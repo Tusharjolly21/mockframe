@@ -128,10 +128,12 @@ export function addEmoji(scene: SceneDocument, emoji: string): { scene: SceneDoc
   return { scene: addLayer(scene, layer), layerId: layer.id };
 }
 
-/** Drop an Iconify icon sticker (a 512px tinted-SVG asset — crisp at any scale). */
-export function addIconSticker(scene: SceneDocument, assetId: string): { scene: SceneDocument; layerId: string } {
+/** Drop a generated-SVG asset sticker (icons, store badges) at a sensible size.
+ *  `baseHeight` is the asset's natural pixel height (icons are 512-square). */
+export function addIconSticker(scene: SceneDocument, assetId: string, baseHeight = 512): { scene: SceneDocument; layerId: string } {
   const id = createId();
-  const scale = Math.round(((scene.canvas.height * 0.14) / 512) * 1000) / 1000;
+  const targetH = baseHeight === 512 ? scene.canvas.height * 0.14 : scene.canvas.height * 0.075;
+  const scale = Math.round((targetH / baseHeight) * 1000) / 1000;
   const n = scene.layers.length;
   const layer: StickerLayer = {
     type: "sticker",

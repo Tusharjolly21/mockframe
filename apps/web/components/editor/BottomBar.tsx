@@ -7,6 +7,7 @@ import { getDevice } from "@framekit/devices";
 import type { MockupLayer } from "@framekit/scene";
 import { ingestGenerated, resolveAsset } from "@/lib/assets";
 import { ICON_COLLECTIONS, ICON_PALETTES, ICON_VIEWBOX, iconBody, iconDataUrl, searchIcons, type IconPalette } from "@/lib/iconStickers";
+import { badgeDataUrl, BADGE_H, BADGE_W, STORE_BADGES } from "@/lib/storeBadges";
 import { addAnnotation, addEmoji, addIconSticker, type AnnotationStickerId } from "@/lib/sceneOps";
 import { applyTheme, BUILTIN_THEMES, loadSavedThemes, saveTheme, syncThemesFromServer, themeMatches, type StyleTheme } from "@/lib/themes";
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
@@ -294,7 +295,7 @@ export function BottomBar() {
   );
 }
 
-type LibraryItem = { glyph: string; label: string; kind?: "annotation" | "icon"; id?: AnnotationStickerId; icon?: string };
+type LibraryItem = { glyph: string; label: string; kind?: "annotation" | "icon" | "badge"; id?: AnnotationStickerId; icon?: string; badge?: string; badgeVariant?: "dark" | "light" };
 
 const ICON_TINTS = ["#17171c", "#ffffff", "#7c3aed", "#ff3b30", "#10b981", "#f59e0b", "#0ea5e9"];
 
@@ -349,6 +350,18 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
   const [visibleCount, setVisibleCount] = useState(PAGE);
   useEffect(() => setVisibleCount(PAGE), [groupId, query]);
   const palette: IconPalette = ICON_PALETTES[paletteKey];
+  const badgeItems: LibraryItem[] =
+    groupId === "badges" || query.trim()
+      ? STORE_BADGES.flatMap((b) =>
+          (["dark", "light"] as const).map((v) => ({
+            kind: "badge" as const,
+            badge: b.id,
+            badgeVariant: v,
+            glyph: "",
+            label: `${b.label} ${v}`,
+          }))
+        ).filter((i) => !query.trim() || i.label.toLowerCase().includes(query.trim().toLowerCase()))
+      : [];
   const collectionBases = groupId.startsWith("icon-")
     ? [...(ICON_COLLECTIONS[groupId.slice(5) as keyof typeof ICON_COLLECTIONS] ?? [])]
     : null;
@@ -362,10 +375,10 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
   }));
   const glyphItems = query.trim()
     ? STICKER_GROUPS.flatMap((item) => item.items.map((entry) => ({ ...entry, group: item.id }))).filter((item) => `${item.label} ${item.group}`.toLowerCase().includes(query.toLowerCase()))
-    : groupId === "icons"
-      ? []
-      : group.items;
-  const items = [...iconItems, ...glyphItems];
+    : STICKER_GROUPS.some((g) => g.id === groupId)
+      ? group.items
+      : [];
+  const items = [...badgeItems, ...iconItems, ...glyphItems];
   const showTints = items.some((i) => i.kind === "icon");
   const moreIcons = iconBases.length - Math.min(visibleCount, iconBases.length);
 
@@ -402,7 +415,7 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search stickers" className="min-w-0 flex-1 bg-transparent text-xs outline-none" />
         </label>
         <div className="panel-scroll mt-2 flex max-h-16 flex-wrap gap-1 overflow-y-auto pb-0.5">
-          {[{ id: "icons", label: "Icons" }, { id: "icon-space", label: "Space" }, { id: "icon-nature", label: "Nature" }, { id: "icon-animals", label: "Animals" }, ...STICKER_GROUPS].map((item) => (
+          {[{ id: "icons", label: "Icons" }, { id: "badges", label: "Store badges" }, { id: "icon-space", label: "Space" }, { id: "icon-nature", label: "Nature" }, { id: "icon-animals", label: "Animals" }, ...STICKER_GROUPS].map((item) => (
             <button
               key={item.id}
               aria-pressed={groupId === item.id && !query}
@@ -453,7 +466,17 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
       >
         <div className="grid grid-cols-5 gap-1.5">
           {items.map((item, index) =>
-            item.kind === "icon" && item.icon ? (
+            item.kind === "badge" && item.badge ? (
+              <button
+                key={`${item.label}-${index}`}
+                title={item.label}
+                onClick={() => insert(item)}
+                className="fk-press col-span-5 grid place-items-center rounded-xl border border-[#ececf2] bg-[#f7f7fa] px-3 py-2.5 hover:border-[#17171c]"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={badgeDataUrl(item.badge, item.badgeVariant ?? "dark") ?? ""} alt={item.label} className="h-10 w-auto" />
+              </button>
+            ) : item.kind === "icon" && item.icon ? (
               <button
                 key={`${item.label}-${index}`}
                 title={item.label}

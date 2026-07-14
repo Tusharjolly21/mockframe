@@ -68,6 +68,12 @@ const KEYWORDS = new Set([
   "int", "float", "double", "char", "bool", "boolean", "string", "long", "short", "byte", "unsigned", "auto",
   "true", "false", "null", "nil", "None", "True", "False", "undefined", "not", "and", "or", "is", "with", "pass",
   "when", "val", "fun", "override", "suspend", "guard", "extension",
+  // SQL (conventionally uppercase; the tokenizer matches exact words)
+  "SELECT", "FROM", "WHERE", "JOIN", "LEFT", "RIGHT", "INNER", "OUTER", "FULL", "CROSS", "ON", "AS", "AND", "OR",
+  "NOT", "IN", "IS", "NULL", "GROUP", "BY", "ORDER", "HAVING", "LIMIT", "OFFSET", "DISTINCT", "UNION", "ALL",
+  "INSERT", "INTO", "VALUES", "UPDATE", "SET", "DELETE", "CREATE", "TABLE", "ALTER", "DROP", "INDEX", "VIEW",
+  "PRIMARY", "KEY", "FOREIGN", "REFERENCES", "CONSTRAINT", "DEFAULT", "BETWEEN", "LIKE", "EXISTS", "CASE",
+  "WHEN", "THEN", "ELSE", "END", "COUNT", "SUM", "AVG", "MIN", "MAX", "ASC", "DESC", "WITH", "RETURNING",
 ]);
 
 type Span = { text: string; color: string };

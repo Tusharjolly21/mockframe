@@ -189,6 +189,30 @@ export function Popover({
   onEscape?: () => void;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  // user-movable (user request): grab any non-interactive area to reposition,
+  // so the popover never has to occlude the thing being edited. Offset uses
+  // the CSS `translate` property — independent of `transform`, which motion
+  // owns and callers use for centering. Resets on close (remount).
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const dragFrom = useRef<{ px: number; py: number; ox: number; oy: number } | null>(null);
+
+  const onDragPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const t = e.target as HTMLElement;
+    if (t.closest("button, a, input, select, textarea, label, img, canvas, [contenteditable], [role='slider']")) return;
+    dragFrom.current = { px: e.clientX, py: e.clientY, ox: dragOffset.x, oy: dragOffset.y };
+    const onMove = (ev: PointerEvent) => {
+      const d = dragFrom.current;
+      if (!d) return;
+      setDragOffset({ x: d.ox + ev.clientX - d.px, y: d.oy + ev.clientY - d.py });
+    };
+    const onUp = () => {
+      dragFrom.current = null;
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  };
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -234,12 +258,13 @@ export function Popover({
       data-fk-popover
       role="dialog"
       onKeyDownCapture={onKeyDown}
+      onPointerDown={onDragPointerDown}
       initial={{ opacity: 0, y: 10, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 6, scale: 0.98 }}
       transition={{ type: "spring", stiffness: 480, damping: 34 }}
       className={`fk-card fk-popover-focus absolute z-50 ${className ?? ""}`}
-      style={{ transformOrigin: "top left", borderRadius: 24, ...style }}
+      style={{ transformOrigin: "top left", borderRadius: 24, translate: `${dragOffset.x}px ${dragOffset.y}px`, ...style }}
     >
       {children}
     </motion.div>
