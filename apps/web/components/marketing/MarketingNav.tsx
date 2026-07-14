@@ -8,6 +8,8 @@ import { SITE_NAME } from "@/lib/site";
 const LINKS: [string, string][] = [
   ["/mockups", "Mockups"],
   ["/templates", "Templates"],
+  ["/guides", "Guides"],
+  ["/pricing", "Pricing"],
   ["/editor", "Editor"],
 ];
 

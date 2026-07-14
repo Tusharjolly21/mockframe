@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { listDevices } from "@framekit/devices";
 import { SITE_URL } from "@/lib/site";
+import { TOOL_PAGES } from "@/lib/toolPages";
+import { GUIDES } from "@/lib/guides";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -9,6 +11,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/`, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${SITE_URL}/mockups`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/templates`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${SITE_URL}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/developers/api`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/developers/embed`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/developers/automations`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_URL}/extensions`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_URL}/guides`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${SITE_URL}/changelog`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: `${SITE_URL}/editor`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
   ];
 
@@ -19,5 +28,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...devicePages];
+  const toolPages: MetadataRoute.Sitemap = TOOL_PAGES.map((tool) => ({
+    url: `${SITE_URL}/tools/${tool.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.8,
+  }));
+
+  const guidePages: MetadataRoute.Sitemap = GUIDES.map((guide) => ({
+    url: `${SITE_URL}/guides/${guide.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...toolPages, ...guidePages, ...devicePages];
 }

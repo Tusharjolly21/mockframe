@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Frame } from "lucide-react";
 import { SITE_NAME } from "@/lib/site";
+import { FeedbackButton } from "./FeedbackButton";
 
 const COLS: { title: string; links: [string, string][] }[] = [
   {
@@ -9,6 +10,10 @@ const COLS: { title: string; links: [string, string][] }[] = [
       ["/editor", "Editor"],
       ["/mockups", "Device mockups"],
       ["/templates", "Templates"],
+      ["/pricing", "Pricing"],
+      ["/developers/api", "Render API alpha"],
+      ["/developers/embed", "Embed editor alpha"],
+      ["/extensions", "Extensions alpha"],
     ],
   },
   {
@@ -17,15 +22,19 @@ const COLS: { title: string; links: [string, string][] }[] = [
       ["/mockups/iphone-16-pro", "iPhone 16 Pro"],
       ["/mockups/macbook-pro-16", "MacBook Pro 16"],
       ["/mockups/ipad-pro-13", "iPad Pro 13"],
-      ["/mockups/apple-watch-ultra-2", "Apple Watch Ultra"],
+      ["/mockups/apple-watch-ultra-psd-midnight-1", "Apple Watch Ultra"],
     ],
   },
   {
-    title: "More",
+    title: "Tools",
     links: [
-      ["/mockups/galaxy-s25-ultra", "Galaxy S25 Ultra"],
-      ["/mockups/pixel-9-pro", "Pixel 9 Pro"],
-      ["/mockups", "All 63 devices"],
+      ["/tools/website-screenshot", "Website screenshots"],
+      ["/tools/code-screenshot", "Code screenshots"],
+      ["/tools/tweet-screenshot", "X post images"],
+      ["/tools/app-store-screenshot", "App Store images"],
+      ["/guides", "Guides"],
+      ["/changelog", "Changelog"],
+      ["/developers/automations", "Automations"],
       ["/privacy", "Privacy policy"],
     ],
   },
@@ -64,7 +73,7 @@ export function MarketingFooter() {
       </div>
       <div className="mx-auto mt-14 flex max-w-6xl items-center justify-between border-t border-white/10 pt-6 text-[12.5px] text-zinc-600">
         <span>© {SITE_NAME}</span>
-        <span>Free · online · no watermark</span>
+        <div className="flex items-center gap-5"><FeedbackButton /><span>Start free · online · Pro exports available</span></div>
       </div>
     </footer>
   );

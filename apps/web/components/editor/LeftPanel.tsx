@@ -1,21 +1,22 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { getDevice, previewDataUri } from "@framekit/devices";
 import type { MockupLayer, Shadow, StickerLayer, TextLayer } from "@framekit/scene";
 import { DEFAULT_SHADOW } from "@framekit/scene";
-import { Crop, Globe, Plus, TriangleAlert, X } from "lucide-react";
+import { Check, Crop, Download, Globe, ImagePlus, MonitorUp, Palette, Plus, Sparkles, TriangleAlert, X } from "lucide-react";
+import { track, trackOnce } from "@/lib/analytics";
 import { ingestFile, resolveAsset } from "@/lib/assets";
 import { renderScreenshotIntoMockup } from "@/lib/mockuuups";
 import { presentationForDevice } from "@/lib/deviceScene";
-import { isScreenAsset } from "@/lib/screens";
+import { decodeScreenAsset, isScreenAsset } from "@/lib/screens";
 import { useSceneStore, useViewStore } from "@/lib/store";
 import { ColorRow, Section, Seg, SliderRow } from "./ui";
 import { CaptureUrlDialog } from "./CaptureUrlDialog";
 import { DevicePicker } from "./DevicePicker";
 import { MediaEditor } from "./MediaEditor";
-import { ScreenStudio } from "./ScreenStudio";
+import { ScreenStudio, isTemplateCard } from "./ScreenStudio";
 import { FrameControls } from "./FramePanel";
 
 const FONTS = [
@@ -103,7 +104,7 @@ export function LeftPanel() {
         ) : target ? (
           <>
             <PhoneSlots layers={mockups} activeId={target.id} onSelect={select} />
-            <MockupControls layer={target} />
+            <MockupControls layer={target} onOpenFrame={() => setTab("frame")} />
           </>
         ) : (
           <p className="px-4 py-8 text-center text-xs text-[#9a9aa4]">Add a device to get started.</p>
@@ -174,7 +175,7 @@ function PhoneSlots({
 
 /* ------------------------------ mockup controls ----------------------------- */
 
-function MockupControls({ layer }: { layer: MockupLayer }) {
+function MockupControls({ layer, onOpenFrame }: { layer: MockupLayer; onOpenFrame: () => void }) {
   const scene = useSceneStore((s) => s.scene);
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const setScene = useSceneStore((s) => s.setScene);
@@ -190,6 +191,15 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
 
   const device = layer.deviceId ? getDevice(layer.deviceId) : undefined;
   const asset = layer.media ? resolveAsset(layer.media.assetId) : undefined;
+  // A layer is one of two clearly separate things, and each shows only its own
+  // controls: a TEMPLATE CARD (a self-contained tweet/code/post — no device, no
+  // upload) or a DEVICE MOCKUP (a screenshot inside a phone/browser/etc.).
+  const screenDoc = layer.media && isScreenAsset(layer.media.assetId) ? decodeScreenAsset(layer.media.assetId) : undefined;
+  const isTemplate = screenDoc ? isTemplateCard(screenDoc) : false;
+  const templateLabel = screenDoc?.app === "code" ? "Code" : screenDoc?.app === "bluesky" ? "Bluesky post" : "X post";
+  // an uploaded photo / realistic-render composite — not a generated screen, so
+  // Screen Studio (which generates screens/cards) doesn't belong under it.
+  const hasPhotoMedia = !!layer.media && !isScreenAsset(layer.media.assetId);
   // Realistic-render (Pro) layers: `media.assetId` is a FLAT baked composite, so
   // "Edit screenshot" must edit the preserved ORIGINAL screenshot (render.sourceAssetId)
   // — editing the screen content, not the whole rendered scene — then re-render it.
@@ -205,9 +215,57 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
       layer.shadow === null ? p.id === "none" : p.value !== null && p.value.mode === layer.shadow?.mode
     ) ?? SHADOW_PRESETS[0];
 
+  useEffect(() => {
+    const openCapture = () => setCapturing(true);
+    window.addEventListener("framekit:start-capture", openCapture);
+    return () => window.removeEventListener("framekit:start-capture", openCapture);
+  }, []);
+
   return (
     <>
-      <div className="px-3 pt-1">
+      {isTemplate ? (
+        <section className="mx-3 mt-2 rounded-xl border border-[#dedee8] bg-[#f8f8fb] p-2.5">
+          <div className="flex items-center justify-between">
+            <p className="text-[12px] font-bold text-[#17171c]">{templateLabel} template</p>
+            <span className="rounded-full bg-[#ece9ff] px-2 py-0.5 text-[9px] font-semibold text-[#5b4cff]">Standalone card</span>
+          </div>
+          <p className="mt-0.5 text-[10.5px] leading-snug text-[#858590]">A self-contained card — it exports on its own, not inside a device. Edit its contents below.</p>
+        </section>
+      ) : !asset ? (
+        <section className="mx-3 mt-2 rounded-xl border border-[#dedee8] bg-[#f8f8fb] p-2.5">
+          <p className="text-[12px] font-bold text-[#17171c]">Start your mockup</p>
+          <p className="mt-0.5 text-[10.5px] leading-snug text-[#858590]">Choose where your first screen comes from.</p>
+          <div className="mt-2 grid grid-cols-3 gap-1.5">
+            <button onClick={() => fileRef.current?.click()} className="fk-press flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border border-[#e3e3eb] bg-white px-1 text-[10px] font-semibold text-[#31313a] hover:border-[#17171c]">
+              <ImagePlus size={16} /> Upload
+            </button>
+            <button onClick={() => setCapturing(true)} className="fk-press flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border border-[#e3e3eb] bg-white px-1 text-[10px] font-semibold text-[#31313a] hover:border-[#17171c]">
+              <Globe size={16} /> Website
+            </button>
+            <button onClick={() => document.getElementById("screen-studio-step")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="fk-press flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border border-[#e3e3eb] bg-white px-1 text-[10px] font-semibold text-[#31313a] hover:border-[#17171c]">
+              <Sparkles size={16} /> Generate
+            </button>
+          </div>
+        </section>
+      ) : (
+        <section aria-label="Mockup workflow" className="mx-3 mt-2 grid grid-cols-4 gap-1 rounded-xl bg-[#f2f2f6] p-1">
+          <button title="Screenshot added" className="flex min-w-0 flex-col items-center gap-0.5 rounded-lg bg-white px-1 py-1.5 text-[9px] font-semibold text-emerald-700 shadow-sm">
+            <Check size={12} /> Screen
+          </button>
+          <button onClick={() => document.getElementById("editor-device-step")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="fk-press flex min-w-0 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[9px] font-semibold text-[#555560] hover:bg-white">
+            <MonitorUp size={12} /> Device
+          </button>
+          <button onClick={onOpenFrame} className="fk-press flex min-w-0 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[9px] font-semibold text-[#555560] hover:bg-white">
+            <Palette size={12} /> Style
+          </button>
+          <button onClick={() => document.getElementById("editor-export")?.focus()} className="fk-press flex min-w-0 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[9px] font-semibold text-[#555560] hover:bg-white">
+            <Download size={12} /> Export
+          </button>
+        </section>
+      )}
+
+      {!isTemplate && (
+      <div id="editor-device-step" className="scroll-mt-2 px-3 pt-1">
         <DevicePicker
           deviceId={layer.deviceId}
           variantId={layer.frameVariant}
@@ -242,12 +300,15 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
             }
             select(layer.id);
             triggerEntrance(layer.id);
+            track("device_selected", { device_id: deviceId, apply_mode: applyMode });
           }}
         />
       </div>
+      )}
 
       <TransformControls layer={layer} />
 
+      {!isTemplate && (
       <Section title="Media">
         <div
           onClick={() => fileRef.current?.click()}
@@ -316,6 +377,8 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
                 patch({ media });
               }
               triggerEntrance(layer.id);
+              track("media_added", { source: "url_capture", desktop: meta.desktop });
+              trackOnce("first_media_added", { source: "url_capture" });
             }}
           />
         )}
@@ -431,12 +494,21 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
             bumpAssets();
             patch({ media: { assetId: a.id, kind: "image", fit: "cover", offsetX: 0, offsetY: 0, scale: 1 } });
             triggerEntrance(layer.id);
+            track("media_added", { source: "upload", mime: f.type || "unknown" });
+            trackOnce("first_media_added", { source: "upload" });
             e.target.value = "";
           }}
         />
       </Section>
+      )}
 
-      <ScreenStudio layer={layer} />
+      {/* Screen Studio builds generated screens & template cards. It's irrelevant
+          for a plain uploaded photo / realistic-render, so hide it there. */}
+      {!hasPhotoMedia && (
+        <div id="screen-studio-step" className="scroll-mt-2">
+          <ScreenStudio layer={layer} />
+        </div>
+      )}
 
       {device && device.variants.length > 1 && (
         <Section title="Style" collapsible defaultOpen={false}>
@@ -465,7 +537,7 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
         </Section>
       )}
 
-      {!device && (
+      {!device && !isTemplate && (
         <Section title="Style">
           <Seg
             id="frameless-style"

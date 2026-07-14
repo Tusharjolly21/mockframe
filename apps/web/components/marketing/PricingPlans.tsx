@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, Check, Infinity as InfinityIcon } from "lucide-react";
 import { SolarIcon } from "./SolarIcon";
-import { formatPrice, perMonthPrice, yearlySavingsPct, PLANS, type Currency } from "@/lib/billing/plans";
+import { formatPrice, perMonthPrice, yearlySavingsPct, type Currency } from "@/lib/billing/plans";
 
 const FREE_FEATURES = [
   "Every device frame + the full editor",

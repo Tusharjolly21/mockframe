@@ -24,7 +24,7 @@ export function useEntitlementSync(): void {
     return () => {
       stale = true;
     };
-  }, [account?.uid, setRemoveWatermark]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [account?.uid, setRemoveWatermark]);
 }
 
 /** INR for Indian locales/timezone, USD otherwise — user can still toggle. */

@@ -19,7 +19,7 @@ import { renderIMessage } from "./imessage";
 import { renderReddit } from "./reddit";
 import { renderSignal } from "./signal";
 import { renderSlack } from "./slack";
-import { renderSocial } from "./social";
+import { renderSocial, renderSocialCard } from "./social";
 import { renderInstagram } from "./instagram";
 import { renderMessenger } from "./messenger";
 import { renderSnapchat } from "./snapchat";
@@ -238,6 +238,10 @@ export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): {
     case "stripe":
       return flat(renderStripe(doc), screenLogicalHeight(doc));
     case "social":
+      if (doc.standalone) {
+        const r = renderSocialCard(doc, dp);
+        return { url: svgDataUri(r.svg, r.totalH, r.totalW), logicalH: r.totalH, logicalW: r.totalW };
+      }
       return flat(renderSocial(doc, dp, lookupUrl));
     case "xpost": {
       if (doc.standalone) {

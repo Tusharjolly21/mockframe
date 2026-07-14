@@ -1,15 +1,11 @@
-"use client";
-
-import { icons as solar } from "@iconify-json/solar";
+import { SOLAR_ICON_BODIES } from "./generated/solarIconBodies";
 
 /**
- * Iconify icon stickers (Solar set, bold-duotone) — 7,000+ vector icons,
- * bundled as JSON so there's no runtime fetch. An icon is inserted as a
- * tinted SVG data-URL asset sticker: crisp at any scale and export-safe
- * (html-to-image needs no network).
+ * A curated, generated subset of Iconify's Solar bold-duotone collection.
+ * Keeping the whole 7,400-icon package in this client module added more than
+ * 6 MB of raw JavaScript to the editor. Inserted icons are still self-contained
+ * SVG data URLs, crisp at any scale and export-safe.
  */
-
-const STYLE_SUFFIX = "-bold-duotone"; // one coherent style; search stays simple
 
 /** shown before the user types — the greatest hits for mockup annotation */
 const CURATED = [
@@ -28,11 +24,9 @@ const CURATED = [
 let ALL_BASES: string[] | null = null;
 function allBases(): string[] {
   if (!ALL_BASES) {
-    const curated = CURATED.filter((n) => solar.icons[n + STYLE_SUFFIX]);
+    const curated = CURATED.filter((n) => SOLAR_ICON_BODIES[n]);
     const curatedSet = new Set(curated);
-    const rest = Object.keys(solar.icons)
-      .filter((k) => k.endsWith(STYLE_SUFFIX))
-      .map((k) => k.slice(0, -STYLE_SUFFIX.length))
+    const rest = Object.keys(SOLAR_ICON_BODIES)
       .filter((b) => !curatedSet.has(b))
       .sort();
     ALL_BASES = [...curated, ...rest];
@@ -48,7 +42,7 @@ export function searchIcons(query: string): string[] {
   return allBases().filter((base) => tokens.every((t) => base.includes(t)));
 }
 
-export const ICON_VIEWBOX = `0 0 ${solar.width ?? 24} ${solar.height ?? 24}`;
+export const ICON_VIEWBOX = "0 0 24 24";
 
 export const ICON_PALETTES = {
   aurora: ["#7c3aed", "#06b6d4", "#a7f3d0"],
@@ -74,7 +68,7 @@ export function colorizeIconBody(body: string, palette: IconPalette): string {
 
 /** inline SVG markup for the picker grid. */
 export function iconBody(base: string, palette?: IconPalette): string | null {
-  const body = solar.icons[base + STYLE_SUFFIX]?.body;
+  const body = SOLAR_ICON_BODIES[base];
   return body ? (palette?.length ? colorizeIconBody(body, palette) : body) : null;
 }
 

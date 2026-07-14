@@ -1,0 +1,23 @@
+{
+  "name": "mockframe-vscode",
+  "displayName": "MockFrame Code Screenshots",
+  "description": "Open selected code directly in MockFrame's code screenshot editor.",
+  "version": "0.1.0",
+  "publisher": "mockframe",
+  "engines": { "vscode": "^1.90.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onCommand:mockframe.openSelection"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [{ "command": "mockframe.openSelection", "title": "MockFrame: Create Screenshot from Selection" }],
+    "configuration": {
+      "title": "MockFrame",
+      "properties": {
+        "mockframe.baseUrl": { "type": "string", "default": "https://mockframe.app", "description": "MockFrame origin used when opening the editor." }
+      }
+    },
+    "menus": { "editor/context": [{ "command": "mockframe.openSelection", "when": "editorHasSelection", "group": "navigation" }] }
+  },
+  "scripts": { "build": "tsc -p .", "package": "vsce package" },
+  "devDependencies": { "@types/vscode": "^1.90.0", "@vscode/vsce": "^3.6.2", "typescript": "^5.8.0" }
+}

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { track, trackOnce } from "@/lib/analytics";
 import { ingestFile } from "@/lib/assets";
 import { loadCustomDevices, syncCustomDevicesFromServer } from "@/lib/customDevices";
 import { buildDeviceScene } from "@/lib/deviceScene";
@@ -16,10 +17,35 @@ import { LeftPanel } from "./LeftPanel";
 import { RightPanel } from "./RightPanel";
 import { LogoChip, Toolbar } from "./Toolbar";
 
-export function EditorShell({ initialDeviceId, openCalibrate = false }: { initialDeviceId?: string; openCalibrate?: boolean }) {
+export function EditorShell({
+  initialDeviceId,
+  openCalibrate = false,
+  openUpgradeOnLoad = false,
+  upgradePlan,
+  openCaptureOnLoad = false,
+  embedded = false,
+}: {
+  initialDeviceId?: string;
+  openCalibrate?: boolean;
+  openUpgradeOnLoad?: boolean;
+  upgradePlan?: string;
+  openCaptureOnLoad?: boolean;
+  embedded?: boolean;
+}) {
   const setScene = useSceneStore((s) => s.setScene);
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const [toast, setToast] = useState<string | null>(null);
+  const extensionCaptures = useRef(new Set<string>());
+
+  useEffect(() => {
+    track("editor_opened", { entry: initialDeviceId ? "device_page" : openCalibrate ? "calibrate" : "direct" });
+    trackOnce("editor_first_open");
+  }, [initialDeviceId, openCalibrate]);
+
+  useEffect(() => {
+    if (!embedded || window.parent === window) return;
+    window.parent.postMessage({ source: "mockframe", type: "ready" }, "*");
+  }, [embedded]);
 
   // user-created custom mockup devices: register the instant localStorage
   // copies first, then merge the account's cloud set (devices made on other
@@ -40,7 +66,6 @@ export function EditorShell({ initialDeviceId, openCalibrate = false }: { initia
     useSceneStore.setState({ scene });
     useSceneStore.temporal.getState().clear();
     window.history.replaceState({}, "", "/editor");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialDeviceId]);
 
   // /calibrate entry: open the custom-mockup calibration modal once the panels
@@ -53,6 +78,16 @@ export function EditorShell({ initialDeviceId, openCalibrate = false }: { initia
     }, 400);
     return () => clearTimeout(t);
   }, [openCalibrate]);
+
+  useEffect(() => {
+    if (!openUpgradeOnLoad && !openCaptureOnLoad) return;
+    const timer = setTimeout(() => {
+      if (openUpgradeOnLoad) window.dispatchEvent(new CustomEvent("framekit:upgrade", { detail: { plan: upgradePlan } }));
+      if (openCaptureOnLoad) window.dispatchEvent(new CustomEvent("framekit:start-capture"));
+      window.history.replaceState({}, "", "/editor");
+    }, 450);
+    return () => clearTimeout(timer);
+  }, [openCaptureOnLoad, openUpgradeOnLoad, upgradePlan]);
 
   // The batch is a list of independent scene documents. Keep the active shot
   // current without making the editor shell re-render for every control tweak.
@@ -76,6 +111,8 @@ export function EditorShell({ initialDeviceId, openCalibrate = false }: { initia
       setScene(() => r.scene);
       useViewStore.getState().select(r.layerId);
       useViewStore.getState().triggerEntrance(r.layerId);
+      track("media_added", { source: "paste" });
+      trackOnce("first_media_added", { source: "paste" });
     };
 
     const onKey = (e: KeyboardEvent) => {
@@ -188,6 +225,39 @@ export function EditorShell({ initialDeviceId, openCalibrate = false }: { initia
     };
   }, [setScene, updateLayer]);
 
+  // Chrome extension handoff. The content script can only post on our own
+  // origin; payloads are bounded and must be image data URLs before ingestion.
+  useEffect(() => {
+    const receiveCapture = async (event: MessageEvent) => {
+      if (event.source !== window || event.origin !== window.location.origin) return;
+      const payload = event.data as { source?: string; type?: string; id?: string; dataUrl?: string; name?: string };
+      if (payload?.source !== "mockframe-extension" || payload.type !== "capture") return;
+      if (!payload.id || extensionCaptures.current.has(payload.id)) return;
+      if (typeof payload.dataUrl !== "string" || !payload.dataUrl.startsWith("data:image/") || payload.dataUrl.length > 25_000_000) return;
+      extensionCaptures.current.add(payload.id);
+      try {
+        const blob = await fetch(payload.dataUrl).then((response) => response.blob());
+        const file = new File([blob], payload.name?.slice(0, 120) || "browser-capture.png", { type: blob.type || "image/png" });
+        const asset = await ingestFile(file);
+        useViewStore.getState().bumpAssets();
+        const result = placeAsset(useSceneStore.getState().scene, asset, { selectedId: useViewStore.getState().selectedIds.at(-1) ?? null });
+        setScene(() => result.scene);
+        useViewStore.getState().select(result.layerId);
+        useViewStore.getState().triggerEntrance(result.layerId);
+        track("media_added", { source: "chrome_extension" });
+        trackOnce("first_media_added", { source: "chrome_extension" });
+        window.postMessage({ source: "mockframe-page", type: "capture-accepted", id: payload.id }, window.location.origin);
+        window.history.replaceState({}, "", "/editor");
+        window.dispatchEvent(new CustomEvent("framekit:toast", { detail: "Tab captured - ready to style" }));
+      } catch {
+        extensionCaptures.current.delete(payload.id);
+        window.dispatchEvent(new CustomEvent("framekit:toast", { detail: "The extension capture could not be opened" }));
+      }
+    };
+    window.addEventListener("message", receiveCapture);
+    return () => window.removeEventListener("message", receiveCapture);
+  }, [setScene]);
+
   /* toasts raised elsewhere (toolbar, ⌘S) surface through the same pill */
   useEffect(() => {
     const onToast = (e: Event) => {
@@ -208,9 +278,7 @@ export function EditorShell({ initialDeviceId, openCalibrate = false }: { initia
 
       <div className="pointer-events-none absolute inset-3 z-20">
         {/* top row */}
-        <div className="absolute left-0 top-0">
-          <LogoChip />
-        </div>
+        {!embedded && <div className="absolute left-0 top-0"><LogoChip /></div>}
         <div className="absolute left-1/2 top-0 -translate-x-1/2">
           <Toolbar />
         </div>

@@ -90,6 +90,7 @@ import { WALLPAPERS } from "@/lib/screens/wallpapers";
 import { githubCells } from "@/lib/screens/github";
 import { importBlueskyPost } from "@/lib/blueskyImport";
 import { importXPost } from "@/lib/xpostImport";
+import { importPostUrl } from "@/lib/postImport";
 import { fetchGithubContributions } from "@/lib/githubImport";
 import { toast } from "./Toolbar";
 import { CODE_THEME_LABELS } from "@/lib/screens/code";
@@ -157,7 +158,8 @@ const APPS: AppMeta[] = [
 
 /** Standalone-card Templates (window-framed content, no phone) — a separate
  *  section from the phone app roster. */
-const TEMPLATE_TILES: { app: "code" | "bluesky" | "xpost"; label: string; icon: React.ComponentType<{ size?: number; color?: string }>; tint: string }[] = [
+const TEMPLATE_TILES: { app: "code" | "bluesky" | "xpost" | "social"; label: string; icon: React.ComponentType<{ size?: number; color?: string }>; tint: string }[] = [
+  { app: "social", label: "Post URL", icon: Link2, tint: "#7c3aed" },
   { app: "code", label: "Code", icon: Code2, tint: "#2f81f7" },
   { app: "bluesky", label: "Bluesky", icon: SiBluesky, tint: "#1083fe" },
   { app: "xpost", label: "X Post", icon: SiX, tint: "#000000" },
@@ -189,8 +191,8 @@ const AVATAR_APPS = new Set<ScreenApp>([
 
 /** True when the doc is a standalone window-framed Template card (Code always;
  *  Bluesky/X only in their `standalone` mode) — gates the window-frame picker. */
-function isTemplateCard(doc: ScreenDoc): boolean {
-  return doc.app === "code" || ((doc.app === "bluesky" || doc.app === "xpost") && !!(doc as { standalone?: boolean }).standalone);
+export function isTemplateCard(doc: ScreenDoc): boolean {
+  return doc.app === "code" || ((doc.app === "bluesky" || doc.app === "xpost" || doc.app === "social") && !!(doc as { standalone?: boolean }).standalone);
 }
 
 /** iOS vs Android from the mockup's device — Apple = iOS, everything else
@@ -219,7 +221,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       let media = l.media;
       if (media && isScreenAsset(media.assetId)) {
         const d = decodeScreenAsset(media.assetId);
-        if (d && (d.app === "github" || d.app === "stripe" || d.app === "code" || d.app === "bluesky" || d.app === "xpost")) {
+        if (d && (d.app === "github" || d.app === "stripe" || d.app === "code" || d.app === "bluesky" || d.app === "xpost" || d.app === "social")) {
           media = { ...media, assetId: encodeScreenAsset({ ...d, standalone: on }) };
         }
       }
@@ -229,7 +231,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
   // Load a standalone Template card (Code / Bluesky / X) in ONE atomic update:
   // the frameless deviceId + the standalone doc land together, so it can never
   // flash the phone version.
-  const setTemplate = (app: "code" | "bluesky" | "xpost") =>
+  const setTemplate = (app: "code" | "bluesky" | "xpost" | "social") =>
     updateLayer(layer.id, (l) => {
       if (l.type !== "mockup") return l;
       const d = defaultTemplateDoc(app);
@@ -289,8 +291,8 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9a9aa4]">Templates</p>
           <span className="text-[9.5px] text-[#b0b0ba]">A ready-made card — no device</span>
         </div>
-        <p className="mb-2 text-[10.5px] leading-snug text-[#858590]">Paste a tweet, code, or post and export it as a standalone card. It doesn&apos;t go inside a phone.</p>
-        <div className="mb-4 grid grid-cols-3 gap-2">
+        <p className="mb-2 text-[10.5px] leading-snug text-[#858590]">Paste a post URL or code and export it as a standalone card. It doesn&apos;t go inside a phone.</p>
+        <div className="mb-4 grid grid-cols-2 gap-2">
           {TEMPLATE_TILES.map((t) => (
             <button
               key={t.app}
@@ -355,8 +357,9 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
           />
         </div>
       </div>
-      {/* platform is driven by the device the mockup sits in (n/a for the code card) */}
-      {doc.app !== "code" && (
+      {/* platform is driven by the device the mockup sits in — n/a for the code card
+          or any standalone Template card (there's no device behind a card) */}
+      {doc.app !== "code" && !isTemplateCard(doc) && (
         <div className="mb-3 flex items-center gap-1.5 rounded-lg bg-[#f4f4f8] px-2.5 py-1.5 text-[11px] text-[#6b6b76]">
           <span className="grid h-4 w-4 place-items-center rounded bg-[#17171c] text-[8px] font-bold text-white">
             {devPlatform === "ios" ? "" : "▲"}
@@ -385,7 +388,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
             id="scr-frame"
             options={[
               { value: "device", label: "Phone" },
-              { value: "none", label: doc.app === "bluesky" || doc.app === "xpost" ? "Card" : "No frame" },
+              { value: "none", label: doc.app === "bluesky" || doc.app === "xpost" || doc.app === "social" ? "Card" : "No frame" },
             ]}
             value={frameless ? "none" : "device"}
             onChange={(v) => setFrameless(v === "none")}
@@ -1999,12 +2002,44 @@ function CommentRows({ comments, onChange, handles }: { comments: PostComment[];
 const SOCIAL_NETS: SocialNetwork[] = ["facebook", "linkedin", "threads"];
 
 function SocialFields({ doc, setDoc }: { doc: SocialPostDoc; setDoc: (d: ScreenDoc) => void }) {
+  const [importUrl, setImportUrl] = useState("");
+  const [importing, setImporting] = useState(false);
+  const networkOptions = Array.from(new Set<SocialNetwork>([doc.network, ...SOCIAL_NETS]));
+  const runImport = async () => {
+    if (!importUrl.trim() || importing) return;
+    setImporting(true);
+    try {
+      const fields = await importPostUrl(importUrl);
+      setDoc({ ...doc, ...fields, standalone: doc.standalone });
+      setImportUrl("");
+      toast("Post imported into a MockFrame card");
+    } catch (error) {
+      toast(error instanceof Error ? error.message : "Post import failed");
+    } finally {
+      setImporting(false);
+    }
+  };
   return (
     <>
+      <div className="mb-3 rounded-xl border border-[#dedee8] bg-[#f8f8fb] p-2.5">
+        <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-[#777783]">Paste a public post URL</span>
+        <div className="flex gap-1.5">
+          <input
+            value={importUrl}
+            placeholder="X, Bluesky, Threads, LinkedIn or Mastodon"
+            onChange={(event) => setImportUrl(event.target.value)}
+            onKeyDown={(event) => event.key === "Enter" && runImport()}
+            className="min-w-0 flex-1 rounded-lg border border-[#e0e0e8] bg-white px-2 py-2 text-[10.5px] text-[#17171c] outline-none focus:border-[#7c3aed]"
+          />
+          <button type="button" onClick={runImport} disabled={importing || !importUrl.trim()} className="fk-press rounded-lg bg-[#17171c] px-3 py-2 text-[10.5px] font-semibold text-white disabled:opacity-40">{importing ? "Importing" : "Import"}</button>
+        </div>
+        <p className="mt-1.5 text-[9.5px] leading-4 text-[#9999a3]">Public posts only. The result uses MockFrame&apos;s own card design.</p>
+      </div>
+      {doc.standalone && <PostLayoutControls doc={doc} setDoc={setDoc} />}
       <span className="mb-1 block text-xs text-[#6b6b76]">Network</span>
       <Seg
         id="so-net"
-        options={SOCIAL_NETS.map((n) => ({ value: n, label: SOCIAL_LABELS[n] }))}
+        options={networkOptions.map((n) => ({ value: n, label: SOCIAL_LABELS[n] }))}
         value={doc.network}
         onChange={(network) => setDoc({ ...doc, network })}
       />
@@ -2051,7 +2086,7 @@ function PostLayoutControls({
   doc,
   setDoc,
 }: {
-  doc: XPostDoc | BlueskyDoc;
+  doc: XPostDoc | BlueskyDoc | SocialPostDoc;
   setDoc: (d: ScreenDoc) => void;
 }) {
   const scene = useSceneStore((s) => s.scene);

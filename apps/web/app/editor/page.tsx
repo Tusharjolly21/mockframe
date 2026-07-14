@@ -9,8 +9,8 @@ import { EditorShell } from "@/components/editor/EditorShell";
 export default async function EditorPage({
   searchParams,
 }: {
-  searchParams: Promise<{ device?: string; calibrate?: string }>;
+  searchParams: Promise<{ device?: string; calibrate?: string; upgrade?: string; capture?: string; plan?: string }>;
 }) {
-  const { device, calibrate } = await searchParams;
-  return <EditorShell initialDeviceId={device} openCalibrate={calibrate === "1"} />;
+  const { device, calibrate, upgrade, capture, plan } = await searchParams;
+  return <EditorShell initialDeviceId={device} openCalibrate={calibrate === "1"} openUpgradeOnLoad={upgrade === "1"} upgradePlan={plan} openCaptureOnLoad={capture === "1"} />;
 }

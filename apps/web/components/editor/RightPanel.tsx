@@ -6,8 +6,9 @@ import { getDevice } from "@framekit/devices";
 import type { MockupLayer, SceneDocument } from "@framekit/scene";
 import { Check, Copy, Dices, Download, Link2, Loader2, Lock, Plus, RotateCcw, Settings2, Share2, Sparkles, Stamp, Trash2, Upload } from "lucide-react";
 import { resolveAsset } from "@/lib/assets";
+import { track, trackOnce } from "@/lib/analytics";
 import { exportScene, type ExportFormat, type ExportQuality } from "@/lib/export";
-import type { CodeDoc } from "@/lib/screens";
+import { isScreenAsset, type CodeDoc } from "@/lib/screens";
 import { CODE_THEME_LABELS, CODE_THEMES } from "@/lib/screens/code";
 import { applyTheme, BUILTIN_THEMES, createSharedTheme, deleteTheme, exportTheme, importThemeFile, loadSavedThemes, saveTheme, syncThemesFromServer, themeMatches, updateSharedTheme, type StyleTheme } from "@/lib/themes";
 import { bulkExportZip, type BulkItem } from "@/lib/bulkExport";
@@ -55,7 +56,8 @@ export function RightPanel() {
   const arity = (Math.min(3, Math.max(1, mockups.length)) as 1 | 2 | 3) ?? 1;
   const hideLayouts = mockups.some((layer) => {
     const category = layer.deviceId ? getDevice(layer.deviceId)?.category : undefined;
-    return category === "laptop" || category === "desktop";
+    const standaloneCard = !layer.deviceId && !!layer.media && isScreenAsset(layer.media.assetId);
+    return category === "laptop" || category === "desktop" || standaloneCard;
   });
   const presets = LAYOUT_PRESETS.filter((p) => p.arity === arity);
   const selectedMockups = selectedIds
@@ -67,10 +69,15 @@ export function RightPanel() {
 
   const removeWatermark = useViewStore((s) => s.removeWatermark);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradePlan, setUpgradePlan] = useState<"monthly" | "yearly" | "lifetime">("yearly");
   // Pro gates anywhere in the editor (video export, renders, 4K…) open the
   // upgrade modal through this event
   useEffect(() => {
-    const onUpgrade = () => setUpgradeOpen(true);
+    const onUpgrade = (event: Event) => {
+      const requested = (event as CustomEvent<{ plan?: string }>).detail?.plan;
+      if (requested === "monthly" || requested === "yearly" || requested === "lifetime") setUpgradePlan(requested);
+      setUpgradeOpen(true);
+    };
     window.addEventListener("framekit:upgrade", onUpgrade);
     return () => window.removeEventListener("framekit:upgrade", onUpgrade);
   }, []);
@@ -94,6 +101,14 @@ export function RightPanel() {
     await new Promise((r) => setTimeout(r, 30));
     try {
       await exportScene(node, scene, { format, scale, quality, watermark: !removeWatermark });
+      track("export_completed", {
+        format,
+        scale,
+        width: Math.round(scene.canvas.width * scale),
+        height: Math.round(scene.canvas.height * scale),
+        pro: removeWatermark,
+      });
+      trackOnce("first_export", { format, pro: removeWatermark });
     } catch (e) {
       toast(e instanceof Error ? e.message : "Export failed");
     } finally {
@@ -162,6 +177,7 @@ export function RightPanel() {
       <div className="relative px-3 pt-3" ref={settingsRef}>
         <div className="flex items-center gap-2">
         <button
+          id="editor-export"
           onClick={runExport}
           disabled={!!busy}
           className="fk-press flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#17171c] px-3 py-2.5 text-[13px] font-semibold text-white hover:bg-black disabled:opacity-60"
@@ -346,7 +362,7 @@ export function RightPanel() {
           </button>
         )}
       </div>
-      {upgradeOpen && <UpgradeModal onClose={() => setUpgradeOpen(false)} />}
+      {upgradeOpen && <UpgradeModal initialPlan={upgradePlan} onClose={() => setUpgradeOpen(false)} />}
       {watermarkOpen && (
         <WatermarkPanel
           onClose={() => {

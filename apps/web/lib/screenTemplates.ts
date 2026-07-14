@@ -18,7 +18,7 @@ import { defaultTemplateDoc, encodeScreenAsset, resolveScreenAsset } from "./scr
  * at least one template.
  */
 
-export type TemplateApp = "code" | "bluesky" | "xpost";
+export type TemplateApp = "code" | "bluesky" | "xpost" | "social";
 export type SceneGroupId = "iphone" | "ipad" | "mac" | "watch" | "android";
 
 export interface TemplateMeta {
@@ -61,6 +61,7 @@ export const SCENE_TEMPLATES: TemplateMeta[] = [
 
 /** Content cards (macOS/Safari window etc.), shown in their own row. */
 export const TEMPLATES: TemplateMeta[] = [
+  { slug: "post", app: "social", label: "Post URL", blurb: "Paste an X, Bluesky, Threads, LinkedIn or Mastodon URL into a provider-neutral MockFrame card.", accent: "#7c3aed" },
   { slug: "code", app: "code", label: "Code", blurb: "Syntax-highlighted code in a macOS, Safari, Windows or Arc window — 9 themes, 8 fonts.", accent: "#2f81f7" },
   { slug: "bluesky-post", app: "bluesky", label: "Bluesky post", blurb: "A Bluesky post card with an embedded link preview and engagement counts.", accent: "#1083fe" },
   { slug: "x-post", app: "xpost", label: "X post", blurb: "A tweet card with a 1–4 photo media grid, verified badge and counts.", accent: "#111111" },
@@ -114,6 +115,9 @@ export function makeTemplateScene(meta: TemplateMeta): SceneDocument {
     offsetY: 0,
     scale: 1,
   };
+  // Standalone cards resolve at 3x logical pixels. The generic device-derived
+  // initial scale makes them tiny, so start them at a useful composition size.
+  layer.transform = { ...layer.transform, scale: 0.72 };
   scene.id = `scene-template-${meta.app}`;
   layer.id = "layer-template";
   scene.layers.push(layer);

@@ -29,10 +29,10 @@ function IconifyIcon({ name, size = 20, color = "#17171c", className = "" }: { n
 }
 
 /** Pro upgrade — clean, spacious pricing surface backed by the existing Razorpay flow. */
-export function UpgradeModal({ onClose }: { onClose: () => void }) {
+export function UpgradeModal({ initialPlan = "yearly", onClose }: { initialPlan?: PlanId; onClose: () => void }) {
   const { account } = useAuth();
   const setRemoveWatermark = useViewStore((s) => s.setRemoveWatermark);
-  const [plan, setPlan] = useState<PlanId>("yearly");
+  const [plan, setPlan] = useState<PlanId>(initialPlan);
   const [currency, setCurrency] = useState<Currency>(() => defaultCurrency());
   const [busy, setBusy] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);

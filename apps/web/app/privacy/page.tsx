@@ -16,7 +16,7 @@ const SECTIONS: { title: string; body: (string | { list: string[] })[] }[] = [
   {
     title: "The short version",
     body: [
-      "Your screenshots live in your browser. They only reach our servers when you explicitly use a cloud feature (drafts, share links, custom devices, templates, realistic renders) — and you can delete them. We run no third-party analytics: no Google Analytics, no ad pixels, no trackers.",
+      "Your screenshots live in your browser. They only reach our servers when you explicitly use a cloud feature (drafts, share links, custom devices, templates, realistic renders) — and you can delete them. We use Google Analytics to understand product usage, but no advertising pixels or session recording.",
     ],
   },
   {
@@ -31,6 +31,7 @@ const SECTIONS: { title: string; body: (string | { list: string[] })[] }[] = [
           "Custom mockup devices — your calibrated device photo is stored under your account until you delete the device.",
           "My templates — saved templates store the composition and its styling assets (never your screenshots) until you delete them.",
           "Realistic renders (Pro) — your screenshot is uploaded so our rendering partner (Mockuuups) can composite it onto a device photo; the partner processes it per their privacy policy.",
+          "Product feedback — messages and optional contact details are stored so we can respond and improve the product. Showcase submissions are never published automatically.",
         ],
       },
       "Deleting a draft, device, or template deletes its stored copies. Nothing you upload is used to train AI models, shown to other users, or sold — ever.",
@@ -39,8 +40,8 @@ const SECTIONS: { title: string; body: (string | { list: string[] })[] }[] = [
   {
     title: "Analytics & tracking",
     body: [
-      "We use no third-party analytics: no Google Analytics, no Meta pixel, no session recording, no advertising trackers.",
-      "Our hosting (Vercel) and backend (Google Firebase) keep standard operational server logs (IP address, request path, timestamps) to run and secure the service. That's the extent of it.",
+      "We use Google Analytics to measure visits, feature usage, and conversion events so we can improve MockFrame. We do not use Meta pixels, advertising trackers, or session-recording tools.",
+      "Google may process basic device, browser, approximate location, and usage information under its own privacy terms. Our hosting (Vercel) and backend (Google Firebase) also keep standard operational server logs such as IP address, request path, and timestamps to run and secure the service.",
     ],
   },
   {
@@ -53,7 +54,7 @@ const SECTIONS: { title: string; body: (string | { list: string[] })[] }[] = [
   {
     title: "Cookies",
     body: [
-      "We set only functional cookies: your sign-in session and an anonymous guest id (so guest work carries over when you sign up). No cross-site or advertising cookies.",
+      "We set functional cookies for your sign-in session and anonymous guest id so guest work carries over when you sign up. Google Analytics may also set or read analytics identifiers. We do not set advertising cookies.",
     ],
   },
   {

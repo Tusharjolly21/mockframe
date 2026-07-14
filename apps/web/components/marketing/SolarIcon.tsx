@@ -1,20 +1,20 @@
-import { icons as solar } from "@iconify-json/solar";
+import { SOLAR_ICON_BODIES } from "@/lib/generated/solarIconBodies";
 
 /**
- * Server-rendered Iconify icon from the Solar set (bold-duotone style) —
- * inlined at build time from @iconify-json/solar, no runtime fetch.
+ * Iconify Solar icon from the curated generated set. This stays safe in client
+ * components without shipping the complete 7,400-icon collection.
  */
 export function SolarIcon({ name, size = 22, className }: { name: string; size?: number; className?: string }) {
-  const icon = solar.icons[name];
-  if (!icon) return null;
+  const body = SOLAR_ICON_BODIES[name.replace(/-bold-duotone$/, "")];
+  if (!body) return null;
   return (
     <svg
-      viewBox={`0 0 ${solar.width ?? 24} ${solar.height ?? 24}`}
+      viewBox="0 0 24 24"
       width={size}
       height={size}
       className={className}
       aria-hidden
-      dangerouslySetInnerHTML={{ __html: icon.body }}
+      dangerouslySetInnerHTML={{ __html: body }}
     />
   );
 }

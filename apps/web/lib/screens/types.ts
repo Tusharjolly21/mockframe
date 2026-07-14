@@ -332,7 +332,7 @@ export interface DiscordDoc {
   messages: DiscordMessage[];
 }
 
-export type SocialNetwork = "facebook" | "linkedin" | "threads";
+export type SocialNetwork = "facebook" | "linkedin" | "threads" | "x" | "bluesky" | "mastodon";
 
 export interface SocialPostDoc {
   app: "social";
@@ -349,6 +349,18 @@ export interface SocialPostDoc {
   shares: number;
   avatar?: string;
   commentList?: PostComment[];
+  /** Imported provider name and canonical source URL. The standalone renderer
+   * uses these as quiet provenance rather than imitating the provider UI. */
+  sourceLabel?: string;
+  sourceUrl?: string;
+  /** Template mode: MockFrame's own provider-neutral post card. */
+  standalone?: boolean;
+  frame?: FrameStyle;
+  cardWidth?: number;
+  postFontSize?: number;
+  postPadding?: number;
+  cardRadius?: number;
+  cardShadow?: number;
 }
 
 export interface SlackMessage {
@@ -649,6 +661,9 @@ export const SOCIAL_LABELS: Record<SocialNetwork, string> = {
   facebook: "Facebook",
   linkedin: "LinkedIn",
   threads: "Threads",
+  x: "X",
+  bluesky: "Bluesky",
+  mastodon: "Mastodon",
 };
 
 export const DATING_LABELS: Record<DatingBrand, string> = {
@@ -1145,8 +1160,21 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
 }
 
 /** Template (card) variants of Bluesky / X — window-framed standalone cards. */
-export function defaultTemplateDoc(app: "bluesky" | "xpost" | "code"): ScreenDoc {
+export function defaultTemplateDoc(app: "bluesky" | "xpost" | "social" | "code"): ScreenDoc {
   if (app === "code") return defaultScreenDoc("code");
+  if (app === "social") {
+    return {
+      ...defaultSocialDoc("threads"),
+      sourceLabel: "Post",
+      standalone: true,
+      frame: "none",
+      cardWidth: 440,
+      postFontSize: 23,
+      postPadding: 24,
+      cardRadius: 22,
+      cardShadow: 1,
+    };
+  }
   const base = defaultScreenDoc(app) as BlueskyDoc | XPostDoc;
   return { ...base, standalone: true, frame: "none" };
 }

@@ -7,7 +7,7 @@ import { getDevice } from "@framekit/devices";
 import type { MockupLayer } from "@framekit/scene";
 import { ingestGenerated, resolveAsset } from "@/lib/assets";
 import { ICON_COLLECTIONS, ICON_PALETTES, ICON_VIEWBOX, iconBody, iconDataUrl, searchIcons, type IconPalette } from "@/lib/iconStickers";
-import { badgeDataUrl, BADGE_H, BADGE_W, STORE_BADGES } from "@/lib/storeBadges";
+import { badgeDataUrl, STORE_BADGES } from "@/lib/storeBadges";
 import { addAnnotation, addEmoji, addIconSticker, type AnnotationStickerId } from "@/lib/sceneOps";
 import { applyTheme, BUILTIN_THEMES, loadSavedThemes, saveTheme, syncThemesFromServer, themeMatches, type StyleTheme } from "@/lib/themes";
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";

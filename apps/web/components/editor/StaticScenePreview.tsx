@@ -35,6 +35,8 @@ export function StaticScenePreview({ scene, className }: { scene: SceneDocument;
             return <div key={layer.id} className="absolute rounded-xl bg-white/85 shadow-lg" style={{ left: `calc(50% + ${(layer.transform.x / canvasWidth) * 100}%)`, top: `calc(50% + ${(layer.transform.y / canvasHeight) * 100}%)`, width: "24%", aspectRatio: "1.5", transform: `translate(-50%, -50%) rotate(${layer.transform.rotate}deg) scale(${layer.transform.scale})` }} />;
           }
           return (
+            // Data-URI device previews are generated from the registry at runtime.
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               key={layer.id}
               src={previewDataUri(device, layer.frameVariant)}

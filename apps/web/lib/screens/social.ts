@@ -13,7 +13,8 @@ import {
   wrapText,
 } from "./common";
 import { fontFor } from "./fonts";
-import type { SocialPostDoc } from "./types";
+import { renderFramed, type FramedResult } from "./frames";
+import { SOCIAL_LABELS, type SocialPostDoc } from "./types";
 
 /**
  * Social post — Facebook / LinkedIn / Threads, mobile feed-card style. One
@@ -25,6 +26,68 @@ const M = 16;
 const GAP = 14;
 const FONT = 16;
 const LINE_H = 22;
+
+/** Provider-neutral standalone card. Imported posts should look like a
+ * MockFrame composition, not a fragile screenshot of another product's UI. */
+export function renderSocialCard(doc: SocialPostDoc, avatarUrl?: string): FramedResult {
+  const dark = !!doc.chrome.dark;
+  const font = fontFor("social", doc.chrome.platform ?? "ios");
+  const viewportW = Math.max(300, Math.min(620, doc.cardWidth ?? 440));
+  const frame = doc.frame ?? "none";
+  const c = dark
+    ? { bg: "#111217", card: "#17191f", text: "#f4f4f5", subtle: "#a1a1aa", hairline: "#30323a", chip: "#232630" }
+    : { bg: "#f4f4f7", card: "#ffffff", text: "#18181b", subtle: "#71717a", hairline: "#e4e4e7", chip: "#f1f1f5" };
+
+  return renderFramed(
+    frame,
+    { cardBg: c.card, barBg: dark ? "#1d1f26" : "#f7f7f9", barText: c.subtle, dark, title: "MockFrame post" },
+    (x, y, w) => {
+      const p = Math.max(12, Math.min(40, doc.postPadding ?? 24));
+      const size = Math.max(14, Math.min(34, doc.postFontSize ?? 23));
+      const lineH = Math.round(size * 1.42);
+      const inX = x + p;
+      const contentW = w - p * 2;
+      const source = doc.sourceLabel || SOCIAL_LABELS[doc.network] || "Post";
+      const subtitle = doc.subtitle || (doc.network === "threads" ? `@${doc.name.replace(/^@/, "")}` : "");
+      const parts: string[] = [];
+      let cy = y + p;
+
+      parts.push(`<rect x="${x}" y="${y}" width="${w}" height="1" fill="${c.hairline}" opacity="0"/>`);
+      parts.push(avatar(doc.name, inX + 22, cy + 22, 22, "mfpost", avatarUrl));
+      parts.push(`<text font-family="${font}" font-size="15.5" font-weight="750" fill="${c.text}" x="${inX + 56}" y="${cy + 18}">${esc(doc.name)}</text>`);
+      if (subtitle) parts.push(`<text font-family="${font}" font-size="12.5" fill="${c.subtle}" x="${inX + 56}" y="${cy + 38}">${esc(subtitle)}</text>`);
+      const chipW = Math.max(54, textWidth(source, 11.5) + 22);
+      parts.push(
+        `<rect x="${x + w - p - chipW}" y="${cy + 7}" width="${chipW}" height="26" rx="13" fill="${c.chip}" stroke="${c.hairline}" stroke-width="1"/>`,
+        `<circle cx="${x + w - p - chipW + 13}" cy="${cy + 20}" r="3.5" fill="#22d3ee"/>`,
+        `<text font-family="${font}" font-size="11.5" font-weight="650" fill="${c.subtle}" text-anchor="middle" x="${x + w - p - chipW / 2 + 5}" y="${cy + 24}">${esc(source)}</text>`
+      );
+      cy += 62;
+
+      const lines = wrapText(doc.text, size, contentW);
+      parts.push(baseTextBlock(lines, { font, x: inX, y: cy, size, lineHeight: lineH, color: c.text }));
+      cy += lines.length * lineH + 24;
+      parts.push(`<rect x="${inX}" y="${cy}" width="${contentW}" height="1" fill="${c.hairline}"/>`);
+      cy += 24;
+
+      const stats = [
+        [compact(doc.likes), "likes"],
+        [compact(doc.comments), "replies"],
+        [compact(doc.shares), "shares"],
+      ];
+      const colW = contentW / stats.length;
+      stats.forEach(([value, label], i) => {
+        const sx = inX + i * colW;
+        parts.push(`<text font-family="${font}" font-size="13" font-weight="700" fill="${c.text}" x="${sx}" y="${cy}">${esc(value)}</text>`);
+        parts.push(`<text font-family="${font}" font-size="11.5" fill="${c.subtle}" x="${sx + textWidth(value, 13) + 5}" y="${cy}">${label}</text>`);
+      });
+      cy += p;
+      return { svg: parts.join("\n"), height: cy - y };
+    },
+    viewportW,
+    { radius: doc.cardRadius, shadow: doc.cardShadow }
+  );
+}
 
 export function renderSocial(doc: SocialPostDoc, avatarUrl?: string, lookupUrl?: (id: string) => string | undefined): string {
   const platform = doc.chrome.platform ?? "ios";
