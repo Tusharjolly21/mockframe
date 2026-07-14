@@ -164,6 +164,43 @@ export function renderWhatsApp(
       if (!m.text) continue;
     }
 
+    // voice-note bubble: play + deterministic waveform + duration
+    if (m.voice) {
+      const vw = 238, vh = 56;
+      const bx = mine ? SW - MARGIN - vw : MARGIN;
+      const fill = mine ? c.outgoing : c.incoming;
+      const secs = Math.max(1, Math.round(m.voice.seconds));
+      const dur = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
+      const bars: string[] = [];
+      for (let b = 0; b < 27; b++) {
+        // deterministic pseudo-random heights so exports are reproducible
+        const hgt = 4 + ((Math.sin((b + 1) * 12.9898 + i * 78.233) * 43758.5453) % 1 + 1) % 1 * 14;
+        const bxp = bx + 64 + b * 5.4;
+        bars.push(`<rect x="${bxp.toFixed(1)}" y="${(y + 22 - hgt / 2).toFixed(1)}" width="3" height="${hgt.toFixed(1)}" rx="1.5" fill="${b < 9 ? c.accent : c.subtle}" opacity="${b < 9 ? 1 : 0.55}"/>`);
+      }
+      const laterReplyV = doc.messages.slice(i + 1).some((n) => n.from === "them");
+      const vTicks = mine ? ticks(m.ticks ?? (laterReplyV ? "read" : "delivered"), bx + vw - 9, y + vh - 8, c.subtle, c.blueTick) : "";
+      parts.push(
+        `<rect x="${bx}" y="${y}" width="${vw}" height="${vh}" rx="9" fill="${fill}" style="filter:drop-shadow(0 0.5px 0.5px rgba(0,0,0,0.12))"/>`,
+        `<circle cx="${bx + 30}" cy="${y + 22}" r="15" fill="${dark ? "#2a3942" : "#f0f0f0"}"/>`,
+        `<path d="M${bx + 26} ${y + 15} l 12 7 l -12 7 Z" fill="${c.accent}"/>`,
+        ...bars,
+        `<text font-family="${font}" font-size="10.5" fill="${c.subtle}" x="${bx + 16}" y="${y + vh - 8}">${dur}</text>`,
+        `<text font-family="${font}" font-size="10.5" fill="${c.subtle}" text-anchor="end" x="${mine ? bx + vw - 27 : bx + vw - 9}" y="${y + vh - 8}">${esc(time)}</text>`,
+        vTicks
+      );
+      if (m.reaction) {
+        const rx = mine ? bx + 6 : bx + vw - 34;
+        parts.push(
+          `<rect x="${rx}" y="${y + vh - 6}" width="30" height="22" rx="11" fill="${dark ? "#1d282f" : "#ffffff"}" stroke="${c.hairline}" stroke-width="0.5"/>`,
+          `<text font-size="13" text-anchor="middle" x="${rx + 15}" y="${y + vh + 10}">${esc(m.reaction)}</text>`
+        );
+        y += 16;
+      }
+      y += vh + 10;
+      continue;
+    }
+
     const lines = wrapText(m.text || " ", FONT_SIZE, BUBBLE_MAX - PAD_X * 2);
     const lastLineW = textWidth(lines[lines.length - 1], FONT_SIZE);
     const metaInline = lastLineW + META_W <= BUBBLE_MAX - PAD_X * 2;
@@ -198,12 +235,22 @@ export function renderWhatsApp(
 
     // meta: time (+ ticks for outgoing) bottom-right inside the bubble
     const metaY = y + h - 7;
-    const ticksSvg = mine ? ticks(m.ticks ?? "read", x + w - 9, metaY, c.subtle, c.blueTick) : "";
+    const laterReply = doc.messages.slice(i + 1).some((n) => n.from === "them");
+    const ticksSvg = mine ? ticks(m.ticks ?? (laterReply ? "read" : "delivered"), x + w - 9, metaY, c.subtle, c.blueTick) : "";
     const timeX = mine ? x + w - 9 - 18 : x + w - 9;
     parts.push(
       `<text font-family="${font}" font-size="10.5" fill="${c.subtle}" text-anchor="end" x="${timeX}" y="${metaY}">${esc(time)}</text>`,
       ticksSvg
     );
+
+    if (m.reaction) {
+      const rx = mine ? x + 6 : x + w - 34;
+      parts.push(
+        `<rect x="${rx}" y="${y + h - 6}" width="30" height="22" rx="11" fill="${dark ? "#1d282f" : "#ffffff"}" stroke="${c.hairline}" stroke-width="0.5"/>`,
+        `<text font-size="13" text-anchor="middle" x="${rx + 15}" y="${y + h + 10}">${esc(m.reaction)}</text>`
+      );
+      y += 16;
+    }
 
     y += h + (i < doc.messages.length - 1 && doc.messages[i + 1].from === m.from ? 3 : 10);
   }
@@ -267,6 +314,43 @@ export function renderWhatsAppGroup(doc: WhatsAppGroupDoc, avatarUrl?: string): 
     const m = doc.messages[i];
     const mine = m.from === "me";
     const sender = !mine ? m.sender || "Member" : null;
+    // voice-note bubble: play + deterministic waveform + duration
+    if (m.voice) {
+      const vw = 238, vh = 56;
+      const bx = mine ? SW - MARGIN - vw : MARGIN;
+      const fill = mine ? c.outgoing : c.incoming;
+      const secs = Math.max(1, Math.round(m.voice.seconds));
+      const dur = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
+      const bars: string[] = [];
+      for (let b = 0; b < 27; b++) {
+        // deterministic pseudo-random heights so exports are reproducible
+        const hgt = 4 + ((Math.sin((b + 1) * 12.9898 + i * 78.233) * 43758.5453) % 1 + 1) % 1 * 14;
+        const bxp = bx + 64 + b * 5.4;
+        bars.push(`<rect x="${bxp.toFixed(1)}" y="${(y + 22 - hgt / 2).toFixed(1)}" width="3" height="${hgt.toFixed(1)}" rx="1.5" fill="${b < 9 ? c.accent : c.subtle}" opacity="${b < 9 ? 1 : 0.55}"/>`);
+      }
+      const laterReplyV = doc.messages.slice(i + 1).some((n) => n.from === "them");
+      const vTicks = mine ? ticks(m.ticks ?? (laterReplyV ? "read" : "delivered"), bx + vw - 9, y + vh - 8, c.subtle, c.blueTick) : "";
+      parts.push(
+        `<rect x="${bx}" y="${y}" width="${vw}" height="${vh}" rx="9" fill="${fill}" style="filter:drop-shadow(0 0.5px 0.5px rgba(0,0,0,0.12))"/>`,
+        `<circle cx="${bx + 30}" cy="${y + 22}" r="15" fill="${dark ? "#2a3942" : "#f0f0f0"}"/>`,
+        `<path d="M${bx + 26} ${y + 15} l 12 7 l -12 7 Z" fill="${c.accent}"/>`,
+        ...bars,
+        `<text font-family="${font}" font-size="10.5" fill="${c.subtle}" x="${bx + 16}" y="${y + vh - 8}">${dur}</text>`,
+        `<text font-family="${font}" font-size="10.5" fill="${c.subtle}" text-anchor="end" x="${mine ? bx + vw - 27 : bx + vw - 9}" y="${y + vh - 8}">${esc(time)}</text>`,
+        vTicks
+      );
+      if (m.reaction) {
+        const rx = mine ? bx + 6 : bx + vw - 34;
+        parts.push(
+          `<rect x="${rx}" y="${y + vh - 6}" width="30" height="22" rx="11" fill="${dark ? "#1d282f" : "#ffffff"}" stroke="${c.hairline}" stroke-width="0.5"/>`,
+          `<text font-size="13" text-anchor="middle" x="${rx + 15}" y="${y + vh + 10}">${esc(m.reaction)}</text>`
+        );
+        y += 16;
+      }
+      y += vh + 10;
+      continue;
+    }
+
     const lines = wrapText(m.text || " ", FONT_SIZE, BUBBLE_MAX - PAD_X * 2);
     const lastLineW = textWidth(lines[lines.length - 1], FONT_SIZE);
     const metaInline = lastLineW + META_W <= BUBBLE_MAX - PAD_X * 2;

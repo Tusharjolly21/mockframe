@@ -27,6 +27,7 @@ export function AnimatePanel() {
   const scene = useSceneStore((s) => s.scene);
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const [open, setOpen] = useState(false);
+  const [speed, setSpeed] = useState<"slow" | "normal" | "fast">("normal");
   const [busy, setBusy] = useState<null | { pct: number; label: string }>(null);
   const [plan, setPlan] = useState<AnimShot[]>([]);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -194,6 +195,32 @@ export function AnimatePanel() {
                   Reveals {total} messages of your {SCREEN_APP_LABELS[anim.doc.app]} chat one at a time — replies
                   land with the sender&apos;s rhythm.
                 </p>
+
+                {/* playback speed — scales every hold/fade in one tap */}
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9a9aa4]">Speed</span>
+                  <div className="grid flex-1 grid-cols-3 rounded-lg bg-[#f1f1f6] p-1">
+                    {([["slow", "Slow", 1.6], ["normal", "Medium", 1], ["fast", "Fast", 0.6]] as const).map(([id, label, factor]) => (
+                      <button
+                        key={id}
+                        onClick={() => {
+                          if (speed === id) return;
+                          const prev = speed === "slow" ? 1.6 : speed === "fast" ? 0.6 : 1;
+                          const ratio = factor / prev;
+                          setPlan((current) => current.map((shot) => ({
+                            ...shot,
+                            holdMs: Math.round(shot.holdMs * ratio),
+                            fadeMs: Math.round(shot.fadeMs * ratio),
+                          })));
+                          setSpeed(id);
+                        }}
+                        className={`fk-press rounded-md px-2 py-1 text-[10px] font-semibold ${speed === id ? "bg-white text-[#17171c] shadow-sm" : "text-[#85858f]"}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 <div className="mb-3 rounded-xl border border-[#e8e8ef] bg-[#fafafd] p-2.5">
                   <div className="mb-2 flex items-center justify-between">

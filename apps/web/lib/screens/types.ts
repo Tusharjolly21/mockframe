@@ -55,6 +55,8 @@ export interface ChatMessage {
   link?: ChatLink;
   /** call-event card instead of a text bubble */
   call?: ChatCall;
+  /** voice-note bubble: waveform + duration (Pro) */
+  voice?: { seconds: number };
   /** date-separator pill shown BEFORE this message ("Today", "Yesterday") */
   dateLabel?: string;
   /** video-export pacing: ms to wait before this message pops in (overrides
@@ -90,7 +92,7 @@ export interface WhatsAppDoc {
   presence: string;
   /** chat wallpaper preset id (see wallpapers.ts); default when unset */
   wallpaper?: string;
-  messages: Array<ChatMessage & { ticks?: WhatsAppTicks }>;
+  messages: Array<ChatMessage & { ticks?: WhatsAppTicks; reaction?: string }>;
 }
 
 /** A reply/comment under a post (X threaded reply or FB/LinkedIn comment). */
@@ -187,7 +189,7 @@ export interface WhatsAppGroupDoc {
   /** member summary line under the group name */
   members: string;
   wallpaper?: string;
-  messages: Array<ChatMessage & { ticks?: WhatsAppTicks; sender?: string; senderAvatar?: string }>;
+  messages: Array<ChatMessage & { ticks?: WhatsAppTicks; sender?: string; senderAvatar?: string; reaction?: string }>;
 }
 
 export interface InstagramDoc {
@@ -220,7 +222,7 @@ export interface TelegramDoc {
   contact: string;
   presence: string; // "last seen recently", "online", …
   wallpaper?: string;
-  messages: Array<ChatMessage & { ticks?: WhatsAppTicks }>;
+  messages: Array<ChatMessage & { ticks?: WhatsAppTicks; reaction?: string }>;
 }
 
 /** Snapchat message-status line under the latest message (ALL-CAPS). */
@@ -368,7 +370,7 @@ export interface SignalDoc {
   avatar?: string;
   contact: string;
   presence: string;
-  messages: Array<ChatMessage & { ticks?: WhatsAppTicks }>;
+  messages: Array<ChatMessage & { ticks?: WhatsAppTicks; reaction?: string }>;
 }
 
 export interface RedditComment {

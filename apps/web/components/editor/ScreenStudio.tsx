@@ -23,7 +23,7 @@ import {
   SiYoutube,
 } from "@icons-pack/react-simple-icons";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, CalendarDays, Code2, FileText, Heart, ImageIcon, ImagePlus, LayoutGrid, Link2, Linkedin, MessagesSquare, Paperclip, Phone, Search, Shuffle, Slack, Sparkles, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, CalendarDays, Code2, FileText, Heart, ImageIcon, ImagePlus, LayoutGrid, Link2, Linkedin, MessagesSquare, Mic, Paperclip, Phone, Search, Shuffle, Slack, SmilePlus, Sparkles, Trash2, X } from "lucide-react";
 import type { MockupLayer } from "@framekit/scene";
 import { getDevice } from "@framekit/devices";
 import { ingestFile, resolveAsset } from "@/lib/assets";
@@ -95,7 +95,8 @@ import { toast } from "./Toolbar";
 import { CODE_THEME_LABELS } from "@/lib/screens/code";
 import { FRAME_LABELS, FRAME_STYLES } from "@/lib/screens/frames";
 import { CODE_FONT_LABELS } from "@/lib/screens/fonts";
-import { useSceneStore } from "@/lib/store";
+import { useSceneStore, useViewStore } from "@/lib/store";
+import { openUpgrade } from "@/lib/billing/gate";
 import { Section, Seg, SliderRow } from "./ui";
 
 /**
@@ -695,8 +696,10 @@ function WallpaperField({ value, onChange }: { value?: string; onChange: (id?: s
 }
 
 /** Per-message attachments (image / document / link) + reorder + video timing. */
+const REACTION_QUICK = ["❤️", "😂", "😮", "😢", "🙏", "👍", "🔥"];
+
 function MsgExtras<
-  M extends { image?: string; file?: ChatFile; link?: ChatLink; call?: ChatCall; dateLabel?: string; delayMs?: number }
+  M extends { image?: string; file?: ChatFile; link?: ChatLink; call?: ChatCall; dateLabel?: string; delayMs?: number; voice?: { seconds: number }; reaction?: string }
 >({
   m,
   i,
@@ -776,7 +779,55 @@ function MsgExtras<
         <button title="Date separator before this message" onClick={() => patch({ dateLabel: m.dateLabel ? undefined : "Today" } as Partial<M>)} className={chipCls(m.dateLabel != null)}>
           <CalendarDays size={12} /> Date
         </button>
+        {/* Pro chat pack: voice notes + reactions */}
+        <button
+          title="Voice-note bubble (Pro)"
+          onClick={() => {
+            if (!useViewStore.getState().removeWatermark) return openUpgrade();
+            patch({ voice: m.voice ? undefined : { seconds: 12 } } as Partial<M>);
+          }}
+          className={chipCls(!!m.voice)}
+        >
+          <Mic size={12} /> Voice
+        </button>
+        <button
+          title="Emoji reaction on this bubble (Pro)"
+          onClick={() => {
+            if (!useViewStore.getState().removeWatermark) return openUpgrade();
+            patch({ reaction: m.reaction ? undefined : "❤️" } as Partial<M>);
+          }}
+          className={chipCls(!!m.reaction)}
+        >
+          <SmilePlus size={12} /> React
+        </button>
       </div>
+      {m.voice && (
+        <div className="mt-1.5 flex items-center gap-1.5">
+          <span className="text-[9px] font-semibold uppercase tracking-wider text-[#b0b0ba]">Length</span>
+          <input
+            type="number"
+            min={1}
+            max={599}
+            value={m.voice.seconds}
+            onChange={(e) => patch({ voice: { seconds: Math.max(1, Number(e.target.value) || 1) } } as Partial<M>)}
+            className="w-14 rounded-md border border-[#e4e4ec] bg-white px-1 py-0.5 text-center text-[10px] tabular-nums text-[#17171c] outline-none focus:border-[#17171c]"
+          />
+          <span className="text-[10px] text-[#9a9aa4]">sec</span>
+        </div>
+      )}
+      {m.reaction && (
+        <div className="mt-1.5 flex items-center gap-1">
+          {REACTION_QUICK.map((e) => (
+            <button
+              key={e}
+              onClick={() => patch({ reaction: e } as Partial<M>)}
+              className={`fk-press grid h-6 w-6 place-items-center rounded-md text-[13px] ${m.reaction === e ? "bg-[#17171c]" : "hover:bg-black/5"}`}
+            >
+              {e}
+            </button>
+          ))}
+        </div>
+      )}
 
       {m.file && (
         <div className="mt-2 flex gap-1.5">
