@@ -75,6 +75,29 @@ function ScreenPlaceholder({ device, layerId }: { device: Device; layerId: strin
   );
 }
 
+/** Diagonal glass-glare streak: a wide main band + a thin echo band, both
+ *  scaled by intensity. Same stops feed the CSS overlay and the SVG gradient. */
+function glareStops(intensity: number): { offset: number; alpha: number }[] {
+  const I = Math.max(0, Math.min(1, intensity));
+  return [
+    { offset: 0, alpha: 0 },
+    { offset: 0.34, alpha: 0 },
+    { offset: 0.42, alpha: 0.5 * I },
+    { offset: 0.5, alpha: 0.34 * I },
+    { offset: 0.54, alpha: 0 },
+    { offset: 0.58, alpha: 0.22 * I },
+    { offset: 0.63, alpha: 0 },
+    { offset: 1, alpha: 0 },
+  ];
+}
+
+function glareCss(glare: { intensity: number; angle: number }): string {
+  const stops = glareStops(glare.intensity)
+    .map((s) => `rgba(255,255,255,${s.alpha.toFixed(3)}) ${(s.offset * 100).toFixed(1)}%`)
+    .join(", ");
+  return `linear-gradient(${glare.angle}deg, ${stops})`;
+}
+
 export function MockupLayerView({
   layer,
   resolveAsset,
@@ -117,16 +140,29 @@ export function MockupLayerView({
                   : undefined,
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={asset.url}
-            alt=""
-            width={asset.width}
-            height={asset.height}
-            style={{ display: "block", borderRadius: radius, maxWidth: "none" }}
-            onLoad={onMediaLoad}
-            crossOrigin="anonymous"
-          />
+          <div style={{ position: "relative" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={asset.url}
+              alt=""
+              width={asset.width}
+              height={asset.height}
+              style={{ display: "block", borderRadius: radius, maxWidth: "none" }}
+              onLoad={onMediaLoad}
+              crossOrigin="anonymous"
+            />
+            {layer.glare && layer.glare.intensity > 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  borderRadius: radius,
+                  background: glareCss(layer.glare),
+                }}
+              />
+            )}
+          </div>
         </div>
       </div>
     );
@@ -260,6 +296,11 @@ export function MockupLayerView({
             boxShadow: "inset 0 0 34px rgba(0,0,0,0.22), inset 0 1px 1px rgba(255,255,255,0.22)",
           }}
         />
+        {/* user glare: a bold light streak, warped with the screen so it follows
+            the device's perspective */}
+        {layer.glare && layer.glare.intensity > 0 && (
+          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: glareCss(layer.glare) }} />
+        )}
       </div>
     );
     return (
@@ -348,6 +389,19 @@ export function MockupLayerView({
             </>
           ) : (
             <ScreenPlaceholder device={device} layerId={layer.id} />
+          )}
+          {layer.glare && layer.glare.intensity > 0 && (
+            <>
+              <defs>
+                {/* SVG gradients run left→right (= CSS 90°); rotate the delta about the centre */}
+                <linearGradient id={`${clipId}_glare`} gradientTransform={`rotate(${layer.glare.angle - 90}, 0.5, 0.5)`}>
+                  {glareStops(layer.glare.intensity).map((s, i) => (
+                    <stop key={i} offset={s.offset} stopColor="#ffffff" stopOpacity={s.alpha} />
+                  ))}
+                </linearGradient>
+              </defs>
+              <rect x={rect.x} y={rect.y} width={rect.width} height={rect.height} fill={`url(#${clipId}_glare)`} />
+            </>
           )}
         </g>
         <g dangerouslySetInnerHTML={{ __html: variant.overlay }} />

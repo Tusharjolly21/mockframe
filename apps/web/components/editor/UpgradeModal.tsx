@@ -62,13 +62,13 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
 
   const ui = (
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0c0d12]/70 p-4 backdrop-blur-md"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-[#09090b]/80 p-4 backdrop-blur-md"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && !busy) onClose();
       }}
     >
-      <div className="relative max-h-[min(760px,calc(100vh-32px))] w-[min(860px,96vw)] overflow-y-auto rounded-[24px] border border-white/70 bg-[#f8f8fb] shadow-[0_32px_100px_rgba(0,0,0,0.38)]">
-        <button onClick={onClose} title="Close" className="fk-press absolute right-5 top-5 z-10 grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/10 text-white hover:bg-white/20">
+      <div className="relative max-h-[min(760px,calc(100vh-32px))] w-[min(860px,96vw)] overflow-y-auto rounded-[24px] border border-white/[0.08] bg-[#0f1014] shadow-[0_32px_100px_rgba(0,0,0,0.6)]">
+        <button onClick={onClose} title="Close" className="fk-press absolute right-5 top-5 z-10 grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/[0.04] text-white hover:bg-white/10">
           <IconifyIcon name="close-circle" size={20} color="#ffffff" />
         </button>
 
@@ -82,11 +82,11 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
                 </span>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#a5b4fc]">MockFrame</p>
-                  <h2 className="text-[22px] font-bold tracking-[-0.03em]">Go Pro</h2>
+              <h2 className="text-[22px] font-medium tracking-[-0.03em]">Go Pro</h2>
                 </div>
               </div>
-              <h1 className="mt-12 max-w-[320px] text-[34px] font-bold leading-[1.05] tracking-[-0.05em]">Make every mockup look ready to ship.</h1>
-              <p className="mt-4 max-w-[320px] text-[14px] leading-6 text-white/60">A calmer workflow for teams that need beautiful, consistent screenshots at speed.</p>
+              <h1 className="mt-12 max-w-[320px] text-[34px] font-medium leading-[1.05] tracking-[-0.04em]">Make every mockup look ready to ship.</h1>
+              <p className="mt-4 max-w-[320px] text-[14px] leading-6 text-zinc-400">A calmer workflow for teams that need beautiful, consistent screenshots at speed.</p>
               <div className="mt-9 space-y-4">
                 {BENEFITS.map((benefit) => (
                   <div key={benefit.title} className="flex gap-3">
@@ -103,15 +103,15 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
             </div>
           </section>
 
-          <section className="px-5 py-7 md:px-8 md:py-9">
+          <section className="bg-[#0f1014] px-5 py-7 text-white md:px-8 md:py-9">
             <div className="flex items-start justify-between gap-4 pr-10">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#7c3aed]">Choose your access</p>
-                <h3 className="mt-1 text-[23px] font-bold tracking-[-0.04em] text-[#17171c]">Upgrade your workspace</h3>
+                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-violet-400">Choose your access</p>
+                <h3 className="mt-1 text-[23px] font-medium tracking-[-0.035em] text-white">Upgrade your workspace</h3>
               </div>
-              <div className="flex rounded-xl border border-[#dedee8] bg-white p-1 text-[11px] font-bold">
+              <div className="flex rounded-lg border border-white/10 bg-white/[0.04] p-1 text-[11px] font-semibold">
                 {(["INR", "USD"] as const).map((c) => (
-                  <button key={c} onClick={() => setCurrency(c)} className={`rounded-lg px-2.5 py-1.5 ${currency === c ? "bg-[#17171c] text-white" : "text-[#858592] hover:text-[#17171c]"}`}>
+                  <button key={c} onClick={() => setCurrency(c)} className={`rounded-md px-2.5 py-1.5 ${currency === c ? "bg-white text-zinc-900" : "text-zinc-500 hover:text-white"}`}>
                     {c === "INR" ? "₹" : "$"} {c}
                   </button>
                 ))}
@@ -123,21 +123,21 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
                 const def = plans[id];
                 const selected = plan === id;
                 const perMo = perMonthPrice(id, currency, plans);
-                return (
-                  <button key={id} onClick={() => setPlan(id)} className={`fk-press relative flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 text-left transition ${selected ? "border-[#7c3aed] bg-[#f4f0ff] shadow-[0_8px_24px_rgba(124,58,237,0.12)]" : "border-[#e6e6ed] bg-white hover:border-[#bdbdca]"}`}>
+                  return (
+                  <button key={id} onClick={() => setPlan(id)} className={`fk-press relative flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 text-left transition ${selected ? "border-violet-400/70 bg-violet-400/[0.08] shadow-[0_8px_24px_rgba(124,58,237,0.12)]" : "border-white/[0.08] bg-white/[0.02] hover:border-white/20"}`}>
                     <span className="min-w-0">
-                      <span className="flex items-center gap-2 text-[14px] font-bold text-[#17171c]">
+                      <span className="flex items-center gap-2 text-[14px] font-semibold text-white">
                         {id === "lifetime" && <IconifyIcon name="infinity" size={15} color="#7c3aed" />}
                         {def.label}
                         {id === "yearly" && <span className="rounded-full bg-[#e9ddff] px-2 py-0.5 text-[9px] font-bold text-[#6d28d9]">SAVE {savings}%</span>}
                       </span>
-                      <span className="mt-1 block text-[11px] text-[#898995]">{def.blurb}</span>
+                      <span className="mt-1 block text-[11px] text-zinc-500">{def.blurb}</span>
                     </span>
                     <span className="flex shrink-0 items-center gap-3">
                       <span className="text-right">
-                        {perMo ? <><strong className="block text-[16px] text-[#17171c]">{perMo}<small className="font-medium text-[#9999a4]">/mo</small></strong><small className="block text-[10px] text-[#9999a4]">{formatPrice(id, currency, plans)} billed yearly</small></> : <strong className="text-[16px] text-[#17171c]">{formatPrice(id, currency, plans)}<small className="font-medium text-[#9999a4]">{PERIOD_SUFFIX[id]}</small></strong>}
+                        {perMo ? <><strong className="block text-[16px] text-white">{perMo}<small className="font-medium text-zinc-500">/mo</small></strong><small className="block text-[10px] text-zinc-500">{formatPrice(id, currency, plans)} billed yearly</small></> : <strong className="text-[16px] text-white">{formatPrice(id, currency, plans)}<small className="font-medium text-zinc-500">{PERIOD_SUFFIX[id]}</small></strong>}
                       </span>
-                      <span className={`grid h-5 w-5 place-items-center rounded-full border-2 ${selected ? "border-[#7c3aed] bg-[#7c3aed]" : "border-[#d5d5df]"}`}>
+                      <span className={`grid h-5 w-5 place-items-center rounded-full border-2 ${selected ? "border-violet-400 bg-violet-500" : "border-white/20"}`}>
                         {selected && <IconifyIcon name="check-circle" size={17} color="#ffffff" />}
                       </span>
                     </span>
@@ -146,19 +146,19 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
               })}
             </div>
 
-            {!account && <p className="mt-4 rounded-xl border border-[#f0dfad] bg-[#fff9e8] px-3 py-2.5 text-[11px] leading-5 text-[#866c1c]">Sign in first so your Pro access follows you across devices.</p>}
+            {!account && <p className="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/[0.06] px-3 py-2.5 text-[11px] leading-5 text-amber-200/80">Sign in first so your Pro access follows you across devices.</p>}
             {account ? (
-              <button onClick={pay} disabled={busy} className="fk-press mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#17171c] py-3.5 text-[13px] font-bold text-white shadow-[0_8px_20px_rgba(23,23,28,0.18)] hover:bg-[#2d2d36] disabled:opacity-50">
+              <button onClick={pay} disabled={busy} className="fk-press mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-white py-3.5 text-[13px] font-semibold text-zinc-900 shadow-[0_8px_20px_rgba(0,0,0,0.18)] hover:bg-zinc-200 disabled:opacity-50">
                 <IconifyIcon name="lock-keyhole" size={16} color="#ffffff" />
                 {busy ? "Opening secure checkout..." : `Continue with ${plan === "yearly" ? "Annual" : plans[plan].label}`}
               </button>
             ) : (
-              <button onClick={() => setAuthOpen(true)} className="fk-press mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#17171c] py-3.5 text-[13px] font-bold text-white shadow-[0_8px_20px_rgba(23,23,28,0.18)] hover:bg-[#2d2d36]">
+              <button onClick={() => setAuthOpen(true)} className="fk-press mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-white py-3.5 text-[13px] font-semibold text-zinc-900 shadow-[0_8px_20px_rgba(0,0,0,0.18)] hover:bg-zinc-200">
                 <IconifyIcon name="login-2" size={16} color="#ffffff" /> Sign in to continue
               </button>
             )}
             <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[10px] text-[#9a9aa4]">
-              <IconifyIcon name="card" size={13} color="#9a9aa4" /> {currency === "INR" ? "UPI, cards and netbanking via Razorpay" : "International cards via Razorpay"}
+              <IconifyIcon name="card" size={13} color="#71717a" /> {currency === "INR" ? "UPI, cards and netbanking via Razorpay" : "International cards via Razorpay"}
             </p>
           </section>
         </div>

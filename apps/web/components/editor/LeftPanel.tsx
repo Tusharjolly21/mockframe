@@ -554,6 +554,48 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
         )}
       </Section>
 
+      <Section title="Glare" collapsible defaultOpen={false}>
+        <Seg
+          id="glare-preset"
+          options={[
+            { value: "off", label: "Off" },
+            { value: "soft", label: "Soft" },
+            { value: "strong", label: "Strong" },
+          ]}
+          value={!layer.glare || layer.glare.intensity === 0 ? "off" : layer.glare.intensity <= 0.45 ? "soft" : "strong"}
+          onChange={(v) =>
+            patch({
+              glare:
+                v === "off"
+                  ? undefined
+                  : { angle: layer.glare?.angle ?? 118, intensity: v === "soft" ? 0.35 : 0.65 },
+            })
+          }
+        />
+        {layer.glare && layer.glare.intensity > 0 && (
+          <div className="mt-2 rounded-xl bg-[#f6f6fa] p-2.5">
+            <SliderRow
+              label="Intensity"
+              value={layer.glare.intensity}
+              min={0.05}
+              max={1}
+              step={0.01}
+              format={(v) => `${Math.round(v * 100)}%`}
+              onChange={(intensity) => patch({ glare: { ...layer.glare!, intensity } })}
+            />
+            <SliderRow
+              label="Angle"
+              value={layer.glare.angle}
+              min={0}
+              max={360}
+              step={1}
+              format={(v) => `${Math.round(v)}°`}
+              onChange={(angle) => patch({ glare: { ...layer.glare!, angle } })}
+            />
+          </div>
+        )}
+      </Section>
+
       <Section title="Border" collapsible defaultOpen={false}>
         <Seg
           id="border-toggle"

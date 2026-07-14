@@ -158,6 +158,14 @@ export const MockupLayerSchema = z.object({
       inset: z.number().min(0),
     })
     .optional(),
+  /** diagonal light streak across the screen glass */
+  glare: z
+    .object({
+      intensity: z.number().min(0).max(1),
+      /** CSS gradient angle in degrees (0 = bottom→top, clockwise) */
+      angle: z.number(),
+    })
+    .optional(),
   effects: z.array(EffectSchema).optional(),
 });
 
