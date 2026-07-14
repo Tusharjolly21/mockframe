@@ -8,6 +8,7 @@ import { createMockupLayer } from "@framekit/scene";
 import { ingestFile, resolveAsset, type GuestAsset } from "@/lib/assets";
 import { fetchCredits, fetchDevices, fetchMockups, renderScreenshotIntoMockup, type DeviceGroup, type MockuuupsItem } from "@/lib/mockuuups";
 import { useSceneStore, useViewStore } from "@/lib/store";
+import { openUpgrade } from "@/lib/billing/gate";
 
 /**
  * Realistic render (Pro) — composites the current screenshot into a photoreal
@@ -121,6 +122,11 @@ export function RealisticRenderPanel({ onClose, onToast }: { onClose: () => void
 
   async function doRender() {
     if (!source || !pick || busy) return;
+    // each render spends a real Mockuuups API credit — Pro only
+    if (!useViewStore.getState().removeWatermark) {
+      openUpgrade();
+      return;
+    }
     setBusy(true);
     try {
       const asset = await renderScreenshotIntoMockup(source, pick, hd);

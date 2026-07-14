@@ -25,6 +25,7 @@ function toRecord(id: string, data: FirebaseFirestore.DocumentData) {
   return {
     id,
     name: data.name ?? "Untitled draft",
+    kind: data.kind === "template" ? "template" : "scene",
     updatedAt: typeof data.updatedAtMs === "number" ? data.updatedAtMs : Date.now(),
     scene: data.scene,
     assets: Array.isArray(data.assets) ? data.assets : [],
@@ -65,6 +66,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     updatedAt: FieldValue.serverTimestamp(),
   };
   if (typeof body.name === "string" && body.name.trim()) patch.name = body.name.trim().slice(0, 120);
+  if (body.kind === "scene" || body.kind === "template") patch.kind = body.kind;
   if (typeof body.thumbnail === "string") patch.thumbnail = body.thumbnail;
   if (Array.isArray(body.assets)) patch.assets = body.assets;
   if ("scene" in body) {

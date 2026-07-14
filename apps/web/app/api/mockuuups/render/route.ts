@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { renderMockup, MockuuupsError } from "@/lib/server/mockuuups";
+import { requestIsPro } from "@/lib/server/entitlement";
 
 /**
  * POST /api/mockuuups/render  { mockup, imageUrl, size? }
@@ -12,6 +13,10 @@ import { renderMockup, MockuuupsError } from "@/lib/server/mockuuups";
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
+  // renders spend real API credits — Pro only, enforced here (UI gate is courtesy)
+  if (!(await requestIsPro(req))) {
+    return NextResponse.json({ error: "Realistic renders are a Pro feature — upgrade to use them" }, { status: 402 });
+  }
   let body: { mockup?: unknown; imageUrl?: unknown; size?: unknown };
   try {
     body = await req.json();

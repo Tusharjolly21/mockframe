@@ -158,16 +158,36 @@ export function renderCode(doc: CodeDoc): FramedResult {
   const lines = codeLines(doc);
   const digits = String(Math.max(1, lines.length)).length;
   const gutterW = doc.lineNumbers ? Math.round(fs * 0.62 * digits) + 16 : 0;
+  const diffEnabled = doc.diffHighlight || doc.language === "diff";
 
-  const draw = (x: number, y: number) => {
+  const diffKind = (line: string): "add" | "remove" | "hunk" | "meta" | null => {
+    if (!diffEnabled) return null;
+    if (line.startsWith("@@")) return "hunk";
+    if (line.startsWith("diff ") || line.startsWith("index ") || line.startsWith("+++") || line.startsWith("---")) return "meta";
+    if (line.startsWith("+")) return "add";
+    if (line.startsWith("-")) return "remove";
+    return null;
+  };
+
+  const draw = (x: number, y: number, w: number) => {
     const parts: string[] = [];
     const codeX = x + PAD_X + gutterW;
     lines.forEach((line, idx) => {
       const baseY = y + PAD_TOP + idx * lineH + fs * 0.82;
+      const kind = diffKind(line);
+      if (kind) {
+        const palette = th.dark
+          ? { add: ["rgba(46,160,67,0.18)", "#56d364"], remove: ["rgba(248,81,73,0.18)", "#ff7b72"], hunk: ["rgba(88,166,255,0.16)", "#79c0ff"], meta: ["rgba(139,148,158,0.10)", th.comment] }
+          : { add: ["rgba(46,160,67,0.12)", "#1a7f37"], remove: ["rgba(207,34,46,0.12)", "#cf222e"], hunk: ["rgba(9,105,218,0.10)", "#0969da"], meta: ["rgba(175,184,193,0.16)", th.comment] };
+        const [fill, accent] = palette[kind];
+        parts.push(`<rect x="${x}" y="${y + PAD_TOP + idx * lineH - 2}" width="${w}" height="${lineH}" fill="${fill}"/>`);
+        parts.push(`<rect x="${x}" y="${y + PAD_TOP + idx * lineH - 2}" width="3" height="${lineH}" fill="${accent}"/>`);
+      }
       if (doc.lineNumbers) {
         parts.push(`<text font-family="${font}" font-size="${fs}" fill="${th.gutter}" text-anchor="end" x="${x + PAD_X + gutterW - 12}" y="${baseY.toFixed(1)}">${idx + 1}</text>`);
       }
-      const spans = tokenizeLine(line, th).map((s) => `<tspan fill="${s.color}">${esc(s.text)}</tspan>`).join("");
+      const diffColor = kind === "add" ? (th.dark ? "#56d364" : "#1a7f37") : kind === "remove" ? (th.dark ? "#ff7b72" : "#cf222e") : kind === "hunk" ? (th.dark ? "#79c0ff" : "#0969da") : undefined;
+      const spans = tokenizeLine(line, th).map((s) => `<tspan fill="${diffColor ?? s.color}">${esc(s.text)}</tspan>`).join("");
       parts.push(`<text xml:space="preserve" font-family="${font}" font-size="${fs}" x="${codeX}" y="${baseY.toFixed(1)}">${spans || " "}</text>`);
     });
     return { svg: parts.join("\n"), height: PAD_TOP + Math.max(1, lines.length) * lineH + PAD_BOT };

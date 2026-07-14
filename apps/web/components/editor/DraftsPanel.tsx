@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, Copy, Image as ImageIcon, Pencil, Trash2 } from "lucide-react";
+import { Check, Copy, Image as ImageIcon, LayoutTemplate, Pencil, Plus, Trash2 } from "lucide-react";
 import {
+  captureThumbnail,
   deleteDraft,
   listDrafts,
   openDraft,
@@ -15,9 +16,7 @@ import {
 } from "@/lib/drafts";
 import { useSceneStore, useViewStore } from "@/lib/store";
 
-/** Popover body for the toolbar's Drafts button: save the live scene, then
- *  reopen / rename / duplicate / delete saved projects. Duplicate is the
- *  "reusable template" workflow — keep a styled base, stamp out copies. */
+/** Save editable scenes and reusable personal templates in one cloud-backed library. */
 export function DraftsPanel({ onClose, onToast }: { onClose: () => void; onToast: (msg: string) => void }) {
   const scene = useSceneStore((s) => s.scene);
   const setScene = useSceneStore((s) => s.setScene);
@@ -26,6 +25,7 @@ export function DraftsPanel({ onClose, onToast }: { onClose: () => void; onToast
   const [drafts, setDrafts] = useState<DraftRecord[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [renaming, setRenaming] = useState<string | null>(null);
+  const [section, setSection] = useState<"scene" | "template">("scene");
 
   const refresh = useCallback(() => {
     listDrafts().then(setDrafts, () => setDrafts([]));
@@ -50,12 +50,13 @@ export function DraftsPanel({ onClose, onToast }: { onClose: () => void; onToast
     try {
       const next = openDraft(rec);
       setScene(() => next);
-      setCurrent(rec.id, rec.name);
+      setCurrent(rec.kind === "template" ? null : rec.id, rec.kind === "template" ? null : rec.name);
       const view = useViewStore.getState();
       view.bumpAssets();
       view.select(null);
       view.setActiveLayout(null);
       window.dispatchEvent(new CustomEvent("framekit:fit")); // canvas size may differ
+      if (rec.kind === "template") onToast(`New scene created from “${rec.name}”`);
       onClose();
     } catch {
       onToast("This draft couldn't be opened — it may be from a newer version.");
@@ -63,8 +64,25 @@ export function DraftsPanel({ onClose, onToast }: { onClose: () => void; onToast
   };
 
   const duplicate = async (rec: DraftRecord) => {
-    await saveDraft({ scene: rec.scene, name: `${rec.name} copy`, thumbnail: rec.thumbnail, assets: rec.assets });
+    await saveDraft({ scene: rec.scene, name: `${rec.name} copy`, kind: rec.kind, thumbnail: rec.thumbnail, assets: rec.assets });
     refresh();
+  };
+
+  const saveTemplate = async () => {
+    const name = window.prompt("Name this template", "My template")?.trim();
+    if (!name) return;
+    setBusy(true);
+    try {
+      const thumbnail = await captureThumbnail(scene);
+      await saveDraft({ scene, name, kind: "template", thumbnail });
+      setSection("template");
+      onToast(`Template “${name}” saved`);
+      refresh();
+    } catch {
+      onToast("Couldn't save this template");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const remove = async (rec: DraftRecord) => {
@@ -82,23 +100,51 @@ export function DraftsPanel({ onClose, onToast }: { onClose: () => void; onToast
     refresh();
   };
 
+  const visible = drafts?.filter((record) => record.kind === section) ?? null;
+
   return (
-    <div className="w-72">
+    <div className="w-80">
+      <div className="mb-2 grid grid-cols-2 rounded-xl bg-[#f1f1f6] p-1" role="tablist" aria-label="Saved work">
+        {(["scene", "template"] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            role="tab"
+            aria-selected={section === value}
+            onClick={() => setSection(value)}
+            className={`fk-press rounded-lg px-3 py-1.5 text-xs font-semibold capitalize ${
+              section === value ? "bg-white text-[#17171c] shadow-sm" : "text-[#7b7b86] hover:text-[#17171c]"
+            }`}
+          >
+            {value === "scene" ? "Scenes" : "My templates"}
+          </button>
+        ))}
+      </div>
       <div className="mb-2 flex items-center gap-1.5 px-1">
-        <button
-          onClick={() => save(false)}
-          disabled={busy}
-          className="fk-press flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#17171c] px-3 py-2 text-xs font-semibold text-white hover:bg-black disabled:opacity-60"
-        >
-          <Check size={13} />
-          {busy ? "Saving…" : currentId ? "Update draft" : "Save draft"}
-          <span className="text-[10px] font-medium text-white/50">⌘S</span>
-        </button>
-        {currentId && (
+        {section === "scene" ? (
+          <button
+            onClick={() => save(false)}
+            disabled={busy}
+            className="fk-press flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#17171c] px-3 py-2 text-xs font-semibold text-white hover:bg-black disabled:opacity-60"
+          >
+            <Check size={13} />
+            {busy ? "Saving…" : currentId ? "Update scene" : "Save scene"}
+            <span className="text-[10px] font-medium text-white/50">⌘S</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => void saveTemplate()}
+            disabled={busy}
+            className="fk-press flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#17171c] px-3 py-2 text-xs font-semibold text-white hover:bg-black disabled:opacity-60"
+          >
+            <Plus size={13} /> {busy ? "Saving…" : "Save current as template"}
+          </button>
+        )}
+        {section === "scene" && currentId && (
           <button
             onClick={() => save(true)}
             disabled={busy}
-            title="Save as a new draft"
+            title="Save as a new scene"
             className="fk-press rounded-xl border border-[#e4e4ec] bg-white px-2.5 py-2 text-xs font-semibold text-[#17171c] hover:border-[#c9c9d4]"
           >
             Save new
@@ -106,15 +152,17 @@ export function DraftsPanel({ onClose, onToast }: { onClose: () => void; onToast
         )}
       </div>
 
-      {drafts === null ? (
+      {visible === null ? (
         <p className="px-3 py-5 text-center text-xs text-[#9a9aa4]">Loading…</p>
-      ) : drafts.length === 0 ? (
+      ) : visible.length === 0 ? (
         <p className="px-3 py-5 text-center text-xs leading-relaxed text-[#9a9aa4]">
-          No drafts yet. Save your project to edit later — or keep one styled as a reusable template.
+          {section === "scene"
+            ? "No saved scenes yet. Save this canvas to continue editing it later."
+            : "No personal templates yet. Save a finished style once, then reuse it without changing the original."}
         </p>
       ) : (
         <div className="flex max-h-80 flex-col gap-1 overflow-y-auto">
-          {drafts.map((rec) => (
+          {visible.map((rec) => (
             <div
               key={rec.id}
               onClick={() => load(rec)}
@@ -148,13 +196,15 @@ export function DraftsPanel({ onClose, onToast }: { onClose: () => void; onToast
                 ) : (
                   <span className="block truncate text-xs font-medium text-[#17171c]">{rec.name}</span>
                 )}
-                <span className="block text-[10.5px] text-[#9a9aa4]">{timeAgo(rec.updatedAt)}</span>
+                <span className="flex items-center gap-1 text-[10.5px] text-[#9a9aa4]">
+                  {rec.kind === "template" && <LayoutTemplate size={10} />} {timeAgo(rec.updatedAt)}
+                </span>
               </span>
               <span className="flex shrink-0 text-[#9a9aa4]">
                 {(
                   [
                     ["Rename", Pencil, () => setRenaming(rec.id)],
-                    ["Duplicate as template", Copy, () => void duplicate(rec)],
+                    ["Duplicate", Copy, () => void duplicate(rec)],
                     ["Delete", Trash2, () => void remove(rec)],
                   ] as const
                 ).map(([title, Icon, fn]) => (

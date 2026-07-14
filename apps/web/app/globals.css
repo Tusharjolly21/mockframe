@@ -54,6 +54,11 @@ body {
   transition-duration: 70ms;
 }
 
+.fk-popover-focus :focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 2px;
+}
+
 /* A new device should feel placed into the composition, not teleported onto it. */
 @keyframes fk-device-enter {
   0% {

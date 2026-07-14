@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Copy, Frame, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, Frame, LayoutTemplate, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { AccountButton } from "@/components/AccountButton";
 import { useAuth } from "@/lib/auth";
 import {
@@ -26,6 +26,7 @@ export default function DashboardPage() {
 
   const [drafts, setDrafts] = useState<DraftRecord[] | null>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
+  const [section, setSection] = useState<"scene" | "template">("scene");
 
   const refresh = useCallback(() => {
     listDrafts().then(setDrafts, () => setDrafts([]));
@@ -34,7 +35,7 @@ export default function DashboardPage() {
 
   function open(rec: DraftRecord) {
     setScene(() => openDraft(rec));
-    setCurrent(rec.id, rec.name);
+    setCurrent(rec.kind === "template" ? null : rec.id, rec.kind === "template" ? null : rec.name);
     router.push("/editor");
   }
 
@@ -48,14 +49,14 @@ export default function DashboardPage() {
     setMenuId(null);
     const name = window.prompt("Rename scene", rec.name)?.trim();
     if (!name || name === rec.name) return;
-    await saveDraft({ scene: rec.scene, id: rec.id, name, assets: rec.assets, thumbnail: rec.thumbnail });
+    await saveDraft({ scene: rec.scene, id: rec.id, name, kind: rec.kind, assets: rec.assets, thumbnail: rec.thumbnail });
     if (useDraftsUi.getState().currentId === rec.id) setCurrent(rec.id, name);
     refresh();
   }
 
   async function duplicate(rec: DraftRecord) {
     setMenuId(null);
-    await saveDraft({ scene: rec.scene, name: `${rec.name} copy`, assets: rec.assets, thumbnail: rec.thumbnail });
+    await saveDraft({ scene: rec.scene, name: `${rec.name} copy`, kind: rec.kind, assets: rec.assets, thumbnail: rec.thumbnail });
     refresh();
   }
 
@@ -65,6 +66,8 @@ export default function DashboardPage() {
     await deleteDraft(rec.id);
     setDrafts((d) => (d ? d.filter((x) => x.id !== rec.id) : d));
   }
+
+  const visible = drafts?.filter((record) => record.kind === section) ?? null;
 
   return (
     <div className="min-h-screen bg-[#f4f4f7] text-[#17171c]">
@@ -85,9 +88,9 @@ export default function DashboardPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-8">
-        <div className="mb-6 flex items-end justify-between gap-4">
+        <div className="mb-4 flex items-end justify-between gap-4">
           <div>
-            <h1 className="text-[22px] font-bold tracking-tight">Your scenes</h1>
+            <h1 className="text-[22px] font-bold tracking-tight">Your work</h1>
             <p className="mt-0.5 text-[13px] text-[#8a8a94]">
               {account ? `Signed in as ${account.email ?? account.name}` : "Saved on this device — sign in to sync across devices."}
             </p>
@@ -100,23 +103,39 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {drafts === null ? (
+        <div className="mb-5 inline-flex rounded-xl border border-[#e1e1e8] bg-white p-1" role="tablist" aria-label="Your work">
+          {(["scene", "template"] as const).map((value) => (
+            <button
+              key={value}
+              role="tab"
+              aria-selected={section === value}
+              onClick={() => setSection(value)}
+              className={`fk-press rounded-lg px-4 py-2 text-[12.5px] font-semibold ${section === value ? "bg-[#17171c] text-white" : "text-[#6b6b76] hover:bg-black/[0.04]"}`}
+            >
+              {value === "scene" ? "Scenes" : "Personal templates"}
+            </button>
+          ))}
+        </div>
+
+        {visible === null ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="aspect-[4/3] animate-pulse rounded-xl bg-[#e8e8ef]" />
             ))}
           </div>
-        ) : drafts.length === 0 ? (
+        ) : visible.length === 0 ? (
           <div className="grid place-items-center rounded-2xl border border-dashed border-[#d6d6e0] bg-white py-20 text-center">
-            <p className="text-[15px] font-semibold text-[#17171c]">No saved scenes yet</p>
-            <p className="mb-4 mt-1 text-[13px] text-[#8a8a94]">Create your first mockup — it&apos;ll show up here.</p>
+            <p className="text-[15px] font-semibold text-[#17171c]">{section === "scene" ? "No saved scenes yet" : "No personal templates yet"}</p>
+            <p className="mb-4 mt-1 text-[13px] text-[#8a8a94]">
+              {section === "scene" ? "Create your first mockup and save it from the editor." : "Save a styled canvas as a template from the editor's folder menu."}
+            </p>
             <button onClick={newScene} className="fk-press flex items-center gap-1.5 rounded-xl bg-[#17171c] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-black">
               <Plus size={15} /> New scene
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-4">
-            {drafts.map((rec) => (
+            {visible.map((rec) => (
               <div key={rec.id} className="group relative overflow-hidden rounded-xl border border-[#e6e6ee] bg-white transition hover:border-[#c9c9d6] hover:shadow-md">
                 <button onClick={() => open(rec)} className="block w-full text-left">
                   <div className="grid aspect-[4/3] place-items-center overflow-hidden bg-[#eceef3]">
@@ -128,7 +147,9 @@ export default function DashboardPage() {
                     )}
                   </div>
                   <div className="px-3 py-2.5">
-                    <p className="truncate text-[13px] font-semibold text-[#17171c]">{rec.name}</p>
+                    <p className="flex items-center gap-1.5 truncate text-[13px] font-semibold text-[#17171c]">
+                      {rec.kind === "template" && <LayoutTemplate size={13} className="shrink-0 text-violet-600" />}{rec.name}
+                    </p>
                     <p className="mt-0.5 text-[11.5px] text-[#9a9aa4]">{timeAgo(rec.updatedAt)}</p>
                   </div>
                 </button>

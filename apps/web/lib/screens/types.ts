@@ -162,6 +162,8 @@ export interface CodeDoc {
   frame: FrameStyle;
   filename: string;
   lineNumbers?: boolean;
+  /** Git-style additions, deletions, and hunk headers. */
+  diffHighlight?: boolean;
   fontSize?: number;
   /** code is always a card — kept for the shared standalone/frameless plumbing */
   standalone?: boolean;
@@ -1112,6 +1114,7 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
         frame: "macos",
         filename: "index.tsx",
         lineNumbers: true,
+        diffHighlight: false,
         fontSize: 13,
         standalone: true,
       };

@@ -16,7 +16,8 @@ import {
 } from "@/lib/screens";
 import { exportSceneVideo } from "@/lib/videoExport";
 import { exportSceneGif } from "@/lib/gifExport";
-import { useSceneStore, withTransientHistory } from "@/lib/store";
+import { useSceneStore, useViewStore, withTransientHistory } from "@/lib/store";
+import { openUpgrade } from "@/lib/billing/gate";
 import { Popover } from "./ui";
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -104,6 +105,10 @@ export function AnimatePanel() {
 
   const exportVideo = async () => {
     if (!anim || busy) return;
+    if (!useViewStore.getState().removeWatermark) {
+      openUpgrade();
+      return;
+    }
     const node = document.querySelector<HTMLElement>("#scene-canvas [data-scene-id]");
     if (!node) return;
     setBusy({ pct: 0, label: "Preparing…" });
@@ -129,6 +134,10 @@ export function AnimatePanel() {
 
   const exportGif = async () => {
     if (!anim || busy) return;
+    if (!useViewStore.getState().removeWatermark) {
+      openUpgrade();
+      return;
+    }
     const node = document.querySelector<HTMLElement>("#scene-canvas [data-scene-id]");
     if (!node) return;
     setBusy({ pct: 0, label: "Preparing…" });

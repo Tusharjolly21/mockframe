@@ -2236,7 +2236,7 @@ function BlueskyFields({ doc, setDoc }: { doc: BlueskyDoc; setDoc: (d: ScreenDoc
 
 const CODE_THEME_KEYS = Object.keys(CODE_THEME_LABELS);
 const CODE_FONT_KEYS = Object.keys(CODE_FONT_LABELS);
-const CODE_LANGS = ["tsx", "jsx", "typescript", "javascript", "python", "rust", "go", "php", "java", "c", "cpp", "ruby", "swift", "kotlin", "html", "css", "json", "bash", "sql"];
+const CODE_LANGS = ["diff", "tsx", "jsx", "typescript", "javascript", "python", "rust", "go", "php", "java", "c", "cpp", "ruby", "swift", "kotlin", "html", "css", "json", "bash", "sql"];
 
 function CodeFields({ doc, setDoc }: { doc: CodeDoc; setDoc: (d: ScreenDoc) => void }) {
   return (
@@ -2257,7 +2257,7 @@ function CodeFields({ doc, setDoc }: { doc: CodeDoc; setDoc: (d: ScreenDoc) => v
           label="Language"
           value={doc.language}
           options={CODE_LANGS.map((l) => ({ value: l, label: l }))}
-          onChange={(language) => setDoc({ ...doc, language })}
+          onChange={(language) => setDoc({ ...doc, language, diffHighlight: language === "diff" ? true : doc.diffHighlight })}
           className="w-28"
         />
       </div>
@@ -2285,6 +2285,13 @@ function CodeFields({ doc, setDoc }: { doc: CodeDoc; setDoc: (d: ScreenDoc) => v
       <label className="mt-3 flex cursor-pointer items-center justify-between rounded-lg border border-[#ececf2] bg-[#fafafc] px-2.5 py-2">
         <span className="text-xs font-medium text-[#17171c]">Line numbers</span>
         <input type="checkbox" checked={!!doc.lineNumbers} onChange={(e) => setDoc({ ...doc, lineNumbers: e.target.checked })} className="h-4 w-4 accent-[#17171c]" />
+      </label>
+      <label className="mt-2 flex cursor-pointer items-center justify-between rounded-lg border border-[#ececf2] bg-[#fafafc] px-2.5 py-2">
+        <span>
+          <span className="block text-xs font-medium text-[#17171c]">Diff highlighting</span>
+          <span className="block text-[10px] text-[#92929d]">Color +, -, and @@ lines</span>
+        </span>
+        <input type="checkbox" checked={!!doc.diffHighlight} onChange={(e) => setDoc({ ...doc, diffHighlight: e.target.checked })} className="h-4 w-4 accent-[#17171c]" />
       </label>
     </>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import {
   ArrowDown,
@@ -211,7 +212,7 @@ function ComingSoonDialog({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -254,7 +255,8 @@ function ComingSoonDialog({ onClose }: { onClose: () => void }) {
           Continue editing
         </button>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 

@@ -15,6 +15,7 @@ import { decodeScreenAsset, isScreenAsset } from "./screens";
 export interface DraftRecord {
   id: string;
   name: string;
+  kind: "scene" | "template";
   updatedAt: number;
   scene: SceneDocument;
   /** uploaded (non-builtin) assets the scene references, inlined as data URLs */
@@ -59,7 +60,11 @@ async function withStore<T>(
 
 async function listLocalDrafts(): Promise<DraftRecord[]> {
   const all = await withStore("readonly", (s) => s.getAll() as IDBRequest<DraftRecord[]>);
-  return all.sort((a, b) => b.updatedAt - a.updatedAt);
+  return all.map(normalizeDraftRecord).sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+function normalizeDraftRecord(record: DraftRecord): DraftRecord {
+  return { ...record, kind: record.kind === "template" ? "template" : "scene" };
 }
 
 async function deleteLocalDraft(id: string): Promise<void> {
@@ -89,7 +94,7 @@ export async function listDrafts(): Promise<DraftRecord[]> {
   try {
     const response = await firebaseFetch("/api/drafts");
     if (!response.ok) throw new Error("Cloud draft list failed");
-    const cloud = (await response.json()) as DraftRecord[];
+    const cloud = ((await response.json()) as DraftRecord[]).map(normalizeDraftRecord);
     if (cloud.length > 0) return cloud.sort((a, b) => b.updatedAt - a.updatedAt);
 
     const local = await listLocalDrafts();
@@ -161,6 +166,7 @@ export async function saveDraft(opts: {
   scene: SceneDocument;
   id?: string; // update in place when set
   name?: string;
+  kind?: "scene" | "template";
   thumbnail?: string;
   /** override the asset snapshot (duplicating a non-loaded draft) */
   assets?: GuestAsset[];
@@ -168,6 +174,7 @@ export async function saveDraft(opts: {
   const record: DraftRecord = {
     id: opts.id ?? createId(),
     name: opts.name ?? defaultName(),
+    kind: opts.kind ?? "scene",
     updatedAt: Date.now(),
     scene: opts.scene,
     assets: opts.assets ?? collectAssets(sceneAssetIds(opts.scene)),
@@ -230,6 +237,7 @@ export async function saveCurrentDraft(scene: SceneDocument): Promise<DraftRecor
     scene,
     id: currentId ?? undefined,
     name: currentName ?? undefined,
+    kind: "scene",
     thumbnail,
   });
   useDraftsUi.getState().setCurrent(record.id, record.name);

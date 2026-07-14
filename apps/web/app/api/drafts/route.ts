@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
       return {
         id: doc.id,
         name: data.name ?? "Untitled draft",
+        kind: data.kind === "template" ? "template" : "scene",
         updatedAt: typeof data.updatedAtMs === "number" ? data.updatedAtMs : Date.now(),
         scene: data.scene,
         assets: Array.isArray(data.assets) ? data.assets : [],
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest) {
     const updatedAt = Date.now();
     const record = {
       name: typeof body.name === "string" && body.name.trim() ? body.name.trim().slice(0, 120) : "Untitled draft",
+      kind: body.kind === "template" ? "template" : "scene",
       updatedAtMs: updatedAt,
       scene,
       assets: Array.isArray(body.assets) ? body.assets : [],
@@ -80,7 +82,7 @@ export async function POST(req: NextRequest) {
     };
     await draftsCollection(owner.ownerId).doc(id).set(record, { merge: true });
     return attachOwnerCookie(
-      NextResponse.json({ id, name: record.name, updatedAt, scene, assets: record.assets, thumbnail: record.thumbnail }),
+      NextResponse.json({ id, name: record.name, kind: record.kind, updatedAt, scene, assets: record.assets, thumbnail: record.thumbnail }),
       owner
     );
   } catch (err) {

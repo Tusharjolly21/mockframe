@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { getDevice } from "@framekit/devices";
 import type { MockupLayer, SceneDocument } from "@framekit/scene";
-import { Check, Copy, Dices, Download, Link2, Loader2, RotateCcw, Settings2, Share2, Sparkles, Stamp, Upload } from "lucide-react";
+import { Check, Copy, Dices, Download, Link2, Loader2, Lock, RotateCcw, Settings2, Share2, Sparkles, Stamp, Upload } from "lucide-react";
 import { resolveAsset } from "@/lib/assets";
 import { exportScene, type ExportFormat, type ExportQuality } from "@/lib/export";
 import type { CodeDoc } from "@/lib/screens";
@@ -15,6 +15,7 @@ import { applyVariation, VARIATIONS } from "@/lib/variations";
 import { applyLayout, DEFAULT_MODS, LAYOUT_PRESETS, modifyPreset, type LayoutMods } from "@/lib/layouts";
 import { useSceneStore, useViewStore } from "@/lib/store";
 import { useEntitlementSync } from "@/lib/billing/client";
+import { openUpgrade } from "@/lib/billing/gate";
 import { loadCustomWatermark } from "@/lib/customWatermark";
 import { UpgradeModal } from "./UpgradeModal";
 import { WatermarkPanel } from "./WatermarkPanel";
@@ -64,6 +65,13 @@ export function RightPanel() {
 
   const removeWatermark = useViewStore((s) => s.removeWatermark);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  // Pro gates anywhere in the editor (video export, renders, 4K…) open the
+  // upgrade modal through this event
+  useEffect(() => {
+    const onUpgrade = () => setUpgradeOpen(true);
+    window.addEventListener("framekit:upgrade", onUpgrade);
+    return () => window.removeEventListener("framekit:upgrade", onUpgrade);
+  }, []);
   const [watermarkOpen, setWatermarkOpen] = useState(false);
   const [watermarkOn, setWatermarkOn] = useState(false);
   useEffect(() => setWatermarkOn(loadCustomWatermark().enabled), []);
@@ -226,20 +234,23 @@ export function RightPanel() {
                   onChange={(v) => setScale(Number(v))}
                 />
                 {/* named targets (PostSpark-style HD/4K/6K): scale derived from
-                    the canvas long edge, so every canvas hits the exact target */}
+                    the canvas long edge, so every canvas hits the exact target.
+                    HD is free; 4K/6K are Pro. */}
                 <div className="mb-2 grid grid-cols-3 gap-1">
                   {([["HD", 1920], ["4K", 3840], ["6K", 5760]] as const).map(([label, target]) => {
                     const longEdge = Math.max(scene.canvas.width, scene.canvas.height);
                     const s = Math.round((target / longEdge) * 1000) / 1000;
                     const active = Math.abs(scale - s) < 0.002;
+                    const locked = label !== "HD" && !removeWatermark;
                     return (
                       <button
                         key={label}
-                        onClick={() => setScale(s)}
-                        className={`fk-press rounded-lg border py-1.5 text-[11px] font-semibold ${
+                        onClick={() => (locked ? openUpgrade() : setScale(s))}
+                        className={`fk-press flex items-center justify-center gap-1 rounded-lg border py-1.5 text-[11px] font-semibold ${
                           active ? "border-[#17171c] bg-[#17171c] text-white" : "border-[#e4e4ec] bg-white text-[#5a5a66] hover:border-[#c9c9d4]"
                         }`}
                       >
+                        {locked && <Lock size={9} className="text-[#b9a02c]" />}
                         {label}
                       </button>
                     );

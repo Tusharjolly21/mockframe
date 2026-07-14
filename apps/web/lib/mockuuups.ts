@@ -1,5 +1,6 @@
 "use client";
 
+import { firebaseFetch } from "./firebaseClient";
 import { ingestFile, persistAsset, type GuestAsset } from "./assets";
 
 /**
@@ -59,7 +60,7 @@ export async function fetchCredits(): Promise<number | null> {
 
 /** Render `imageUrl` (a public url) into a Mockuuups mockup; returns the CDN image url. */
 export async function renderMockup(mockup: string, imageUrl: string, size: number): Promise<string> {
-  const res = await fetch(`/api/mockuuups/render`, {
+  const res = await firebaseFetch(`/api/mockuuups/render`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ mockup, imageUrl, size }),

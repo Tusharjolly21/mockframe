@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -82,6 +82,7 @@ export function Seg<T extends string>({
         return (
           <button
             key={o.value}
+            aria-pressed={active}
             className={`fk-press relative rounded-lg px-2 py-1.5 text-xs font-medium ${
               active ? "text-[#17171c]" : "text-[#8a8a94] hover:text-[#4a4a55]"
             }`}
@@ -141,23 +142,103 @@ export function IconButton({
   );
 }
 
+const POPOVER_FOCUSABLE = [
+  "button:not([disabled])",
+  "a[href]",
+  "input:not([disabled]):not([type='hidden'])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "[tabindex]:not([tabindex='-1'])",
+].join(",");
+
+function popoverItems(root: HTMLElement): HTMLElement[] {
+  return Array.from(root.querySelectorAll<HTMLElement>(POPOVER_FOCUSABLE)).filter((item) => {
+    if (item.closest<HTMLElement>("[data-fk-popover]") !== root) return false;
+    const rect = item.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0 && item.getAttribute("aria-hidden") !== "true";
+  });
+}
+
+function nextSpatialItem(items: HTMLElement[], current: HTMLElement, key: string): HTMLElement | undefined {
+  const from = current.getBoundingClientRect();
+  const fx = from.left + from.width / 2;
+  const fy = from.top + from.height / 2;
+  const candidates = items.flatMap((item) => {
+    if (item === current) return [];
+    const rect = item.getBoundingClientRect();
+    const dx = rect.left + rect.width / 2 - fx;
+    const dy = rect.top + rect.height / 2 - fy;
+    const primary = key === "ArrowRight" ? dx : key === "ArrowLeft" ? -dx : key === "ArrowDown" ? dy : -dy;
+    if (primary <= 2) return [];
+    const cross = key === "ArrowRight" || key === "ArrowLeft" ? Math.abs(dy) : Math.abs(dx);
+    return [{ item, score: primary * 4 + cross }];
+  });
+  return candidates.sort((a, b) => a.score - b.score)[0]?.item;
+}
+
 /** Animated popover shell. Mount inside a relatively-positioned parent. */
 export function Popover({
   children,
   className,
   style,
+  onEscape,
 }: {
   children: ReactNode;
   className?: string;
   style?: React.CSSProperties;
+  onEscape?: () => void;
 }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const root = rootRef.current;
+      if (!root) return;
+      const preferred = root.querySelector<HTMLElement>("[data-popover-autofocus='true'], [aria-pressed='true'], [aria-selected='true'], [aria-current='true']");
+      const target = preferred && preferred.closest("[data-fk-popover]") === root ? preferred : popoverItems(root)[0];
+      target?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape" && onEscape) {
+      event.preventDefault();
+      event.stopPropagation();
+      onEscape();
+      return;
+    }
+    if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    const target = event.target as HTMLElement;
+    if (target.matches("input, textarea, select, [contenteditable='true']")) return;
+    const root = rootRef.current;
+    if (!root) return;
+    const items = popoverItems(root);
+    if (!items.length) return;
+    const current = items.includes(target) ? target : items[0];
+    const next = event.key === "Home"
+      ? items[0]
+      : event.key === "End"
+        ? items.at(-1)
+        : nextSpatialItem(items, current, event.key);
+    if (!next) return;
+    event.preventDefault();
+    event.stopPropagation();
+    next.focus();
+    next.scrollIntoView({ block: "nearest", inline: "nearest" });
+  };
+
   return (
     <motion.div
+      ref={rootRef}
+      data-fk-popover
+      role="dialog"
+      onKeyDownCapture={onKeyDown}
       initial={{ opacity: 0, y: 10, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 6, scale: 0.98 }}
       transition={{ type: "spring", stiffness: 480, damping: 34 }}
-      className={`fk-card absolute z-50 ${className ?? ""}`}
+      className={`fk-card fk-popover-focus absolute z-50 ${className ?? ""}`}
       style={{ transformOrigin: "top left", borderRadius: 24, ...style }}
     >
       {children}

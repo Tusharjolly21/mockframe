@@ -14,10 +14,10 @@ const PLAN_ORDER: PlanId[] = ["monthly", "yearly", "lifetime"];
 const PERIOD_SUFFIX: Record<PlanId, string> = { monthly: "/mo", yearly: "/yr", lifetime: " once" };
 
 const BENEFITS = [
-  { icon: "export", title: "Clean exports", text: "Remove the MockFrame watermark from every PNG and bulk export." },
-  { icon: "shield-check", title: "Your brand, your style", text: "Add a custom watermark and keep every deliverable consistent." },
+  { icon: "export", title: "Clean exports", text: "Remove the MockFrame watermark — or stamp your own brand instead." },
   { icon: "magic-stick-3", title: "Photo-real mockups", text: "Unlock realistic device-photo rendering for polished presentations." },
-  { icon: "bolt", title: "Higher resolution", text: "Export crisp HD, 4K and 6K assets whenever you need them." },
+  { icon: "videocamera-record", title: "Video & GIF export", text: "Turn chat replays and animations into shareable videos." },
+  { icon: "bolt", title: "4K & 6K + full-page capture", text: "Ultra-crisp exports and entire scrolling websites in one shot." },
 ] as const;
 
 function IconifyIcon({ name, size = 20, color = "#17171c", className = "" }: { name: string; size?: number; color?: string; className?: string }) {

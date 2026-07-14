@@ -388,7 +388,7 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <Popover className="!z-[200] bottom-[calc(100%+10px)] left-1/2 w-[360px] max-w-[calc(100vw-24px)] -translate-x-1/2 overflow-hidden p-0">
+    <Popover onEscape={onClose} className="!z-[200] bottom-[calc(100%+10px)] left-1/2 w-[360px] max-w-[calc(100vw-24px)] -translate-x-1/2 overflow-hidden p-0">
       <div className="border-b border-[#ececf2] px-3 pb-2.5 pt-3">
         <div className="mb-2 flex items-center justify-between">
           <div>
@@ -403,7 +403,13 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
         </label>
         <div className="panel-scroll mt-2 flex max-h-16 flex-wrap gap-1 overflow-y-auto pb-0.5">
           {[{ id: "icons", label: "Icons" }, { id: "icon-space", label: "Space" }, { id: "icon-nature", label: "Nature" }, { id: "icon-animals", label: "Animals" }, ...STICKER_GROUPS].map((item) => (
-            <button key={item.id} onClick={() => { setGroupId(item.id); setQuery(""); }} className={`fk-press shrink-0 rounded-full px-2.5 py-1.5 text-[10.5px] font-semibold ${groupId === item.id && !query ? "bg-[#17171c] text-white" : "bg-[#f1f1f5] text-[#5a5a66] hover:bg-[#e8e8ee]"}`}>
+            <button
+              key={item.id}
+              aria-pressed={groupId === item.id && !query}
+              data-popover-autofocus={groupId === item.id && !query ? "true" : undefined}
+              onClick={() => { setGroupId(item.id); setQuery(""); }}
+              className={`fk-press shrink-0 rounded-full px-2.5 py-1.5 text-[10.5px] font-semibold ${groupId === item.id && !query ? "bg-[#17171c] text-white" : "bg-[#f1f1f5] text-[#5a5a66] hover:bg-[#e8e8ee]"}`}
+            >
               {item.label}
             </button>
           ))}
@@ -413,6 +419,7 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
             {(Object.keys(ICON_PALETTES) as Array<keyof typeof ICON_PALETTES>).map((key) => (
               <button
                 key={key}
+                aria-pressed={paletteKey === key}
                 onClick={() => setPaletteKey(key)}
                 title={`${key} palette`}
                 className={`h-5 w-8 rounded-full border ${paletteKey === key ? "ring-2 ring-[#17171c] ring-offset-1" : "border-black/15"}`}
@@ -422,6 +429,7 @@ function StickerLibrary({ onClose }: { onClose: () => void }) {
             {ICON_TINTS.map((c) => (
               <button
                 key={c}
+                aria-pressed={tint === c}
                 onClick={() => setTint(c)}
                 title={c}
                 className={`h-5 w-5 rounded-full border ${tint === c ? "ring-2 ring-[#17171c] ring-offset-1" : "border-black/15"}`}
@@ -503,41 +511,6 @@ function ThemesPopover({ onClose }: { onClose: () => void }) {
   const all = [...BUILTIN_THEMES, ...saved];
   const current = all.find((t) => themeMatches(scene, t));
 
-  // keyboard theme switching (user request): ↑/↓ moves focus, Enter applies,
-  // Esc closes — focus starts on the active theme
-  const [focusIdx, setFocusIdx] = useState(() => Math.max(0, all.findIndex((t) => t.id === current?.id)));
-  const listRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement).matches("input, textarea, select")) return;
-      if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-        e.preventDefault();
-        e.stopPropagation();
-        setFocusIdx((i) => Math.min(all.length - 1, i + 1));
-      } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
-        e.preventDefault();
-        e.stopPropagation();
-        setFocusIdx((i) => Math.max(0, i - 1));
-      } else if (e.key === "Enter") {
-        e.preventDefault();
-        e.stopPropagation();
-        const t = all[focusIdx];
-        if (t) {
-          setScene((s) => applyTheme(s, t));
-          onClose();
-        }
-      } else if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    // capture phase so the editor's global nudge handler doesn't move layers
-    window.addEventListener("keydown", onKey, true);
-    return () => window.removeEventListener("keydown", onKey, true);
-  }, [all, focusIdx, onClose, setScene]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    listRef.current?.children[focusIdx]?.scrollIntoView({ block: "nearest" });
-  }, [focusIdx]);
-
   const cardBg = (t: StyleTheme): React.CSSProperties => {
     const bg = t.background;
     if (bg.type === "solid") return { background: bg.color };
@@ -556,7 +529,7 @@ function ThemesPopover({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <Popover className="bottom-[calc(100%+10px)] right-0 max-h-80 w-64 overflow-y-auto p-3">
+    <Popover onEscape={onClose} className="bottom-[calc(100%+10px)] right-0 max-h-80 w-64 overflow-y-auto p-3">
       <div className="mb-2 flex items-center justify-between">
         <p className="text-[12px] font-bold text-[#17171c]">Themes</p>
         <button
@@ -571,21 +544,20 @@ function ThemesPopover({ onClose }: { onClose: () => void }) {
           +
         </button>
       </div>
-      <div ref={listRef} className="flex flex-col gap-2">
-        {all.map((t, i) => (
+      <div className="flex flex-col gap-2">
+        {all.map((t) => (
           <button
             key={t.id}
+            aria-pressed={current?.id === t.id}
+            data-popover-autofocus={current?.id === t.id ? "true" : undefined}
             onClick={() => {
               setScene((s) => applyTheme(s, t));
               onClose();
             }}
-            onMouseEnter={() => setFocusIdx(i)}
             className={`fk-press flex h-14 items-end rounded-2xl border-2 px-3 pb-2 text-left text-[13px] font-semibold ${
               current?.id === t.id
                 ? "border-teal-500 shadow-[0_0_0_2px_rgba(20,184,166,0.25)]"
-                : focusIdx === i
-                  ? "border-[#17171c] shadow-[0_0_0_2px_rgba(23,23,28,0.2)]"
-                  : "border-black/5"
+                : "border-black/5"
             }`}
             style={cardBg(t)}
           >
@@ -593,7 +565,7 @@ function ThemesPopover({ onClose }: { onClose: () => void }) {
           </button>
         ))}
       </div>
-      <p className="mt-2 text-center text-[10px] text-[#9a9aa4]">↑↓ to browse · Enter to apply · T to toggle</p>
+      <p className="mt-2 text-center text-[10px] text-[#9a9aa4]">Arrow keys to browse · Enter or Space to apply</p>
     </Popover>
   );
 }
