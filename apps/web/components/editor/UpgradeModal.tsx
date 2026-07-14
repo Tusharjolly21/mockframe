@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "motion/react";
 import { useAuth } from "@/lib/auth";
 import { AuthModal } from "@/components/AuthModal";
 import { useViewStore } from "@/lib/store";
@@ -9,9 +10,6 @@ import { CheckoutCancelled, defaultCurrency, purchasePlan } from "@/lib/billing/
 import { formatPrice, perMonthPrice, PLANS, yearlySavingsPct, type Currency, type PlanDef, type PlanId } from "@/lib/billing/plans";
 import { iconBody, ICON_VIEWBOX } from "@/lib/iconStickers";
 import { toast } from "./Toolbar";
-
-const PLAN_ORDER: PlanId[] = ["monthly", "yearly", "lifetime"];
-const PERIOD_SUFFIX: Record<PlanId, string> = { monthly: "/mo", yearly: "/yr", lifetime: " once" };
 
 const BENEFITS = [
   { icon: "export", title: "Clean exports", text: "Remove the MockFrame watermark — or stamp your own brand instead." },
@@ -118,33 +116,86 @@ export function UpgradeModal({ initialPlan = "yearly", onClose }: { initialPlan?
               </div>
             </div>
 
-            <div className="mt-7 space-y-2.5">
-              {PLAN_ORDER.map((id) => {
-                const def = plans[id];
-                const selected = plan === id;
-                const perMo = perMonthPrice(id, currency, plans);
-                  return (
-                  <button key={id} onClick={() => setPlan(id)} className={`fk-press relative flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 text-left transition ${selected ? "border-violet-400/70 bg-violet-400/[0.08] shadow-[0_8px_24px_rgba(124,58,237,0.12)]" : "border-white/[0.08] bg-white/[0.02] hover:border-white/20"}`}>
-                    <span className="min-w-0">
-                      <span className="flex items-center gap-2 text-[14px] font-semibold text-white">
-                        {id === "lifetime" && <IconifyIcon name="infinity" size={15} color="#7c3aed" />}
-                        {def.label}
-                        {id === "yearly" && <span className="rounded-full bg-[#e9ddff] px-2 py-0.5 text-[9px] font-bold text-[#6d28d9]">SAVE {savings}%</span>}
-                      </span>
-                      <span className="mt-1 block text-[11px] text-zinc-500">{def.blurb}</span>
-                    </span>
-                    <span className="flex shrink-0 items-center gap-3">
-                      <span className="text-right">
-                        {perMo ? <><strong className="block text-[16px] text-white">{perMo}<small className="font-medium text-zinc-500">/mo</small></strong><small className="block text-[10px] text-zinc-500">{formatPrice(id, currency, plans)} billed yearly</small></> : <strong className="text-[16px] text-white">{formatPrice(id, currency, plans)}<small className="font-medium text-zinc-500">{PERIOD_SUFFIX[id]}</small></strong>}
-                      </span>
-                      <span className={`grid h-5 w-5 place-items-center rounded-full border-2 ${selected ? "border-violet-400 bg-violet-500" : "border-white/20"}`}>
-                        {selected && <IconifyIcon name="check-circle" size={17} color="#ffffff" />}
-                      </span>
-                    </span>
+            {/* Monthly / Annual toggle with a sliding pill — matches the pricing page */}
+            <div className="mt-7 flex items-center gap-3">
+              <div className="relative inline-flex rounded-full border border-white/10 bg-white/[0.04] p-1">
+                {(["monthly", "yearly"] as const).map((b) => (
+                  <button
+                    key={b}
+                    onClick={() => setPlan(b)}
+                    className={`relative z-10 rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${plan === b ? "text-zinc-900" : "text-zinc-400 hover:text-white"}`}
+                  >
+                    {plan === b && (
+                      <motion.span layoutId="up-bill-pill" className="absolute inset-0 -z-10 rounded-full bg-white" transition={{ type: "spring", stiffness: 420, damping: 34 }} />
+                    )}
+                    {b === "monthly" ? "Monthly" : "Annual"}
                   </button>
-                );
-              })}
+                ))}
+              </div>
+              <AnimatePresence>
+                {plan === "yearly" && (
+                  <motion.span
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.6, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 26 }}
+                    className="rounded-full bg-[#e9ddff] px-2.5 py-1 text-[10px] font-bold text-[#6d28d9]"
+                  >
+                    SAVE {savings}%
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </div>
+
+            {/* animated price */}
+            <div className="mt-5 flex h-[50px] items-end overflow-hidden">
+              <AnimatePresence mode="popLayout" initial={false}>
+                <motion.div
+                  key={plan + currency}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -20, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  className="flex items-end gap-1.5"
+                >
+                  <span className="text-[40px] font-semibold leading-none tracking-[-0.03em] text-white">
+                    {plan === "lifetime"
+                      ? formatPrice("lifetime", currency, plans)
+                      : plan === "yearly"
+                        ? perMonthPrice("yearly", currency, plans)
+                        : formatPrice("monthly", currency, plans)}
+                  </span>
+                  <span className="pb-1 text-[13px] font-medium text-zinc-500">{plan === "lifetime" ? "once" : "/ month"}</span>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+            <div className="mt-1.5 h-4">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.p key={plan} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="text-[11px] text-zinc-500">
+                  {plan === "yearly"
+                    ? `${formatPrice("yearly", currency, plans)} billed yearly`
+                    : plan === "monthly"
+                      ? "billed monthly · cancel anytime"
+                      : "one payment · Pro forever"}
+                </motion.p>
+              </AnimatePresence>
+            </div>
+
+            {/* Lifetime — the pay-once option, selectable */}
+            <button
+              onClick={() => setPlan("lifetime")}
+              className={`fk-press mt-4 flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition ${plan === "lifetime" ? "border-violet-400/70 bg-violet-400/[0.08]" : "border-white/[0.08] bg-white/[0.02] hover:border-white/20"}`}
+            >
+              <span className="flex items-center gap-2 text-[12.5px] font-semibold text-white">
+                <IconifyIcon name="infinity" size={15} color="#7c3aed" /> Prefer to pay once? Lifetime Pro
+              </span>
+              <span className="flex items-center gap-2 text-[13px] font-semibold text-white">
+                {formatPrice("lifetime", currency, plans)}
+                <span className={`grid h-4 w-4 place-items-center rounded-full border-2 ${plan === "lifetime" ? "border-violet-400 bg-violet-500" : "border-white/20"}`}>
+                  {plan === "lifetime" && <IconifyIcon name="check-circle" size={13} color="#ffffff" />}
+                </span>
+              </span>
+            </button>
 
             {!account && <p className="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/[0.06] px-3 py-2.5 text-[11px] leading-5 text-amber-200/80">Sign in first so your Pro access follows you across devices.</p>}
             {account ? (

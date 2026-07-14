@@ -62,7 +62,7 @@ export function MarketingFooter() {
             <ul className="mt-4 space-y-2.5">
               {col.links.map(([href, label]) => (
                 <li key={href + label}>
-                  <Link href={href} className="text-[13px] text-zinc-500 transition-colors hover:text-zinc-300">
+                  <Link href={href} className="text-[13px] text-zinc-500 transition-colors hover:text-white">
                     {label}
                   </Link>
                 </li>
