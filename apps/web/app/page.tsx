@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { getDevice, listDevices } from "@framekit/devices";
 import { ChatStoriesSection } from "@/components/marketing/ChatStoriesSection";
-import { FakeScreen } from "@/components/marketing/FakeScreen";
+import { HeroSection } from "@/components/marketing/HeroSection";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { SolarIcon } from "@/components/marketing/SolarIcon";
@@ -12,7 +12,7 @@ import { SITE_NAME, SITE_URL, baseDeviceName } from "@/lib/site";
 export const metadata: Metadata = {
   title: { absolute: "MockFrame — Free Screenshot Mockup Studio" },
   description:
-    "Drop your screenshot into a photoreal iPhone, MacBook, iPad or Apple Watch, style the scene, and export a production-ready image. Free, online, no watermark.",
+    "Drop your screenshot into a photoreal iPhone, MacBook, iPad or Apple Watch, style the scene, and export a production-ready image. Start free, online, with no sign-up wall.",
   alternates: { canonical: "/" },
   openGraph: {
     title: "MockFrame — Free Screenshot Mockup Studio",
@@ -54,8 +54,8 @@ const FEATURE_TILES = [
   },
   {
     icon: "crown-bold-duotone",
-    title: "Free forever",
-    body: "No sign-up wall, no watermark, no install. Open the editor and ship the shot.",
+    title: "Start free",
+    body: "No sign-up wall and no install. Open the editor, build your first mockup, and upgrade only when you need Pro exports.",
   },
 ];
 
@@ -80,105 +80,7 @@ export default function HomePage() {
       <MarketingNav />
 
       {/* ============================ HERO ============================ */}
-      <section className="relative overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute left-1/2 top-0 h-[780px] w-[1200px] -translate-x-1/2"
-          style={{
-            background:
-              "radial-gradient(ellipse 50% 50% at 50% 20%, rgba(124,58,237,0.16), transparent 70%), radial-gradient(ellipse 40% 40% at 68% 28%, rgba(6,182,212,0.12), transparent 70%)",
-          }}
-        />
-
-        <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-6 pt-32 text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[12.5px] font-medium text-zinc-300 backdrop-blur">
-            <SolarIcon name="bolt-bold-duotone" size={14} className="text-violet-400" />
-            {devices.length} devices · free forever
-          </span>
-          <h1 className="mt-6 text-[38px] font-medium leading-[1.05] tracking-[-0.03em] text-balance sm:text-[54px]">
-            Turn any screenshot into a{" "}
-            <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-300 bg-clip-text text-transparent">
-              stunning mockup.
-            </span>
-          </h1>
-          <p className="mt-5 max-w-xl text-[15.5px] leading-relaxed text-zinc-400 sm:text-[16.5px]">
-            Drop your screenshot into a photoreal device, style the scene, export a production-ready image. Free,
-            online, no watermark.
-          </p>
-          <div className="mt-8 flex items-center gap-5">
-            <Link
-              href="/editor"
-              className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-[14.5px] font-semibold text-zinc-900 transition-colors hover:bg-zinc-200"
-            >
-              Open the editor
-              <ArrowRight size={17} />
-            </Link>
-            <Link
-              href="/mockups"
-              className="inline-flex items-center gap-1.5 text-[14px] font-medium text-zinc-300 transition-colors hover:text-white"
-            >
-              Browse {devices.length} devices
-              <span aria-hidden>→</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* ---------- the workflow: screenshot → real device → export ---------- */}
-        <div className="relative z-10 mx-auto mt-16 max-w-6xl px-6 pb-10">
-          <div className="flex items-end justify-center gap-5 sm:gap-10">
-            {/* 01 — your raw screenshot */}
-            <div className="hidden flex-col items-center md:flex">
-              <StepLabel n="01" text="Your screenshot" />
-              <div className="mt-4 w-[150px] -rotate-3 overflow-hidden rounded-[18px] border border-dashed border-white/25 opacity-90 lg:w-[170px]">
-                <FakeScreen app="whatsapp" className="block w-full" />
-              </div>
-            </div>
-
-            <FlowArrow className="mb-24 hidden md:block" />
-
-            {/* 02 — framed in a real device */}
-            <div className="flex flex-col items-center">
-              <StepLabel n="02" text="Dropped into a real device" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/hero/hero-iphone.webp"
-                alt="Photoreal iPhone 16 Pro mockup with a WhatsApp screenshot"
-                className="mt-4 w-[180px] drop-shadow-[0_36px_60px_rgba(0,0,0,0.6)] sm:w-[210px]"
-              />
-            </div>
-
-            <FlowArrow className="mb-24 hidden sm:block" />
-
-            {/* 03 — styled & exported */}
-            <div className="hidden flex-col items-center sm:flex">
-              <StepLabel n="03" text="Styled & exported" />
-              <div
-                className="mt-4 flex h-[300px] w-[220px] items-center justify-center overflow-hidden rounded-[20px] border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] sm:h-[340px] sm:w-[260px]"
-                style={{
-                  background:
-                    "radial-gradient(120% 100% at 20% 0%, #6d28d9 0%, #4f46e5 34%, #0e7490 78%, #155e75 100%)",
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/hero/hero-iphone.webp"
-                  alt="Exported mockup — iPhone on a styled gradient background"
-                  className="h-[82%] w-auto drop-shadow-[0_24px_44px_rgba(0,0,0,0.45)]"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* trust row */}
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[12.5px] font-medium text-zinc-500">
-            {["No sign-up", "No watermark", "Photoreal devices", "Instant export"].map((t) => (
-              <span key={t} className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> {t}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
+      <HeroSection devicesCount={devices.length} />
 
       {/* ===================== CHAT STORIES (live, self-playing) ================= */}
       <ChatStoriesSection />
@@ -370,30 +272,6 @@ export default function HomePage() {
 }
 
 /* ------------------------------ small helpers ------------------------------ */
-
-function StepLabel({ n, text }: { n: string; text: string }) {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11.5px] font-semibold uppercase tracking-wide text-zinc-400 backdrop-blur">
-      <span className="text-violet-400">{n}</span>
-      {text}
-    </span>
-  );
-}
-
-function FlowArrow({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 48 24" className={`h-6 w-12 shrink-0 text-zinc-600 ${className ?? ""}`} aria-hidden>
-      <path
-        d="M2 12h40m0 0-8-8m8 8-8 8"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 function IconChip({ name }: { name: string }) {
   return (
