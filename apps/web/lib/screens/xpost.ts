@@ -153,7 +153,8 @@ export function renderXPostCard(doc: XPostDoc, avatarUrl?: string, lookupUrl?: (
     doc.frame ?? "none",
     theme,
     (x, y, w) => xpostBody(x, y, w, doc, c, font, avatarUrl, lookupUrl, false),
-    Math.max(300, Math.min(620, doc.cardWidth ?? 402))
+    Math.max(300, Math.min(620, doc.cardWidth ?? 402)),
+    { radius: doc.cardRadius, shadow: doc.cardShadow }
   );
 }
 

@@ -128,7 +128,8 @@ export function renderBlueskyCard(doc: BlueskyDoc, avatarUrl?: string, lookupUrl
     doc.frame ?? "none",
     theme,
     (x, y, w) => blueskyBody(x, y, w, doc, c, font, avatarUrl, lookupUrl),
-    Math.max(300, Math.min(620, doc.cardWidth ?? 402))
+    Math.max(300, Math.min(620, doc.cardWidth ?? 402)),
+    { radius: doc.cardRadius, shadow: doc.cardShadow }
   );
 }
 

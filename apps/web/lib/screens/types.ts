@@ -134,6 +134,10 @@ export interface XPostDoc {
   postFontSize?: number;
   /** Inner post-card spacing. */
   postPadding?: number;
+  /** Card corner roundness in px (0–40). Defaults to 15. */
+  cardRadius?: number;
+  /** Card shadow strength: 0 none · 1 default · up to 2 dramatic. */
+  cardShadow?: number;
 }
 
 /** Bluesky post (PostSpark /bluesky-post). */
@@ -156,6 +160,8 @@ export interface BlueskyDoc {
   cardWidth?: number;
   postFontSize?: number;
   postPadding?: number;
+  cardRadius?: number;
+  cardShadow?: number;
 }
 
 /** Code template card (PostSpark /code): window frame + syntax theme + code font.

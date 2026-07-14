@@ -2058,7 +2058,7 @@ function PostLayoutControls({
     { label: "4:5", width: 1080, height: 1350 },
     { label: "9:16", width: 1080, height: 1920 },
   ];
-  const patch = (values: Partial<Pick<XPostDoc, "cardWidth" | "postFontSize" | "postPadding">>) => setDoc({ ...doc, ...values });
+  const patch = (values: Partial<Pick<XPostDoc, "cardWidth" | "postFontSize" | "postPadding" | "cardRadius" | "cardShadow">>) => setDoc({ ...doc, ...values });
   const setCanvas = (width: number, height: number) => {
     setScene((current) => ({ ...current, canvas: { ...current.canvas, width, height } }));
     window.dispatchEvent(new CustomEvent("framekit:fit"));
@@ -2101,6 +2101,12 @@ function PostLayoutControls({
       )}
       <SliderRow label="Text size" value={doc.postFontSize ?? (doc.app === "xpost" ? 21 : 18)} min={14} max={34} step={1} format={(value) => `${Math.round(value)}px`} onChange={(postFontSize) => patch({ postFontSize: Math.round(postFontSize) })} />
       <SliderRow label="Padding" value={doc.postPadding ?? 16} min={8} max={40} step={1} format={(value) => `${Math.round(value)}px`} onChange={(postPadding) => patch({ postPadding: Math.round(postPadding) })} />
+      {doc.standalone && (
+        <>
+          <SliderRow label="Roundness" value={doc.cardRadius ?? 15} min={0} max={40} step={1} format={(value) => `${Math.round(value)}px`} onChange={(cardRadius) => patch({ cardRadius: Math.round(cardRadius) })} />
+          <SliderRow label="Shadow" value={doc.cardShadow ?? 1} min={0} max={2} step={0.05} format={(value) => (value < 0.05 ? "None" : `${value.toFixed(2)}×`)} onChange={(cardShadow) => patch({ cardShadow: Math.round(cardShadow * 20) / 20 })} />
+        </>
+      )}
     </div>
   );
 }

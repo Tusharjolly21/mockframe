@@ -46,7 +46,7 @@ export interface FramedResult {
 }
 
 const M = 16; // outer margin within the SW-wide canvas
-const RX = 15;
+const RX_DEFAULT = 15;
 
 function barHeight(style: FrameStyle): number {
   if (style === "safari") return 46;
@@ -104,7 +104,11 @@ function drawBar(style: FrameStyle, th: FrameTheme, x: number, y: number, w: num
   );
 }
 
-export function renderFramed(style: FrameStyle, th: FrameTheme, draw: ContentDrawer, viewportW: number = SW): FramedResult {
+/** Optional per-card look overrides (pika-style Roundness / Shadow sliders). */
+export type FrameLook = { radius?: number; shadow?: number };
+
+export function renderFramed(style: FrameStyle, th: FrameTheme, draw: ContentDrawer, viewportW: number = SW, look?: FrameLook): FramedResult {
+  const RX = Math.max(0, Math.min(40, look?.radius ?? RX_DEFAULT));
   const barH = barHeight(style);
   const pad = style === "card" ? 18 : 0; // Card style insets the content
   const stackDR = style === "stack" ? 10 : 0; // down-right peek
@@ -124,7 +128,11 @@ export function renderFramed(style: FrameStyle, th: FrameTheme, draw: ContentDra
   const cardH = barH + pad + contentH + pad;
   const totalH = cardY + cardH + stackDR + M;
 
-  const shadow = th.dark ? "rgba(0,0,0,0.5)" : "rgba(20,20,45,0.2)";
+  // shadow: 0 = none, 1 = default soft, up to 2 = dramatic
+  const sh = Math.max(0, Math.min(2, look?.shadow ?? 1));
+  const shAlpha = (th.dark ? 0.5 : 0.2) * sh;
+  const shadow = th.dark ? `rgba(0,0,0,${shAlpha.toFixed(3)})` : `rgba(20,20,45,${shAlpha.toFixed(3)})`;
+  const shadowFilter = sh > 0.001 ? `filter:drop-shadow(0 ${(14 * sh).toFixed(1)}px ${(38 * sh).toFixed(1)}px ${shadow})` : "";
   const cx = cardX + cardW / 2;
   const cy = cardY + cardH / 2;
   const parts: string[] = [];
@@ -139,7 +147,7 @@ export function renderFramed(style: FrameStyle, th: FrameTheme, draw: ContentDra
   }
 
   // main card + soft shadow
-  parts.push(`<rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="${RX}" fill="${th.cardBg}" style="filter:drop-shadow(0 14px 38px ${shadow})"/>`);
+  parts.push(`<rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="${RX}" fill="${th.cardBg}"${shadowFilter ? ` style="${shadowFilter}"` : ""}/>`);
   if (style === "card") {
     parts.push(`<rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="${RX}" fill="none" stroke="${th.dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}" stroke-width="1"/>`);
   }
