@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { getDevice, listDevices } from "@framekit/devices";
+import { ChatStoriesSection } from "@/components/marketing/ChatStoriesSection";
 import { FakeScreen } from "@/components/marketing/FakeScreen";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
@@ -178,6 +179,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ===================== CHAT STORIES (live, self-playing) ================= */}
+      <ChatStoriesSection />
 
       {/* ============================ FEATURES (bento) ============================ */}
       <section className="relative border-t border-white/[0.06] py-28">
