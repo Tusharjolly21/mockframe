@@ -68,7 +68,14 @@ export function onAuthChange(cb: (user: User | null) => void): () => void {
 /** Ensure there is at least an anonymous (guest) session. */
 export async function ensureGuestSession(): Promise<void> {
   const auth = getFirebaseAuth();
-  if (auth && !auth.currentUser) {
+  if (!auth) return;
+  // WAIT for Firebase to restore any persisted session first — checking
+  // currentUser synchronously at page load races the async IndexedDB
+  // restoration, and signInAnonymously would STOMP the user's saved
+  // Google/email session with a fresh guest (the "why am I signed out
+  // after reopening?" bug)
+  await auth.authStateReady();
+  if (!auth.currentUser) {
     try {
       await signInAnonymously(auth);
     } catch {
@@ -207,6 +214,7 @@ export async function getFirebaseIdToken(): Promise<string | null> {
     authPromise = (async () => {
       const auth = getFirebaseAuth();
       if (!auth) return null;
+      await auth.authStateReady(); // same restoration race as ensureGuestSession
       if (!auth.currentUser) await signInAnonymously(auth);
       return auth;
     })().catch(() => null);
