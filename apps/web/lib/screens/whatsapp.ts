@@ -14,6 +14,7 @@ import {
   SH,
   statusBar,
   SW,
+  scrollBody,
   textBlock as baseTextBlock,
   textWidth,
   typingDots,
@@ -79,7 +80,8 @@ export function renderWhatsApp(
     phoneIcon(SW - 34, 73, 21, c.text)
   );
 
-  /* encryption chip */
+  /* message body (scrolls to bottom when taller than the band) */
+  const bodyStart = parts.length;
   let y = HEADER_H + 14;
   const chipText = "Messages and calls are end-to-end encrypted.";
   const chipW = Math.min(SW - 48, textWidth(chipText, 11) + 34);
@@ -267,6 +269,10 @@ export function renderWhatsApp(
     );
     y += th + 10;
   }
+
+  // pin the body to the bottom of the visible band above the composer
+  const body = parts.splice(bodyStart);
+  parts.push(scrollBody(body.join("\n"), { top: HEADER_H, bottom: SH - 92, contentBottom: y }));
 
   /* input bar */
   parts.push(...waComposer({ platform, dark, subtle: c.subtle, headerBg: c.headerBg, font }));

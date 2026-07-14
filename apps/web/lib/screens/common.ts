@@ -13,6 +13,25 @@ export const OUT_H = SH * 3;
 
 export type Platform = "ios" | "android";
 
+/**
+ * Pin a chat's message body to the bottom of its visible band, like a real
+ * scrolled-to-the-latest conversation: content taller than the band is
+ * translated up so the newest message sits just above the input bar, and the
+ * band clips whatever scrolls under the header. `contentBottom` is the y the
+ * message layout reached; `top`/`bottom` bound the visible message area.
+ */
+export function scrollBody(
+  body: string,
+  { top, bottom, contentBottom }: { top: number; bottom: number; contentBottom: number }
+): string {
+  const scroll = Math.max(0, contentBottom - bottom);
+  const clipId = `sb_${Math.round(top)}_${Math.round(bottom)}`;
+  return (
+    `<defs><clipPath id="${clipId}"><rect x="0" y="${top}" width="${SW}" height="${(bottom - top).toFixed(1)}"/></clipPath></defs>` +
+    `<g clip-path="url(#${clipId})"><g transform="translate(0 ${(-scroll).toFixed(1)})">${body}</g></g>`
+  );
+}
+
 /* Font system. Custom brand webfonts can't load inside a pure-SVG data URI,
    so these are web-safe stacks that evoke each brand and differ meaningfully
    (serif vs sans, SF vs Roboto). The registry lives in fonts.ts. */

@@ -106,15 +106,39 @@ export function LiveChatStory({
   );
 }
 
-/** Wraps a live story in a dark phone shell — bezel, notch, screen. */
-export function PhoneShell({ children, className }: { children: React.ReactNode; className?: string }) {
+/**
+ * Dark phone shell — a physical bezel with a SINGLE camera cutout on top:
+ * an iPhone dynamic-island pill, or a Samsung center punch-hole. The screen
+ * SVG already draws its own status bar (time/battery flank the cutout), so
+ * the shell must NOT add a second notch. Percentage-positioned so the cutout
+ * scales with the phone at any size.
+ */
+export function PhoneShell({
+  children,
+  notch = "island",
+  className,
+}: {
+  children: React.ReactNode;
+  notch?: "island" | "punch";
+  className?: string;
+}) {
   return (
     <div
-      className={`relative overflow-hidden rounded-[38px] border-[6px] border-[#0d0d10] bg-black shadow-[0_40px_90px_rgba(0,0,0,0.6)] ${className ?? ""}`}
+      className={`relative overflow-hidden rounded-[15%/7%] border-[5px] border-[#08080a] bg-black shadow-[0_40px_90px_rgba(0,0,0,0.55)] ${className ?? ""}`}
       style={{ aspectRatio: "393/852" }}
     >
-      <div className="absolute left-1/2 top-2 z-10 h-[26px] w-[92px] -translate-x-1/2 rounded-full bg-black" />
       {children}
+      {notch === "island" ? (
+        <div
+          className="absolute z-20 rounded-full bg-black"
+          style={{ top: "1.4%", left: "35%", width: "30%", height: "3.5%" }}
+        />
+      ) : (
+        <div
+          className="absolute z-20 aspect-square rounded-full bg-black ring-1 ring-white/10"
+          style={{ top: "1.5%", left: "calc(50% - 1.4%)", width: "2.8%" }}
+        />
+      )}
     </div>
   );
 }

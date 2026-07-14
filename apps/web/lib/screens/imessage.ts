@@ -12,6 +12,7 @@ import {
   SH,
   statusBar,
   SW,
+  scrollBody,
   textBlock as baseTextBlock,
   textWidth,
   typingDots,
@@ -73,7 +74,8 @@ export function renderIMessage(
     videoIcon(SW - 37, 84, 26, c.blue)
   );
 
-  /* conversation */
+  /* conversation (scrolls to bottom when taller than the band) */
+  const bodyStart = parts.length;
   let y = HEADER_H + 18;
   if (doc.showHeader) {
     parts.push(
@@ -180,6 +182,9 @@ export function renderIMessage(
       typingDots(MARGIN + 20, y + h / 2, c.subtle, doc.chrome._anim?.dotPhase ?? 0, 4.2, 12)
     );
   }
+
+  const body = parts.splice(bodyStart);
+  parts.push(scrollBody(body.join("\n"), { top: HEADER_H, bottom: SH - 94, contentBottom: y }));
 
   /* input bar — iOS 26 liquid glass: floating pill, + button, mic in-field */
   const iy = SH - 70;
