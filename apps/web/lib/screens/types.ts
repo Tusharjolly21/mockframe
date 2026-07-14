@@ -126,6 +126,12 @@ export interface XPostDoc {
   /** Template mode: render as a window-framed card instead of a phone screen */
   standalone?: boolean;
   frame?: FrameStyle;
+  /** Standalone post-card width in logical pixels. */
+  cardWidth?: number;
+  /** Main post copy size, independent from the card scale. */
+  postFontSize?: number;
+  /** Inner post-card spacing. */
+  postPadding?: number;
 }
 
 /** Bluesky post (PostSpark /bluesky-post). */
@@ -145,6 +151,9 @@ export interface BlueskyDoc {
   /** Template mode: render as a window-framed card instead of a phone screen */
   standalone?: boolean;
   frame?: FrameStyle;
+  cardWidth?: number;
+  postFontSize?: number;
+  postPadding?: number;
 }
 
 /** Code template card (PostSpark /code): window frame + syntax theme + code font.
@@ -1085,6 +1094,9 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
           { user: "Priya Sharma", handle: "priyabuilds", text: "This is exactly what I needed. Shipping mine tonight 🚀", time: "1h", likes: 42, verified: true },
           { user: "Devon", handle: "devondesigns", text: "the video export is wild", time: "45m", likes: 18 },
         ],
+        cardWidth: 402,
+        postFontSize: 21,
+        postPadding: 16,
       };
     case "bluesky":
       return {
@@ -1102,6 +1114,9 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
           desc: "Bluesky is the lobby to the open web. Find and build your community here.",
           domain: "bsky.social",
         },
+        cardWidth: 402,
+        postFontSize: 18,
+        postPadding: 16,
       };
     case "code":
       return {

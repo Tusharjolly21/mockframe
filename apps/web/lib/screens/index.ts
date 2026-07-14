@@ -1,7 +1,7 @@
 "use client";
 
 import type { ResolvedAsset } from "@framekit/renderer";
-import { OUT_W, SH, svgDataUri } from "./common";
+import { SH, SW, svgDataUri } from "./common";
 import { renderAiChat } from "./aichat";
 import { renderBluesky, renderBlueskyCard } from "./bluesky";
 import { renderCode } from "./code";
@@ -189,9 +189,9 @@ function referencedAssetIds(doc: ScreenDoc): string[] {
 
 /** Render a doc → its data-URI + the logical height it occupies. Template cards
  *  (code always; bluesky/xpost when standalone) have a content-driven height. */
-export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): { url: string; logicalH: number } {
+export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): { url: string; logicalH: number; logicalW: number } {
   const dp = "avatar" in doc && doc.avatar ? lookupUrl?.(doc.avatar) : undefined;
-  const flat = (inner: string, h = SH) => ({ url: svgDataUri(inner, h), logicalH: h });
+  const flat = (inner: string, h = SH) => ({ url: svgDataUri(inner, h), logicalH: h, logicalW: SW });
   switch (doc.app) {
     case "imessage":
       return flat(renderIMessage(doc, dp, lookupUrl));
@@ -242,20 +242,20 @@ export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): {
     case "xpost": {
       if (doc.standalone) {
         const r = renderXPostCard(doc, dp, lookupUrl);
-        return { url: svgDataUri(r.svg, r.totalH), logicalH: r.totalH };
+        return { url: svgDataUri(r.svg, r.totalH, r.totalW), logicalH: r.totalH, logicalW: r.totalW };
       }
       return flat(renderXPost(doc, dp, lookupUrl));
     }
     case "bluesky": {
       if (doc.standalone) {
         const r = renderBlueskyCard(doc, dp, lookupUrl);
-        return { url: svgDataUri(r.svg, r.totalH), logicalH: r.totalH };
+        return { url: svgDataUri(r.svg, r.totalH, r.totalW), logicalH: r.totalH, logicalW: r.totalW };
       }
       return flat(renderBluesky(doc, dp, lookupUrl));
     }
     case "code": {
       const r = renderCode(doc);
-      return { url: svgDataUri(r.svg, r.totalH), logicalH: r.totalH };
+      return { url: svgDataUri(r.svg, r.totalH, r.totalW), logicalH: r.totalH, logicalW: r.totalW };
     }
   }
 }
@@ -278,12 +278,12 @@ export function resolveScreenAsset(
   if (hit) return hit;
   const doc = decodeScreenAsset(assetId);
   if (!doc) return undefined;
-  const { url, logicalH } = renderScreenSized(doc, lookupUrl);
+  const { url, logicalH, logicalW } = renderScreenSized(doc, lookupUrl);
   const resolved = {
     id: assetId,
     name: `${SCREEN_APP_LABELS[doc.app]} screen`,
     url,
-    width: OUT_W,
+    width: Math.round(logicalW * 3),
     height: Math.round(logicalH * 3),
   };
   // a referenced upload (avatar or message image) isn't registered yet (e.g.

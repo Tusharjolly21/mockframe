@@ -404,8 +404,9 @@ export function compact(n: number): string {
   return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
 }
 
-export function svgDataUri(inner: string, logicalH: number = SH): string {
+export function svgDataUri(inner: string, logicalH: number = SH, logicalW: number = SW): string {
   const h3 = Math.round(logicalH * 3);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SW} ${logicalH}" width="${OUT_W}" height="${h3}">${inner}</svg>`;
+  const w3 = Math.round(logicalW * 3);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${logicalW} ${logicalH}" width="${w3}" height="${h3}">${inner}</svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }

@@ -42,6 +42,7 @@ export type ContentDrawer = (x: number, y: number, w: number) => { svg: string; 
 export interface FramedResult {
   svg: string;
   totalH: number;
+  totalW: number;
 }
 
 const M = 16; // outer margin within the SW-wide canvas
@@ -103,7 +104,7 @@ function drawBar(style: FrameStyle, th: FrameTheme, x: number, y: number, w: num
   );
 }
 
-export function renderFramed(style: FrameStyle, th: FrameTheme, draw: ContentDrawer): FramedResult {
+export function renderFramed(style: FrameStyle, th: FrameTheme, draw: ContentDrawer, viewportW: number = SW): FramedResult {
   const barH = barHeight(style);
   const pad = style === "card" ? 18 : 0; // Card style insets the content
   const stackDR = style === "stack" ? 10 : 0; // down-right peek
@@ -113,7 +114,7 @@ export function renderFramed(style: FrameStyle, th: FrameTheme, draw: ContentDra
 
   const cardX = M;
   const cardY = M + topRoom;
-  const cardW = SW - 2 * M - sideRoom;
+  const cardW = viewportW - 2 * M - sideRoom;
 
   const contentX = cardX + pad;
   const contentW = cardW - 2 * pad;
@@ -155,5 +156,5 @@ export function renderFramed(style: FrameStyle, th: FrameTheme, draw: ContentDra
     parts.push(`<rect x="${cardX}" y="${cardY + barH - 0.5}" width="${cardW}" height="0.5" fill="${th.dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.07)"}"/>`);
   }
 
-  return { svg: parts.join("\n"), totalH };
+  return { svg: parts.join("\n"), totalH, totalW: viewportW };
 }

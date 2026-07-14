@@ -38,7 +38,7 @@ function blueskyBody(
   avatarUrl?: string,
   lookupUrl?: (id: string) => string | undefined
 ): { svg: string; height: number } {
-  const P = 16;
+  const P = Math.max(8, Math.min(40, doc.postPadding ?? 16));
   const bx = x + P;
   const bw = w - 2 * P;
   const parts: string[] = [];
@@ -54,8 +54,8 @@ function blueskyBody(
   yy += 52;
 
   // post text
-  const size = 18;
-  const lh = 24;
+  const size = Math.max(14, Math.min(34, doc.postFontSize ?? 18));
+  const lh = Math.round(size * 1.34);
   const lines = wrapText(doc.text || " ", size, bw);
   lines.forEach((l, i) => parts.push(`<text font-family="${font}" font-size="${size}" fill="${c.text}" x="${bx}" y="${yy + i * lh}">${esc(l)}</text>`));
   yy += lines.length * lh + 6;
@@ -124,7 +124,12 @@ export function renderBlueskyCard(doc: BlueskyDoc, avatarUrl?: string, lookupUrl
     dark,
     title: `@${doc.handle}`,
   };
-  return renderFramed(doc.frame ?? "none", theme, (x, y, w) => blueskyBody(x, y, w, doc, c, font, avatarUrl, lookupUrl));
+  return renderFramed(
+    doc.frame ?? "none",
+    theme,
+    (x, y, w) => blueskyBody(x, y, w, doc, c, font, avatarUrl, lookupUrl),
+    Math.max(300, Math.min(620, doc.cardWidth ?? 402))
+  );
 }
 
 /** Full-phone screen (mobile picker). */

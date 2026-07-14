@@ -36,7 +36,7 @@ function xpostBody(
   lookupUrl?: (id: string) => string | undefined,
   includeReplies = false
 ): { svg: string; height: number } {
-  const P = 16;
+  const P = Math.max(8, Math.min(40, doc.postPadding ?? 16));
   const bx = x + P;
   const bw = w - 2 * P;
   const parts: string[] = [];
@@ -54,8 +54,8 @@ function xpostBody(
   yy += 52;
 
   // text with #/@ tinting
-  const TSZ = 21;
-  const TLH = 28;
+  const TSZ = Math.max(14, Math.min(34, doc.postFontSize ?? 21));
+  const TLH = Math.round(TSZ * 1.34);
   const lines = wrapText(doc.text || " ", TSZ, bw);
   const spans = lines
     .map((line, i) => {
@@ -149,7 +149,12 @@ export function renderXPostCard(doc: XPostDoc, avatarUrl?: string, lookupUrl?: (
     dark,
     title: `@${doc.handle}`,
   };
-  return renderFramed(doc.frame ?? "none", theme, (x, y, w) => xpostBody(x, y, w, doc, c, font, avatarUrl, lookupUrl, false));
+  return renderFramed(
+    doc.frame ?? "none",
+    theme,
+    (x, y, w) => xpostBody(x, y, w, doc, c, font, avatarUrl, lookupUrl, false),
+    Math.max(300, Math.min(620, doc.cardWidth ?? 402))
+  );
 }
 
 /** Full-phone detail view (mobile picker). */

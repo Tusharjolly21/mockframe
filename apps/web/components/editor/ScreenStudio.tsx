@@ -1988,6 +1988,72 @@ function SocialFields({ doc, setDoc }: { doc: SocialPostDoc; setDoc: (d: ScreenD
 
 /* ----------------------------------- X post ---------------------------------- */
 
+function PostLayoutControls({
+  doc,
+  setDoc,
+}: {
+  doc: XPostDoc | BlueskyDoc;
+  setDoc: (d: ScreenDoc) => void;
+}) {
+  const scene = useSceneStore((s) => s.scene);
+  const setScene = useSceneStore((s) => s.setScene);
+  const presets = [
+    { label: "Compact", cardWidth: 520, postFontSize: 17, postPadding: 14 },
+    { label: "Readable", cardWidth: 420, postFontSize: 24, postPadding: 20 },
+    { label: "Story", cardWidth: 340, postFontSize: 28, postPadding: 26 },
+  ];
+  const sizes = [
+    { label: "1:1", width: 1080, height: 1080 },
+    { label: "4:5", width: 1080, height: 1350 },
+    { label: "9:16", width: 1080, height: 1920 },
+  ];
+  const patch = (values: Partial<Pick<XPostDoc, "cardWidth" | "postFontSize" | "postPadding">>) => setDoc({ ...doc, ...values });
+  const setCanvas = (width: number, height: number) => {
+    setScene((current) => ({ ...current, canvas: { ...current.canvas, width, height } }));
+    window.dispatchEvent(new CustomEvent("framekit:fit"));
+  };
+
+  return (
+    <div className="mb-3 rounded-xl border border-[#e5e5ed] bg-[#fafafc] p-2.5">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8f8f9a]">Post layout</span>
+        <div className="flex gap-1">
+          {sizes.map((size) => (
+            <button
+              key={size.label}
+              type="button"
+              onClick={() => setCanvas(size.width, size.height)}
+              className={`fk-press rounded-md px-2 py-1 text-[10px] font-semibold ${scene.canvas.width === size.width && scene.canvas.height === size.height ? "bg-[#17171c] text-white" : "bg-white text-[#6b6b76] ring-1 ring-[#e1e1e8]"}`}
+            >
+              {size.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="mb-2 grid grid-cols-3 gap-1.5">
+        {presets.map((preset) => {
+          const active = (doc.cardWidth ?? 402) === preset.cardWidth && (doc.postFontSize ?? (doc.app === "xpost" ? 21 : 18)) === preset.postFontSize && (doc.postPadding ?? 16) === preset.postPadding;
+          return (
+            <button
+              key={preset.label}
+              type="button"
+              onClick={() => patch(preset)}
+              className={`fk-press rounded-lg border px-2 py-1.5 text-[10.5px] font-semibold ${active ? "border-[#17171c] bg-[#17171c] text-white" : "border-[#e2e2e9] bg-white text-[#5f5f6a] hover:border-[#bdbdc8]"}`}
+            >
+              {preset.label}
+            </button>
+          );
+        })}
+      </div>
+      {doc.standalone && (
+        <SliderRow label="Card width" value={doc.cardWidth ?? 402} min={300} max={620} step={2} format={(value) => `${Math.round(value)}px`} onChange={(cardWidth) => patch({ cardWidth: Math.round(cardWidth) })} />
+      )}
+      <SliderRow label="Text size" value={doc.postFontSize ?? (doc.app === "xpost" ? 21 : 18)} min={14} max={34} step={1} format={(value) => `${Math.round(value)}px`} onChange={(postFontSize) => patch({ postFontSize: Math.round(postFontSize) })} />
+      <SliderRow label="Padding" value={doc.postPadding ?? 16} min={8} max={40} step={1} format={(value) => `${Math.round(value)}px`} onChange={(postPadding) => patch({ postPadding: Math.round(postPadding) })} />
+    </div>
+  );
+}
+
 function XPostFields({ doc, setDoc }: { doc: XPostDoc; setDoc: (d: ScreenDoc) => void }) {
   const [importUrl, setImportUrl] = useState("");
   const [importing, setImporting] = useState(false);
@@ -2053,6 +2119,7 @@ function XPostFields({ doc, setDoc }: { doc: XPostDoc; setDoc: (d: ScreenDoc) =>
           className="w-full resize-none rounded-lg border border-[#e4e4ec] bg-white px-2 py-1.5 text-xs text-[#17171c] outline-none focus:border-[#17171c]"
         />
       </label>
+      <PostLayoutControls doc={doc} setDoc={setDoc} />
       <div className="flex gap-2">
         <Field label="Date" value={doc.date} onChange={(date) => setDoc({ ...doc, date })} className="flex-1" />
         <Field label="Views" value={doc.views} onChange={(views) => setDoc({ ...doc, views })} className="w-20" />
@@ -2199,6 +2266,9 @@ function BlueskyFields({ doc, setDoc }: { doc: BlueskyDoc; setDoc: (d: ScreenDoc
           className="w-full resize-none rounded-lg border border-[#e4e4ec] bg-white px-2 py-1.5 text-xs text-[#17171c] outline-none focus:border-[#17171c]"
         />
       </label>
+      <div className="mt-3">
+        <PostLayoutControls doc={doc} setDoc={setDoc} />
+      </div>
       <Field label="Timestamp" value={doc.time} onChange={(time) => setDoc({ ...doc, time })} className="mt-3" />
       <div className="mt-3 flex gap-2">
         {(

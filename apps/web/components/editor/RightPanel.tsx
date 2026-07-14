@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { getDevice } from "@framekit/devices";
 import type { MockupLayer, SceneDocument } from "@framekit/scene";
-import { Check, Copy, Dices, Download, Link2, Loader2, Lock, RotateCcw, Settings2, Share2, Sparkles, Stamp, Upload } from "lucide-react";
+import { Check, Copy, Dices, Download, Link2, Loader2, Lock, Plus, RotateCcw, Settings2, Share2, Sparkles, Stamp, Trash2, Upload } from "lucide-react";
 import { resolveAsset } from "@/lib/assets";
 import { exportScene, type ExportFormat, type ExportQuality } from "@/lib/export";
 import type { CodeDoc } from "@/lib/screens";
@@ -16,6 +16,7 @@ import { applyLayout, DEFAULT_MODS, LAYOUT_PRESETS, modifyPreset, type LayoutMod
 import { useSceneStore, useViewStore } from "@/lib/store";
 import { useEntitlementSync } from "@/lib/billing/client";
 import { openUpgrade } from "@/lib/billing/gate";
+import { applyTemplate, deleteUserTemplate, loadUserTemplates, saveUserTemplate, syncUserTemplatesFromServer, templateFromScene, type UserTemplate } from "@/lib/userTemplates";
 import { loadCustomWatermark } from "@/lib/customWatermark";
 import { UpgradeModal } from "./UpgradeModal";
 import { WatermarkPanel } from "./WatermarkPanel";
@@ -340,6 +341,8 @@ export function RightPanel() {
           })}
         </div>
       </div>
+
+      <MyTemplates />
 
       <div className="px-3 pt-4">
         <h3 className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">
@@ -1096,5 +1099,116 @@ function CountGlyph({ n }: { n: number }) {
         <span key={i} className="h-3.5 w-[7px] rounded-[2.5px] bg-current" />
       ))}
     </span>
+  );
+}
+
+/* ------------------------------ my templates ------------------------------ */
+/* Pro: save the whole composition (background, effects, positions, text,
+   stickers — screenshots stripped) as a reusable template that follows the
+   account; applying one restyles the CURRENT shots. */
+function MyTemplates() {
+  const scene = useSceneStore((s) => s.scene);
+  const setScene = useSceneStore((s) => s.setScene);
+  const isPro = useViewStore((s) => s.removeWatermark);
+  const select = useViewStore((s) => s.select);
+  const [templates, setTemplates] = useState<UserTemplate[]>([]);
+  const [naming, setNaming] = useState(false);
+  const [name, setName] = useState("");
+
+  useEffect(() => {
+    setTemplates(loadUserTemplates());
+    syncUserTemplatesFromServer().then(setTemplates).catch(() => {});
+  }, []);
+
+  const startSave = () => {
+    if (!isPro) {
+      openUpgrade();
+      return;
+    }
+    setName(`Template ${templates.length + 1}`);
+    setNaming(true);
+  };
+
+  const confirmSave = () => {
+    const tpl = templateFromScene(useSceneStore.getState().scene, name);
+    setTemplates((t) => [tpl, ...t]);
+    setNaming(false);
+    saveUserTemplate(tpl).then(
+      () => toast(`Saved "${tpl.name}" to your templates ✓`),
+      (e) => toast(e instanceof Error ? e.message : "Couldn't sync the template")
+    );
+  };
+
+  return (
+    <div className="px-3 pt-4">
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">
+          My templates
+          <span className="rounded-full bg-gradient-to-r from-violet-600 to-cyan-500 px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase text-white">Pro</span>
+        </h3>
+        {!naming && (
+          <button
+            onClick={startSave}
+            className="fk-press flex items-center gap-1 rounded-lg border border-[#e4e4ec] bg-white px-2 py-1 text-[10.5px] font-semibold text-[#17171c] hover:border-[#17171c]"
+          >
+            {isPro ? <Plus size={11} /> : <Lock size={10} className="text-[#b9a02c]" />} Save current
+          </button>
+        )}
+      </div>
+
+      {naming && (
+        <div className="mb-2 flex items-center gap-1.5">
+          <input
+            autoFocus
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && confirmSave()}
+            className="min-w-0 flex-1 rounded-lg border border-[#e4e4ec] bg-white px-2 py-1.5 text-[11.5px] text-[#17171c] outline-none focus:border-[#17171c]"
+          />
+          <button onClick={confirmSave} className="fk-press rounded-lg bg-[#17171c] px-2.5 py-1.5 text-[11px] font-semibold text-white">
+            Save
+          </button>
+          <button onClick={() => setNaming(false)} className="fk-press rounded-lg px-1.5 py-1.5 text-[11px] font-semibold text-[#8a8a94]">
+            ✕
+          </button>
+        </div>
+      )}
+
+      {templates.length > 0 && (
+        <div className="grid grid-cols-2 gap-2">
+          {templates.map((tpl) => (
+            <div key={tpl.id} className="group relative">
+              <button
+                onClick={() => {
+                  setScene((s) => applyTemplate(s, tpl));
+                  select(null);
+                  toast(`Applied "${tpl.name}" — your screenshots kept ✨`);
+                }}
+                className="fk-tile w-full cursor-pointer rounded-xl border border-[#e8e8ef] p-1 text-left hover:border-[#17171c]"
+                title={`Apply "${tpl.name}"`}
+              >
+                <ScenePreview scene={tpl.scene} />
+                <span className="block truncate px-1 pt-1 text-[10px] font-semibold text-[#5a5a66]">{tpl.name}</span>
+              </button>
+              <button
+                title="Delete template"
+                onClick={() => {
+                  deleteUserTemplate(tpl.id);
+                  setTemplates((t) => t.filter((x) => x.id !== tpl.id));
+                }}
+                className="fk-press absolute right-1.5 top-1.5 hidden h-6 w-6 place-items-center rounded-md bg-white/90 text-[#9a9aa4] shadow group-hover:grid hover:text-red-500"
+              >
+                <Trash2 size={11} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {templates.length === 0 && !naming && (
+        <p className="rounded-xl bg-[#f6f6fa] px-3 py-2.5 text-[10.5px] leading-relaxed text-[#9a9aa4]">
+          Style a scene — colors, positions, text — then save it here and reuse it on any future shot.
+        </p>
+      )}
+    </div>
   );
 }
