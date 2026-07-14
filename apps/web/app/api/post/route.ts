@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { assertPublicUrl } from "@/lib/server/ssrf";
 
 export const runtime = "nodejs";
 
@@ -91,6 +92,9 @@ async function importBluesky(url: URL): Promise<ImportedPost> {
 async function importMastodon(url: URL): Promise<ImportedPost> {
   const match = url.pathname.match(/^\/@([^/]+)\/(\d+)/) || url.pathname.match(/^\/users\/([^/]+)\/statuses\/(\d+)/);
   if (!match) throw new Error("Paste a public Mastodon status URL");
+  // Mastodon is the one branch that fetches an ARBITRARY user-supplied origin,
+  // so resolve+block internal addresses before touching it (SSRF guard).
+  await assertPublicUrl(url);
   const response = await fetch(`${url.origin}/api/v1/statuses/${match[2]}`, { headers: { accept: "application/json" }, redirect: "error", signal: AbortSignal.timeout(10_000) });
   if (!response.ok) throw new Error("That Mastodon status could not be read");
   const post = (await response.json()) as { content?: string; created_at?: string; replies_count?: number; reblogs_count?: number; favourites_count?: number; account?: { display_name?: string; username?: string; acct?: string } };
