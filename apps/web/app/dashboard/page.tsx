@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Copy, Frame, LayoutTemplate, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { AccountButton } from "@/components/AccountButton";
+import { BrandMark } from "@/components/marketing/BrandMark";
 import { useAuth } from "@/lib/auth";
 import {
   deleteDraft,
@@ -74,9 +75,7 @@ export default function DashboardPage() {
       {/* header */}
       <header className="flex items-center gap-3 border-b border-[#e6e6ee] bg-white px-5 py-3">
         <Link href="/editor" className="flex items-center gap-2">
-          <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-violet-600 to-cyan-500 text-white">
-            <Frame size={14} strokeWidth={2.4} />
-          </span>
+          <BrandMark size={28} />
           <span className="text-[15px] font-bold tracking-tight">MockFrame</span>
         </Link>
         <Link href="/templates" className="fk-press ml-1 rounded-lg px-2.5 py-1.5 text-[12.5px] font-semibold text-[#6b6b76] hover:bg-black/[0.06] hover:text-[#17171c]">
