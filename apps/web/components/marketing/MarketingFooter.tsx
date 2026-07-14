@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Frame } from "lucide-react";
 import { SITE_NAME } from "@/lib/site";
+import { BrandMark } from "./BrandMark";
 import { FeedbackButton } from "./FeedbackButton";
 
 const COLS: { title: string; links: [string, string][] }[] = [
@@ -47,10 +47,8 @@ export function MarketingFooter() {
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 md:grid-cols-5">
         <div className="col-span-2 md:col-span-2">
           <Link href="/" className="flex items-center gap-2">
-            <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-violet-500 to-cyan-400 text-white">
-              <Frame size={15} strokeWidth={2.4} />
-            </span>
-            <span className="text-[15px] font-semibold tracking-tight text-white">{SITE_NAME}</span>
+            <BrandMark size={28} />
+            <span className="text-[15px] font-semibold tracking-[-0.01em] text-white">{SITE_NAME}</span>
           </Link>
           <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-zinc-500">
             The free screenshot mockup studio. Pixel-accurate device frames, gorgeous scenes, one-click export.

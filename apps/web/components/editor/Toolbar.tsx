@@ -11,7 +11,6 @@ import {
   Copy,
   Clock3,
   FolderOpen,
-  Frame,
   Image as ImageIcon,
   Layers,
   Maximize,
@@ -25,6 +24,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { AccountButton } from "@/components/AccountButton";
+import { BrandMark } from "@/components/marketing/BrandMark";
 import { ingestFile, resolveAsset } from "@/lib/assets";
 import { useDraftsUi } from "@/lib/drafts";
 import { addAppIcon, addText, duplicateLayer, removeLayer, reorderLayer } from "@/lib/sceneOps";
@@ -264,9 +264,7 @@ export function LogoChip() {
   return (
     <div className="fk-card pointer-events-auto flex items-center gap-1 rounded-2xl px-2.5 py-1.5">
       <Link href="/editor" className="flex items-center gap-2 pr-1">
-        <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-violet-600 to-cyan-500 text-white">
-          <Frame size={14} strokeWidth={2.4} />
-        </span>
+        <BrandMark size={28} />
         <span className="text-[14px] font-bold tracking-tight text-[#17171c]">MockFrame</span>
       </Link>
       <Link

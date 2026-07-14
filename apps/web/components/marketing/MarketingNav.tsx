@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { Frame, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { BrandMark } from "./BrandMark";
 import { SITE_NAME } from "@/lib/site";
 
 const LINKS: [string, string][] = [
@@ -29,10 +30,8 @@ export function MarketingNav() {
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
         <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
-          <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-violet-500 to-cyan-400 text-white">
-            <Frame size={15} strokeWidth={2.4} />
-          </span>
-          <span className="text-[15px] font-semibold tracking-tight text-white">{SITE_NAME}</span>
+          <BrandMark size={28} />
+          <span className="text-[15px] font-semibold tracking-[-0.01em] text-white">{SITE_NAME}</span>
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">

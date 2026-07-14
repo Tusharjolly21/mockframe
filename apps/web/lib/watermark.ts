@@ -73,46 +73,81 @@ function drawTiles(ctx: CanvasRenderingContext2D, w: number, h: number, brand: s
   ctx.restore();
 }
 
-function drawBadge(ctx: CanvasRenderingContext2D, w: number, h: number, brand: string) {
-  const fs = Math.max(16, Math.round(w * 0.018));
-  const pad = Math.round(w * 0.018);
-  const label = `Made with ${brand}`;
+/** The MockFrame viewfinder mark — a gradient rounded square with white
+ *  focus-corner brackets and a centre dot. Matches <BrandMark>. */
+function drawMark(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  const grad = ctx.createLinearGradient(x, y, x + size, y + size);
+  grad.addColorStop(0, "#8b5cf6");
+  grad.addColorStop(0.5, "#d946ef");
+  grad.addColorStop(1, "#22d3ee");
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.roundRect(x, y, size, size, size * 0.28);
+  ctx.fill();
+
+  const k = size / 24;
   ctx.save();
-  ctx.font = `700 ${fs}px Inter, system-ui, sans-serif`;
+  ctx.translate(x, y);
+  ctx.scale(k, k);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2.1;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(4, 9); ctx.lineTo(4, 4.4); ctx.lineTo(9, 4.4);
+  ctx.moveTo(15, 4.4); ctx.lineTo(19.6, 4.4); ctx.lineTo(19.6, 9);
+  ctx.moveTo(19.6, 15); ctx.lineTo(19.6, 19.6); ctx.lineTo(15, 19.6);
+  ctx.moveTo(9, 19.6); ctx.lineTo(4, 19.6); ctx.lineTo(4, 15);
+  ctx.stroke();
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.roundRect(9.4, 9.4, 5.2, 5.2, 1.4);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawBadge(ctx: CanvasRenderingContext2D, w: number, h: number, brand: string) {
+  const fs = Math.max(15, Math.round(w * 0.017));
+  const pad = Math.round(w * 0.02);
+  ctx.save();
   ctx.textBaseline = "middle";
-  const iconS = fs * 1.35;
-  const gap = fs * 0.4;
-  const padX = fs * 0.85;
-  const padY = fs * 0.5;
-  const textW = ctx.measureText(label).width;
-  const bw = padX * 2 + iconS + gap + textW;
+  const iconS = fs * 1.55;
+  const gap = fs * 0.6;
+  const padX = fs * 0.95;
+  const padY = fs * 0.62;
+  const fMade = `500 ${fs * 0.92}px Inter, system-ui, sans-serif`;
+  const fBrand = `700 ${fs}px Inter, system-ui, sans-serif`;
+  ctx.font = fMade;
+  const w1 = ctx.measureText("Made with ").width;
+  ctx.font = fBrand;
+  const w2 = ctx.measureText(brand).width;
+  const bw = padX * 2 + iconS + gap + w1 + w2;
   const bh = iconS + padY * 2;
   const bx = w - pad - bw;
   const by = h - pad - bh;
 
-  ctx.fillStyle = "rgba(15,16,22,0.62)";
+  // refined pill: soft dark glass + hairline border
   ctx.beginPath();
   ctx.roundRect(bx, by, bw, bh, bh / 2);
+  ctx.fillStyle = "rgba(9,9,12,0.66)";
   ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  ctx.stroke();
 
   const ix = bx + padX;
   const iy = by + (bh - iconS) / 2;
-  const grad = ctx.createLinearGradient(ix, iy, ix + iconS, iy + iconS);
-  grad.addColorStop(0, "#7c3aed");
-  grad.addColorStop(1, "#06b6d4");
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.roundRect(ix, iy, iconS, iconS, iconS * 0.3);
-  ctx.fill();
+  drawMark(ctx, ix, iy, iconS);
 
-  ctx.fillStyle = "#ffffff";
-  ctx.font = `${fs * 0.8}px Inter, system-ui, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.fillText("◆", ix + iconS / 2, iy + iconS / 2 + 1);
-
+  const tx = ix + iconS + gap;
+  const cy = by + bh / 2 + 0.5;
   ctx.textAlign = "left";
-  ctx.font = `700 ${fs}px Inter, system-ui, sans-serif`;
-  ctx.fillText(label, ix + iconS + gap, by + bh / 2 + 0.5);
+  ctx.font = fMade;
+  ctx.fillStyle = "rgba(255,255,255,0.62)";
+  ctx.fillText("Made with ", tx, cy);
+  ctx.font = fBrand;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(brand, tx + w1, cy);
   ctx.restore();
 }
 

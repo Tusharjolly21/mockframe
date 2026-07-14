@@ -186,48 +186,55 @@ function SceneRendererImpl({
       )}
 
       {watermark && (() => {
-        const pad = Math.round(canvas.width * 0.018);
-        const badgeFs = Math.max(16, Math.round(canvas.width * 0.018));
+        const pad = Math.round(canvas.width * 0.02);
+        const fs = Math.max(15, Math.round(canvas.width * 0.017));
+        const iconS = fs * 1.5;
         return (
-          <>
-            {/* single subtle corner badge — no full-canvas tiling (looks clean, still credits) */}
-            <div
+          // refined corner badge — matches the baked export watermark + <BrandMark>
+          <div
+            style={{
+              position: "absolute",
+              right: pad,
+              bottom: pad,
+              pointerEvents: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: fs * 0.6,
+              padding: `${fs * 0.6}px ${fs * 0.95}px`,
+              borderRadius: 999,
+              background: "rgba(9,9,12,0.66)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              fontFamily: "Inter, system-ui, sans-serif",
+              fontSize: fs,
+              letterSpacing: "-0.01em",
+              lineHeight: 1,
+              backdropFilter: "blur(6px)",
+            }}
+          >
+            <span
               style={{
-                position: "absolute",
-                right: pad,
-                bottom: pad,
-                pointerEvents: "none",
-                display: "flex",
-                alignItems: "center",
-                gap: badgeFs * 0.4,
-                padding: `${badgeFs * 0.5}px ${badgeFs * 0.85}px`,
-                borderRadius: 999,
-                background: "rgba(15,16,22,0.62)",
-                color: "#ffffff",
-                fontFamily: "Inter, system-ui, sans-serif",
-                fontSize: badgeFs,
-                fontWeight: 700,
-                letterSpacing: "-0.01em",
-                lineHeight: 1,
-                backdropFilter: "blur(4px)",
+                position: "relative",
+                display: "grid",
+                placeItems: "center",
+                width: iconS,
+                height: iconS,
+                borderRadius: iconS * 0.28,
+                background: "linear-gradient(135deg,#8b5cf6,#d946ef,#22d3ee)",
               }}
             >
-              <span
-                style={{
-                  display: "grid",
-                  placeItems: "center",
-                  width: badgeFs * 1.35,
-                  height: badgeFs * 1.35,
-                  borderRadius: badgeFs * 0.4,
-                  background: "linear-gradient(135deg,#7c3aed,#06b6d4)",
-                  fontSize: badgeFs * 0.8,
-                }}
-              >
-                ◆
-              </span>
-              Made with MockFrame
-            </div>
-          </>
+              <svg width={iconS * 0.6} height={iconS * 0.6} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 8.4V6.3A2.3 2.3 0 0 1 6.3 4H8.4" />
+                <path d="M15.6 4h2.1A2.3 2.3 0 0 1 20 6.3v2.1" />
+                <path d="M20 15.6v2.1a2.3 2.3 0 0 1-2.3 2.3h-2.1" />
+                <path d="M8.4 20H6.3A2.3 2.3 0 0 1 4 17.7v-2.1" />
+              </svg>
+              <span style={{ position: "absolute", width: iconS * 0.2, height: iconS * 0.2, borderRadius: 2.5, background: "#fff" }} />
+            </span>
+            <span style={{ whiteSpace: "nowrap" }}>
+              <span style={{ color: "rgba(255,255,255,0.62)", fontWeight: 500 }}>Made with </span>
+              <span style={{ color: "#ffffff", fontWeight: 700 }}>MockFrame</span>
+            </span>
+          </div>
         );
       })()}
     </div>
