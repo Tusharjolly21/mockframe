@@ -1,6 +1,7 @@
 "use client";
 
 import { toCanvas } from "html-to-image";
+import { drawDisclosure, loadDisclosure } from "./disclosure";
 import type { SceneDocument } from "@framekit/scene";
 import type { AnimShot } from "@/lib/screens";
 
@@ -102,6 +103,9 @@ export async function exportSceneVideo(o: VideoExportOpts): Promise<void> {
     ctx.drawImage(cvs, 0, 0, W, H);
     ctx.globalAlpha = 1;
   };
+  // fictional-recreation label rides every frame (pixels, not metadata)
+  const disclosureCfg = loadDisclosure();
+  const stamp = () => drawDisclosure(ctx, W, H, disclosureCfg);
 
   await new Promise<void>((resolve) => {
     recorder.onstop = () => resolve();
@@ -113,6 +117,7 @@ export async function exportSceneVideo(o: VideoExportOpts): Promise<void> {
         const last = timeline[timeline.length - 1];
         ctx.clearRect(0, 0, W, H);
         draw(shotFrame(last.shot, 0), 1);
+        stamp();
         recorder.stop();
         return;
       }
@@ -137,6 +142,7 @@ export async function exportSceneVideo(o: VideoExportOpts): Promise<void> {
       } else {
         draw(cur, 1);
       }
+      stamp();
       onProgress?.(0.55 + 0.45 * (t / totalDur), "Encoding…");
       requestAnimationFrame(tick);
     };

@@ -1,6 +1,7 @@
 "use client";
 
 import { toCanvas } from "html-to-image";
+import { drawDisclosure, loadDisclosure } from "./disclosure";
 import { applyPalette, GIFEncoder, quantize } from "gifenc";
 import type { AnimShot } from "@/lib/screens";
 
@@ -58,6 +59,7 @@ export async function exportSceneGif(o: GifExportOpts): Promise<void> {
     }
   }
 
+  const disclosureCfg = loadDisclosure();
   /* 1 — pre-render each UNIQUE state once */
   const unique = new Map<string, (typeof frames)[number]>();
   for (const f of frames) if (!unique.has(f.key)) unique.set(f.key, f);
@@ -70,6 +72,7 @@ export async function exportSceneGif(o: GifExportOpts): Promise<void> {
       await settle();
       const cvs = await toCanvas(node, { pixelRatio: 1, canvasWidth: W, canvasHeight: H, style: { transform: "none" } });
       const ctx = cvs.getContext("2d")!;
+      drawDisclosure(ctx, cvs.width, cvs.height, disclosureCfg);
       bitmaps.set(st.key, ctx.getImageData(0, 0, cvs.width, cvs.height).data);
       onProgress?.(((i + 1) / uniqueList.length) * 0.6, `Rendering ${i + 1}/${uniqueList.length}`);
     }

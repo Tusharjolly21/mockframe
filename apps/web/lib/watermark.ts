@@ -27,6 +27,8 @@ export interface WatermarkOptions {
   brand?: string;
   /** Pro custom brand watermark — replaces the MockFrame visible marks */
   custom?: CustomBrandWatermark;
+  /** fictional-recreation label, baked into pixels (free for everyone) */
+  disclosure?: { enabled: boolean; text: string; position: "top" | "bottom" };
 }
 
 /** structurally matches lib/customWatermark's CustomWatermarkCfg — kept here
@@ -318,7 +320,7 @@ async function drawCustomWatermark(
 
 /** Bake watermark layers into an export canvas, in place. */
 export async function applyWatermark(canvas: HTMLCanvasElement, opts: WatermarkOptions = {}): Promise<HTMLCanvasElement> {
-  const { tile = true, badge = true, forensicKey = FORENSIC_KEY, brand = "MockFrame", custom } = opts;
+  const { tile = true, badge = true, forensicKey = FORENSIC_KEY, brand = "MockFrame", custom, disclosure } = opts;
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas;
   const { width: w, height: h } = canvas;
@@ -328,6 +330,10 @@ export async function applyWatermark(canvas: HTMLCanvasElement, opts: WatermarkO
   } else {
     if (tile) drawTiles(ctx, w, h, brand);
     if (badge) drawBadge(ctx, w, h, brand);
+  }
+  if (disclosure?.enabled) {
+    const { drawDisclosure } = await import("./disclosure");
+    drawDisclosure(ctx, w, h, disclosure as import("./disclosure").DisclosureCfg);
   }
   if (forensicKey) embedForensic(ctx, w, h, forensicKey);
   return canvas;

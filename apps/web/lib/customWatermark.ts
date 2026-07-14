@@ -1,6 +1,7 @@
 "use client";
 
 import type { WatermarkOptions } from "./watermark";
+import { loadDisclosure } from "./disclosure";
 
 /**
  * Custom brand watermark (Pro): instead of just removing the MockFrame marks,
@@ -61,9 +62,10 @@ export function saveCustomWatermark(cfg: CustomWatermarkCfg): void {
 /** Watermark options for an export: free tier gets the full MockFrame marks,
  *  Pro gets their custom brand (if enabled) or forensic-only. */
 export function exportWatermarkOpts(watermarkFree: boolean): WatermarkOptions {
-  if (!watermarkFree) return {};
+  const disclosure = loadDisclosure();
+  if (!watermarkFree) return { disclosure };
   const cfg = loadCustomWatermark();
-  return { tile: false, badge: false, custom: cfg.enabled ? cfg : undefined };
+  return { tile: false, badge: false, custom: cfg.enabled ? cfg : undefined, disclosure };
 }
 
 /** Downscale an uploaded logo to ≤256px and return a compact data URL

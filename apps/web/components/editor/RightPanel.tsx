@@ -18,6 +18,7 @@ import { useEntitlementSync } from "@/lib/billing/client";
 import { openUpgrade } from "@/lib/billing/gate";
 import { applyTemplate, deleteUserTemplate, loadUserTemplates, saveUserTemplate, syncUserTemplatesFromServer, templateFromScene, type UserTemplate } from "@/lib/userTemplates";
 import { loadCustomWatermark } from "@/lib/customWatermark";
+import { DEFAULT_DISCLOSURE, DISCLOSURE_PRESETS, loadDisclosure, saveDisclosure, type DisclosureCfg } from "@/lib/disclosure";
 import { UpgradeModal } from "./UpgradeModal";
 import { WatermarkPanel } from "./WatermarkPanel";
 import { Popover, Seg, SliderRow } from "./ui";
@@ -74,6 +75,14 @@ export function RightPanel() {
     return () => window.removeEventListener("framekit:upgrade", onUpgrade);
   }, []);
   const [watermarkOpen, setWatermarkOpen] = useState(false);
+  const [disclosure, setDisclosure] = useState<DisclosureCfg>(DEFAULT_DISCLOSURE);
+  useEffect(() => setDisclosure(loadDisclosure()), []);
+  const patchDisclosure = (p: Partial<DisclosureCfg>) =>
+    setDisclosure((d) => {
+      const next = { ...d, ...p };
+      saveDisclosure(next);
+      return next;
+    });
   const [watermarkOn, setWatermarkOn] = useState(false);
   useEffect(() => setWatermarkOn(loadCustomWatermark().enabled), []);
   useEntitlementSync();
@@ -265,6 +274,54 @@ export function RightPanel() {
                 <p className="text-[10.5px] tabular-nums text-[#9a9aa4]">
                   {Math.round(scene.canvas.width * scale)} × {Math.round(scene.canvas.height * scale)} px
                 </p>
+
+                {/* fictional-recreation disclosure — free safety feature, baked
+                    into image, video and GIF pixels */}
+                <div className="mt-3 border-t border-[#ececf2] pt-2.5">
+                  <label className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-[#17171c]">&quot;Fictional&quot; disclosure label</span>
+                    <input
+                      type="checkbox"
+                      checked={disclosure.enabled}
+                      onChange={(e) => patchDisclosure({ enabled: e.target.checked })}
+                      className="h-3.5 w-3.5 accent-[#17171c]"
+                    />
+                  </label>
+                  <p className="mt-0.5 text-[9.5px] leading-snug text-[#9a9aa4]">
+                    Marks exports as a dramatization — protects you when sharing realistic chat mockups.
+                  </p>
+                  {disclosure.enabled && (
+                    <div className="mt-2 space-y-1.5">
+                      <select
+                        value={(DISCLOSURE_PRESETS as readonly string[]).includes(disclosure.text) ? disclosure.text : "__custom"}
+                        onChange={(e) => patchDisclosure({ text: e.target.value === "__custom" ? "" : e.target.value })}
+                        className="w-full rounded-lg border border-[#e4e4ec] bg-white px-2 py-1.5 text-[10.5px] text-[#17171c]"
+                      >
+                        {DISCLOSURE_PRESETS.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                        <option value="__custom">Custom text…</option>
+                      </select>
+                      {!(DISCLOSURE_PRESETS as readonly string[]).includes(disclosure.text) && (
+                        <input
+                          value={disclosure.text}
+                          onChange={(e) => patchDisclosure({ text: e.target.value })}
+                          placeholder="Your disclosure text"
+                          className="w-full rounded-lg border border-[#e4e4ec] bg-white px-2 py-1.5 text-[10.5px] text-[#17171c] outline-none focus:border-[#17171c]"
+                        />
+                      )}
+                      <Seg
+                        id="disclosure-pos"
+                        options={[
+                          { value: "top", label: "Top" },
+                          { value: "bottom", label: "Bottom" },
+                        ]}
+                        value={disclosure.position}
+                        onChange={(position) => patchDisclosure({ position })}
+                      />
+                    </div>
+                  )}
+                </div>
             </motion.div>
           )}
         </AnimatePresence>
