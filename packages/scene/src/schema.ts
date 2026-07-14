@@ -150,6 +150,8 @@ export const MockupLayerSchema = z.object({
     .optional(),
   transform: TransformSchema,
   shadow: ShadowSchema.nullable(),
+  /** persistent grouping: layers sharing a group id select & move together */
+  group: z.string().optional(),
   cornerRadius: z.number().min(0).optional(), // frameless only
   border: z
     .object({
@@ -172,6 +174,7 @@ export const MockupLayerSchema = z.object({
 export const TextLayerSchema = z.object({
   type: z.literal("text"),
   id: z.string(),
+  group: z.string().optional(),
   content: z.string(),
   font: z.object({
     family: z.string(),
@@ -202,6 +205,7 @@ export const StickerLayerSchema = z.union([
   z.object({
     type: z.literal("sticker"),
     id: z.string(),
+    group: z.string().optional(),
     stickerId: z.string(),
     tint: z.string().optional(),
     size: z.object({ width: z.number().positive(), height: z.number().positive() }).optional(),
@@ -210,6 +214,7 @@ export const StickerLayerSchema = z.union([
   z.object({
     type: z.literal("sticker"),
     id: z.string(),
+    group: z.string().optional(),
     assetId: z.string(),
     transform: TransformSchema,
     /** Decorative assets sit between the canvas background and mockups. */

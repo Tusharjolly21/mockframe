@@ -377,8 +377,14 @@ export function CanvasStage() {
           }
         }
       }
-      const ids = selectedIds.includes(id) ? selectedIds : [id];
-      if (!selectedIds.includes(id)) select(id);
+      // grouped layers select & move as one: clicking any member grabs the group
+      const groupId = scene.layers.find((l) => l.id === id)?.group;
+      const members = groupId ? scene.layers.filter((l) => l.group === groupId).map((l) => l.id) : [id];
+      const ids = selectedIds.includes(id) ? selectedIds : members;
+      if (!selectedIds.includes(id)) {
+        if (members.length > 1) useViewStore.setState({ selectedIds: members });
+        else select(id);
+      }
       const starts: Record<string, { x: number; y: number }> = {};
       for (const l of scene.layers) {
         if (ids.includes(l.id)) starts[l.id] = { x: l.transform.x, y: l.transform.y };

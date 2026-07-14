@@ -7,7 +7,7 @@ import { loadCustomDevices, syncCustomDevicesFromServer } from "@/lib/customDevi
 import { buildDeviceScene } from "@/lib/deviceScene";
 import { saveCurrentDraft } from "@/lib/drafts";
 import { useShotBatchStore } from "@/lib/shotBatch";
-import { duplicateLayer, placeAsset, removeLayer } from "@/lib/sceneOps";
+import { duplicateLayer, groupLayers, placeAsset, removeLayer, ungroupLayers } from "@/lib/sceneOps";
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
 import { AnimatePanel } from "./AnimatePanel";
 import { BottomBar } from "./BottomBar";
@@ -107,6 +107,22 @@ export function EditorShell({ initialDeviceId, openCalibrate = false }: { initia
       if (mod && e.key.toLowerCase() === "d" && primary) {
         e.preventDefault();
         setScene((s) => duplicateLayer(s, primary));
+        return;
+      }
+      // ⌘G groups the multi-selection; ⇧⌘G dissolves any group in it
+      if (mod && e.key.toLowerCase() === "g") {
+        e.preventDefault();
+        const notify = (msg: string) =>
+          window.dispatchEvent(new CustomEvent("framekit:toast", { detail: msg }));
+        if (e.shiftKey) {
+          setScene((s) => ungroupLayers(s, selectedIds));
+          notify("Ungrouped");
+        } else if (selectedIds.length >= 2) {
+          setScene((s) => groupLayers(s, selectedIds));
+          notify(`Grouped ${selectedIds.length} elements — they now select & move together (⇧⌘G to ungroup)`);
+        } else {
+          notify("Shift-click 2+ elements first, then ⌘G to group them");
+        }
         return;
       }
       // panel shortcuts — deliberately modifier-free so they behave identically

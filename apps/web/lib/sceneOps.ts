@@ -25,9 +25,30 @@ export function duplicateLayer(scene: SceneDocument, id: string): SceneDocument 
   const copy: Layer = {
     ...structuredClone(src),
     id: createId(),
+    group: undefined, // a duplicate starts life ungrouped
     transform: { ...src.transform, x: src.transform.x + 32, y: src.transform.y + 32 },
   };
   return { ...scene, layers: [...scene.layers, copy] };
+}
+
+/** Glue the given layers together: clicking any of them selects them all and
+ *  they move as one. Persists through drafts and templates. */
+export function groupLayers(scene: SceneDocument, ids: string[]): SceneDocument {
+  const group = `grp-${createId()}`;
+  return {
+    ...scene,
+    layers: scene.layers.map((l) => (ids.includes(l.id) ? { ...l, group } : l)),
+  };
+}
+
+export function ungroupLayers(scene: SceneDocument, ids: string[]): SceneDocument {
+  // ungroup dissolves every group touched by the selection
+  const groups = new Set(scene.layers.filter((l) => ids.includes(l.id) && l.group).map((l) => l.group));
+  if (!groups.size) return scene;
+  return {
+    ...scene,
+    layers: scene.layers.map((l) => (l.group && groups.has(l.group) ? { ...l, group: undefined } : l)),
+  };
 }
 
 export function reorderLayer(scene: SceneDocument, id: string, dir: 1 | -1): SceneDocument {
