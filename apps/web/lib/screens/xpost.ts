@@ -49,7 +49,8 @@ function xpostBody(
   if (doc.badge !== "none") parts.push(verifiedBadge(bx + 54 + nameW + 6, yy - 4, doc.badge === "gold" ? c.gold : c.accent));
   parts.push(
     `<text font-family="${font}" font-size="15" fill="${c.subtle}" x="${bx + 54}" y="${yy + 22}">@${esc(doc.handle)}</text>`,
-    `<text font-family="${font}" font-size="17" font-weight="700" fill="${c.subtle}" x="${bx + bw - 8}" y="${yy + 4}">···</text>`
+    // X logo in the top-right corner (the pika-style signature mark)
+    xLogo(bx + bw - 22, yy - 12, 20, c.text)
   );
   yy += 52;
 
@@ -75,27 +76,10 @@ function xpostBody(
 
   // time · date · views
   parts.push(`<text font-family="${font}" font-size="15" fill="${c.subtle}" x="${bx}" y="${yy}">${esc(doc.chrome.time || "9:41")} AM · ${esc(doc.date)} · <tspan font-weight="700" fill="${c.text}">${esc(doc.views)}</tspan> Views</text>`);
-  yy += 16;
-  parts.push(`<rect x="${bx}" y="${yy}" width="${bw}" height="0.5" fill="${c.hairline}"/>`);
-  yy += 24;
-
-  // engagement counts
-  const quotes = Math.max(1, Math.round(doc.reposts * 0.28));
-  const bookmarks = Math.max(1, Math.round(doc.likes * 0.11));
-  let ex = bx;
-  for (const [n, label] of [
-    [compact(doc.reposts), "Reposts"],
-    [compact(quotes), "Quotes"],
-    [compact(doc.likes), "Likes"],
-    [compact(bookmarks), "Bookmarks"],
-  ] as const) {
-    parts.push(`<text font-family="${font}" font-size="14" x="${ex}" y="${yy}"><tspan font-weight="700" fill="${c.text}">${n}</tspan><tspan fill="${c.subtle}"> ${label}</tspan></text>`);
-    ex += textWidth(`${n} ${label}`, 14) + 10;
-  }
-  yy += 14;
+  yy += 18;
   parts.push(`<rect x="${bx}" y="${yy}" width="${bw}" height="0.5" fill="${c.hairline}"/>`);
 
-  // action icons
+  // action icons (reply · repost · like · bookmark · share) — pika-style compact row
   const ay = yy + 30;
   const s = [bx + 14, bx + bw * 0.3, bx + bw * 0.55, bx + bw * 0.8, bx + bw - 8];
   parts.push(
@@ -206,6 +190,12 @@ function mediaGrid(parts: string[], urls: string[], x: number, y: number, w: num
 
 function numLabel(n: string, x: number, y: number, color: string, font: string): string {
   return `<text font-family="${font}" font-size="13.5" fill="${color}" x="${x}" y="${y}">${n}</text>`;
+}
+
+/** Official X (Twitter) logo mark, scaled to `size`px, drawn from (x, y). */
+function xLogo(x: number, y: number, size: number, color: string): string {
+  const sc = size / 24;
+  return `<g transform="translate(${x} ${y}) scale(${sc})"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="${color}"/></g>`;
 }
 
 function verifiedBadge(x: number, y: number, color: string): string {

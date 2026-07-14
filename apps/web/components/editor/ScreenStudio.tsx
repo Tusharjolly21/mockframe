@@ -283,10 +283,14 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
 
   if (!doc) {
     return (
-      <Section title="Screen Studio">
+      <Section title="Generate a screen">
         {/* Templates — standalone content CARDS wrapped in a window frame (no phone) */}
-        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#9a9aa4]">Templates · window cards</p>
-        <div className="mb-3 grid grid-cols-3 gap-2">
+        <div className="mb-1.5 flex items-baseline justify-between">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9a9aa4]">Templates</p>
+          <span className="text-[9.5px] text-[#b0b0ba]">A ready-made card — no device</span>
+        </div>
+        <p className="mb-2 text-[10.5px] leading-snug text-[#858590]">Paste a tweet, code, or post and export it as a standalone card. It doesn&apos;t go inside a phone.</p>
+        <div className="mb-4 grid grid-cols-3 gap-2">
           {TEMPLATE_TILES.map((t) => (
             <button
               key={t.app}
@@ -298,7 +302,11 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
             </button>
           ))}
         </div>
-        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#9a9aa4]">App screenshots · phone</p>
+        <div className="mb-1.5 flex items-baseline justify-between border-t border-[#eeeef3] pt-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9a9aa4]">App screenshots</p>
+          <span className="text-[9.5px] text-[#b0b0ba]">Fake app UI · goes in your device</span>
+        </div>
+        <p className="mb-2 text-[10.5px] leading-snug text-[#858590]">Build a chat, feed, or app screen that sits inside the phone or tablet frame you picked.</p>
         <FeaturedPicker
           platform={devPlatform}
           onPick={(meta) => {
