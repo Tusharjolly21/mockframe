@@ -16,6 +16,7 @@ import {
   SW,
   textBlock as baseTextBlock,
   textWidth,
+  typingDots,
   videoIcon,
   wrapText,
 } from "./common";
@@ -255,6 +256,18 @@ export function renderWhatsApp(
     y += h + (i < doc.messages.length - 1 && doc.messages[i + 1].from === m.from ? 3 : 10);
   }
 
+  // in-thread typing bubble — the animated three-dot beat before each reply
+  // (dotPhase cycles per video frame, so the dots pulse in exports too)
+  if (doc.chrome._anim?.typing) {
+    const tw = 74, th = 40;
+    parts.push(
+      `<rect x="${MARGIN}" y="${y}" width="${tw}" height="${th}" rx="9" fill="${c.incoming}" style="filter:drop-shadow(0 0.5px 0.5px rgba(0,0,0,0.12))"/>`,
+      `<path d="M${MARGIN + 4} ${y} h -10 c 3 6 6 8 10 9 Z" fill="${c.incoming}"/>`,
+      typingDots(MARGIN + tw / 2, y + th / 2, c.subtle, doc.chrome._anim?.dotPhase ?? 0, 4, 12)
+    );
+    y += th + 10;
+  }
+
   /* input bar */
   parts.push(...waComposer({ platform, dark, subtle: c.subtle, headerBg: c.headerBg, font }));
 
@@ -398,6 +411,16 @@ export function renderWhatsAppGroup(doc: WhatsAppGroupDoc, avatarUrl?: string): 
       mine ? ticks(m.ticks ?? "read", x + w - 9, metaY, c.subtle, c.blueTick) : ""
     );
     y += h + (i < doc.messages.length - 1 && doc.messages[i + 1].from === m.from && (mine || doc.messages[i + 1].sender === m.sender) ? 3 : 10);
+  }
+
+  if (doc.chrome._anim?.typing) {
+    const tw = 74, th = 40;
+    parts.push(
+      `<rect x="${MARGIN}" y="${y}" width="${tw}" height="${th}" rx="9" fill="${c.incoming}" style="filter:drop-shadow(0 0.5px 0.5px rgba(0,0,0,0.12))"/>`,
+      `<path d="M${MARGIN + 4} ${y} h -10 c 3 6 6 8 10 9 Z" fill="${c.incoming}"/>`,
+      typingDots(MARGIN + tw / 2, y + th / 2, c.subtle, doc.chrome._anim?.dotPhase ?? 0, 4, 12)
+    );
+    y += th + 10;
   }
 
   /* input bar */
