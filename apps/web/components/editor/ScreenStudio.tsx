@@ -158,11 +158,13 @@ const APPS: AppMeta[] = [
 
 /** Standalone-card Templates (window-framed content, no phone) — a separate
  *  section from the phone app roster. */
-const TEMPLATE_TILES: { app: "code" | "bluesky" | "xpost" | "social"; label: string; icon: React.ComponentType<{ size?: number; color?: string }>; tint: string }[] = [
+type StandaloneTemplateApp = "code" | "social" | "github" | "stripe";
+
+const TEMPLATE_TILES: { app: StandaloneTemplateApp; label: string; icon: React.ComponentType<{ size?: number; color?: string }>; tint: string }[] = [
   { app: "social", label: "Post URL", icon: Link2, tint: "#7c3aed" },
   { app: "code", label: "Code", icon: Code2, tint: "#2f81f7" },
-  { app: "bluesky", label: "Bluesky", icon: SiBluesky, tint: "#1083fe" },
-  { app: "xpost", label: "X Post", icon: SiX, tint: "#000000" },
+  { app: "github", label: "GitHub graph", icon: SiGithub, tint: "#238636" },
+  { app: "stripe", label: "Stripe graph", icon: SiStripe, tint: "#635bff" },
 ];
 
 /** Apps whose doc carries a contact/profile photo (`avatar`). A runtime
@@ -193,6 +195,11 @@ const AVATAR_APPS = new Set<ScreenApp>([
  *  Bluesky/X only in their `standalone` mode) — gates the window-frame picker. */
 export function isTemplateCard(doc: ScreenDoc): boolean {
   return doc.app === "code" || ((doc.app === "bluesky" || doc.app === "xpost" || doc.app === "social") && !!(doc as { standalone?: boolean }).standalone);
+}
+
+/** Any content that is currently exporting on its own, without a device. */
+function isStandaloneContent(doc: ScreenDoc): boolean {
+  return isTemplateCard(doc) || ((doc.app === "github" || doc.app === "stripe") && !!doc.standalone);
 }
 
 /** iOS vs Android from the mockup's device — Apple = iOS, everything else
@@ -228,10 +235,10 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       return { ...l, deviceId: on ? null : lastDeviceRef.current, media };
     });
 
-  // Load a standalone Template card (Code / Bluesky / X) in ONE atomic update:
+  // Load a standalone Template card in ONE atomic update:
   // the frameless deviceId + the standalone doc land together, so it can never
   // flash the phone version.
-  const setTemplate = (app: "code" | "bluesky" | "xpost" | "social") =>
+  const setTemplate = (app: StandaloneTemplateApp) =>
     updateLayer(layer.id, (l) => {
       if (l.type !== "mockup") return l;
       const d = defaultTemplateDoc(app);
@@ -359,7 +366,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       </div>
       {/* platform is driven by the device the mockup sits in — n/a for the code card
           or any standalone Template card (there's no device behind a card) */}
-      {doc.app !== "code" && !isTemplateCard(doc) && (
+      {doc.app !== "code" && !isStandaloneContent(doc) && (
         <div className="mb-3 flex items-center gap-1.5 rounded-lg bg-[#f4f4f8] px-2.5 py-1.5 text-[11px] text-[#6b6b76]">
           <span className="grid h-4 w-4 place-items-center rounded bg-[#17171c] text-[8px] font-bold text-white">
             {devPlatform === "ios" ? "" : "▲"}
@@ -388,7 +395,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
             id="scr-frame"
             options={[
               { value: "device", label: "Phone" },
-              { value: "none", label: doc.app === "bluesky" || doc.app === "xpost" || doc.app === "social" ? "Card" : "No frame" },
+              { value: "none", label: doc.app === "bluesky" || doc.app === "xpost" || doc.app === "social" || doc.app === "github" || doc.app === "stripe" ? "Card" : "No frame" },
             ]}
             value={frameless ? "none" : "device"}
             onChange={(v) => setFrameless(v === "none")}
@@ -1723,6 +1730,57 @@ function GithubPaintGrid({ cells, onChange }: { cells: number[]; onChange: (c: n
   );
 }
 
+function ChartCardSizeFields({
+  doc,
+  setDoc,
+}: {
+  doc: GithubDoc | StripeDoc;
+  setDoc: (d: ScreenDoc) => void;
+}) {
+  if (!doc.standalone) return null;
+  const isGithub = doc.app === "github";
+  const presets = isGithub
+    ? [
+        { label: "Compact", width: 680, height: 270 },
+        { label: "GitHub", width: 960, height: 260 },
+        { label: "Wide", width: 1160, height: 330 },
+      ]
+    : [
+        { label: "Compact", width: 420, height: 330 },
+        { label: "Dashboard", width: 560, height: 400 },
+        { label: "Wide", width: 760, height: 400 },
+      ];
+  const patch = (values: Partial<Pick<GithubDoc, "cardWidth" | "cardHeight" | "contentScale">>) =>
+    setDoc({ ...doc, ...values } as ScreenDoc);
+
+  return (
+    <div className="mb-4 mt-3 rounded-xl border border-[#e7e7ee] bg-[#f8f8fb] p-3">
+      <div className="mb-2.5 flex items-center justify-between">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#7d7d88]">Card dimensions</span>
+        <span className="text-[10px] tabular-nums text-[#9a9aa4]">{Math.round(doc.cardWidth ?? (isGithub ? 960 : 560))} × {Math.round(doc.cardHeight ?? (isGithub ? 260 : 400))}</span>
+      </div>
+      <div className="mb-3 grid grid-cols-3 gap-1.5">
+        {presets.map((preset) => {
+          const active = (doc.cardWidth ?? (isGithub ? 960 : 560)) === preset.width && (doc.cardHeight ?? (isGithub ? 260 : 400)) === preset.height;
+          return (
+            <button
+              key={preset.label}
+              type="button"
+              onClick={() => patch({ cardWidth: preset.width, cardHeight: preset.height })}
+              className={`fk-press rounded-lg border px-1 py-1.5 text-[10px] font-semibold ${active ? "border-[#17171c] bg-[#17171c] text-white" : "border-[#dedee7] bg-white text-[#656570] hover:border-[#9a9aa4]"}`}
+            >
+              {preset.label}
+            </button>
+          );
+        })}
+      </div>
+      <SliderRow label="Width" value={doc.cardWidth ?? (isGithub ? 960 : 560)} min={isGithub ? 520 : 320} max={isGithub ? 1200 : 900} step={2} format={(v) => `${Math.round(v)} px`} onChange={(cardWidth) => patch({ cardWidth: Math.round(cardWidth) })} />
+      <SliderRow label="Height" value={doc.cardHeight ?? (isGithub ? 260 : 400)} min={isGithub ? 240 : 260} max={isGithub ? 560 : 640} step={2} format={(v) => `${Math.round(v)} px`} onChange={(cardHeight) => patch({ cardHeight: Math.round(cardHeight) })} />
+      <SliderRow label="Content size" value={Math.round((doc.contentScale ?? (isGithub ? 1 : 1.1)) * 100)} min={65} max={160} format={(v) => `${Math.round(v)}%`} onChange={(contentScale) => patch({ contentScale: contentScale / 100 })} />
+    </div>
+  );
+}
+
 function GithubFields({ doc, setDoc }: { doc: GithubDoc; setDoc: (d: ScreenDoc) => void }) {
   const cells = doc.cells && doc.cells.length === 371 ? doc.cells : githubCells(doc);
   const [fetching, setFetching] = useState(false);
@@ -1730,7 +1788,7 @@ function GithubFields({ doc, setDoc }: { doc: GithubDoc; setDoc: (d: ScreenDoc) 
     if (fetching || !doc.login.trim()) return;
     setFetching(true);
     try {
-      const r = await fetchGithubContributions(doc.login);
+      const r = await fetchGithubContributions(doc.login, doc.range === "calendar-year" ? doc.year : "last");
       setDoc({ ...doc, cells: r.cells, contributions: r.contributions, login: r.login });
       toast(`Loaded @${r.login}'s real graph ✨`);
     } catch (e) {
@@ -1741,6 +1799,7 @@ function GithubFields({ doc, setDoc }: { doc: GithubDoc; setDoc: (d: ScreenDoc) 
   };
   return (
     <>
+      <ChartCardSizeFields doc={doc} setDoc={setDoc} />
       <div className="flex gap-2">
         <Field label="Name" value={doc.name} onChange={(name) => setDoc({ ...doc, name })} className="flex-1" />
         <Field label="Username" value={doc.login} onChange={(login) => setDoc({ ...doc, login })} className="flex-1" />
@@ -1765,6 +1824,35 @@ function GithubFields({ doc, setDoc }: { doc: GithubDoc; setDoc: (d: ScreenDoc) 
         <Field label="Contributions" value={doc.contributions} onChange={(contributions) => setDoc({ ...doc, contributions })} className="flex-1" placeholder="1,247" />
         <Field label="Year" value={doc.year} onChange={(year) => setDoc({ ...doc, year })} className="w-20" placeholder="2025" />
       </div>
+      <div className="mt-2 flex gap-2">
+        <Select
+          label="Range"
+          value={doc.range ?? "last-year"}
+          options={[
+            { value: "last-year", label: "Last year" },
+            { value: "calendar-year", label: "Calendar year" },
+          ]}
+          onChange={(range) => setDoc({ ...doc, range: range as GithubDoc["range"], startMonth: range === "calendar-year" ? 0 : doc.startMonth ?? 6 })}
+          className="flex-1"
+        />
+        {(doc.range ?? "last-year") === "last-year" && (
+          <Select
+            label="Starts"
+            value={String(doc.startMonth ?? 6)}
+            options={["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((label, index) => ({ value: String(index), label }))}
+            onChange={(startMonth) => setDoc({ ...doc, startMonth: Number(startMonth) })}
+            className="w-24"
+          />
+        )}
+      </div>
+      {doc.standalone && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <Toggle label="Year rail" on={doc.showYearRail ?? true} onClick={() => setDoc({ ...doc, showYearRail: !(doc.showYearRail ?? true) })} />
+          <Toggle label="Settings" on={doc.showSettings ?? true} onClick={() => setDoc({ ...doc, showSettings: !(doc.showSettings ?? true) })} />
+          <Toggle label="Legend" on={doc.showLegend ?? true} onClick={() => setDoc({ ...doc, showLegend: !(doc.showLegend ?? true) })} />
+          <Toggle label="Learn link" on={doc.showLearnLink ?? true} onClick={() => setDoc({ ...doc, showLearnLink: !(doc.showLearnLink ?? true) })} />
+        </div>
+      )}
       <GithubPaintGrid cells={cells} onChange={(c) => setDoc({ ...doc, cells: c })} />
       <div className="mt-3">
         <SliderRow label="Graph density" value={Math.round((doc.density ?? 0) * 100)} min={0} max={100} format={(v) => `${Math.round(v)}%`} onChange={(v) => setDoc({ ...doc, density: v / 100, cells: undefined })} />
@@ -1848,6 +1936,7 @@ function genStripeSeries(n = 28): number[] {
 function StripeFields({ doc, setDoc }: { doc: StripeDoc; setDoc: (d: ScreenDoc) => void }) {
   return (
     <>
+      <ChartCardSizeFields doc={doc} setDoc={setDoc} />
       <div className="flex gap-2">
         <Field label="Metric" value={doc.metric} onChange={(metric) => setDoc({ ...doc, metric })} className="flex-1" placeholder="Gross volume" />
         <label className="w-16 shrink-0">

@@ -31,6 +31,11 @@ export function waveTile(color: string, thickness: number): string {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
+function patternTile(inner: string, width: number, height = width): string {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'>${inner}</svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
 /** Style for the pattern layer (rendered behind the mockups). */
 export function patternStyle(p: Pattern): CSSProperties {
   const t = p.thickness;
@@ -64,6 +69,50 @@ export function patternStyle(p: Pattern): CSSProperties {
     case "waves": {
       const h = (16 + 3.5 + 6 * t) * 2;
       return { ...base, backgroundImage: waveTile(c, t), backgroundSize: `40px ${h.toFixed(0)}px`, backgroundRepeat: "repeat" };
+    }
+    case "diamonds": {
+      const size = Math.round(28 + (1 - t) * 30);
+      const stroke = (1 + t * 2.5).toFixed(1);
+      const tile = patternTile(`<path d='M${size / 2} 0 L${size} ${size / 2} L${size / 2} ${size} L0 ${size / 2} Z' fill='none' stroke='${c}' stroke-width='${stroke}'/>`, size);
+      return { ...base, backgroundImage: tile, backgroundSize: `${size}px ${size}px`, backgroundRepeat: "repeat" };
+    }
+    case "checker": {
+      const size = Math.round(28 + (1 - t) * 32);
+      return {
+        ...base,
+        backgroundImage: `conic-gradient(from 90deg, ${c} 25%, transparent 0 75%, ${c} 0)`,
+        backgroundSize: `${size}px ${size}px`,
+      };
+    }
+    case "crosses": {
+      const size = Math.round(30 + (1 - t) * 32);
+      const arm = Math.round(5 + t * 8);
+      const stroke = (1.2 + t * 2.4).toFixed(1);
+      const half = size / 2;
+      const tile = patternTile(`<path d='M${half - arm} ${half} H${half + arm} M${half} ${half - arm} V${half + arm}' fill='none' stroke='${c}' stroke-width='${stroke}' stroke-linecap='round'/>`, size);
+      return { ...base, backgroundImage: tile, backgroundSize: `${size}px ${size}px`, backgroundRepeat: "repeat" };
+    }
+    case "arcs": {
+      const size = Math.round(38 + (1 - t) * 38);
+      const stroke = (1.2 + t * 3).toFixed(1);
+      const tile = patternTile(
+        `<path d='M0 ${size} A${size} ${size} 0 0 1 ${size} 0 M0 ${size / 2} A${size / 2} ${size / 2} 0 0 1 ${size / 2} 0' fill='none' stroke='${c}' stroke-width='${stroke}'/>`,
+        size
+      );
+      return { ...base, backgroundImage: tile, backgroundSize: `${size}px ${size}px`, backgroundRepeat: "repeat" };
+    }
+    case "topography": {
+      const size = Math.round(78 + (1 - t) * 54);
+      const stroke = (0.8 + t * 2).toFixed(1);
+      const tile = patternTile(
+        `<g fill='none' stroke='${c}' stroke-width='${stroke}' stroke-linecap='round'>` +
+          `<path d='M-8 ${size * 0.2} C${size * 0.14} ${size * 0.02},${size * 0.32} ${size * 0.42},${size * 0.55} ${size * 0.2} S${size * 0.9} ${size * 0.02},${size + 8} ${size * 0.22}'/>` +
+          `<path d='M-8 ${size * 0.48} C${size * 0.18} ${size * 0.25},${size * 0.34} ${size * 0.72},${size * 0.6} ${size * 0.48} S${size * 0.88} ${size * 0.3},${size + 8} ${size * 0.52}'/>` +
+          `<path d='M-8 ${size * 0.78} C${size * 0.17} ${size * 0.57},${size * 0.4} ${size * 0.98},${size * 0.62} ${size * 0.76} S${size * 0.88} ${size * 0.62},${size + 8} ${size * 0.8}'/>` +
+        `</g>`,
+        size
+      );
+      return { ...base, backgroundImage: tile, backgroundSize: `${size}px ${size}px`, backgroundRepeat: "repeat" };
     }
     case "noise":
       return { ...base, backgroundImage: noiseUrl(3, 0.7), opacity: p.intensity * 0.5, mixBlendMode: "overlay" };

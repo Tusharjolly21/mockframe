@@ -3,7 +3,7 @@
 import { createId } from "@framekit/scene";
 import type { ResolvedAsset } from "@framekit/renderer";
 import { resolveBuiltin } from "./builtinBackgrounds";
-import { decodeScreenAsset, resolveScreenAsset, screenLogicalHeight, SCREEN_PREFIX } from "./screens";
+import { decodeScreenAsset, resolveScreenAsset, screenLogicalHeight, screenLogicalWidth, SCREEN_PREFIX } from "./screens";
 import { SCREEN_APP_LABELS } from "./screens/types";
 import { firebaseFetch } from "./firebaseClient";
 
@@ -71,7 +71,7 @@ export function resolvePreviewAsset(assetId: string): GuestAsset | undefined {
   if (hit) return hit;
   const doc = decodeScreenAsset(assetId);
   if (!doc) return undefined;
-  const width = 1206;
+  const width = Math.round(screenLogicalWidth(doc) * 3);
   const height = Math.round(screenLogicalHeight(doc) * 3);
   const dark = "chrome" in doc && !!doc.chrome.dark;
   const label = SCREEN_APP_LABELS[doc.app] ?? "Screen";

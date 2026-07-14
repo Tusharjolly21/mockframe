@@ -16,7 +16,15 @@ export type { Device, DeviceVariant, DeviceCategory, FrameSpec, ScreenSpec, Rast
 // These legacy AI-generated watch frames are intentionally hidden in favour of
 // the calibrated PSD watch scenes. Keep the ids here as a migration guard for
 // old generated registries and saved projects.
-const REMOVED_DEVICE_IDS = new Set(["apple-watch-s10", "apple-watch-ultra-2", "watch-front"]);
+const REMOVED_DEVICE_IDS = new Set([
+  "apple-watch-s10",
+  "apple-watch-ultra-2",
+  "watch-front",
+  "ipad-floating",
+  "ipad-angle",
+  "ipad-duo",
+  "ipad-tilt",
+]);
 const DEVICES: Device[] = [
   ...PARAMETRIC_DEVICES,
   ...SVG_DEVICES,
@@ -30,6 +38,20 @@ const DEVICES: Device[] = [
 ].filter((device) => !REMOVED_DEVICE_IDS.has(device.id));
 
 const byId = new Map(DEVICES.map((d) => [d.id, d]));
+
+// Legacy iPad scene IDs used simplified raster plates. Keep old drafts working
+// by resolving them to the calibrated PSD equivalents, while hiding the old
+// cards from every picker and gallery.
+const LEGACY_DEVICE_REPLACEMENTS: Record<string, string> = {
+  "ipad-floating": "ipad-pro-2024-psd-silver-2",
+  "ipad-angle": "ipad-pro-2024-psd-silver-1",
+  "ipad-duo": "ipad-pro-2024-psd-space-black-2",
+  "ipad-tilt": "ipad-pro-2024-psd-space-black-1",
+};
+for (const [legacyId, replacementId] of Object.entries(LEGACY_DEVICE_REPLACEMENTS)) {
+  const replacement = byId.get(replacementId);
+  if (replacement) byId.set(legacyId, replacement);
+}
 
 /**
  * Register a device at runtime — user-created "custom mockup" scene devices

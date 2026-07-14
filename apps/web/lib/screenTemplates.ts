@@ -10,7 +10,7 @@ import { defaultTemplateDoc, encodeScreenAsset, resolveScreenAsset } from "./scr
  *     iPad…). Grouped by device into category cards (iPhone, iPad, Mac, …); each
  *     category card opens /templates/collection/<group> listing every mockup in
  *     it. Backed by a raster scene `deviceId` (packages/devices/src/scenes.ts).
- *   • content CARDS — Code / Bluesky / X post (an `app` screen doc).
+ *   • content CARDS — posts, code and standalone data charts (an `app` screen doc).
  * Both open the editor at /templates/<slug> via makeTemplateScene.
  *
  * To add more mockups: extract the PSD → add a scene device → add a
@@ -18,7 +18,7 @@ import { defaultTemplateDoc, encodeScreenAsset, resolveScreenAsset } from "./scr
  * at least one template.
  */
 
-export type TemplateApp = "code" | "bluesky" | "xpost" | "social";
+export type TemplateApp = "code" | "social" | "github" | "stripe";
 export type SceneGroupId = "iphone" | "ipad" | "mac" | "watch" | "android";
 
 export interface TemplateMeta {
@@ -51,25 +51,27 @@ export const SCENE_GROUPS: SceneGroup[] = [
 
 /** Premium device mockups, one card each inside their category. */
 export const SCENE_TEMPLATES: TemplateMeta[] = [
-  { slug: "ipad-floating", deviceId: "ipad-floating", group: "ipad", label: "iPad Floating", blurb: "A clean straight-on iPad floating in space. Drop in a 1451 × 2073 screenshot.", accent: "#9fb4c9" },
-  { slug: "ipad-angled", deviceId: "ipad-angle", group: "ipad", label: "iPad Angled", blurb: "A perspective iPad tilted in space — your screenshot warps onto the angled screen. 1451 × 2073.", accent: "#9fb4c9" },
-  { slug: "ipad-tilted", deviceId: "ipad-tilt", group: "ipad", label: "iPad Tilted", blurb: "A dynamic floating iPad at an angle. Your screenshot maps into the perspective screen. 1451 × 2073.", accent: "#9fb4c9" },
-  { slug: "ipad-front-back", deviceId: "ipad-duo", group: "ipad", label: "iPad Front & Back", blurb: "Two iPads — one showing your screen, one showing the back. 1451 × 2073.", accent: "#9fb4c9" },
+  { slug: "ipad-floating", deviceId: "ipad-pro-2024-psd-silver-2", group: "ipad", label: "iPad Pro · Silver Flat", blurb: "A calibrated iPad Pro 2024 PSD scene with exact perspective and screen masking. 2752 × 2064.", accent: "#9fb4c9" },
+  { slug: "ipad-angled", deviceId: "ipad-pro-2024-psd-silver-1", group: "ipad", label: "iPad Pro · Silver Angled", blurb: "A calibrated perspective iPad Pro scene extracted from the original PSD. 2752 × 2064.", accent: "#9fb4c9" },
+  { slug: "ipad-tilted", deviceId: "ipad-pro-2024-psd-space-black-1", group: "ipad", label: "iPad Pro · Space Black Angled", blurb: "A dark iPad Pro scene with exact screen quadrilateral, mask and foreground. 2752 × 2064.", accent: "#9fb4c9" },
+  { slug: "ipad-front-back", deviceId: "ipad-pro-2024-psd-space-black-2", group: "ipad", label: "iPad Pro · Space Black Flat", blurb: "A clean flat iPad Pro scene using the reusable layered PSD template. 2752 × 2064.", accent: "#9fb4c9" },
   // Mac
   { slug: "macbook-pro-16", deviceId: "macbook-pro-16-mockup", group: "mac", label: "MacBook Pro 16″", blurb: "A clean front-on MacBook Pro 16″ (Space Gray). Drop in a 3456 × 2234 screenshot.", accent: "#c9c2b4" },
 ];
 
 /** Content cards (macOS/Safari window etc.), shown in their own row. */
 export const TEMPLATES: TemplateMeta[] = [
-  { slug: "post", app: "social", label: "Post URL", blurb: "Paste an X, Bluesky, Threads, LinkedIn or Mastodon URL into a provider-neutral MockFrame card.", accent: "#7c3aed" },
+  { slug: "post", app: "social", label: "Post from URL", blurb: "Paste an X, Bluesky, Threads, LinkedIn or Mastodon link. MockFrame builds one polished, editable post card.", accent: "#60a5fa" },
   { slug: "code", app: "code", label: "Code", blurb: "Syntax-highlighted code in a macOS, Safari, Windows or Arc window — 9 themes, 8 fonts.", accent: "#2f81f7" },
-  { slug: "bluesky-post", app: "bluesky", label: "Bluesky post", blurb: "A Bluesky post card with an embedded link preview and engagement counts.", accent: "#1083fe" },
-  { slug: "x-post", app: "xpost", label: "X post", blurb: "A tweet card with a 1–4 photo media grid, verified badge and counts.", accent: "#111111" },
+  { slug: "github-contributions", app: "github", label: "GitHub contributions", blurb: "An editable contribution heatmap card. Fetch a profile, paint cells and resize it freely.", accent: "#238636" },
+  { slug: "stripe-revenue", app: "stripe", label: "Stripe revenue", blurb: "A standalone revenue chart with editable data, dimensions and visual scale.", accent: "#635bff" },
 ];
 
 const ALL = [...SCENE_TEMPLATES, ...TEMPLATES];
 
 export function templateBySlug(slug: string): TemplateMeta | undefined {
+  // Old platform-specific post links now open the unified URL post template.
+  if (slug === "x-post" || slug === "bluesky-post") return TEMPLATES.find((template) => template.slug === "post");
   return ALL.find((t) => t.slug === slug);
 }
 
@@ -104,7 +106,15 @@ export function groupPreviewUrl(group: string): string | null {
 export function makeTemplateScene(meta: TemplateMeta): SceneDocument {
   if (meta.deviceId) return makeSceneDeviceScene(meta.deviceId);
 
-  const scene = createScene({ width: 1920, height: 1080 });
+  const isPost = meta.app === "social";
+  const scene = isPost
+    ? createScene({
+        width: 1080,
+        height: 1080,
+        background: { type: "solid", color: "#82b5e8" },
+        backdrop: { pattern: { kind: "stripes", intensity: 0.12, thickness: 0.56, color: "#dceeff" } },
+      })
+    : createScene({ width: 1920, height: 1080 });
   const iphone = getDevice("iphone-16-pro") ?? listDevices()[0];
   const layer = createMockupLayer({ deviceId: null, frameHeight: iphone.frame.height, canvasHeight: scene.canvas.height });
   layer.media = {
@@ -117,7 +127,10 @@ export function makeTemplateScene(meta: TemplateMeta): SceneDocument {
   };
   // Standalone cards resolve at 3x logical pixels. The generic device-derived
   // initial scale makes them tiny, so start them at a useful composition size.
-  layer.transform = { ...layer.transform, scale: 0.72 };
+  layer.transform = {
+    ...layer.transform,
+    scale: isPost ? 0.5 : meta.app === "github" ? 0.58 : 0.72,
+  };
   scene.id = `scene-template-${meta.app}`;
   layer.id = "layer-template";
   scene.layers.push(layer);

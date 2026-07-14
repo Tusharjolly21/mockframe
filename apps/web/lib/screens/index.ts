@@ -8,10 +8,10 @@ import { renderCode } from "./code";
 import { renderDating } from "./dating";
 import { renderDiscord } from "./discord";
 import { renderEmail } from "./email";
-import { GITHUB_SA_H, renderGithub } from "./github";
+import { githubStandaloneSize, renderGithub } from "./github";
 import { renderHinge } from "./hinge";
 import { renderLine } from "./line";
-import { renderStripe, STRIPE_SA_H } from "./stripe";
+import { renderStripe, stripeStandaloneSize } from "./stripe";
 import { renderStory } from "./story";
 import { renderTeams } from "./teams";
 import { renderYouTube } from "./youtube";
@@ -158,10 +158,17 @@ export type AssetUrlLookup = (assetId: string) => string | undefined;
 /** Logical height of a screen — normally full-phone (SH), but standalone
  *  chart cards export at a compact card height. */
 export function screenLogicalHeight(doc: ScreenDoc): number {
-  if (doc.app === "github" && doc.standalone) return GITHUB_SA_H;
-  if (doc.app === "stripe" && doc.standalone) return STRIPE_SA_H;
+  if (doc.app === "github" && doc.standalone) return githubStandaloneSize(doc).height;
+  if (doc.app === "stripe" && doc.standalone) return stripeStandaloneSize(doc).height;
   // template cards have a content-driven height — resolved via renderScreenSized
   return SH;
+}
+
+/** Logical width of fixed-size screens and resizable standalone chart cards. */
+export function screenLogicalWidth(doc: ScreenDoc): number {
+  if (doc.app === "github" && doc.standalone) return githubStandaloneSize(doc).width;
+  if (doc.app === "stripe" && doc.standalone) return stripeStandaloneSize(doc).width;
+  return SW;
 }
 
 /** All uploaded asset ids a doc references (avatar + per-message images +
@@ -191,7 +198,7 @@ function referencedAssetIds(doc: ScreenDoc): string[] {
  *  (code always; bluesky/xpost when standalone) have a content-driven height. */
 export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): { url: string; logicalH: number; logicalW: number } {
   const dp = "avatar" in doc && doc.avatar ? lookupUrl?.(doc.avatar) : undefined;
-  const flat = (inner: string, h = SH) => ({ url: svgDataUri(inner, h), logicalH: h, logicalW: SW });
+  const flat = (inner: string, h = SH, w = SW) => ({ url: svgDataUri(inner, h, w), logicalH: h, logicalW: w });
   switch (doc.app) {
     case "imessage":
       return flat(renderIMessage(doc, dp, lookupUrl));
@@ -234,9 +241,9 @@ export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): {
     case "story":
       return flat(renderStory(doc, dp, lookupUrl));
     case "github":
-      return flat(renderGithub(doc, dp), screenLogicalHeight(doc));
+      return flat(renderGithub(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
     case "stripe":
-      return flat(renderStripe(doc), screenLogicalHeight(doc));
+      return flat(renderStripe(doc), screenLogicalHeight(doc), screenLogicalWidth(doc));
     case "social":
       if (doc.standalone) {
         const r = renderSocialCard(doc, dp);

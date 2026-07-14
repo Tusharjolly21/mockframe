@@ -22,13 +22,24 @@ import type { GithubDoc } from "./types";
  */
 
 const MARGIN = 16;
-export const GITHUB_SA_H = 212; // logical height of the standalone card export
+
+export function githubStandaloneSize(doc: GithubDoc): { width: number; height: number } {
+  return {
+    width: Math.round(Math.min(1200, Math.max(520, doc.cardWidth ?? 960))),
+    height: Math.round(Math.min(560, Math.max(240, doc.cardHeight ?? 260))),
+  };
+}
 
 const LEVELS_LIGHT = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"];
 const LEVELS_DARK = ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const COLS = 53;
 const ROWS = 7;
+
+function visibleMonths(doc: GithubDoc, includeEnd = false): string[] {
+  const start = doc.range === "calendar-year" ? 0 : Math.max(0, Math.min(11, Math.round(doc.startMonth ?? 6)));
+  return Array.from({ length: includeEnd ? 13 : 12 }, (_, index) => MONTHS[(start + index) % 12]);
+}
 
 function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
@@ -50,7 +61,9 @@ export function githubCells(doc: GithubDoc): number[] {
     for (let row = 0; row < ROWS; row++) {
       const weekday = row !== 0 && row !== 6;
       const r = rng();
-      const threshold = density * (weekday ? 1.05 : 0.62);
+      const progress = col / (COLS - 1);
+      const recentActivity = doc.range === "last-year" ? 0.04 + 0.96 * Math.pow(progress, 4.5) : 1;
+      const threshold = density * recentActivity * (weekday ? 1.05 : 0.62);
       if (r > threshold) out.push(0);
       else {
         const q = rng();
@@ -69,23 +82,26 @@ interface GC {
 }
 
 /** Draw the contribution card (title + grid + legend) at (x,y,w). Returns bottom Y. */
-function graphCard(parts: string[], doc: GithubDoc, c: GC, font: string, x: number, y: number, w: number): number {
+function graphCard(parts: string[], doc: GithubDoc, c: GC, font: string, x: number, y: number, w: number, contentScale = 1): number {
+  const scale = Math.min(1.6, Math.max(0.65, contentScale));
   const cellLevels = githubCells(doc);
-  parts.push(`<text font-family="${font}" font-size="14" font-weight="600" fill="${c.text}" x="${x + 16}" y="${y + 22}">${esc(doc.contributions)} contributions in ${esc(doc.year)}</text>`);
-  const GRID_X = x + 16 + 22; // room for day labels
-  const cell = 4.6;
-  const gap = 1.5;
-  const step = cell + gap;
-  const gridTop = y + 48;
+  const titleSize = 14 * scale;
+  parts.push(`<text font-family="${font}" font-size="${titleSize.toFixed(1)}" font-weight="600" fill="${c.text}" x="${(x + 16 * scale).toFixed(1)}" y="${(y + 22 * scale).toFixed(1)}">${esc(doc.contributions)} contributions in ${esc(doc.year)}</text>`);
+  const GRID_X = x + 38 * scale; // room for day labels
+  const maxStep = Math.max(3.5, (w - 54 * scale) / COLS);
+  const step = Math.min(6.1 * scale, maxStep);
+  const cell = step * 0.754;
+  const gridTop = y + 48 * scale;
 
   // month labels
-  for (let mi = 0; mi < 12; mi++) {
+  const months = visibleMonths(doc);
+  for (let mi = 0; mi < months.length; mi++) {
     const col = Math.round((mi * COLS) / 12);
-    parts.push(`<text font-family="${font}" font-size="9" fill="${c.subtle}" x="${(GRID_X + col * step).toFixed(1)}" y="${y + 40}">${MONTHS[mi]}</text>`);
+    parts.push(`<text font-family="${font}" font-size="${(9 * scale).toFixed(1)}" fill="${c.subtle}" x="${(GRID_X + col * step).toFixed(1)}" y="${(y + 40 * scale).toFixed(1)}">${months[mi]}</text>`);
   }
   // day labels
   for (const [row, lbl] of [[1, "Mon"], [3, "Wed"], [5, "Fri"]] as const) {
-    parts.push(`<text font-family="${font}" font-size="9" fill="${c.subtle}" text-anchor="end" x="${GRID_X - 6}" y="${(gridTop + row * step + cell).toFixed(1)}">${lbl}</text>`);
+    parts.push(`<text font-family="${font}" font-size="${(9 * scale).toFixed(1)}" fill="${c.subtle}" text-anchor="end" x="${(GRID_X - 6 * scale).toFixed(1)}" y="${(gridTop + row * step + cell).toFixed(1)}">${lbl}</text>`);
   }
   // cells
   for (let col = 0; col < COLS; col++) {
@@ -95,12 +111,13 @@ function graphCard(parts: string[], doc: GithubDoc, c: GC, font: string, x: numb
     }
   }
   // legend
-  const legY = gridTop + ROWS * step + 16;
-  const legX0 = x + w - 16 - 5 * step - textWidth("More", 10) - 6;
-  parts.push(`<text font-family="${font}" font-size="10" fill="${c.subtle}" text-anchor="end" x="${(legX0 - 6).toFixed(1)}" y="${legY + cell}">Less</text>`);
+  const legY = gridTop + ROWS * step + 16 * scale;
+  const legendSize = 10 * scale;
+  const legX0 = x + w - 16 * scale - 5 * step - textWidth("More", legendSize) - 6 * scale;
+  parts.push(`<text font-family="${font}" font-size="${legendSize.toFixed(1)}" fill="${c.subtle}" text-anchor="end" x="${(legX0 - 6 * scale).toFixed(1)}" y="${(legY + cell).toFixed(1)}">Less</text>`);
   for (let l = 0; l < 5; l++) parts.push(`<rect x="${(legX0 + l * step).toFixed(1)}" y="${legY}" width="${cell}" height="${cell}" rx="1.3" fill="${c.levels[l]}"/>`);
-  parts.push(`<text font-family="${font}" font-size="10" fill="${c.subtle}" x="${(legX0 + 5 * step + 4).toFixed(1)}" y="${legY + cell}">More</text>`);
-  return legY + cell + 14;
+  parts.push(`<text font-family="${font}" font-size="${legendSize.toFixed(1)}" fill="${c.subtle}" x="${(legX0 + 5 * step + 4 * scale).toFixed(1)}" y="${(legY + cell).toFixed(1)}">More</text>`);
+  return legY + cell + 14 * scale;
 }
 
 export function renderGithub(doc: GithubDoc, avatarUrl?: string): string {
@@ -115,10 +132,80 @@ export function renderGithub(doc: GithubDoc, avatarUrl?: string): string {
 
   /* ------------------------------ standalone -------------------------------- */
   if (doc.standalone) {
+    const { width, height } = githubStandaloneSize(doc);
+    const scale = Math.min(1.3, Math.max(0.75, doc.contentScale ?? 1));
     const parts: string[] = [];
-    // floating white card on a transparent page
-    parts.push(`<rect x="8" y="8" width="${SW - 16}" height="${GITHUB_SA_H - 16}" rx="12" fill="${c.card}" stroke="${c.border}" stroke-width="1" style="filter:drop-shadow(0 6px 20px rgba(20,20,40,0.10))"/>`);
-    graphCard(parts, doc, gc, font, 8, 12, SW - 16);
+    const showYearRail = (doc.showYearRail ?? true) && width >= 700;
+    const showSettings = doc.showSettings ?? true;
+    const showLegend = doc.showLegend ?? true;
+    const showLearnLink = doc.showLearnLink ?? true;
+    const railW = showYearRail ? 122 * scale : 0;
+    const mainW = width - railW;
+    const pad = 18 * scale;
+    const boxX = pad;
+    const boxY = 58 * scale;
+    const boxW = mainW - pad * 2;
+    const boxH = height - boxY - pad;
+    const title = doc.range === "calendar-year"
+      ? `${doc.contributions} contributions in ${doc.year}`
+      : `${doc.contributions} contributions in the last year`;
+
+    parts.push(`<rect width="${width}" height="${height}" fill="${c.bg}"/>`);
+    parts.push(`<text font-family="${font}" font-size="${(18 * scale).toFixed(1)}" font-weight="500" fill="${c.text}" x="${pad.toFixed(1)}" y="${(35 * scale).toFixed(1)}">${esc(title)}</text>`);
+    if (showSettings) {
+      const settingsX = mainW - pad - 14 * scale;
+      parts.push(
+        `<text font-family="${font}" font-size="${(13 * scale).toFixed(1)}" fill="${c.subtle}" text-anchor="end" x="${settingsX.toFixed(1)}" y="${(35 * scale).toFixed(1)}">Contribution settings</text>`,
+        `<path d="M${(settingsX + 7 * scale).toFixed(1)} ${(29 * scale).toFixed(1)} l${(4 * scale).toFixed(1)} ${(4 * scale).toFixed(1)} l${(4 * scale).toFixed(1)} -${(4 * scale).toFixed(1)}" fill="none" stroke="${c.subtle}" stroke-width="${(1.5 * scale).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`
+      );
+    }
+    parts.push(`<rect x="${boxX.toFixed(1)}" y="${boxY.toFixed(1)}" width="${boxW.toFixed(1)}" height="${boxH.toFixed(1)}" rx="${(7 * scale).toFixed(1)}" fill="${c.card}" stroke="${c.border}" stroke-width="1"/>`);
+
+    const gridX = boxX + 56 * scale;
+    const gridTop = boxY + 43 * scale;
+    const footerH = 42 * scale;
+    const stepX = (boxW - 72 * scale) / COLS;
+    const stepY = (boxH - (gridTop - boxY) - footerH) / ROWS;
+    const step = Math.max(4, Math.min(stepX, stepY));
+    const cell = Math.max(2.8, step - 2 * scale);
+    const months = visibleMonths(doc, true);
+    months.forEach((month, index) => {
+      const col = (index * (COLS - 1)) / 12;
+      parts.push(`<text font-family="${font}" font-size="${(11 * scale).toFixed(1)}" fill="${c.text}" x="${(gridX + col * step).toFixed(1)}" y="${(boxY + 30 * scale).toFixed(1)}">${month}</text>`);
+    });
+    for (const [row, label] of [[1, "Mon"], [3, "Wed"], [5, "Fri"]] as const) {
+      parts.push(`<text font-family="${font}" font-size="${(11 * scale).toFixed(1)}" fill="${c.text}" text-anchor="end" x="${(gridX - 9 * scale).toFixed(1)}" y="${(gridTop + row * step + cell).toFixed(1)}">${label}</text>`);
+    }
+    const cellLevels = githubCells(doc);
+    for (let col = 0; col < COLS; col++) {
+      for (let row = 0; row < ROWS; row++) {
+        const level = cellLevels[col * ROWS + row] ?? 0;
+        parts.push(`<rect x="${(gridX + col * step).toFixed(1)}" y="${(gridTop + row * step).toFixed(1)}" width="${cell.toFixed(1)}" height="${cell.toFixed(1)}" rx="${(1.6 * scale).toFixed(1)}" fill="${c.levels[level]}" stroke="${c.border}" stroke-width="0.35"/>`);
+      }
+    }
+
+    const footerY = boxY + boxH - 18 * scale;
+    if (showLearnLink) parts.push(`<text font-family="${font}" font-size="${(11.5 * scale).toFixed(1)}" fill="${c.subtle}" x="${gridX.toFixed(1)}" y="${footerY.toFixed(1)}">Learn how we count contributions</text>`);
+    if (showLegend) {
+      const legendSize = 11.5 * scale;
+      const legendStep = 14 * scale;
+      const legendX = boxX + boxW - 132 * scale;
+      parts.push(`<text font-family="${font}" font-size="${legendSize.toFixed(1)}" fill="${c.subtle}" text-anchor="end" x="${(legendX - 6 * scale).toFixed(1)}" y="${footerY.toFixed(1)}">Less</text>`);
+      for (let level = 0; level < 5; level++) parts.push(`<rect x="${(legendX + level * legendStep).toFixed(1)}" y="${(footerY - 10 * scale).toFixed(1)}" width="${(10 * scale).toFixed(1)}" height="${(10 * scale).toFixed(1)}" rx="${(1.8 * scale).toFixed(1)}" fill="${c.levels[level]}" stroke="${c.border}" stroke-width="0.35"/>`);
+      parts.push(`<text font-family="${font}" font-size="${legendSize.toFixed(1)}" fill="${c.subtle}" x="${(legendX + 5 * legendStep + 2 * scale).toFixed(1)}" y="${footerY.toFixed(1)}">More</text>`);
+    }
+
+    if (showYearRail) {
+      const selected = Number.parseInt(doc.year, 10) || new Date().getFullYear();
+      const railX = mainW + 14 * scale;
+      const railItemW = railW - 26 * scale;
+      const railItemH = 42 * scale;
+      parts.push(`<rect x="${railX.toFixed(1)}" y="${(8 * scale).toFixed(1)}" width="${railItemW.toFixed(1)}" height="${railItemH.toFixed(1)}" rx="${(7 * scale).toFixed(1)}" fill="${c.blue}"/>`);
+      parts.push(`<text font-family="${font}" font-size="${(14 * scale).toFixed(1)}" font-weight="600" fill="#ffffff" x="${(railX + 16 * scale).toFixed(1)}" y="${(35 * scale).toFixed(1)}">${selected}</text>`);
+      for (let index = 1; index < 5; index++) {
+        parts.push(`<text font-family="${font}" font-size="${(14 * scale).toFixed(1)}" fill="${c.subtle}" x="${(railX + 16 * scale).toFixed(1)}" y="${((35 + index * 45) * scale).toFixed(1)}">${selected - index}</text>`);
+      }
+    }
     return parts.join("\n");
   }
 

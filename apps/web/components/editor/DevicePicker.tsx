@@ -351,6 +351,9 @@ function wallpaperFor(device: Device, variantId?: string) {
 }
 
 function DevicePreview({ device, variantId, compact = false }: { device: Device; variantId?: string; compact?: boolean }) {
+  const src = previewDataUri(device, variantId);
+  const [previewState, setPreviewState] = useState<"loading" | "ready" | "error">("loading");
+  useEffect(() => setPreviewState("loading"), [src]);
   const { width, height, screenRect } = device.frame;
   const quad = device.plate?.screenQuad;
   const quadBounds = quad
@@ -399,22 +402,35 @@ function DevicePreview({ device, variantId, compact = false }: { device: Device;
       className={`relative mx-auto ${compact ? "h-full w-full" : "h-full max-w-full"}`}
       style={{ aspectRatio: `${width} / ${height}` }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={previewDataUri(device, variantId)}
-        alt={compact ? "" : device.name}
-        className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_6px_12px_rgba(20,20,40,0.18)]"
+      <span
+        aria-hidden="true"
+        className={`absolute inset-[8%] rounded-xl bg-[#f1f1f5] transition-opacity ${previewState === "loading" ? "animate-pulse opacity-100" : "opacity-0"}`}
       />
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute overflow-hidden"
+        className="pointer-events-none absolute overflow-hidden transition-opacity"
         style={{
           ...screenStyle,
           background: wallpaperFor(device, variantId),
           boxShadow: "inset 0 0 0 1px rgba(255,255,255,.14), inset 0 -10px 18px rgba(0,0,0,.18)",
           zIndex: 1,
+          opacity: previewState === "ready" ? 1 : 0,
         }}
       />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt=""
+        onLoad={() => setPreviewState("ready")}
+        onError={() => setPreviewState("error")}
+        className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_6px_12px_rgba(20,20,40,0.18)] transition-opacity"
+        style={{ zIndex: 2, opacity: previewState === "ready" ? 1 : 0 }}
+      />
+      {previewState === "error" && (
+        <span aria-label="Preview unavailable" className="absolute inset-0 z-[3] grid place-items-center rounded-xl bg-[#f4f4f7] text-[#a1a1aa]">
+          <ImagePlus size={compact ? 14 : 20} />
+        </span>
+      )}
     </div>
   );
 }

@@ -50,6 +50,7 @@ export function createScene(partial?: Partial<SceneDocument["canvas"]>): SceneDo
     schemaVersion: SCHEMA_VERSION,
     id: createId(),
     canvas: {
+      ...partial,
       width: partial?.width ?? 1920,
       height: partial?.height ?? 1080,
       background: partial?.background ?? DEFAULT_BACKGROUND,

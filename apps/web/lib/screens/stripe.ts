@@ -12,7 +12,13 @@ import type { StripeDoc } from "./types";
  */
 
 const MARGIN = 20;
-export const STRIPE_SA_H = 320; // logical height of the standalone card export
+
+export function stripeStandaloneSize(doc: StripeDoc): { width: number; height: number } {
+  return {
+    width: Math.round(Math.min(900, Math.max(320, doc.cardWidth ?? 560))),
+    height: Math.round(Math.min(640, Math.max(260, doc.cardHeight ?? 400))),
+  };
+}
 
 interface Pt {
   x: number;
@@ -48,28 +54,29 @@ interface SC {
 }
 
 /** Draw the metric header + area chart inside a card rect. */
-function metricCard(parts: string[], doc: StripeDoc, c: SC, accent: string, font: string, cardX: number, cardY: number, cardW: number, cardH: number): void {
-  const pad = 18;
+function metricCard(parts: string[], doc: StripeDoc, c: SC, accent: string, font: string, cardX: number, cardY: number, cardW: number, cardH: number, contentScale = 1): void {
+  const scale = Math.min(1.6, Math.max(0.65, contentScale));
+  const pad = 18 * scale;
   const ix = cardX + pad;
   parts.push(
-    `<text font-family="${font}" font-size="13" font-weight="500" fill="${c.subtle}" x="${ix}" y="${cardY + 30}">${esc(doc.metric)}</text>`,
-    `<text font-family="${font}" font-size="30" font-weight="700" fill="${c.text}" x="${ix}" y="${cardY + 66}">${esc(doc.amount)}</text>`
+    `<text font-family="${font}" font-size="${(13 * scale).toFixed(1)}" font-weight="500" fill="${c.subtle}" x="${ix.toFixed(1)}" y="${(cardY + 30 * scale).toFixed(1)}">${esc(doc.metric)}</text>`,
+    `<text font-family="${font}" font-size="${(30 * scale).toFixed(1)}" font-weight="700" fill="${c.text}" x="${ix.toFixed(1)}" y="${(cardY + 66 * scale).toFixed(1)}">${esc(doc.amount)}</text>`
   );
   const up = doc.deltaUp !== false;
   const deltaCol = up ? c.up : c.down;
-  const badgeY = cardY + 80;
+  const badgeY = cardY + 80 * scale;
   parts.push(
     up
-      ? `<path d="M${ix + 5} ${badgeY + 5} l4 -5 4 5" fill="none" stroke="${deltaCol}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`
-      : `<path d="M${ix + 5} ${badgeY} l4 5 4 -5" fill="none" stroke="${deltaCol}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
-    `<text font-family="${font}" font-size="13" font-weight="600" fill="${deltaCol}" x="${ix + 16}" y="${badgeY + 5}">${esc(doc.delta)}</text>`,
-    `<text font-family="${font}" font-size="12.5" fill="${c.subtle}" x="${ix + 16 + textWidth(doc.delta, 13) + 8}" y="${badgeY + 5}">vs. prior period</text>`
+      ? `<path d="M${(ix + 5 * scale).toFixed(1)} ${(badgeY + 5 * scale).toFixed(1)} l${(4 * scale).toFixed(1)} ${(-5 * scale).toFixed(1)} ${(4 * scale).toFixed(1)} ${(5 * scale).toFixed(1)}" fill="none" stroke="${deltaCol}" stroke-width="${(1.8 * scale).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`
+      : `<path d="M${(ix + 5 * scale).toFixed(1)} ${badgeY.toFixed(1)} l${(4 * scale).toFixed(1)} ${(5 * scale).toFixed(1)} ${(4 * scale).toFixed(1)} ${(-5 * scale).toFixed(1)}" fill="none" stroke="${deltaCol}" stroke-width="${(1.8 * scale).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`,
+    `<text font-family="${font}" font-size="${(13 * scale).toFixed(1)}" font-weight="600" fill="${deltaCol}" x="${(ix + 16 * scale).toFixed(1)}" y="${(badgeY + 5 * scale).toFixed(1)}">${esc(doc.delta)}</text>`,
+    `<text font-family="${font}" font-size="${(12.5 * scale).toFixed(1)}" fill="${c.subtle}" x="${(ix + 16 * scale + textWidth(doc.delta, 13 * scale) + 8 * scale).toFixed(1)}" y="${(badgeY + 5 * scale).toFixed(1)}">vs. prior period</text>`
   );
 
   const plotX = ix;
   const plotW = cardW - pad * 2;
-  const plotTop = cardY + 108;
-  const plotBottom = cardY + cardH - 30;
+  const plotTop = cardY + 108 * scale;
+  const plotBottom = Math.max(plotTop + 36, cardY + cardH - 30 * scale);
   const plotH = plotBottom - plotTop;
 
   const series = doc.series.length >= 2 ? doc.series : [1, 1];
@@ -106,7 +113,7 @@ function metricCard(parts: string[], doc: StripeDoc, c: SC, accent: string, font
   ["7 days ago", "", "Today"].forEach((lbl, i) => {
     if (!lbl) return;
     const lx = plotX + (i / 2) * plotW;
-    parts.push(`<text font-family="${font}" font-size="10.5" fill="${c.subtle}" text-anchor="${i === 0 ? "start" : "end"}" x="${lx.toFixed(1)}" y="${plotBottom + 22}">${lbl}</text>`);
+    parts.push(`<text font-family="${font}" font-size="${(10.5 * scale).toFixed(1)}" fill="${c.subtle}" text-anchor="${i === 0 ? "start" : "end"}" x="${lx.toFixed(1)}" y="${(plotBottom + 22 * scale).toFixed(1)}">${lbl}</text>`);
   });
 }
 
@@ -121,9 +128,12 @@ export function renderStripe(doc: StripeDoc): string {
 
   /* ------------------------------ standalone -------------------------------- */
   if (doc.standalone) {
+    const { width, height } = stripeStandaloneSize(doc);
+    const scale = Math.min(1.6, Math.max(0.65, doc.contentScale ?? 1.1));
     const parts: string[] = [];
-    parts.push(`<rect x="8" y="8" width="${SW - 16}" height="${STRIPE_SA_H - 16}" rx="16" fill="${c.surface}" stroke="${c.border}" stroke-width="1" style="filter:drop-shadow(0 6px 24px rgba(20,20,40,0.12))"/>`);
-    metricCard(parts, doc, c, accent, font, 8, 10, SW - 16, STRIPE_SA_H - 20);
+    const inset = 8;
+    parts.push(`<rect x="${inset}" y="${inset}" width="${width - inset * 2}" height="${height - inset * 2}" rx="${Math.round(16 * Math.min(scale, 1.25))}" fill="${c.surface}" stroke="${c.border}" stroke-width="1" style="filter:drop-shadow(0 6px 24px rgba(20,20,40,0.12))"/>`);
+    metricCard(parts, doc, c, accent, font, inset, inset, width - inset * 2, height - inset * 2, scale);
     return parts.join("\n");
   }
 

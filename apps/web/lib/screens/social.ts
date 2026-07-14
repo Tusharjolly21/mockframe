@@ -35,8 +35,8 @@ export function renderSocialCard(doc: SocialPostDoc, avatarUrl?: string): Framed
   const viewportW = Math.max(300, Math.min(620, doc.cardWidth ?? 440));
   const frame = doc.frame ?? "none";
   const c = dark
-    ? { bg: "#111217", card: "#17191f", text: "#f4f4f5", subtle: "#a1a1aa", hairline: "#30323a", chip: "#232630" }
-    : { bg: "#f4f4f7", card: "#ffffff", text: "#18181b", subtle: "#71717a", hairline: "#e4e4e7", chip: "#f1f1f5" };
+    ? { card: "#17191f", text: "#f4f4f5", subtle: "#a1a1aa", hairline: "#30323a" }
+    : { card: "#f8fbff", text: "#262a31", subtle: "#858d98", hairline: "#dfe8f2" };
 
   return renderFramed(
     frame,
@@ -53,35 +53,36 @@ export function renderSocialCard(doc: SocialPostDoc, avatarUrl?: string): Framed
       let cy = y + p;
 
       parts.push(`<rect x="${x}" y="${y}" width="${w}" height="1" fill="${c.hairline}" opacity="0"/>`);
-      parts.push(avatar(doc.name, inX + 22, cy + 22, 22, "mfpost", avatarUrl));
-      parts.push(`<text font-family="${font}" font-size="15.5" font-weight="750" fill="${c.text}" x="${inX + 56}" y="${cy + 18}">${esc(doc.name)}</text>`);
-      if (subtitle) parts.push(`<text font-family="${font}" font-size="12.5" fill="${c.subtle}" x="${inX + 56}" y="${cy + 38}">${esc(subtitle)}</text>`);
-      const chipW = Math.max(54, textWidth(source, 11.5) + 22);
-      parts.push(
-        `<rect x="${x + w - p - chipW}" y="${cy + 7}" width="${chipW}" height="26" rx="13" fill="${c.chip}" stroke="${c.hairline}" stroke-width="1"/>`,
-        `<circle cx="${x + w - p - chipW + 13}" cy="${cy + 20}" r="3.5" fill="#22d3ee"/>`,
-        `<text font-family="${font}" font-size="11.5" font-weight="650" fill="${c.subtle}" text-anchor="middle" x="${x + w - p - chipW / 2 + 5}" y="${cy + 24}">${esc(source)}</text>`
-      );
-      cy += 62;
+      parts.push(avatar(doc.name, inX + 24, cy + 24, 24, "mfpost", avatarUrl));
+      parts.push(`<text font-family="${font}" font-size="18" font-weight="750" fill="${c.text}" x="${inX + 62}" y="${cy + 19}">${esc(doc.name)}</text>`);
+      if (subtitle) parts.push(`<text font-family="${font}" font-size="14.5" fill="${c.subtle}" x="${inX + 62}" y="${cy + 42}">${esc(subtitle)}</text>`);
+      const mark = doc.network === "x" ? "X" : doc.network === "threads" ? "@" : source;
+      const markSize = doc.network === "x" || doc.network === "threads" ? 30 : 14;
+      parts.push(`<text font-family="${font}" font-size="${markSize}" font-weight="750" fill="${c.text}" text-anchor="end" x="${x + w - p}" y="${cy + (markSize > 20 ? 34 : 26)}">${esc(mark)}</text>`);
+      cy += 76;
 
       const lines = wrapText(doc.text, size, contentW);
       parts.push(baseTextBlock(lines, { font, x: inX, y: cy, size, lineHeight: lineH, color: c.text }));
-      cy += lines.length * lineH + 24;
+      cy += lines.length * lineH + 30;
+      if (doc.time) {
+        parts.push(`<text font-family="${font}" font-size="14" fill="${c.subtle}" x="${inX}" y="${cy}">${esc(doc.time)}</text>`);
+        cy += 28;
+      }
       parts.push(`<rect x="${inX}" y="${cy}" width="${contentW}" height="1" fill="${c.hairline}"/>`);
-      cy += 24;
+      cy += 30;
 
       const stats = [
+        [compact(doc.shares), doc.network === "x" ? "retweets" : "shares"],
         [compact(doc.likes), "likes"],
         [compact(doc.comments), "replies"],
-        [compact(doc.shares), "shares"],
       ];
       const colW = contentW / stats.length;
       stats.forEach(([value, label], i) => {
         const sx = inX + i * colW;
-        parts.push(`<text font-family="${font}" font-size="13" font-weight="700" fill="${c.text}" x="${sx}" y="${cy}">${esc(value)}</text>`);
-        parts.push(`<text font-family="${font}" font-size="11.5" fill="${c.subtle}" x="${sx + textWidth(value, 13) + 5}" y="${cy}">${label}</text>`);
+        parts.push(`<text font-family="${font}" font-size="16" font-weight="750" fill="${c.text}" x="${sx}" y="${cy}">${esc(value)}</text>`);
+        parts.push(`<text font-family="${font}" font-size="14" fill="${c.subtle}" x="${sx + textWidth(value, 16) + 7}" y="${cy}">${label}</text>`);
       });
-      cy += p;
+      cy += p + 4;
       return { svg: parts.join("\n"), height: cy - y };
     },
     viewportW,

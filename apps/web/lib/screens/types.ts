@@ -568,6 +568,14 @@ export interface GithubDoc {
   /** "1,247 contributions in the last year" */
   contributions: string;
   year: string; // "2025"
+  /** rolling last-year view or one calendar year */
+  range?: "last-year" | "calendar-year";
+  /** first visible month, 0 = January */
+  startMonth?: number;
+  showYearRail?: boolean;
+  showSettings?: boolean;
+  showLegend?: boolean;
+  showLearnLink?: boolean;
   /** 0..1 — how filled the graph is */
   density: number;
   /** deterministic pattern seed (Shuffle to change) */
@@ -578,6 +586,11 @@ export interface GithubDoc {
   cells?: number[];
   /** render just the contribution-graph card (no phone chrome) for a standalone export */
   standalone?: boolean;
+  /** standalone card dimensions in logical pixels */
+  cardWidth?: number;
+  cardHeight?: number;
+  /** scales chart typography and cells without changing the card bounds */
+  contentScale?: number;
 }
 
 /** Stripe-dashboard style revenue chart. */
@@ -597,6 +610,11 @@ export interface StripeDoc {
   color?: string;
   /** render just the chart card (no phone chrome) for a standalone export */
   standalone?: boolean;
+  /** standalone card dimensions in logical pixels */
+  cardWidth?: number;
+  cardHeight?: number;
+  /** scales chart typography without changing the card bounds */
+  contentScale?: number;
 }
 
 export type ScreenDoc =
@@ -1077,12 +1095,21 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
         name: "Riley Morgan",
         login: "rileymorgan",
         bio: "Design engineer. Building MockFrame — the screenshot mockup studio.",
-        contributions: "1,247",
-        year: "2025",
+        contributions: "341",
+        year: "2026",
+        range: "last-year",
+        startMonth: 6,
+        showYearRail: true,
+        showSettings: true,
+        showLegend: true,
+        showLearnLink: true,
         density: 0.55,
         seed: 7,
         followers: "1.2k",
         following: "180",
+        cardWidth: 960,
+        cardHeight: 260,
+        contentScale: 1,
       };
     case "stripe":
       return {
@@ -1096,6 +1123,9 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
         series: [8, 9, 7, 10, 12, 11, 14, 13, 16, 15, 18, 20, 19, 22, 21, 24, 26, 25, 28, 31, 29, 34, 36, 35, 39, 41, 44, 47],
         prevSeries: [7, 8, 7, 8, 9, 9, 10, 10, 11, 12, 12, 13, 13, 14, 14, 15, 16, 16, 17, 18, 18, 19, 20, 21, 22, 22, 23, 24],
         color: "#635bff",
+        cardWidth: 560,
+        cardHeight: 400,
+        contentScale: 1.1,
       };
     case "social":
       return defaultSocialDoc("facebook");
@@ -1159,20 +1189,31 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
   }
 }
 
-/** Template (card) variants of Bluesky / X — window-framed standalone cards. */
-export function defaultTemplateDoc(app: "bluesky" | "xpost" | "social" | "code"): ScreenDoc {
+/** Template variants open as standalone cards instead of inside a phone. */
+export function defaultTemplateDoc(app: "bluesky" | "xpost" | "social" | "code" | "github" | "stripe"): ScreenDoc {
   if (app === "code") return defaultScreenDoc("code");
+  if (app === "github" || app === "stripe") {
+    return { ...defaultScreenDoc(app), standalone: true } as ScreenDoc;
+  }
   if (app === "social") {
     return {
-      ...defaultSocialDoc("threads"),
-      sourceLabel: "Post",
+      ...defaultSocialDoc("x"),
+      name: "MockFrame",
+      subtitle: "@mockframe",
+      text: "Simple ideas become memorable when the presentation gives them room to breathe.",
+      time: "19:29 · Sep 29, 2026",
+      likes: 17,
+      comments: 8,
+      shares: 4,
+      commentList: [],
+      sourceLabel: "X",
       standalone: true,
       frame: "none",
-      cardWidth: 440,
-      postFontSize: 23,
-      postPadding: 24,
-      cardRadius: 22,
-      cardShadow: 1,
+      cardWidth: 560,
+      postFontSize: 27,
+      postPadding: 32,
+      cardRadius: 26,
+      cardShadow: 1.15,
     };
   }
   const base = defaultScreenDoc(app) as BlueskyDoc | XPostDoc;

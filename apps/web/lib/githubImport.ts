@@ -18,12 +18,14 @@ const COLS = 53;
 const ROWS = 7;
 
 export async function fetchGithubContributions(
-  username: string
+  username: string,
+  year: string = "last"
 ): Promise<{ cells: number[]; contributions: string; login: string }> {
   const user = username.trim().replace(/^@/, "");
   if (!/^[a-zA-Z0-9-]{1,39}$/.test(user)) throw new Error("Enter a valid GitHub username");
 
-  const r = await fetch(`https://github-contributions-api.jogruber.de/v4/${encodeURIComponent(user)}?y=last`);
+  const requestedYear = year === "last" || /^\d{4}$/.test(year) ? year : "last";
+  const r = await fetch(`https://github-contributions-api.jogruber.de/v4/${encodeURIComponent(user)}?y=${requestedYear}`);
   if (r.status === 404) throw new Error(`No GitHub user "${user}"`);
   if (!r.ok) throw new Error("GitHub fetch failed — try again");
   const data = (await r.json()) as { total?: Record<string, number>; contributions?: ApiDay[] };
@@ -41,6 +43,7 @@ export async function fetchGithubContributions(
     cells[col * ROWS + row] = days[i].level;
   }
 
-  const total = data.total?.lastYear ?? days.reduce((n, d) => n + d.count, 0);
+  const totalKey = requestedYear === "last" ? "lastYear" : requestedYear;
+  const total = data.total?.[totalKey] ?? days.reduce((n, d) => n + d.count, 0);
   return { cells, contributions: total.toLocaleString("en-US"), login: user };
 }

@@ -55,9 +55,10 @@ export function RightPanel() {
   const mockups = scene.layers.filter((l): l is MockupLayer => l.type === "mockup");
   const arity = (Math.min(3, Math.max(1, mockups.length)) as 1 | 2 | 3) ?? 1;
   const hideLayouts = mockups.some((layer) => {
-    const category = layer.deviceId ? getDevice(layer.deviceId)?.category : undefined;
+    const device = layer.deviceId ? getDevice(layer.deviceId) : undefined;
+    const category = device?.category;
     const standaloneCard = !layer.deviceId && !!layer.media && isScreenAsset(layer.media.assetId);
-    return category === "laptop" || category === "desktop" || standaloneCard;
+    return !!device?.plate || category === "laptop" || category === "desktop" || standaloneCard;
   });
   const presets = LAYOUT_PRESETS.filter((p) => p.arity === arity);
   const selectedMockups = selectedIds
