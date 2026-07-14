@@ -363,6 +363,36 @@ export interface SocialPostDoc {
   cardShadow?: number;
 }
 
+export type TestimonialFont = "modern" | "editorial" | "rounded" | "classic";
+export type TestimonialAlign = "left" | "center";
+export type TestimonialQuoteStyle = "mark" | "line" | "none";
+
+export interface TestimonialDoc {
+  app: "testimonial";
+  chrome: ScreenChrome;
+  quote: string;
+  author: string;
+  role: string;
+  company: string;
+  avatar?: string;
+  eyebrow?: string;
+  font: TestimonialFont;
+  align: TestimonialAlign;
+  quoteStyle: TestimonialQuoteStyle;
+  showRating: boolean;
+  rating: number;
+  cardWidth: number;
+  cardHeight: number;
+  fontSize: number;
+  padding: number;
+  cardRadius: number;
+  cardShadow: number;
+  cardColor: string;
+  textColor: string;
+  accentColor: string;
+  standalone: true;
+}
+
 export interface SlackMessage {
   sender: string;
   text: string;
@@ -643,6 +673,7 @@ export type ScreenDoc =
   | SocialPostDoc
   | XPostDoc
   | BlueskyDoc
+  | TestimonialDoc
   | CodeDoc;
 export type ScreenApp = ScreenDoc["app"];
 
@@ -672,6 +703,7 @@ export const SCREEN_APP_LABELS: Record<ScreenApp, string> = {
   social: "Social Post",
   xpost: "X Post",
   bluesky: "Bluesky",
+  testimonial: "Testimonial",
   code: "Code",
 };
 
@@ -790,6 +822,7 @@ export const APP_PLATFORMS: Record<ScreenApp, ("ios" | "android")[]> = {
   social: ["ios", "android"],
   xpost: ["ios", "android"],
   bluesky: ["ios", "android"],
+  testimonial: ["ios", "android"],
   code: ["ios", "android"],
 };
 
@@ -1171,6 +1204,31 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
         postFontSize: 18,
         postPadding: 16,
       };
+    case "testimonial":
+      return {
+        app,
+        chrome,
+        quote: "MockFrame turned our launch assets from a two-day design task into a focused thirty-minute workflow. Every visual finally feels like it belongs to the same brand.",
+        author: "Maya Chen",
+        role: "Head of Product",
+        company: "Northstar Labs",
+        eyebrow: "Customer story",
+        font: "modern",
+        align: "left",
+        quoteStyle: "mark",
+        showRating: true,
+        rating: 5,
+        cardWidth: 760,
+        cardHeight: 520,
+        fontSize: 35,
+        padding: 54,
+        cardRadius: 28,
+        cardShadow: 1.15,
+        cardColor: "#ffffff",
+        textColor: "#16181d",
+        accentColor: "#6d5dfc",
+        standalone: true,
+      };
     case "code":
       return {
         app,
@@ -1190,8 +1248,9 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
 }
 
 /** Template variants open as standalone cards instead of inside a phone. */
-export function defaultTemplateDoc(app: "bluesky" | "xpost" | "social" | "code" | "github" | "stripe"): ScreenDoc {
+export function defaultTemplateDoc(app: "bluesky" | "xpost" | "social" | "code" | "github" | "stripe" | "testimonial"): ScreenDoc {
   if (app === "code") return defaultScreenDoc("code");
+  if (app === "testimonial") return defaultScreenDoc("testimonial");
   if (app === "github" || app === "stripe") {
     return { ...defaultScreenDoc(app), standalone: true } as ScreenDoc;
   }

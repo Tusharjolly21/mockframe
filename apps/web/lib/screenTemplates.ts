@@ -18,7 +18,7 @@ import { defaultTemplateDoc, encodeScreenAsset, resolveScreenAsset } from "./scr
  * at least one template.
  */
 
-export type TemplateApp = "code" | "social" | "github" | "stripe";
+export type TemplateApp = "code" | "social" | "github" | "stripe" | "testimonial";
 export type SceneGroupId = "iphone" | "ipad" | "mac" | "watch" | "android";
 
 export interface TemplateMeta {
@@ -65,6 +65,7 @@ export const TEMPLATES: TemplateMeta[] = [
   { slug: "code", app: "code", label: "Code", blurb: "Syntax-highlighted code in a macOS, Safari, Windows or Arc window — 9 themes, 8 fonts.", accent: "#2f81f7" },
   { slug: "github-contributions", app: "github", label: "GitHub contributions", blurb: "An editable contribution heatmap card. Fetch a profile, paint cells and resize it freely.", accent: "#238636" },
   { slug: "stripe-revenue", app: "stripe", label: "Stripe revenue", blurb: "A standalone revenue chart with editable data, dimensions and visual scale.", accent: "#635bff" },
+  { slug: "testimonial", app: "testimonial", label: "Testimonial", blurb: "Premium quote cards with editable author details, photo, typography, dimensions, colors and social-proof styling.", accent: "#6d5dfc" },
 ];
 
 const ALL = [...SCENE_TEMPLATES, ...TEMPLATES];
@@ -107,6 +108,7 @@ export function makeTemplateScene(meta: TemplateMeta): SceneDocument {
   if (meta.deviceId) return makeSceneDeviceScene(meta.deviceId);
 
   const isPost = meta.app === "social";
+  const isTestimonial = meta.app === "testimonial";
   const scene = isPost
     ? createScene({
         width: 1080,
@@ -114,6 +116,13 @@ export function makeTemplateScene(meta: TemplateMeta): SceneDocument {
         background: { type: "solid", color: "#82b5e8" },
         backdrop: { pattern: { kind: "stripes", intensity: 0.12, thickness: 0.56, color: "#dceeff" } },
       })
+    : isTestimonial
+      ? createScene({
+          width: 1080,
+          height: 1080,
+          background: { type: "linear-gradient", angle: 138, stops: [{ at: 0, color: "#111827" }, { at: 0.52, color: "#183b45" }, { at: 1, color: "#6d5dfc" }] },
+          backdrop: { pattern: { kind: "waves", intensity: 0.1, thickness: 0.3, color: "#d7fff5" } },
+        })
     : createScene({ width: 1920, height: 1080 });
   const iphone = getDevice("iphone-16-pro") ?? listDevices()[0];
   const layer = createMockupLayer({ deviceId: null, frameHeight: iphone.frame.height, canvasHeight: scene.canvas.height });
@@ -129,7 +138,7 @@ export function makeTemplateScene(meta: TemplateMeta): SceneDocument {
   // initial scale makes them tiny, so start them at a useful composition size.
   layer.transform = {
     ...layer.transform,
-    scale: isPost ? 0.5 : meta.app === "github" ? 0.58 : 0.72,
+    scale: isPost ? 0.5 : isTestimonial ? 0.37 : meta.app === "github" ? 0.58 : 0.72,
   };
   scene.id = `scene-template-${meta.app}`;
   layer.id = "layer-template";

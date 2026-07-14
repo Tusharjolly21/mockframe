@@ -14,6 +14,7 @@ import { renderLine } from "./line";
 import { renderStripe, stripeStandaloneSize } from "./stripe";
 import { renderStory } from "./story";
 import { renderTeams } from "./teams";
+import { renderTestimonial, testimonialSize } from "./testimonial";
 import { renderYouTube } from "./youtube";
 import { renderIMessage } from "./imessage";
 import { renderReddit } from "./reddit";
@@ -160,6 +161,7 @@ export type AssetUrlLookup = (assetId: string) => string | undefined;
 export function screenLogicalHeight(doc: ScreenDoc): number {
   if (doc.app === "github" && doc.standalone) return githubStandaloneSize(doc).height;
   if (doc.app === "stripe" && doc.standalone) return stripeStandaloneSize(doc).height;
+  if (doc.app === "testimonial") return testimonialSize(doc).height;
   // template cards have a content-driven height — resolved via renderScreenSized
   return SH;
 }
@@ -168,6 +170,7 @@ export function screenLogicalHeight(doc: ScreenDoc): number {
 export function screenLogicalWidth(doc: ScreenDoc): number {
   if (doc.app === "github" && doc.standalone) return githubStandaloneSize(doc).width;
   if (doc.app === "stripe" && doc.standalone) return stripeStandaloneSize(doc).width;
+  if (doc.app === "testimonial") return testimonialSize(doc).width;
   return SW;
 }
 
@@ -244,6 +247,8 @@ export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): {
       return flat(renderGithub(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
     case "stripe":
       return flat(renderStripe(doc), screenLogicalHeight(doc), screenLogicalWidth(doc));
+    case "testimonial":
+      return flat(renderTestimonial(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
     case "social":
       if (doc.standalone) {
         const r = renderSocialCard(doc, dp);

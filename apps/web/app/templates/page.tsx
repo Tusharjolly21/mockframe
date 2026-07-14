@@ -14,6 +14,7 @@ import {
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
+import { SocialBrandIcon } from "@/components/SocialBrandIcon";
 
 const TOOL_BACKGROUNDS: Record<string, CSSProperties> = {
   code: {
@@ -29,6 +30,10 @@ const TOOL_BACKGROUNDS: Record<string, CSSProperties> = {
   "stripe-revenue": {
     backgroundColor: "#eeecff",
     backgroundImage: "repeating-linear-gradient(135deg,rgba(99,91,255,.09) 0 10px,transparent 10px 36px)",
+  },
+  testimonial: {
+    backgroundColor: "#111827",
+    backgroundImage: "radial-gradient(circle at 18% 20%,rgba(52,211,153,.22),transparent 34%),linear-gradient(138deg,#111827 0%,#183b45 54%,#6d5dfc 100%)",
   },
 };
 
@@ -91,8 +96,12 @@ export default function TemplatesPage() {
                     <ArrowRight size={19} />
                   </button>
                 </form>
-                <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-medium text-zinc-500">
-                  <span>X</span><span>Bluesky</span><span>Threads</span><span>LinkedIn</span><span>Mastodon</span>
+                <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-medium text-zinc-500">
+                  <span className="inline-flex items-center gap-1.5"><SocialBrandIcon brand="x" size={15} className="rounded-[3px] bg-white" />X</span>
+                  <span>Bluesky</span>
+                  <span className="inline-flex items-center gap-1.5"><SocialBrandIcon brand="threads" size={15} className="rounded-[3px] bg-white" />Threads</span>
+                  <span className="inline-flex items-center gap-1.5"><SocialBrandIcon brand="linkedin" size={15} />LinkedIn</span>
+                  <span>Mastodon</span>
                 </div>
               </div>
 
@@ -126,7 +135,7 @@ export default function TemplatesPage() {
             <span className="hidden text-[12px] text-zinc-500 sm:block">No device required</span>
           </div>
         </Reveal>
-        <RevealGroup className="mt-5 grid gap-4 md:grid-cols-3">
+        <RevealGroup className="mt-5 grid gap-4 md:grid-cols-2">
           {tools.map((template) => {
             const previewUrl = templatePreviewUrl(template);
             return (

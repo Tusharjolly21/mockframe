@@ -68,10 +68,33 @@ export const EffectSchema = z.discriminatedUnion("type", [
 export const BackdropSchema = z.object({
   pattern: z
     .object({
-      kind: z.enum(["circles", "waves", "dots", "rays", "grid", "stripes", "noise", "diamonds", "checker", "crosses", "arcs", "topography"]),
+      kind: z.enum([
+        "circles",
+        "waves",
+        "dots",
+        "harmony",
+        "grid",
+        "sight",
+        "chimes",
+        "diamonds",
+        "mixed-shapes",
+        "confetti",
+        "rays",
+        "stripes",
+        "noise",
+        "checker",
+        "crosses",
+        "arcs",
+        "topography",
+      ]),
       intensity: z.number().min(0).max(1),
       thickness: z.number().min(0).max(1),
       color: z.string(),
+      rotation: z.number().min(-180).max(180).optional(),
+      blur: z.number().min(0).max(30).optional(),
+      blendMode: z.enum(["normal", "overlay", "soft-light", "multiply", "screen"]).optional(),
+      seed: z.number().int().optional(),
+      paletteSeed: z.number().int().optional(),
     })
     .optional(),
   overlay: z

@@ -9,9 +9,7 @@ import { Aperture, ArrowLeft, ArrowUpDown, Ban, Check, ChevronDown, Grid3x3, Ima
 import {
   SiAppstore,
   SiDribbble,
-  SiInstagram,
   SiPinterest,
-  SiX,
   SiYoutube,
 } from "@icons-pack/react-simple-icons";
 import { findSizePreset, SIZE_CATEGORIES, type SizePreset } from "@/lib/canvasSizes";
@@ -20,6 +18,7 @@ import { BG_CATEGORIES, magicSwatches, type BgSwatch } from "@/lib/backgrounds";
 import { extractPalette } from "@/lib/palette";
 import { useSceneStore, useViewStore } from "@/lib/store";
 import { ColorRow, Popover, Section, Seg, SliderRow } from "./ui";
+import { InstagramBrandIcon, XBrandIcon } from "@/components/SocialBrandIcon";
 
 /* PostSpark-style hub → detail navigation: the Frame tab shows a compact hub
    (size, background, one "Style" chip grid); each style feature opens its own
@@ -618,53 +617,35 @@ function BorderDetail() {
    a repeating Pattern behind the subject, a cast light/shadow Overlay on top,
    and a Portrait depth treatment. All pure CSS/SVG → export-safe. */
 
-type PatternKind = NonNullable<Backdrop["pattern"]>["kind"];
+type PatternConfig = NonNullable<Backdrop["pattern"]>;
+type PatternKind = PatternConfig["kind"];
 type OverlayKind = NonNullable<Backdrop["overlay"]>["kind"];
 
-const PATTERN_PRESETS: Array<{ id: string; label: string; kind: PatternKind; color: string; intensity: number; thickness: number }> = [
-  { id: "soft-grid", label: "Soft grid", kind: "grid", color: "#ffffff", intensity: 0.18, thickness: 0.34 },
-  { id: "blueprint", label: "Blueprint", kind: "grid", color: "#7dd3fc", intensity: 0.3, thickness: 0.62 },
-  { id: "halo-dots", label: "Halo dots", kind: "dots", color: "#ffffff", intensity: 0.2, thickness: 0.24 },
-  { id: "studio-dots", label: "Studio dots", kind: "dots", color: "#0f172a", intensity: 0.16, thickness: 0.52 },
-  { id: "orbit", label: "Orbit", kind: "circles", color: "#c4b5fd", intensity: 0.18, thickness: 0.28 },
-  { id: "concentric", label: "Concentric", kind: "circles", color: "#ffffff", intensity: 0.14, thickness: 0.7 },
-  { id: "silk", label: "Silk", kind: "waves", color: "#f0abfc", intensity: 0.16, thickness: 0.7 },
-  { id: "waterline", label: "Waterline", kind: "waves", color: "#67e8f9", intensity: 0.18, thickness: 0.35 },
-  { id: "prism-rays", label: "Prism rays", kind: "rays", color: "#fde68a", intensity: 0.13, thickness: 0.4 },
-  { id: "spot-rays", label: "Spot rays", kind: "rays", color: "#ffffff", intensity: 0.1, thickness: 0.78 },
-  { id: "diagonal-soft", label: "Diagonal", kind: "stripes", color: "#ffffff", intensity: 0.11, thickness: 0.28 },
-  { id: "film-noise", label: "Film grain", kind: "noise", color: "#ffffff", intensity: 0.12, thickness: 0.5 },
-  { id: "micro-grid", label: "Micro grid", kind: "grid", color: "#e0e7ff", intensity: 0.12, thickness: 0.18 },
-  { id: "blueprint-fine", label: "Fine blueprint", kind: "grid", color: "#67e8f9", intensity: 0.18, thickness: 0.22 },
-  { id: "constellation", label: "Constellation", kind: "dots", color: "#fef3c7", intensity: 0.14, thickness: 0.14 },
-  { id: "bubble-field", label: "Bubble field", kind: "circles", color: "#bae6fd", intensity: 0.12, thickness: 0.46 },
-  { id: "fine-silk", label: "Fine silk", kind: "waves", color: "#ffffff", intensity: 0.11, thickness: 0.22 },
-  { id: "neon-wave", label: "Neon wave", kind: "waves", color: "#22d3ee", intensity: 0.15, thickness: 0.86 },
-  { id: "sunburst", label: "Sunburst", kind: "rays", color: "#fef08a", intensity: 0.12, thickness: 0.62 },
-  { id: "radial-rays", label: "Radial rays", kind: "rays", color: "#c4b5fd", intensity: 0.16, thickness: 0.24 },
-  { id: "pinstripe", label: "Pinstripe", kind: "stripes", color: "#e0f2fe", intensity: 0.1, thickness: 0.12 },
-  { id: "wide-stripe", label: "Wide stripe", kind: "stripes", color: "#fbcfe8", intensity: 0.12, thickness: 0.72 },
-  { id: "soft-noise", label: "Soft noise", kind: "noise", color: "#ffffff", intensity: 0.08, thickness: 0.2 },
-  { id: "ice-diamonds", label: "Ice diamonds", kind: "diamonds", color: "#dbeafe", intensity: 0.2, thickness: 0.24 },
-  { id: "midnight-diamonds", label: "Midnight facets", kind: "diamonds", color: "#172554", intensity: 0.17, thickness: 0.58 },
-  { id: "rose-diamonds", label: "Rose facets", kind: "diamonds", color: "#fda4af", intensity: 0.18, thickness: 0.78 },
-  { id: "editorial-diamonds", label: "Editorial facets", kind: "diamonds", color: "#fafafa", intensity: 0.12, thickness: 0.4 },
-  { id: "soft-checker", label: "Soft checker", kind: "checker", color: "#ffffff", intensity: 0.09, thickness: 0.28 },
-  { id: "studio-checker", label: "Studio checker", kind: "checker", color: "#0f172a", intensity: 0.11, thickness: 0.55 },
-  { id: "pixel-blocks", label: "Pixel blocks", kind: "checker", color: "#a5f3fc", intensity: 0.16, thickness: 0.86 },
-  { id: "mono-blocks", label: "Mono blocks", kind: "checker", color: "#f4f4f5", intensity: 0.13, thickness: 0.68 },
-  { id: "swiss-crosses", label: "Swiss crosses", kind: "crosses", color: "#ffffff", intensity: 0.18, thickness: 0.42 },
-  { id: "spark-crosses", label: "Spark crosses", kind: "crosses", color: "#fde047", intensity: 0.2, thickness: 0.7 },
-  { id: "blueprint-crosses", label: "Blueprint crosses", kind: "crosses", color: "#7dd3fc", intensity: 0.2, thickness: 0.24 },
-  { id: "ink-crosses", label: "Ink crosses", kind: "crosses", color: "#18181b", intensity: 0.13, thickness: 0.54 },
-  { id: "deco-arches", label: "Deco arches", kind: "arcs", color: "#fef3c7", intensity: 0.18, thickness: 0.45 },
-  { id: "ripple-arcs", label: "Ripple arcs", kind: "arcs", color: "#bae6fd", intensity: 0.17, thickness: 0.2 },
-  { id: "sunrise-arches", label: "Sunrise arches", kind: "arcs", color: "#fdba74", intensity: 0.19, thickness: 0.76 },
-  { id: "gallery-arches", label: "Gallery arches", kind: "arcs", color: "#ffffff", intensity: 0.11, thickness: 0.6 },
-  { id: "terrain", label: "Terrain", kind: "topography", color: "#dcfce7", intensity: 0.2, thickness: 0.38 },
-  { id: "ocean-contours", label: "Ocean contours", kind: "topography", color: "#67e8f9", intensity: 0.19, thickness: 0.22 },
-  { id: "neon-contours", label: "Neon contours", kind: "topography", color: "#e879f9", intensity: 0.18, thickness: 0.76 },
-  { id: "paper-contours", label: "Paper contours", kind: "topography", color: "#ffffff", intensity: 0.12, thickness: 0.48 },
+type PatternPreset = {
+  id: string;
+  label: string;
+  kind: PatternKind;
+  color: string;
+  intensity: number;
+  thickness: number;
+  rotation: number;
+  blur: number;
+  blendMode: NonNullable<PatternConfig["blendMode"]>;
+  seed: number;
+  paletteSeed: number;
+};
+
+const PATTERN_PRESETS: PatternPreset[] = [
+  { id: "circles", label: "Circles", kind: "circles", color: "#d8b4fe", intensity: 0.72, thickness: 0.52, rotation: 0, blur: 0, blendMode: "normal", seed: 17, paletteSeed: 0 },
+  { id: "waves", label: "Waves", kind: "waves", color: "#60a5fa", intensity: 0.7, thickness: 0.46, rotation: 18, blur: 0, blendMode: "normal", seed: 23, paletteSeed: 0 },
+  { id: "dots", label: "Dots", kind: "dots", color: "#60a5fa", intensity: 0.72, thickness: 0.46, rotation: 0, blur: 0, blendMode: "normal", seed: 29, paletteSeed: 0 },
+  { id: "harmony", label: "Harmony", kind: "harmony", color: "#93c5fd", intensity: 0.68, thickness: 0.55, rotation: 0, blur: 0, blendMode: "normal", seed: 37, paletteSeed: 1 },
+  { id: "grid", label: "Grid", kind: "grid", color: "#ffffff", intensity: 0.58, thickness: 0.5, rotation: 0, blur: 0, blendMode: "normal", seed: 41, paletteSeed: 0 },
+  { id: "sight", label: "Sight", kind: "sight", color: "#dbeafe", intensity: 0.74, thickness: 0.44, rotation: 0, blur: 0, blendMode: "normal", seed: 43, paletteSeed: 0 },
+  { id: "chimes", label: "Chimes", kind: "chimes", color: "#dbeafe", intensity: 0.78, thickness: 0.48, rotation: 0, blur: 0, blendMode: "screen", seed: 59, paletteSeed: 2 },
+  { id: "diamonds", label: "Diamonds", kind: "diamonds", color: "#d8b4fe", intensity: 0.72, thickness: 0.54, rotation: 0, blur: 0, blendMode: "normal", seed: 71, paletteSeed: 0 },
+  { id: "mixed-shapes", label: "Mixed Shapes", kind: "mixed-shapes", color: "#d8b4fe", intensity: 0.72, thickness: 0.52, rotation: 0, blur: 0, blendMode: "normal", seed: 83, paletteSeed: 0 },
+  { id: "confetti", label: "Confetti", kind: "confetti", color: "#c4b5fd", intensity: 0.76, thickness: 0.5, rotation: 0, blur: 0, blendMode: "normal", seed: 97, paletteSeed: 0 },
 ];
 
 const OVERLAY_PRESETS: Array<{ id: string; label: string; kind: OverlayKind; intensity: number }> = [
@@ -690,7 +671,7 @@ const OVERLAY_PRESETS: Array<{ id: string; label: string; kind: OverlayKind; int
 
 /** Strip a backdrop layer's absolute positioning so it can tile a demo swatch. */
 function demoStyle(s: React.CSSProperties): React.CSSProperties {
-  return { ...s, position: "relative", inset: undefined, opacity: 1 };
+  return { ...s, position: "relative", inset: undefined, opacity: 1, mixBlendMode: "normal" };
 }
 
 /** Shared canvas.backdrop patcher. */
@@ -704,34 +685,80 @@ function useBackdrop() {
 function PatternDetail() {
   const { backdrop, patch } = useBackdrop();
   const pattern = backdrop?.pattern;
-  const setPattern = (preset: (typeof PATTERN_PRESETS)[number]) =>
-    patch({ pattern: pattern?.kind === preset.kind && pattern.color === preset.color ? undefined : { kind: preset.kind, intensity: preset.intensity, thickness: preset.thickness, color: preset.color } });
+  const setPattern = (preset: PatternPreset) => {
+    const { id: _id, label: _label, ...nextPattern } = preset;
+    patch({ pattern: nextPattern });
+  };
+  const randomizedKinds = new Set<PatternKind>(["circles", "dots", "sight", "diamonds", "mixed-shapes", "confetti"]);
   return (
     <div className="pb-2">
-      <p className="mb-2 text-[10.5px] leading-relaxed text-[#9a9aa4]">Layer a subtle material, grid, or light texture behind the mockup. Every preset stays editable.</p>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="text-[10.5px] leading-relaxed text-[#9a9aa4]">Ten full-canvas patterns. Every style stays sharp at any export size.</p>
+        {pattern && (
+          <button onClick={() => patch({ pattern: undefined })} className="fk-press shrink-0 rounded-lg border border-[#e5e5ec] bg-white px-2 py-1 text-[10px] font-semibold text-[#666672]">
+            Remove
+          </button>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
         {PATTERN_PRESETS.map((preset) => {
-          const active = pattern?.kind === preset.kind && pattern.color === preset.color;
+          const active = pattern?.kind === preset.kind;
+          const { id: _id, label: _label, ...previewPattern } = preset;
           return (
             <button
               key={preset.id}
               onClick={() => setPattern(preset)}
               className={`fk-tile rounded-xl border bg-white p-1 ${active ? "border-[#17171c] shadow-[0_0_0_1.5px_#17171c]" : "border-[#e8e8ef]"}`}
             >
-              <span className="block h-12 rounded-lg border border-black/5 bg-[linear-gradient(135deg,#172554,#7c3aed)]" style={demoStyle(patternStyle({ kind: preset.kind, intensity: 0.72, thickness: preset.thickness, color: preset.color }))} />
-              <span className="mt-1 block truncate text-center text-[9.5px] font-medium text-[#6b6b76]">{preset.label}</span>
+              <span className="block h-[72px] rounded-lg border border-black/5 bg-[#83b5e8]" style={demoStyle(patternStyle(previewPattern))} />
+              <span className="mt-1 block truncate px-1 text-left text-[10px] font-semibold text-[#54545f]">{preset.label}</span>
             </button>
           );
         })}
       </div>
       {pattern && (
-        <div className="mt-3">
-          <SliderRow label="Intensity" value={pattern.intensity} min={0.05} max={1} step={0.01} format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => patch({ pattern: { ...pattern, intensity: v } })} />
-          <div className="mt-2">
-            <SliderRow label="Thickness" value={pattern.thickness} min={0} max={1} step={0.01} format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => patch({ pattern: { ...pattern, thickness: v } })} />
+        <div className="mt-3 rounded-xl border border-[#e8e8ef] bg-[#fafafd] p-3">
+          <SliderRow label="Opacity" value={pattern.intensity} min={0.05} max={1} step={0.01} format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => patch({ pattern: { ...pattern, intensity: v } })} />
+          <div className="mt-3">
+            <SliderRow label="Shape size" value={pattern.thickness} min={0} max={1} step={0.01} format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => patch({ pattern: { ...pattern, thickness: v } })} />
           </div>
-          <div className="mt-2">
+          <div className="mt-3">
+            <SliderRow label="Rotation" value={pattern.rotation ?? 0} min={-180} max={180} step={1} format={(v) => `${Math.round(v)}°`} onChange={(v) => patch({ pattern: { ...pattern, rotation: v } })} />
+          </div>
+          <div className="mt-3">
+            <SliderRow label="Blur" value={pattern.blur ?? 0} min={0} max={30} step={1} format={(v) => `${Math.round(v)} px`} onChange={(v) => patch({ pattern: { ...pattern, blur: v } })} />
+          </div>
+          <div className="mt-3">
             <ColorRow label="Color" value={pattern.color} onChange={(color) => patch({ pattern: { ...pattern, color } })} />
+          </div>
+          <label className="mt-3 flex items-center justify-between gap-3 text-[11px] font-semibold text-[#666672]">
+            Blending
+            <select
+              value={pattern.blendMode ?? "normal"}
+              onChange={(event) => patch({ pattern: { ...pattern, blendMode: event.target.value as NonNullable<PatternConfig["blendMode"]> } })}
+              className="h-8 min-w-28 rounded-lg border border-[#ddddE7] bg-white px-2 text-[11px] font-semibold text-[#34343c] outline-none focus:border-[#17171c]"
+            >
+              <option value="normal">Normal</option>
+              <option value="overlay">Overlay</option>
+              <option value="soft-light">Soft light</option>
+              <option value="multiply">Multiply</option>
+              <option value="screen">Screen</option>
+            </select>
+          </label>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => patch({ pattern: { ...pattern, paletteSeed: (pattern.paletteSeed ?? 0) + 1 } })}
+              className="fk-press flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#ddddE7] bg-white px-2 text-[10.5px] font-semibold text-[#4c4c57]"
+            >
+              <Pipette size={13} /> Colors
+            </button>
+            <button
+              disabled={!randomizedKinds.has(pattern.kind)}
+              onClick={() => patch({ pattern: { ...pattern, seed: Math.floor(Math.random() * 2_000_000_000) } })}
+              className="fk-press flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#ddddE7] bg-white px-2 text-[10.5px] font-semibold text-[#4c4c57] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ArrowUpDown size={13} /> Positions
+            </button>
           </div>
         </div>
       )}
@@ -960,8 +987,8 @@ function LightDetail() {
 /* ------------------------------- size selector ------------------------------ */
 
 const BRAND_ICONS: Record<string, { Icon: React.ComponentType<{ size?: number; color?: string }>; color: string }> = {
-  instagram: { Icon: SiInstagram, color: "#E4405F" },
-  x: { Icon: SiX, color: "#111111" },
+  instagram: { Icon: InstagramBrandIcon, color: "#E4405F" },
+  x: { Icon: XBrandIcon, color: "#111111" },
   youtube: { Icon: SiYoutube, color: "#FF0000" },
   pinterest: { Icon: SiPinterest, color: "#BD081C" },
   dribbble: { Icon: SiDribbble, color: "#EA4C89" },

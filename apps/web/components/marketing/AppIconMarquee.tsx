@@ -3,7 +3,6 @@
 import {
   SiApple,
   SiDiscord,
-  SiInstagram,
   SiLine,
   SiMessenger,
   SiReddit,
@@ -15,8 +14,8 @@ import {
   SiViber,
   SiWechat,
   SiWhatsapp,
-  SiX,
 } from "@icons-pack/react-simple-icons";
+import { InstagramBrandIcon, XBrandIcon } from "@/components/SocialBrandIcon";
 
 /**
  * Infinite icon marquee of the apps MockFrame can fake — a seamless loop of
@@ -27,13 +26,13 @@ import {
 const ICONS = [
   { Icon: SiWhatsapp, label: "WhatsApp" },
   { Icon: SiApple, label: "iMessage" },
-  { Icon: SiInstagram, label: "Instagram" },
+  { Icon: InstagramBrandIcon, label: "Instagram" },
   { Icon: SiTinder, label: "Tinder" },
   { Icon: SiMessenger, label: "Messenger" },
   { Icon: SiTelegram, label: "Telegram" },
   { Icon: SiSnapchat, label: "Snapchat" },
   { Icon: SiTiktok, label: "TikTok" },
-  { Icon: SiX, label: "X" },
+  { Icon: XBrandIcon, label: "X" },
   { Icon: SiDiscord, label: "Discord" },
   { Icon: SiSignal, label: "Signal" },
   { Icon: SiReddit, label: "Reddit" },

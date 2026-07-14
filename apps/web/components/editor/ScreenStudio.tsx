@@ -7,7 +7,6 @@ import {
   SiGmail,
   SiGithub,
   SiImessage,
-  SiInstagram,
   SiLine,
   SiMessenger,
   SiReddit,
@@ -16,14 +15,12 @@ import {
   SiTinder,
   SiSnapchat,
   SiTelegram,
-  SiThreads,
   SiTiktok,
   SiWhatsapp,
-  SiX,
   SiYoutube,
 } from "@icons-pack/react-simple-icons";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, CalendarDays, Code2, FileText, Heart, ImageIcon, ImagePlus, LayoutGrid, Link2, Linkedin, MessagesSquare, Mic, Paperclip, Phone, Search, Shuffle, Slack, SmilePlus, Sparkles, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, CalendarDays, Code2, FileText, Heart, ImageIcon, ImagePlus, LayoutGrid, Link2, MessagesSquare, Mic, Paperclip, Phone, Quote, Search, Shuffle, Slack, SmilePlus, Sparkles, Trash2, X } from "lucide-react";
 import type { MockupLayer } from "@framekit/scene";
 import { getDevice } from "@framekit/devices";
 import { ingestFile, resolveAsset } from "@/lib/assets";
@@ -56,6 +53,7 @@ import {
   type HingeVital,
   type LineDoc,
   type StripeDoc,
+  type TestimonialDoc,
   type SnapStatus,
   type StoryDoc,
   type TeamsDoc,
@@ -99,6 +97,7 @@ import { CODE_FONT_LABELS } from "@/lib/screens/fonts";
 import { useSceneStore, useViewStore } from "@/lib/store";
 import { openUpgrade } from "@/lib/billing/gate";
 import { Section, Seg, SliderRow } from "./ui";
+import { InstagramBrandIcon, LinkedInBrandIcon, ThreadsBrandIcon, XBrandIcon } from "@/components/SocialBrandIcon";
 
 /**
  * Screen Studio (framekit-screen-studio.md §2.4): compose the screenshot
@@ -128,7 +127,7 @@ const APPS: AppMeta[] = [
   { app: "imessage", label: "iMessage", icon: SiImessage, tint: "#34c759", cat: "Messaging", kw: "sms text apple" },
   { app: "whatsapp", label: "WhatsApp", icon: SiWhatsapp, tint: "#25d366", cat: "Messaging" },
   { app: "whatsapp-group", label: "WA Group", icon: SiWhatsapp, tint: "#128c7e", cat: "Messaging", kw: "whatsapp group" },
-  { app: "instagram", label: "Instagram", icon: SiInstagram, tint: "#e4405f", cat: "Messaging", kw: "dm insta" },
+  { app: "instagram", label: "Instagram", icon: InstagramBrandIcon, tint: "#e4405f", cat: "Messaging", kw: "dm insta" },
   { app: "messenger", label: "Messenger", icon: SiMessenger, tint: "#0a7cff", cat: "Messaging", kw: "facebook" },
   { app: "telegram", label: "Telegram", icon: SiTelegram, tint: "#26a5e4", cat: "Messaging" },
   { app: "snapchat", label: "Snapchat", icon: SiSnapchat, tint: "#d4b800", cat: "Messaging", kw: "snap" },
@@ -139,15 +138,15 @@ const APPS: AppMeta[] = [
   { app: "line", label: "LINE", icon: SiLine, tint: "#06c755", cat: "Messaging", kw: "japan korea sticker green chat" },
   { app: "teams", label: "Teams", icon: MessagesSquare, tint: "#5b5fc7", cat: "Messaging", kw: "microsoft work office channel" },
   { app: "ai", label: "AI Chat", icon: Sparkles, tint: "#7c3aed", cat: "AI Chats", kw: "chatgpt claude gemini grok perplexity gpt" },
-  { app: "xpost", label: "X Post", icon: SiX, tint: "#000000", cat: "Social", kw: "twitter tweet" },
+  { app: "xpost", label: "X Post", icon: XBrandIcon, tint: "#000000", cat: "Social", kw: "twitter tweet" },
   { app: "bluesky", label: "Bluesky", icon: SiBluesky, tint: "#1083fe", cat: "Social", kw: "bsky butterfly post skeet" },
   { app: "social", label: "Facebook", icon: SiFacebook, tint: "#1877f2", cat: "Social", kw: "post feed meta", make: () => defaultSocialDoc("facebook") },
-  { app: "social", label: "LinkedIn", icon: Linkedin, tint: "#0a66c2", cat: "Social", kw: "post feed job", make: () => defaultSocialDoc("linkedin") },
-  { app: "social", label: "Threads", icon: SiThreads, tint: "#000000", cat: "Social", kw: "post meta insta", make: () => defaultSocialDoc("threads") },
+  { app: "social", label: "LinkedIn", icon: LinkedInBrandIcon, tint: "#0a66c2", cat: "Social", kw: "post feed job", make: () => defaultSocialDoc("linkedin") },
+  { app: "social", label: "Threads", icon: ThreadsBrandIcon, tint: "#000000", cat: "Social", kw: "post meta insta", make: () => defaultSocialDoc("threads") },
   { app: "tiktok", label: "TikTok", icon: SiTiktok, tint: "#161823", cat: "Social", kw: "comments" },
   { app: "youtube", label: "YouTube", icon: SiYoutube, tint: "#ff0000", cat: "Social", kw: "video watch comments subscribe channel" },
   { app: "reddit", label: "Reddit", icon: SiReddit, tint: "#ff4500", cat: "Social", kw: "thread post comments upvote subreddit" },
-  { app: "story", label: "IG Story", icon: SiInstagram, tint: "#e4405f", cat: "Social", kw: "instagram story reel status full screen" },
+  { app: "story", label: "IG Story", icon: InstagramBrandIcon, tint: "#e4405f", cat: "Social", kw: "instagram story reel status full screen" },
   { app: "dating", label: "Tinder", icon: SiTinder, tint: "#fe3c72", cat: "Dating", kw: "swipe match profile date", make: () => defaultDatingDoc("tinder") },
   { app: "dating", label: "Bumble", icon: Heart, tint: "#ffb800", cat: "Dating", kw: "swipe match profile date bee", make: () => defaultDatingDoc("bumble") },
   { app: "hinge", label: "Hinge", icon: Heart, tint: "#67295f", cat: "Dating", kw: "swipe match profile date prompt" },
@@ -158,13 +157,14 @@ const APPS: AppMeta[] = [
 
 /** Standalone-card Templates (window-framed content, no phone) — a separate
  *  section from the phone app roster. */
-type StandaloneTemplateApp = "code" | "social" | "github" | "stripe";
+type StandaloneTemplateApp = "code" | "social" | "github" | "stripe" | "testimonial";
 
 const TEMPLATE_TILES: { app: StandaloneTemplateApp; label: string; icon: React.ComponentType<{ size?: number; color?: string }>; tint: string }[] = [
   { app: "social", label: "Post URL", icon: Link2, tint: "#7c3aed" },
   { app: "code", label: "Code", icon: Code2, tint: "#2f81f7" },
   { app: "github", label: "GitHub graph", icon: SiGithub, tint: "#238636" },
   { app: "stripe", label: "Stripe graph", icon: SiStripe, tint: "#635bff" },
+  { app: "testimonial", label: "Testimonial", icon: Quote, tint: "#6d5dfc" },
 ];
 
 /** Apps whose doc carries a contact/profile photo (`avatar`). A runtime
@@ -189,6 +189,7 @@ const AVATAR_APPS = new Set<ScreenApp>([
   "social",
   "xpost",
   "bluesky",
+  "testimonial",
 ]);
 
 /** True when the doc is a standalone window-framed Template card (Code always;
@@ -199,7 +200,7 @@ export function isTemplateCard(doc: ScreenDoc): boolean {
 
 /** Any content that is currently exporting on its own, without a device. */
 function isStandaloneContent(doc: ScreenDoc): boolean {
-  return isTemplateCard(doc) || ((doc.app === "github" || doc.app === "stripe") && !!doc.standalone);
+  return isTemplateCard(doc) || doc.app === "testimonial" || ((doc.app === "github" || doc.app === "stripe") && !!doc.standalone);
 }
 
 /** iOS vs Android from the mockup's device — Apple = iOS, everything else
@@ -351,19 +352,21 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       action={removeBtn}
     >
       {/* shared status-bar chrome */}
-      <div className="mb-3 flex gap-2">
-        <Field label="Time" value={doc.chrome.time} onChange={(time) => setDoc({ ...doc, chrome: { ...doc.chrome, time } })} className="w-20" />
-        <div className="flex-1">
-          <SliderRow
-            label="Battery"
-            value={doc.chrome.battery}
-            min={1}
-            max={100}
-            format={(v) => `${Math.round(v)}%`}
-            onChange={(battery) => setDoc({ ...doc, chrome: { ...doc.chrome, battery } })}
-          />
+      {doc.app !== "testimonial" && (
+        <div className="mb-3 flex gap-2">
+          <Field label="Time" value={doc.chrome.time} onChange={(time) => setDoc({ ...doc, chrome: { ...doc.chrome, time } })} className="w-20" />
+          <div className="flex-1">
+            <SliderRow
+              label="Battery"
+              value={doc.chrome.battery}
+              min={1}
+              max={100}
+              format={(v) => `${Math.round(v)}%`}
+              onChange={(battery) => setDoc({ ...doc, chrome: { ...doc.chrome, battery } })}
+            />
+          </div>
         </div>
-      </div>
+      )}
       {/* platform is driven by the device the mockup sits in — n/a for the code card
           or any standalone Template card (there's no device behind a card) */}
       {doc.app !== "code" && !isStandaloneContent(doc) && (
@@ -374,7 +377,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
           {devPlatform === "ios" ? "iPhone UI" : "Android UI"} · matches your device
         </div>
       )}
-      {doc.app !== "xpost" && doc.app !== "code" && (
+      {doc.app !== "xpost" && doc.app !== "code" && doc.app !== "testimonial" && (
         <Seg
           id="scr-theme"
           options={[
@@ -388,7 +391,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
 
       {/* device frame on/off — "None" exports just the screen/card, no phone.
           The code template is always a card, so it skips this toggle. */}
-      {doc.app !== "code" && (
+      {doc.app !== "code" && doc.app !== "testimonial" && (
         <div className="mt-3">
           <span className="mb-1 block text-xs text-[#6b6b76]">Frame</span>
           <Seg
@@ -424,7 +427,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
                   ? "Your avatar"
                   : doc.app === "github"
                     ? "Profile photo"
-                    : doc.app === "social" || doc.app === "xpost" || doc.app === "bluesky"
+                    : doc.app === "social" || doc.app === "xpost" || doc.app === "bluesky" || doc.app === "testimonial"
                       ? "Author photo"
                       : "Their photo (DP)"
           }
@@ -458,6 +461,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       {doc.app === "social" && <SocialFields doc={doc} setDoc={setDoc} />}
       {doc.app === "xpost" && <XPostFields doc={doc} setDoc={setDoc} />}
       {doc.app === "bluesky" && <BlueskyFields doc={doc} setDoc={setDoc} />}
+      {doc.app === "testimonial" && <TestimonialFields doc={doc} setDoc={setDoc} />}
       {doc.app === "code" && <CodeFields doc={doc} setDoc={setDoc} />}
     </Section>
   );
@@ -2487,6 +2491,145 @@ function BlueskyFields({ doc, setDoc }: { doc: BlueskyDoc; setDoc: (d: ScreenDoc
           <Field label="Domain" value={doc.link.domain} onChange={(domain) => setDoc({ ...doc, link: { ...doc.link!, domain } })} className="mt-2" />
         </div>
       )}
+    </>
+  );
+}
+
+/* ------------------------------ Testimonial -------------------------------- */
+
+const TESTIMONIAL_PRESETS: Array<{
+  label: string;
+  swatch: string;
+  values: Partial<TestimonialDoc>;
+}> = [
+  {
+    label: "Studio",
+    swatch: "linear-gradient(135deg,#ffffff 0 70%,#e9e6ff 70%)",
+    values: { font: "modern", align: "left", quoteStyle: "mark", cardColor: "#ffffff", textColor: "#16181d", accentColor: "#6d5dfc", cardRadius: 28, cardShadow: 1.15 },
+  },
+  {
+    label: "Midnight",
+    swatch: "linear-gradient(135deg,#111827 0 70%,#34d399 70%)",
+    values: { font: "modern", align: "left", quoteStyle: "line", cardColor: "#111827", textColor: "#f8fafc", accentColor: "#34d399", cardRadius: 24, cardShadow: 1.35 },
+  },
+  {
+    label: "Editorial",
+    swatch: "linear-gradient(135deg,#f7f2e9 0 70%,#bf5b3d 70%)",
+    values: { font: "editorial", align: "center", quoteStyle: "none", cardColor: "#f7f2e9", textColor: "#24201c", accentColor: "#bf5b3d", cardRadius: 12, cardShadow: 0.8 },
+  },
+];
+
+function TestimonialFields({ doc, setDoc }: { doc: TestimonialDoc; setDoc: (d: ScreenDoc) => void }) {
+  const patch = (values: Partial<TestimonialDoc>) => setDoc({ ...doc, ...values });
+  return (
+    <>
+      <div className="mb-4">
+        <span className="mb-1.5 block text-xs text-[#6b6b76]">Style</span>
+        <div className="grid grid-cols-3 gap-2">
+          {TESTIMONIAL_PRESETS.map((preset) => (
+            <button
+              key={preset.label}
+              type="button"
+              onClick={() => patch(preset.values)}
+              className="fk-tile overflow-hidden rounded-lg border border-[#e4e4ec] bg-white p-1 text-left"
+            >
+              <span className="block h-10 rounded-md" style={{ background: preset.swatch }} />
+              <span className="block px-1 pb-0.5 pt-1 text-[10px] font-semibold text-[#4b4b55]">{preset.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <label className="block">
+        <span className="mb-1 block text-xs text-[#6b6b76]">Quote</span>
+        <textarea
+          value={doc.quote}
+          rows={5}
+          onChange={(event) => patch({ quote: event.target.value })}
+          className="w-full resize-y rounded-lg border border-[#e4e4ec] bg-white px-2.5 py-2 text-xs leading-relaxed text-[#17171c] outline-none focus:border-[#17171c]"
+        />
+      </label>
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <Field label="Author" value={doc.author} onChange={(author) => patch({ author })} />
+        <Field label="Company" value={doc.company} onChange={(company) => patch({ company })} />
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <Field label="Role" value={doc.role} onChange={(role) => patch({ role })} />
+        <Field label="Eyebrow" value={doc.eyebrow ?? ""} onChange={(eyebrow) => patch({ eyebrow })} placeholder="Customer story" />
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <Select
+          label="Typeface"
+          value={doc.font}
+          options={[
+            { value: "modern", label: "Modern" },
+            { value: "editorial", label: "Editorial" },
+            { value: "rounded", label: "Rounded" },
+            { value: "classic", label: "Classic" },
+          ]}
+          onChange={(font) => patch({ font })}
+        />
+        <Select
+          label="Quote detail"
+          value={doc.quoteStyle}
+          options={[
+            { value: "mark", label: "Large mark" },
+            { value: "line", label: "Accent line" },
+            { value: "none", label: "None" },
+          ]}
+          onChange={(quoteStyle) => patch({ quoteStyle })}
+        />
+      </div>
+
+      <div className="mt-3">
+        <Seg
+          id="testimonial-align"
+          options={[{ value: "left", label: "Left" }, { value: "center", label: "Center" }]}
+          value={doc.align}
+          onChange={(align) => patch({ align: align as TestimonialDoc["align"] })}
+        />
+      </div>
+
+      <div className="mt-3 rounded-xl border border-[#e7e7ee] bg-[#f8f8fb] p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#7d7d88]">Card dimensions</span>
+          <span className="text-[10px] tabular-nums text-[#9a9aa4]">{Math.round(doc.cardWidth)} × {Math.round(doc.cardHeight)}</span>
+        </div>
+        <SliderRow label="Width" value={doc.cardWidth} min={440} max={1200} step={4} format={(v) => `${Math.round(v)} px`} onChange={(cardWidth) => patch({ cardWidth: Math.round(cardWidth) })} />
+        <SliderRow label="Height" value={doc.cardHeight} min={360} max={900} step={4} format={(v) => `${Math.round(v)} px`} onChange={(cardHeight) => patch({ cardHeight: Math.round(cardHeight) })} />
+        <SliderRow label="Text size" value={doc.fontSize} min={18} max={58} format={(v) => `${Math.round(v)} px`} onChange={(fontSize) => patch({ fontSize: Math.round(fontSize) })} />
+        <SliderRow label="Padding" value={doc.padding} min={28} max={100} format={(v) => `${Math.round(v)} px`} onChange={(padding) => patch({ padding: Math.round(padding) })} />
+        <SliderRow label="Roundness" value={doc.cardRadius} min={0} max={64} format={(v) => `${Math.round(v)} px`} onChange={(cardRadius) => patch({ cardRadius: Math.round(cardRadius) })} />
+        <SliderRow label="Shadow" value={doc.cardShadow * 100} min={0} max={200} format={(v) => `${Math.round(v)}%`} onChange={(cardShadow) => patch({ cardShadow: cardShadow / 100 })} />
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        {([
+          ["Card", "cardColor"],
+          ["Text", "textColor"],
+          ["Accent", "accentColor"],
+        ] as const).map(([label, key]) => (
+          <label key={key}>
+            <span className="mb-1 block text-[10px] font-medium text-[#6b6b76]">{label}</span>
+            <input
+              type="color"
+              value={doc[key]}
+              onChange={(event) => patch({ [key]: event.target.value })}
+              className="h-9 w-full cursor-pointer rounded-lg border border-[#e4e4ec] bg-white p-1"
+            />
+          </label>
+        ))}
+      </div>
+
+      <div className="mt-3 flex items-center justify-between rounded-lg border border-[#ececf2] bg-[#fafafc] px-2.5 py-2">
+        <div>
+          <p className="text-xs font-medium text-[#17171c]">Five-star rating</p>
+          <p className="text-[10px] text-[#9a9aa4]">Adds social proof above the author</p>
+        </div>
+        <Toggle label={doc.showRating ? "On" : "Off"} on={doc.showRating} onClick={() => patch({ showRating: !doc.showRating })} />
+      </div>
     </>
   );
 }

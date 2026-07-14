@@ -56,9 +56,13 @@ export function renderSocialCard(doc: SocialPostDoc, avatarUrl?: string): Framed
       parts.push(avatar(doc.name, inX + 24, cy + 24, 24, "mfpost", avatarUrl));
       parts.push(`<text font-family="${font}" font-size="18" font-weight="750" fill="${c.text}" x="${inX + 62}" y="${cy + 19}">${esc(doc.name)}</text>`);
       if (subtitle) parts.push(`<text font-family="${font}" font-size="14.5" fill="${c.subtle}" x="${inX + 62}" y="${cy + 42}">${esc(subtitle)}</text>`);
-      const mark = doc.network === "x" ? "X" : doc.network === "threads" ? "@" : source;
-      const markSize = doc.network === "x" || doc.network === "threads" ? 30 : 14;
-      parts.push(`<text font-family="${font}" font-size="${markSize}" font-weight="750" fill="${c.text}" text-anchor="end" x="${x + w - p}" y="${cy + (markSize > 20 ? 34 : 26)}">${esc(mark)}</text>`);
+      if (doc.network === "x") {
+        parts.push(xBrandMark(x + w - p - 34, cy + 7, 34, c.text));
+      } else {
+        const mark = doc.network === "threads" ? "@" : source;
+        const markSize = doc.network === "threads" ? 30 : 14;
+        parts.push(`<text font-family="${font}" font-size="${markSize}" font-weight="750" fill="${c.text}" text-anchor="end" x="${x + w - p}" y="${cy + (markSize > 20 ? 34 : 26)}">${esc(mark)}</text>`);
+      }
       cy += 76;
 
       const lines = wrapText(doc.text, size, contentW);
@@ -88,6 +92,12 @@ export function renderSocialCard(doc: SocialPostDoc, avatarUrl?: string): Framed
     viewportW,
     { radius: doc.cardRadius, shadow: doc.cardShadow }
   );
+}
+
+/** Exact vector path from the supplied icons8-x.svg asset. */
+function xBrandMark(x: number, y: number, size: number, color: string): string {
+  const scale = size / 50;
+  return `<path d="M 11 4 C 7.134 4 4 7.134 4 11 L 4 39 C 4 42.866 7.134 46 11 46 L 39 46 C 42.866 46 46 42.866 46 39 L 46 11 C 46 7.134 42.866 4 39 4 L 11 4 z M 13.085938 13 L 21.023438 13 L 26.660156 21.009766 L 33.5 13 L 36 13 L 27.789062 22.613281 L 37.914062 37 L 29.978516 37 L 23.4375 27.707031 L 15.5 37 L 13 37 L 22.308594 26.103516 L 13.085938 13 z M 16.914062 15 L 31.021484 35 L 34.085938 35 L 19.978516 15 L 16.914062 15 z" fill="${color}" transform="translate(${x} ${y}) scale(${scale})"/>`;
 }
 
 export function renderSocial(doc: SocialPostDoc, avatarUrl?: string, lookupUrl?: (id: string) => string | undefined): string {
