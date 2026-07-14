@@ -54,10 +54,24 @@ export function RevealGroup({ children, className }: { children: ReactNode; clas
   );
 }
 
-/** One staggered cell inside a RevealGroup. `h-full` keeps grid rows even. */
-export function RevealItem({ children, className }: { children: ReactNode; className?: string }) {
+/** One staggered cell inside a RevealGroup. `h-full` keeps grid rows even.
+ *  Lifts gently on hover (disable with `lift={false}` for non-card content). */
+export function RevealItem({
+  children,
+  className,
+  lift = true,
+}: {
+  children: ReactNode;
+  className?: string;
+  lift?: boolean;
+}) {
   return (
-    <motion.div variants={childVariants} className={className}>
+    <motion.div
+      variants={childVariants}
+      className={className}
+      whileHover={lift ? { y: -4 } : undefined}
+      transition={{ type: "spring", stiffness: 300, damping: 22 }}
+    >
       {children}
     </motion.div>
   );
