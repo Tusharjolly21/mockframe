@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { verifyRazorpaySignature, writeBilling } from "@/lib/server/razorpay";
+import { razorpay, readBilling, verifyRazorpaySignature, writeBilling } from "@/lib/server/razorpay";
 import { isPlanId } from "@/lib/billing/plans";
 
 export const runtime = "nodejs";
@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
 
   let event: {
     event?: string;
+    created_at?: number;
     payload?: {
       payment?: { entity?: { id?: string; order_id?: string; notes?: Record<string, string> } };
       subscription?: { entity?: { id?: string; notes?: Record<string, string> } };
@@ -36,16 +37,36 @@ export async function POST(req: NextRequest) {
   }
 
   const type = event.event ?? "";
+  const eventAt = typeof event.created_at === "number" ? event.created_at : 0;
   const payment = event.payload?.payment?.entity;
   const subscription = event.payload?.subscription?.entity;
-  // uid/plan travel in notes (set at checkout creation) so attribution never
-  // depends on a browser session existing
-  const notes = subscription?.notes ?? payment?.notes ?? {};
-  const uid = notes.uid;
-  const plan = notes.plan;
 
   try {
+    // uid/plan travel in notes (set at checkout creation) so attribution never
+    // depends on a browser session existing. Subscriptions carry notes on the
+    // entity, but a one-time (lifetime) Order's notes are NOT copied onto the
+    // payment entity — so fetch the order to recover them.
+    let notes: Record<string, string> = subscription?.notes ?? payment?.notes ?? {};
+    if (!notes.uid && payment?.order_id) {
+      try {
+        const order = await razorpay().orders.fetch(payment.order_id);
+        notes = (order?.notes as Record<string, string>) ?? notes;
+      } catch (e) {
+        console.error("[billing/webhook] order fetch", e);
+      }
+    }
+    const uid = notes.uid;
+    const plan = notes.plan;
+
     if (uid && isPlanId(plan)) {
+      // drop duplicate / out-of-order deliveries: never apply an event older
+      // than the one already recorded (Razorpay retries, and doesn't guarantee
+      // ordering — otherwise a late "charged" could re-activate a cancelled sub)
+      const current = await readBilling(uid);
+      if (eventAt && current?.eventAt && eventAt <= current.eventAt) {
+        return NextResponse.json({ ok: true, skipped: "stale" });
+      }
+
       if (type === "payment.captured" && plan === "lifetime") {
         await writeBilling(uid, {
           plan,
@@ -54,6 +75,7 @@ export async function POST(req: NextRequest) {
           paymentId: payment?.id,
           orderId: payment?.order_id,
           via: "webhook",
+          eventAt,
           updatedAt: FieldValue.serverTimestamp(),
         });
       } else if (type === "subscription.activated" || type === "subscription.charged" || type === "subscription.resumed") {
@@ -63,6 +85,7 @@ export async function POST(req: NextRequest) {
           kind: "subscription",
           subscriptionId: subscription?.id,
           via: "webhook",
+          eventAt,
           updatedAt: FieldValue.serverTimestamp(),
         });
       } else if (type === "subscription.halted" || type === "subscription.cancelled" || type === "subscription.completed" || type === "subscription.paused") {
@@ -72,6 +95,7 @@ export async function POST(req: NextRequest) {
           kind: "subscription",
           subscriptionId: subscription?.id,
           via: "webhook",
+          eventAt,
           updatedAt: FieldValue.serverTimestamp(),
         });
       }

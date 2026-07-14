@@ -78,13 +78,19 @@ export interface BillingRecord {
   subscriptionId?: string;
   currency?: Currency;
   via: "checkout" | "webhook";
+  /** Razorpay event `created_at` (unix seconds) — lets the webhook drop stale /
+   *  out-of-order deliveries so a cancelled sub can't be re-activated. */
+  eventAt?: number;
   updatedAt: FirebaseFirestore.FieldValue | FirebaseFirestore.Timestamp;
 }
 
 export async function writeBilling(uid: string, record: BillingRecord): Promise<void> {
   // Firestore rejects undefined values — prune optional fields that are absent
   const clean = Object.fromEntries(Object.entries(record).filter(([, v]) => v !== undefined));
-  await firestoreDb().collection("users").doc(uid).set({ billing: clean }, { merge: true });
+  // mergeFields replaces the whole `billing` map (not a deep-merge) so stale
+  // fields from a prior record — e.g. an old subscriptionId after switching to
+  // lifetime — don't linger, while other user fields stay untouched.
+  await firestoreDb().collection("users").doc(uid).set({ billing: clean }, { mergeFields: ["billing"] });
 }
 
 export async function readBilling(uid: string): Promise<BillingRecord | null> {

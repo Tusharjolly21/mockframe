@@ -7,6 +7,7 @@ import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
 export const runtime = "nodejs";
 
 const MAX_IMAGE_BYTES = 40 * 1024 * 1024;
+const MAX_ASSETS_PER_OWNER = 500; // generous, but bounds runaway/abusive writes
 
 function configError() {
   return NextResponse.json({ error: "Firebase is not configured", hint: firebaseSetupHint() }, { status: 501 });
@@ -32,21 +33,31 @@ export async function GET(req: NextRequest) {
   try {
     const owner = await getRequestOwner(req);
     const snap = await assetsCollection(owner.ownerId).orderBy("createdAtMs", "desc").limit(100).get();
-    const assets = await Promise.all(
-      snap.docs.map(async (doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          name: data.name,
-          mime: data.mime,
-          width: data.width,
-          height: data.height,
-          bytes: data.bytes,
-          url: await signedReadUrl(data.storagePath),
-          createdAt: data.createdAtMs,
-        };
-      })
-    );
+    // one malformed row (missing storagePath) or a transient signing error must
+    // not 500 the whole listing — skip it and return the rest
+    const assets = (
+      await Promise.all(
+        snap.docs.map(async (doc) => {
+          const data = doc.data();
+          if (!data.storagePath) return null;
+          try {
+            return {
+              id: doc.id,
+              name: data.name,
+              mime: data.mime,
+              width: data.width,
+              height: data.height,
+              bytes: data.bytes,
+              url: await signedReadUrl(data.storagePath),
+              createdAt: data.createdAtMs,
+            };
+          } catch (e) {
+            console.error("[assets] sign failed", doc.id, e);
+            return null;
+          }
+        })
+      )
+    ).filter(Boolean);
     return attachOwnerCookie(NextResponse.json(assets), owner);
   } catch (err) {
     if (err instanceof FirebaseConfigError) return configError();
@@ -62,6 +73,13 @@ export async function POST(req: NextRequest) {
     if (!(file instanceof File)) return NextResponse.json({ error: "Missing file" }, { status: 400 });
     if (!file.type.startsWith("image/")) return NextResponse.json({ error: "Only image uploads are supported" }, { status: 415 });
     if (file.size > MAX_IMAGE_BYTES) return NextResponse.json({ error: "Image exceeds 40MB" }, { status: 413 });
+
+    // bound total objects per owner so a runaway/abusive client can't write
+    // unlimited large blobs into Storage
+    const existing = await assetsCollection(owner.ownerId).count().get();
+    if (existing.data().count >= MAX_ASSETS_PER_OWNER) {
+      return NextResponse.json({ error: "Asset limit reached — delete some uploads to add more" }, { status: 429 });
+    }
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const sha256 = createHash("sha256").update(buffer).digest("hex");

@@ -51,7 +51,10 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
       try { uid = (await firebaseAuth().getUserByEmail(email)).uid; } catch { /* pending invite */ }
       const members = (result.doc.data.members ?? []).filter((member: { email?: string }) => member.email?.toLowerCase() !== email);
       members.push({ email, uid, role: body.role });
-      await result.doc.ref.update({ members, updatedAt: FieldValue.serverTimestamp() });
+      // keep the denormalized membership arrays in sync so GET's indexed queries find it
+      const memberUids = [...new Set(members.map((m) => m.uid).filter((v): v is string => !!v))];
+      const memberEmails = [...new Set(members.map((m) => m.email?.toLowerCase()).filter((v): v is string => !!v))];
+      await result.doc.ref.update({ members, memberUids, memberEmails, updatedAt: FieldValue.serverTimestamp() });
     }
     return NextResponse.json({ ok: true });
   } catch (err) {

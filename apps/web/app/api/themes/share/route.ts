@@ -20,15 +20,20 @@ export async function GET(req: NextRequest) {
   try {
     const owner = await getRequestOwner(req);
     if (!accountOnly(owner)) return NextResponse.json({ error: "Sign in to access shared themes." }, { status: 401 });
-    const snapshot = await firestoreDb().collection("sharedThemes").get();
+    // Indexed union instead of scanning the whole global collection: themes I
+    // own + themes I'm a member of (by uid, or by email for pending invites).
+    // memberUids/memberEmails are denormalized on write for exactly this.
     const email = owner.email?.toLowerCase();
-    const themes = snapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() }))
-      .filter((theme) => {
-        const data = theme as { ownerUid?: string; members?: { uid?: string | null; email?: string }[] };
-        return data.ownerUid === owner.uid || (data.members ?? []).some((member) => member.uid === owner.uid || (!!email && member.email?.toLowerCase() === email));
-      });
-    return attachOwnerCookie(NextResponse.json(themes), owner);
+    const col = firestoreDb().collection("sharedThemes");
+    const queries = [
+      col.where("ownerUid", "==", owner.uid).get(),
+      col.where("memberUids", "array-contains", owner.uid).get(),
+    ];
+    if (email) queries.push(col.where("memberEmails", "array-contains", email).get());
+    const snaps = await Promise.all(queries);
+    const byId = new Map<string, unknown>();
+    for (const snap of snaps) for (const doc of snap.docs) byId.set(doc.id, { id: doc.id, ...doc.data() });
+    return attachOwnerCookie(NextResponse.json([...byId.values()]), owner);
   } catch (err) {
     return errorResponse(err);
   }
@@ -58,6 +63,9 @@ export async function POST(req: NextRequest) {
       ownerUid: owner.uid,
       ownerEmail: owner.email ?? null,
       members: [{ email, uid: invitedUid, role: body.role }],
+      // denormalized for indexed membership queries in GET
+      memberUids: invitedUid ? [invitedUid] : [],
+      memberEmails: [email],
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });

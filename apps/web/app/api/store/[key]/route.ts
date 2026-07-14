@@ -38,7 +38,9 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ key: string
   const { key } = await ctx.params;
   if (!validKey(key)) return NextResponse.json({ error: "Bad key" }, { status: 400 });
   const body = await req.text();
-  if (body.length > 1_000_000) return NextResponse.json({ error: "Too large" }, { status: 413 });
+  // Firestore's hard limit is ~1 MiB per document; stay under it once value +
+  // serverTimestamp + key overhead are added (matches drafts/templates).
+  if (body.length > 950_000) return NextResponse.json({ error: "Too large" }, { status: 413 });
   let value: unknown;
   try {
     value = JSON.parse(body); // must be valid JSON
