@@ -114,10 +114,12 @@ export function MockupLayerView({
   layer,
   resolveAsset,
   onMediaLoad,
+  onBlurZonesChange,
 }: {
   layer: MockupLayer;
   resolveAsset: (assetId: string) => ResolvedAsset | undefined;
   onMediaLoad?: () => void;
+  onBlurZonesChange?: (zones: Array<{ x: number; y: number; w: number; h: number }>) => void;
 }) {
   const tiltStyle: CSSProperties = {
     transform: `perspective(${layer.transform.perspective}px) rotateX(calc(${layer.transform.tiltX}deg + var(--fk-drag-tilt-x, 0deg))) rotateY(calc(${layer.transform.tiltY}deg + var(--fk-drag-tilt-y, 0deg)))`,
@@ -133,23 +135,110 @@ export function MockupLayerView({
     const glass = style.startsWith("glass") || style === "liquid-glass";
     const glassDark = style === "glass-dark";
     const pad = glass ? Math.max(asset.width, asset.height) * 0.015 : 0;
+
+    if (glass) {
+      const glassBg = glassDark 
+        ? "rgba(10, 10, 15, 0.35)" 
+        : "rgba(255, 255, 255, 0.32)";
+      const highlightGradient = "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 40%, rgba(0,0,0,0.06) 100%)";
+
+      return (
+        <div data-layer-content="true" style={tiltStyle}>
+          <div
+            style={{
+              position: "relative",
+              padding: pad,
+              borderRadius: radius + pad,
+              background: glassBg,
+              backdropFilter: "blur(24px) saturate(180%)",
+              boxShadow: glassDark
+                ? "0 30px 100px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)"
+                : "0 30px 100px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",
+              border: `1.5px solid ${glassDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.45)"}`,
+            }}
+          >
+            <div style={{ position: "relative", borderRadius: radius, overflow: "hidden" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={asset.url}
+                alt=""
+                width={asset.width}
+                height={asset.height}
+                style={{
+                  display: "block",
+                  borderRadius: radius,
+                  maxWidth: "none",
+                  opacity: glassDark ? 0.62 : 0.68,
+                }}
+                onLoad={onMediaLoad}
+                crossOrigin="anonymous"
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  mixBlendMode: "overlay",
+                  opacity: 0.08,
+                  backgroundImage: glassNoise(2, 0.7),
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  background: highlightGradient,
+                }}
+              />
+              {layer.glare && layer.glare.intensity > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    pointerEvents: "none",
+                    borderRadius: radius,
+                    background: glareCss(layer.glare),
+                  }}
+                />
+              )}
+            </div>
+
+            {layer.blurZones?.map((zone, i) => (
+              <InteractiveBlurZone
+                key={i}
+                zone={zone}
+                index={i}
+                onBlurZonesChange={onBlurZonesChange}
+                allZones={layer.blurZones || []}
+                style={{
+                  position: "absolute",
+                  left: `${zone.x}%`,
+                  top: `${zone.y}%`,
+                  width: `${zone.w}%`,
+                  height: `${zone.h}%`,
+                  borderRadius: radius,
+                  backdropFilter: "blur(20px)",
+                  backgroundColor: "rgba(0, 0, 0, 0.15)",
+                  border: "1px dashed rgba(255, 255, 255, 0.4)",
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div data-layer-content="true" style={tiltStyle}>
         <div
           style={{
             padding: pad,
             borderRadius: radius + pad,
-            background: glass
-              ? glassDark
-                ? "rgba(15,18,28,0.55)"
-                : "rgba(255,255,255,0.45)"
-              : undefined,
             border:
               style === "outline"
                 ? `${Math.max(2, asset.width * 0.004)}px solid rgba(255,255,255,0.75)`
-                : glass
-                  ? `1px solid ${glassDark ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.65)"}`
-                  : undefined,
+                : undefined,
           }}
         >
           <div style={{ position: "relative" }}>
@@ -175,8 +264,12 @@ export function MockupLayerView({
               />
             )}
             {layer.blurZones?.map((zone, i) => (
-              <div
+              <InteractiveBlurZone
                 key={i}
+                zone={zone}
+                index={i}
+                onBlurZonesChange={onBlurZonesChange}
+                allZones={layer.blurZones || []}
                 style={{
                   position: "absolute",
                   left: `${zone.x}%`,
@@ -187,7 +280,6 @@ export function MockupLayerView({
                   backdropFilter: "blur(20px)",
                   backgroundColor: "rgba(0, 0, 0, 0.15)",
                   border: "1px dashed rgba(255, 255, 255, 0.4)",
-                  pointerEvents: "none",
                 }}
               />
             ))}
@@ -331,8 +423,12 @@ export function MockupLayerView({
           <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: glareCss(layer.glare) }} />
         )}
         {layer.blurZones?.map((zone, i) => (
-          <div
+          <InteractiveBlurZone
             key={i}
+            zone={zone}
+            index={i}
+            onBlurZonesChange={onBlurZonesChange}
+            allZones={layer.blurZones || []}
             style={{
               position: "absolute",
               left: `${zone.x}%`,
@@ -342,7 +438,6 @@ export function MockupLayerView({
               backdropFilter: "blur(20px)",
               backgroundColor: "rgba(0, 0, 0, 0.15)",
               border: "1px dashed rgba(255, 255, 255, 0.4)",
-              pointerEvents: "none",
             }}
           />
         ))}
@@ -452,8 +547,13 @@ export function MockupLayerView({
         <g dangerouslySetInnerHTML={{ __html: browserUrlOverlay(variant.overlay, layer.browserUrl) }} />
       </svg>
       {layer.blurZones?.map((zone, i) => (
-        <div
+        <InteractiveBlurZone
           key={i}
+          zone={zone}
+          index={i}
+          onBlurZonesChange={onBlurZonesChange}
+          allZones={layer.blurZones || []}
+          screenScale={rect.width / frame.width}
           style={{
             position: "absolute",
             left: `${rect.x + (zone.x * rect.width) / 100}px`,
@@ -463,7 +563,6 @@ export function MockupLayerView({
             backdropFilter: "blur(20px)",
             backgroundColor: "rgba(0, 0, 0, 0.15)",
             border: "1px dashed rgba(255, 255, 255, 0.4)",
-            pointerEvents: "none",
           }}
         />
       ))}
@@ -474,3 +573,180 @@ export function MockupLayerView({
 }
 
 export const MockupLayerViewMemo = memo(MockupLayerView);
+
+interface InteractiveBlurZoneProps {
+  zone: { x: number; y: number; w: number; h: number };
+  index: number;
+  onBlurZonesChange?: (zones: Array<{ x: number; y: number; w: number; h: number }>) => void;
+  allZones: Array<{ x: number; y: number; w: number; h: number }>;
+  style: CSSProperties;
+  screenScale?: number;
+}
+
+function InteractiveBlurZone({
+  zone,
+  index,
+  onBlurZonesChange,
+  allZones,
+  style,
+  screenScale = 1,
+}: InteractiveBlurZoneProps) {
+  const startDrag = (
+    e: React.PointerEvent<HTMLDivElement>,
+    action: "move" | "resize-nw" | "resize-ne" | "resize-se" | "resize-sw"
+  ) => {
+    if (!onBlurZonesChange) return;
+    e.stopPropagation();
+    e.preventDefault();
+
+    const el = e.currentTarget.parentElement; // The screen container (relative parent)
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const initialZone = { ...zone };
+
+    // Screen dimensions in client pixels:
+    const screenWidthPx = rect.width * screenScale;
+    const screenHeightPx = rect.height * screenScale;
+
+    const onPointerMove = (moveEv: PointerEvent) => {
+      const dx = moveEv.clientX - startX;
+      const dy = moveEv.clientY - startY;
+      // Convert to percent relative to screen size
+      const pctX = (dx / screenWidthPx) * 100;
+      const pctY = (dy / screenHeightPx) * 100;
+
+      const updated = [...allZones];
+      const z = { ...initialZone };
+
+      if (action === "move") {
+        z.x = Math.max(0, Math.min(100 - z.w, initialZone.x + pctX));
+        z.y = Math.max(0, Math.min(100 - z.h, initialZone.y + pctY));
+      } else if (action === "resize-se") {
+        z.w = Math.max(5, Math.min(100 - z.x, initialZone.w + pctX));
+        z.h = Math.max(5, Math.min(100 - z.y, initialZone.h + pctY));
+      } else if (action === "resize-sw") {
+        const newX = Math.max(0, Math.min(initialZone.x + initialZone.w - 5, initialZone.x + pctX));
+        z.w = initialZone.x + initialZone.w - newX;
+        z.x = newX;
+        z.h = Math.max(5, Math.min(100 - z.y, initialZone.h + pctY));
+      } else if (action === "resize-ne") {
+        z.w = Math.max(5, Math.min(100 - z.x, initialZone.w + pctX));
+        const newY = Math.max(0, Math.min(initialZone.y + initialZone.h - 5, initialZone.y + pctY));
+        z.h = initialZone.y + initialZone.h - newY;
+        z.y = newY;
+      } else if (action === "resize-nw") {
+        const newX = Math.max(0, Math.min(initialZone.x + initialZone.w - 5, initialZone.x + pctX));
+        z.w = initialZone.x + initialZone.w - newX;
+        z.x = newX;
+        const newY = Math.max(0, Math.min(initialZone.y + initialZone.h - 5, initialZone.y + pctY));
+        z.h = initialZone.y + initialZone.h - newY;
+        z.y = newY;
+      }
+
+      z.x = Math.round(z.x);
+      z.y = Math.round(z.y);
+      z.w = Math.round(z.w);
+      z.h = Math.round(z.h);
+
+      updated[index] = z;
+      onBlurZonesChange(updated);
+    };
+
+    const onPointerUp = () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+  };
+
+  const interactive = !!onBlurZonesChange;
+
+  return (
+    <div
+      style={{
+        ...style,
+        pointerEvents: interactive ? "auto" : "none",
+        cursor: interactive ? "move" : undefined,
+      }}
+      onPointerDown={interactive ? (e) => startDrag(e, "move") : undefined}
+    >
+      {interactive && (
+        <>
+          {/* NW corner */}
+          <div
+            onPointerDown={(e) => startDrag(e, "resize-nw")}
+            style={{
+              position: "absolute",
+              left: -4,
+              top: -4,
+              width: 8,
+              height: 8,
+              backgroundColor: "#fff",
+              border: "1.5px solid #8b5cf6",
+              borderRadius: "50%",
+              cursor: "nwse-resize",
+              zIndex: 9999,
+            }}
+          />
+          {/* NE corner */}
+          <div
+            onPointerDown={(e) => startDrag(e, "resize-ne")}
+            style={{
+              position: "absolute",
+              right: -4,
+              top: -4,
+              width: 8,
+              height: 8,
+              backgroundColor: "#fff",
+              border: "1.5px solid #8b5cf6",
+              borderRadius: "50%",
+              cursor: "nesw-resize",
+              zIndex: 9999,
+            }}
+          />
+          {/* SW corner */}
+          <div
+            onPointerDown={(e) => startDrag(e, "resize-sw")}
+            style={{
+              position: "absolute",
+              left: -4,
+              bottom: -4,
+              width: 8,
+              height: 8,
+              backgroundColor: "#fff",
+              border: "1.5px solid #8b5cf6",
+              borderRadius: "50%",
+              cursor: "nesw-resize",
+              zIndex: 9999,
+            }}
+          />
+          {/* SE corner */}
+          <div
+            onPointerDown={(e) => startDrag(e, "resize-se")}
+            style={{
+              position: "absolute",
+              right: -4,
+              bottom: -4,
+              width: 8,
+              height: 8,
+              backgroundColor: "#fff",
+              border: "1.5px solid #8b5cf6",
+              borderRadius: "50%",
+              cursor: "nwse-resize",
+              zIndex: 9999,
+            }}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+function glassNoise(seed: number, baseFrequency: number): string {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='${baseFrequency}' numOctaves='2' seed='${seed}' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='240' height='240' filter='url(#n)'/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}

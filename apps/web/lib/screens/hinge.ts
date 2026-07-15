@@ -13,6 +13,9 @@ import {
   textWidth,
   truncate,
   wrapText,
+  avatar,
+  scrollBody,
+  bubbleBaseline,
 } from "./common";
 import { fontFor } from "./fonts";
 import type { HingeCard, HingeDoc, HingeVitalIcon } from "./types";
@@ -44,6 +47,9 @@ interface Palette {
 }
 
 export function renderHinge(doc: HingeDoc, avatarUrl?: string, lookupUrl?: (id: string) => string | undefined): string {
+  if (doc.mode === "chat") {
+    return renderHingeChat(doc, avatarUrl);
+  }
   const platform = doc.chrome.platform ?? "ios";
   const font = fontFor("hinge", platform);
   const textBlock = (lines: string[], o: Parameters<typeof baseTextBlock>[1]) => baseTextBlock(lines, { font, ...o });
@@ -229,4 +235,119 @@ function vitalGlyph(type: HingeVitalIcon, x: number, y: number, color: string): 
       break;
   }
   return `<g fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${body}</g>`;
+}
+
+function renderHingeChat(doc: HingeDoc, avatarUrl?: string): string {
+  const platform = doc.chrome.platform ?? "ios";
+  const font = fontFor("hinge", platform);
+  const dark = !!doc.chrome.dark;
+  
+  const c = {
+    page: dark ? "#171310" : "#F4F1EA",
+    card: dark ? "#241E18" : "#FFFFFF",
+    text: dark ? "#F4F1EA" : "#1A1A1A",
+    label: dark ? "#8E877C" : "#8C8A85",
+    accent: dark ? "#9F81A5" : "#67295F",
+    hairline: dark ? "#342d27" : "#e5e1da",
+  };
+
+  const parts: string[] = [`<rect width="${SW}" height="${SH}" fill="${c.page}"/>`];
+  parts.push(statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.text, platform }));
+
+  // Header area
+  const HEADER_H = 120;
+  parts.push(`<rect width="${SW}" height="${HEADER_H}" fill="${c.page}"/>`);
+  parts.push(`<rect y="${HEADER_H - 0.5}" width="${SW}" height="0.5" fill="${c.hairline}"/>`);
+
+  // Back chevron
+  parts.push(`<path d="M22 75 l-8 8 l8 8" fill="none" stroke="${c.accent}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`);
+
+  // Match avatar
+  const avatarX = 54;
+  const avatarY = 82;
+  parts.push(avatar(doc.name, avatarX, avatarY, 20, "hg", avatarUrl));
+
+  // Name
+  const nameX = 86;
+  const nameY = 82;
+  parts.push(
+    `<text font-family="${SERIF_FONT}" font-size="17" font-weight="600" fill="${c.text}" x="${nameX}" y="${nameY}">${esc(doc.name)}</text>`
+  );
+  if (doc.verified) {
+    const nameWidth = textWidth(doc.name, 17);
+    parts.push(verifiedBadge(nameX + nameWidth + 4, nameY - 14, c.accent));
+  }
+
+  // Header Right ellipses control
+  parts.push(`
+    <circle cx="${SW - 30}" cy="${HEADER_H - 38}" r="2" fill="${c.accent}"/>
+    <circle cx="${SW - 24}" cy="${HEADER_H - 38}" r="2" fill="${c.accent}"/>
+    <circle cx="${SW - 18}" cy="${HEADER_H - 38}" r="2" fill="${c.accent}"/>
+  `);
+
+  // Render Messages
+  const bodyStart = parts.length;
+  let y = HEADER_H + 20;
+
+  const BUBBLE_MAX = 260;
+  const FONT_SIZE = 15;
+  const LINE_H = 20;
+  const PAD_X = 14;
+  const PAD_Y = 10;
+  const MARGIN = 16;
+
+  const msgs = doc.messages || [];
+  for (let i = 0; i < msgs.length; i++) {
+    const m = msgs[i];
+    const mine = m.from === "me";
+    const lines = wrapText(m.text || " ", FONT_SIZE, BUBBLE_MAX - PAD_X * 2);
+    const w = Math.min(
+      BUBBLE_MAX,
+      Math.max(...lines.map((l) => textWidth(l, FONT_SIZE))) + PAD_X * 2
+    );
+    const h = lines.length * LINE_H + PAD_Y * 2;
+    const x = mine ? SW - MARGIN - w : MARGIN;
+
+    const bubbleFill = mine ? c.accent : c.card;
+    const textColor = mine ? "#ffffff" : c.text;
+
+    const isGroupEnd = i === msgs.length - 1 || msgs[i + 1].from !== m.from;
+
+    parts.push(`<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="16" fill="${bubbleFill}" stroke="${mine ? "none" : c.hairline}" stroke-width="${mine ? 0 : 1}"/>`);
+    parts.push(
+      baseTextBlock(lines, {
+        font,
+        x: x + PAD_X,
+        y: bubbleBaseline(y, h, lines.length, LINE_H, FONT_SIZE),
+        size: FONT_SIZE,
+        lineHeight: LINE_H,
+        color: textColor,
+      })
+    );
+
+    y += h + (isGroupEnd ? 12 : 3);
+  }
+
+  const body = parts.splice(bodyStart);
+  parts.push(scrollBody(body.join("\n"), { top: HEADER_H, bottom: SH - 90, contentBottom: y }));
+
+  // Input area
+  const inputY = SH - 80;
+  parts.push(`<rect y="${inputY}" width="${SW}" height="80" fill="${c.page}"/>`);
+  parts.push(`<rect y="${inputY}" width="${SW}" height="0.5" fill="${c.hairline}"/>`);
+
+  parts.push(`
+    <rect x="16" y="${inputY + 12}" width="${SW - 32}" height="40" rx="20" fill="${c.card}" stroke="${c.hairline}" stroke-width="1"/>
+    <text font-family="${font}" font-size="14.5" fill="${c.label}" x="32" y="${inputY + 36}">Type a message...</text>
+    
+    <!-- Send Arrow icon -->
+    <g transform="translate(${SW - 46}, ${inputY + 20})" stroke="${c.accent}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="19" x2="12" y2="5"/>
+      <polyline points="5 12 12 5 19 12"/>
+    </g>
+  `);
+
+  parts.push(homeIndicator(c.text, platform));
+
+  return parts.join("\n");
 }

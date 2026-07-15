@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3020 1740">
+<!--BODY-->
+<defs></defs>
+
+<path d="M36 10 H2984 A26 26 0 0 1 3010 36 V1704 A26 26 0 0 1 2984 1730 H36 A26 26 0 0 1 10 1704 V36 A26 26 0 0 1 36 10 Z" fill="#27272a"/>
+<path d="M36 10 H450 V1730 H36 A26 26 0 0 1 10 1704 V36 A26 26 0 0 1 36 10 Z" fill="#18181b"/>
+
+<circle cx="54" cy="58" r="13" fill="#ff5f57"/>
+<circle cx="98" cy="58" r="13" fill="#febc2e"/>
+<circle cx="142" cy="58" r="13" fill="#28c840"/>
+<rect x="34" y="100" width="392" height="56" rx="14" fill="#202124" stroke="#2c2d30" stroke-width="1"/>
+<!-- search lock icon -->
+<g stroke="#71717a" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(54, 116)">
+  <rect x="2" y="7" width="12" height="9" rx="2"/>
+  <path d="M5 7 V4 a3 3 0 0 1 6 0 v3"/>
+</g>
+<text x="86" y="138" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="24" font-weight="600" fill="#f3f4f6" id="fk_urltext_fk_arc-browser_dark">framekit.app</text>
+
+<!-- dummy tabs inside sidebar -->
+<g fill="#71717a" opacity="0.6" transform="translate(34, 186)">
+  <!-- Pinned Tab 1 -->
+  <rect x="0" y="0" width="84" height="84" rx="18" fill="#09090b"/>
+  <rect x="26" y="26" width="32" height="32" rx="8" fill="#f3f4f6"/>
+  <!-- Pinned Tab 2 -->
+  <rect x="100" y="0" width="84" height="84" rx="18" fill="#09090b"/>
+  <rect x="126" y="26" width="32" height="32" rx="8" fill="#f3f4f6"/>
+  <!-- Pinned Tab 3 -->
+  <rect x="200" y="0" width="84" height="84" rx="18" fill="#09090b"/>
+  <rect x="226" y="26" width="32" height="32" rx="8" fill="#f3f4f6"/>
+  
+  <!-- Folder/Link list -->
+  <g transform="translate(0, 116)">
+    <!-- Item 1 -->
+    <rect x="0" y="0" width="392" height="42" rx="10" fill="none"/>
+    <rect x="16" y="13" width="16" height="16" rx="4" fill="#f3f4f6"/>
+    <rect x="48" y="16" width="160" height="10" rx="5" fill="#f3f4f6"/>
+    <!-- Item 2 -->
+    <rect x="0" y="58" width="392" height="42" rx="10" fill="none"/>
+    <rect x="16" y="71" width="16" height="16" rx="4" fill="#f3f4f6"/>
+    <rect x="48" y="74" width="120" height="10" rx="5" fill="#f3f4f6"/>
+  </g>
+</g>
+
+<!-- Content area backing card -->
+<path d="M482 26 H2978 A16 16 0 0 1 2994 42 V1698 A16 16 0 0 1 2978 1714 H482 A16 16 0 0 1 466 1698 V42 A16 16 0 0 1 482 26 Z" fill="#09090b"/>
+<!--/BODY-->
+<!--SCREEN--><path d="M482 26 H2978 A16 16 0 0 1 2994 42 V1698 A16 16 0 0 1 2978 1714 H482 A16 16 0 0 1 466 1698 V42 A16 16 0 0 1 482 26 Z" fill="#f6f7f9"/>
+<rect x="617.6800000000001" y="161.04" width="1061.76" height="101.28" rx="50.64" fill="#e2e5ea"/>
+<rect x="617.6800000000001" y="363.6" width="2224.64" height="675.2" rx="28" fill="#e9ecf1"/>
+<rect x="617.6800000000001" y="1140.0800000000002" width="1061.76" height="371.36" rx="24" fill="#eef0f4"/>
+<rect x="1780.56" y="1140.0800000000002" width="1061.76" height="371.36" rx="24" fill="#eef0f4"/><!--/SCREEN-->
+<!--OVERLAY--><!--/OVERLAY-->
+</svg>

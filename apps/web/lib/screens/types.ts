@@ -215,6 +215,25 @@ export interface SpotifyDoc {
   standalone?: boolean;
 }
 
+export interface AppStorePromoDoc {
+  app: "appstore-promo";
+  chrome: ScreenChrome;
+  badgeText: string;
+  title: string;
+  subtitle: string;
+  ratingValue: number;
+  reviewsCountText: string;
+  accentColor: string;
+  avatar?: string;
+  screenshot?: string;
+  buttonText?: string;
+  dark?: boolean;
+  standalone?: boolean;
+  cardWidth?: number;
+  cardHeight?: number;
+  deviceId?: string;
+}
+
 export interface AppStoreDoc {
   app: "appstore";
   chrome: ScreenChrome;
@@ -548,6 +567,8 @@ export interface DatingDoc {
   distance?: string;
   bio?: string;
   interests?: string[];
+  mode?: "profile" | "chat";
+  messages?: Array<{ from: "me" | "them"; text: string; image?: string }>;
 }
 
 export interface YouTubeComment {
@@ -633,6 +654,8 @@ export interface HingeDoc {
   cards: HingeCard[];
   /** card indices shown as liked (filled heart) */
   liked?: number[];
+  mode?: "profile" | "chat";
+  messages?: Array<{ from: "me" | "them"; text: string; image?: string }>;
 }
 
 export type StorySticker = {
@@ -749,6 +772,7 @@ export type ScreenDoc =
   | IosNotificationDoc
   | SpotifyDoc
   | AppStoreDoc
+  | AppStorePromoDoc
   | GoogleMapsDoc
   | GooglePlayDoc;
 export type ScreenApp = ScreenDoc["app"];
@@ -784,6 +808,7 @@ export const SCREEN_APP_LABELS: Record<ScreenApp, string> = {
   "ios-notification": "iOS Notification",
   spotify: "Spotify",
   appstore: "App Store",
+  "appstore-promo": "App Store Promo",
   googlemaps: "Google Maps",
   googleplay: "Google Play",
 };
@@ -835,6 +860,13 @@ export function defaultDatingDoc(brand: DatingBrand): DatingDoc {
       distance: "3 km away",
       bio: "Make the first move 🐝 Matcha addict, weekend hiker, and full-time dog mom.",
       interests: ["Art", "Hiking", "Coffee", "Dogs"],
+      mode: "profile",
+      messages: [
+        { from: "them", text: "Yellow! 🐝 Love your dog, what breed is he?" },
+        { from: "me", text: "Hey Bella! He's a golden retriever puppy, keeps me super busy haha" },
+        { from: "them", text: "Aww adorable! Let's go for coffee and a walk with him sometime? ☕️" },
+        { from: "me", text: "I'd love that! How about this Saturday morning?" },
+      ],
     };
   return {
     app: "dating",
@@ -847,6 +879,13 @@ export function defaultDatingDoc(brand: DatingBrand): DatingDoc {
     distance: "2 miles away",
     bio: "Designer by day, rock climber by weekend. Looking for someone to split tacos and adventures with 🌮",
     interests: ["Climbing", "Design", "Travel", "Tacos"],
+    mode: "profile",
+    messages: [
+      { from: "them", text: "Hey Alex! Love your climbing pictures, where was that first one taken?" },
+      { from: "me", text: "Hey! Thanks, that was at Joshua Tree last winter. Highly recommend it if you haven't been!" },
+      { from: "them", text: "Oh nice! I've only done indoor bouldering so far, but dying to go outdoors soon" },
+      { from: "me", text: "We should totally plan a trip or start at a gym first! What's your favorite spot in the city?" },
+    ],
   };
 }
 
@@ -908,6 +947,7 @@ export const APP_PLATFORMS: Record<ScreenApp, ("ios" | "android")[]> = {
   "ios-notification": ["ios", "android"],
   spotify: ["ios", "android"],
   appstore: ["ios", "android"],
+  "appstore-promo": ["ios", "android"],
   googlemaps: ["ios", "android"],
   googleplay: ["ios", "android"],
 };
@@ -1194,6 +1234,13 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
           { type: "photo" },
         ],
         liked: [],
+        mode: "profile",
+        messages: [
+          { from: "them", text: "So... what's your top taco spot in Brooklyn? The debate is on!" },
+          { from: "me", text: "Haha okay, it's definitely Birria Landia in Williamsburg. What's yours?" },
+          { from: "them", text: "Oooh bold choice! I'm a big fan of Taqueria Ramirez. We might need to do a taste-test comparison." },
+          { from: "me", text: "A taco crawl? You have a deal. Friday night?" },
+        ],
       };
     case "story":
       return {
@@ -1370,6 +1417,22 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
         dark: false,
         standalone: true,
       };
+    case "appstore-promo":
+      return {
+        app,
+        chrome,
+        badgeText: "APP OF THE DAY",
+        title: "MockFrame",
+        subtitle: "Create premium screenshot mockups in seconds",
+        ratingValue: 4.9,
+        reviewsCountText: "12.4K ratings",
+        accentColor: "#6366f1",
+        buttonText: "GET",
+        dark: false,
+        standalone: true,
+        cardWidth: 1200,
+        cardHeight: 900,
+      };
     case "googleplay":
       return {
         app,
@@ -1400,9 +1463,10 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
 }
 
 /** Template variants open as standalone cards instead of inside a phone. */
-export function defaultTemplateDoc(app: "bluesky" | "xpost" | "social" | "code" | "github" | "stripe" | "testimonial" | "ios-notification" | "spotify" | "appstore" | "googlemaps" | "googleplay"): ScreenDoc {
+export function defaultTemplateDoc(app: "bluesky" | "xpost" | "social" | "code" | "github" | "stripe" | "testimonial" | "ios-notification" | "spotify" | "appstore" | "appstore-promo" | "googlemaps" | "googleplay"): ScreenDoc {
   if (app === "code") return defaultScreenDoc("code");
   if (app === "testimonial") return defaultScreenDoc("testimonial");
+  if (app === "appstore-promo") return defaultScreenDoc("appstore-promo");
   if (app === "github" || app === "stripe" || app === "ios-notification" || app === "spotify" || app === "appstore" || app === "googlemaps" || app === "googleplay") {
     return { ...defaultScreenDoc(app), standalone: true } as ScreenDoc;
   }

@@ -234,16 +234,17 @@ ${linGrad(`${p}_deck`, deckFill, 0, 0, 0, 1)}
 
 function browser({ id, variant, viewW, viewH, kind, chrome: c }) {
   const M = 10;
-  const toolbarH = kind === "chrome" ? 150 : 104;
-  const W = viewW + M * 2;
+  const toolbarH = kind === "chrome" ? 150 : (kind === "arc" ? 120 : 104);
+  const sidebarW = kind === "arc" ? 440 : 0;
+  const W = viewW + M * 2 + sidebarW;
   const H = M + toolbarH + viewH + M;
   const p = `fk_${id}_${variant}`;
   const winR = 26;
 
   const lights = `
-<circle cx="${M + 44}" cy="${M + (kind === "chrome" ? 38 : toolbarH / 2)}" r="13" fill="#ff5f57"/>
-<circle cx="${M + 88}" cy="${M + (kind === "chrome" ? 38 : toolbarH / 2)}" r="13" fill="#febc2e"/>
-<circle cx="${M + 132}" cy="${M + (kind === "chrome" ? 38 : toolbarH / 2)}" r="13" fill="#28c840"/>`;
+<circle cx="${M + 44}" cy="${M + (kind === "chrome" ? 38 : (kind === "arc" ? 48 : toolbarH / 2))}" r="13" fill="#ff5f57"/>
+<circle cx="${M + 88}" cy="${M + (kind === "chrome" ? 38 : (kind === "arc" ? 48 : toolbarH / 2))}" r="13" fill="#febc2e"/>
+<circle cx="${M + 132}" cy="${M + (kind === "chrome" ? 38 : (kind === "arc" ? 48 : toolbarH / 2))}" r="13" fill="#28c840"/>`;
 
   let toolbar = "";
   if (kind === "chrome") {
@@ -265,6 +266,44 @@ ${lights}
   <circle cx="${viewW - M - 150}" cy="${M + 114}" r="4"/><circle cx="${viewW - M - 132}" cy="${M + 114}" r="4"/><circle cx="${viewW - M - 114}" cy="${M + 114}" r="4"/>
 </g>
 <rect x="${M}" y="${M + toolbarH - 2}" width="${viewW}" height="2" fill="${c.divider}"/>`;
+  } else if (kind === "arc") {
+    toolbar = `
+<path d="${rr(M, M, viewW + sidebarW, toolbarH + viewH, winR)}" fill="${c.windowEdge}"/>
+<path d="${rr(M, M, sidebarW, toolbarH + viewH, { tl: winR, tr: 0, br: 0, bl: winR })}" fill="${c.tabstrip}"/>
+${lights}
+<rect x="${M + 24}" y="${M + 90}" width="${sidebarW - 48}" height="56" rx="14" fill="${c.urlbar}" stroke="${c.divider}" stroke-width="1"/>
+<!-- search lock icon -->
+<g stroke="${c.textDim}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(${M + 44}, ${M + 106})">
+  <rect x="2" y="7" width="12" height="9" rx="2"/>
+  <path d="M5 7 V4 a3 3 0 0 1 6 0 v3"/>
+</g>
+<text x="${M + 76}" y="${M + 128}" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="24" font-weight="600" fill="${c.text}" id="fk_urltext_${p}">framekit.app</text>
+
+<!-- dummy tabs inside sidebar -->
+<g fill="${c.textDim}" opacity="0.6" transform="translate(${M + 24}, ${M + 176})">
+  <!-- Pinned Tab 1 -->
+  <rect x="0" y="0" width="84" height="84" rx="18" fill="${c.toolbar}"/>
+  <rect x="26" y="26" width="32" height="32" rx="8" fill="${c.text}"/>
+  <!-- Pinned Tab 2 -->
+  <rect x="100" y="0" width="84" height="84" rx="18" fill="${c.toolbar}"/>
+  <rect x="126" y="26" width="32" height="32" rx="8" fill="${c.text}"/>
+  <!-- Pinned Tab 3 -->
+  <rect x="200" y="0" width="84" height="84" rx="18" fill="${c.toolbar}"/>
+  <rect x="226" y="26" width="32" height="32" rx="8" fill="${c.text}"/>
+  
+  <!-- Folder/Link list -->
+  <g transform="translate(0, 116)">
+    <!-- Item 1 -->
+    <rect x="0" y="0" width="${sidebarW - 48}" height="42" rx="10" fill="none"/>
+    <rect x="16" y="13" width="16" height="16" rx="4" fill="${c.text}"/>
+    <rect x="48" y="16" width="160" height="10" rx="5" fill="${c.text}"/>
+    <!-- Item 2 -->
+    <rect x="0" y="58" width="${sidebarW - 48}" height="42" rx="10" fill="none"/>
+    <rect x="16" y="71" width="16" height="16" rx="4" fill="${c.text}"/>
+    <rect x="48" y="74" width="120" height="10" rx="5" fill="${c.text}"/>
+  </g>
+</g>
+`;
   } else {
     toolbar = `
 <path d="${rr(M, M, viewW, toolbarH, { tl: winR, tr: winR, br: 0, bl: 0 })}" fill="${c.toolbar}"/>
@@ -278,7 +317,12 @@ ${lights}
 <rect x="${M}" y="${M + toolbarH - 2}" width="${viewW}" height="2" fill="${c.divider}"/>`;
   }
 
-  const body = `
+  const body = kind === "arc" ? `
+<defs></defs>
+${toolbar}
+<!-- Content area backing card -->
+<path d="${rr(M + sidebarW + 16, M + 16, viewW - 32, toolbarH + viewH - 32, 16)}" fill="${c.toolbar}"/>
+` : `
 <defs></defs>
 <path d="${rr(M - 2, M - 2, viewW + 4, toolbarH + viewH + 4, winR + 2)}" fill="${c.windowEdge}"/>
 ${toolbar}
@@ -287,8 +331,12 @@ ${toolbar}
 
   return {
     W, H,
-    screenRect: { x: M, y: M + toolbarH, width: viewW, height: viewH },
-    maskPath: rr(M, M + toolbarH, viewW, viewH, { tl: 0, tr: 0, br: winR, bl: winR }),
+    screenRect: kind === "arc" 
+      ? { x: M + sidebarW + 16, y: M + 16, width: viewW - 32, height: toolbarH + viewH - 32 }
+      : { x: M, y: M + toolbarH, width: viewW, height: viewH },
+    maskPath: kind === "arc"
+      ? rr(M + sidebarW + 16, M + 16, viewW - 32, toolbarH + viewH - 32, 16)
+      : rr(M, M + toolbarH, viewW, viewH, { tl: 0, tr: 0, br: winR, bl: winR }),
     body,
     overlay: "",
   };
@@ -807,6 +855,22 @@ const DEVICES = [
     variants: [
       { id: "light", label: "Light", colors: { toolbar: "#f5f4f6", urlbar: "#e9e8ec", text: "#3a3a3c", textDim: "#98989d", divider: "#e2e1e5", windowEdge: "#cfced3", accentDot: "#0a84ff" } },
       { id: "dark", label: "Dark", colors: { toolbar: "#2d2c31", urlbar: "#3a393f", text: "#d7d7dc", textDim: "#8e8e93", divider: "#232227", windowEdge: "#141317", accentDot: "#0a84ff" } },
+    ],
+  },
+  {
+    meta: {
+      id: "arc-browser", name: "Arc", brand: "browser-company", category: "browser",
+      released: "2026-01",
+      screen: { width: 2560, height: 1600, cornerRadius: 0 },
+      aliases: ["arc browser mockup", "arc frame"],
+      seo: { monthlyQueries: ["arc mockup", "arc browser mockup"] },
+      urlBarText: "mockframe.app",
+    },
+    gen: (variant, colors) =>
+      browser({ id: "arc-browser", variant, viewW: 2560, viewH: 1600, kind: "arc", chrome: colors }),
+    variants: [
+      { id: "light", label: "Light", colors: { tabstrip: "#f3f4f6", toolbar: "#ffffff", urlbar: "#ffffff", text: "#1f2937", textDim: "#9ca3af", divider: "#dee1e6", windowEdge: "#e5e7eb", accentDot: "#3b82f6" } },
+      { id: "dark", label: "Dark", colors: { tabstrip: "#18181b", toolbar: "#09090b", urlbar: "#202124", text: "#f3f4f6", textDim: "#71717a", divider: "#2c2d30", windowEdge: "#27272a", accentDot: "#3b82f6" } },
     ],
   },
 ];

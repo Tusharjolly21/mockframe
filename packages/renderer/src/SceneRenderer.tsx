@@ -26,6 +26,7 @@ function SceneRendererImpl({
   animationNonce = 0,
   panoramaIdx,
   panoramaTotal,
+  onBlurZonesChange,
 }: {
   scene: SceneDocument;
   resolveAsset: ResolveAsset;
@@ -38,6 +39,7 @@ function SceneRendererImpl({
   animationNonce?: number;
   panoramaIdx?: number;
   panoramaTotal?: number;
+  onBlurZonesChange?: (layerId: string, zones: Array<{ x: number; y: number; w: number; h: number }>) => void;
 }) {
   const { canvas } = scene;
   const bg = canvas.background;
@@ -136,6 +138,7 @@ function SceneRendererImpl({
           layer={layer}
           resolveAsset={resolveAsset}
           entrance={animateLayerId === layer.id}
+          onBlurZonesChange={onBlurZonesChange}
         />
       ))}
 
@@ -304,7 +307,17 @@ function SceneRendererImpl({
   );
 }
 
-const LayerView = memo(function LayerView({ layer, resolveAsset, entrance }: { layer: Layer; resolveAsset: ResolveAsset; entrance?: boolean }) {
+const LayerView = memo(function LayerView({
+  layer,
+  resolveAsset,
+  entrance,
+  onBlurZonesChange,
+}: {
+  layer: Layer;
+  resolveAsset: ResolveAsset;
+  entrance?: boolean;
+  onBlurZonesChange?: (layerId: string, zones: Array<{ x: number; y: number; w: number; h: number }>) => void;
+}) {
   const t = layer.transform;
   const wrapper: CSSProperties = {
     position: "absolute",
@@ -318,7 +331,11 @@ const LayerView = memo(function LayerView({ layer, resolveAsset, entrance }: { l
   if (layer.type === "mockup") {
     return (
       <div data-layer-id={layer.id} style={wrapper}>
-        <MockupLayerViewMemo layer={layer} resolveAsset={resolveAsset} />
+        <MockupLayerViewMemo
+          layer={layer}
+          resolveAsset={resolveAsset}
+          onBlurZonesChange={onBlurZonesChange ? (zones) => onBlurZonesChange(layer.id, zones) : undefined}
+        />
       </div>
     );
   }

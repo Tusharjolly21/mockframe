@@ -91,8 +91,7 @@ export function renderTestimonial(doc: TestimonialDoc, avatarUrl?: string): stri
   const authorY = cardY + cardH - padding - 27;
   if (doc.showRating) {
     const count = Math.max(1, Math.min(5, Math.round(doc.rating || 5)));
-    const stars = Array.from({ length: 5 }, (_, i) => i < count ? "★" : "☆").join(" ");
-    parts.push(`<text x="${anchorX}" y="${authorY - 64}" text-anchor="${align}" font-family="Arial,sans-serif" font-size="16" letter-spacing="2" fill="${accent}">${stars}</text>`);
+    parts.push(drawStars(quoteX, authorY - 60, count, accent));
   }
 
   if (doc.align === "center") {
@@ -112,4 +111,33 @@ export function renderTestimonial(doc: TestimonialDoc, avatarUrl?: string): stri
   }
 
   return parts.join("\n");
+}
+
+function drawStars(cx: number, cy: number, rating: number, accent: string): string {
+  const r = 8; // Star radius
+  const gap = 5;
+  const starW = r * 2;
+  const step = starW + gap;
+  const totalW = 5 * starW + 4 * gap;
+  
+  const isCentered = cx > 250; // true if quote block is centered
+  const startX = isCentered ? cx - totalW / 2 + r : cx + r;
+
+  const polygons: string[] = [];
+  for (let idx = 0; idx < 5; idx++) {
+    const starCX = startX + idx * step;
+    const pts: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      const rad = i % 2 ? r * 0.44 : r;
+      const a = -Math.PI / 2 + (i * Math.PI) / 5;
+      pts.push(`${(starCX + Math.cos(a) * rad).toFixed(1)},${(cy + Math.sin(a) * rad).toFixed(1)}`);
+    }
+    const fill = idx < rating ? accent : "none";
+    const stroke = accent;
+    const strokeWidth = idx < rating ? "0" : "1.5";
+    polygons.push(
+      `<polygon points="${pts.join(" ")}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>`
+    );
+  }
+  return polygons.join("\n");
 }

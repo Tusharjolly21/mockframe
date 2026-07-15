@@ -1,6 +1,6 @@
 "use client";
 
-import { esc, homeIndicator, initials, SH, statusBar, SW, textWidth, wrapText } from "./common";
+import { esc, homeIndicator, initials, SH, statusBar, SW, textWidth, wrapText, avatar, scrollBody, bubbleBaseline, textBlock as baseTextBlock } from "./common";
 import { fontFor } from "./fonts";
 import type { DatingBrand, DatingDoc } from "./types";
 
@@ -55,6 +55,9 @@ const BRANDS: Record<DatingBrand, BrandCfg> = {
 };
 
 export function renderDating(doc: DatingDoc, photoUrl?: string): string {
+  if (doc.mode === "chat") {
+    return renderDatingChat(doc, photoUrl);
+  }
   const platform = doc.chrome.platform ?? "ios";
   const font = fontFor("dating", platform);
   const dark = !!doc.chrome.dark;
@@ -231,4 +234,254 @@ function rewindIcon(cx: number, cy: number, r: number, color: string): string {
     `<path d="M${cx + s} ${cy} a ${s} ${s} 0 1 1 -${s} -${s}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>` +
     `<path d="M${cx} ${cy - s * 1.7} L${cx} ${cy - s} L${cx + s * 0.75} ${cy - s}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`
   );
+}
+
+function renderDatingChat(doc: DatingDoc, avatarUrl?: string): string {
+  const platform = doc.chrome.platform ?? "ios";
+  const font = fontFor("dating", platform);
+  const dark = !!doc.chrome.dark;
+  const brand = doc.brand;
+  
+  const c = {
+    bg: dark ? "#000000" : "#ffffff",
+    headerBg: dark ? "#161619" : "#ffffff",
+    hairline: dark ? "#242427" : "#e4e4ec",
+    textPrimary: dark ? "#ffffff" : "#111827",
+    textSecondary: dark ? "rgba(255,255,255,0.7)" : "rgba(17,24,39,0.6)",
+    textTertiary: dark ? "rgba(255,255,255,0.4)" : "rgba(17,24,39,0.4)",
+    incoming: dark ? "#212124" : "#f1f1f7",
+    incomingText: dark ? "#ffffff" : "#111827",
+    accent: brand === "tinder" ? "#fd267a" : "#ffb800",
+  };
+
+  const parts: string[] = [`<rect width="${SW}" height="${SH}" fill="${c.bg}"/>`];
+  parts.push(statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.textPrimary, platform }));
+
+  // Header area
+  const HEADER_H = 120;
+  parts.push(`<rect width="${SW}" height="${HEADER_H}" fill="${c.headerBg}"/>`);
+  parts.push(`<rect y="${HEADER_H - 0.5}" width="${SW}" height="0.5" fill="${c.hairline}"/>`);
+
+  // Back chevron
+  if (brand === "tinder") {
+    parts.push(`<path d="M22 78 l-8 8 l8 8" fill="none" stroke="#8e8e93" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`);
+  } else {
+    parts.push(`<path d="M22 75 l-8 8 l8 8" fill="none" stroke="${c.accent}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`);
+  }
+
+  if (brand === "tinder") {
+    // Tinder style: Center-aligned avatar, name below it
+    const avatarX = SW / 2;
+    const avatarY = 66;
+    parts.push(avatar(doc.name, avatarX, avatarY, 20, "dt", avatarUrl));
+    
+    // Verified badge
+    const nameWidth = textWidth(doc.name, 12);
+    const nameY = 100;
+    parts.push(
+      `<text font-family="${font}" font-size="12" font-weight="600" fill="${c.textPrimary}" text-anchor="middle" x="${avatarX}">${esc(doc.name)}</text>`
+    );
+    if (doc.verified) {
+      parts.push(verifiedBadge(avatarX + nameWidth / 2 + 4, nameY - 10));
+    }
+
+    // Header Right controls: Blue shield, video icon
+    const iconColor = "#007aff";
+    parts.push(`
+      <g transform="translate(${SW - 44}, 62)" stroke="${iconColor}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </g>
+    `);
+    parts.push(`
+      <g transform="translate(${SW - 88}, 62)" stroke="${iconColor}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 7l-7 5 7 5V7z"/>
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+      </g>
+    `);
+  } else {
+    // Bumble style: Left-aligned avatar, name and status subtitle next to it
+    const avatarX = 54;
+    const avatarY = 82;
+    parts.push(avatar(doc.name, avatarX, avatarY, 20, "dt", avatarUrl));
+
+    // Name + Verified
+    const nameX = 86;
+    const nameY = 78;
+    parts.push(
+      `<text font-family="${font}" font-size="15" font-weight="700" fill="${c.textPrimary}" x="${nameX}" y="${nameY}">${esc(doc.name)}</text>`
+    );
+    if (doc.verified) {
+      const nameWidth = textWidth(doc.name, 15);
+      parts.push(verifiedBadge(nameX + nameWidth + 4, nameY - 14));
+    }
+    // Subtitle
+    parts.push(
+      `<text font-family="${font}" font-size="11.5" font-weight="500" fill="#00e2a0" x="${nameX}" y="${nameY + 16}">Active today</text>`
+    );
+
+    // Call controls (Video and Phone) on the right
+    parts.push(`
+      <g transform="translate(${SW - 44}, 68)" stroke="${c.accent}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+      </g>
+      <g transform="translate(${SW - 88}, 68)" stroke="${c.accent}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 7l-7 5 7 5V7z"/>
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+      </g>
+    `);
+  }
+
+  // Render Messages
+  const bodyStart = parts.length;
+  let y = HEADER_H + 20;
+
+  const BUBBLE_MAX = 260;
+  const FONT_SIZE = 15;
+  const LINE_H = 20;
+  const PAD_X = 14;
+  const PAD_Y = 10;
+  const MARGIN = 16;
+
+  const msgs = doc.messages || [];
+  for (let i = 0; i < msgs.length; i++) {
+    const m = msgs[i];
+    const mine = m.from === "me";
+    const availableWidth = brand === "tinder" && !mine ? BUBBLE_MAX - 52 : BUBBLE_MAX;
+    const lines = wrapText(m.text || " ", FONT_SIZE, availableWidth - PAD_X * 2);
+    const w = Math.min(
+      availableWidth,
+      Math.max(...lines.map((l) => textWidth(l, FONT_SIZE))) + PAD_X * 2
+    );
+    const h = lines.length * LINE_H + PAD_Y * 2;
+    
+    let x = MARGIN;
+    if (mine) {
+      x = SW - MARGIN - w;
+    } else if (brand === "tinder") {
+      x = 52;
+    }
+
+    // Bubbles styling
+    let bubbleFill = "";
+    let textColor = "";
+
+    if (mine) {
+      if (brand === "tinder") {
+        bubbleFill = "#1eb8ff"; // Tinder reference screenshot solid cyan-blue
+        textColor = "#ffffff";
+      } else {
+        bubbleFill = "#ffce34"; // Bumble yellow
+        textColor = "#1e1e24";
+      }
+    } else {
+      bubbleFill = c.incoming;
+      textColor = c.incomingText;
+    }
+
+    // Render small circular avatar for Tinder incoming messages
+    if (brand === "tinder" && !mine) {
+      parts.push(avatar(doc.name, 28, y + h - 14, 14, "dt", avatarUrl));
+    }
+
+    const isGroupEnd = i === msgs.length - 1 || msgs[i + 1].from !== m.from;
+
+    parts.push(`<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="18" fill="${bubbleFill}"/>`);
+    parts.push(
+      baseTextBlock(lines, {
+        font,
+        x: x + PAD_X,
+        y: bubbleBaseline(y, h, lines.length, LINE_H, FONT_SIZE),
+        size: FONT_SIZE,
+        lineHeight: LINE_H,
+        color: textColor,
+      })
+    );
+
+    y += h + (isGroupEnd ? 12 : 3);
+  }
+
+  const body = parts.splice(bodyStart);
+  const inputHeight = brand === "tinder" ? 120 : 80;
+  parts.push(scrollBody(body.join("\n"), { top: HEADER_H, bottom: SH - inputHeight, contentBottom: y }));
+
+  // Input area
+  const inputY = SH - inputHeight;
+  parts.push(`<rect y="${inputY}" width="${SW}" height="${inputHeight}" fill="${c.headerBg}"/>`);
+  parts.push(`<rect y="${inputY}" width="${SW}" height="0.5" fill="${c.hairline}"/>`);
+
+  if (brand === "tinder") {
+    // Tinder Style Input with bottom icon bar
+    parts.push(`
+      <rect x="16" y="${inputY + 12}" width="${SW - 32}" height="44" rx="22" fill="${dark ? "#1c1c1e" : "#f1f1f7"}" stroke="none"/>
+      <text font-family="${font}" font-size="15" fill="${c.textTertiary}" x="36" y="${inputY + 39}">Type a message...</text>
+      <text font-family="${font}" font-size="16" font-weight="600" fill="${dark ? "#48484a" : "#c8c8cd"}" x="${SW - 62}" y="${inputY + 39}">Send</text>
+    `);
+
+    // Bottom icons bar distribution
+    const iconY = inputY + 70;
+    
+    // 1. Contact Card Icon
+    parts.push(`
+      <g transform="translate(${SW / 6 * 1 - 12}, ${iconY})" stroke="${c.textSecondary}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="2" width="20" height="16" rx="2" ry="2"/>
+        <circle cx="8" cy="10" r="3"/>
+        <line x1="15" y1="8" x2="20" y2="8"/>
+        <line x1="15" y1="12" x2="20" y2="12"/>
+      </g>
+    `);
+
+    // 2. Sticker Icon
+    parts.push(`
+      <g transform="translate(${SW / 6 * 2 - 12}, ${iconY})" stroke="${c.textSecondary}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="2" width="20" height="20" rx="3" ry="3"/>
+        <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+        <circle cx="15.5" cy="8.5" r="1.5" fill="currentColor"/>
+        <path d="M7 14.5 C 7 14.5, 9 17, 12 17 C 15 17, 17 14.5, 17 14.5"/>
+      </g>
+    `);
+
+    // 3. GIF Icon
+    parts.push(`
+      <g transform="translate(${SW / 6 * 3 - 12}, ${iconY})">
+        <circle cx="12" cy="11" r="11" fill="${dark ? "#26262b" : "#f1f1f7"}"/>
+        <text font-family="${font}" font-size="9" font-weight="900" fill="${c.textSecondary}" text-anchor="middle" x="12" y="14.5">GIF</text>
+      </g>
+    `);
+
+    // 4. Music/Notes Icon
+    parts.push(`
+      <g transform="translate(${SW / 6 * 4 - 10}, ${iconY})" stroke="${c.textSecondary}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 18V5l12-2v13"/>
+        <circle cx="6" cy="18" r="3"/>
+        <circle cx="18" cy="16" r="3"/>
+      </g>
+    `);
+
+    // 5. Blue Search circle Icon
+    parts.push(`
+      <g transform="translate(${SW / 6 * 5 - 12}, ${iconY})">
+        <circle cx="12" cy="11" r="11" fill="none" stroke="#00b0ff" stroke-width="2.5"/>
+        <circle cx="12" cy="11" r="5" fill="#00b0ff"/>
+      </g>
+    `);
+  } else {
+    parts.push(`
+      <circle cx="34" cy="${inputY + 32}" r="16" fill="${c.accent}"/>
+      <path d="M34 ${inputY + 25} v14 M27 ${inputY + 32} h14" stroke="#1e1e24" stroke-width="2.5" stroke-linecap="round"/>
+      <rect x="62" y="${inputY + 12}" width="${SW - 78}" height="40" rx="20" fill="${dark ? "#212124" : "#f1f1f7"}"/>
+      <text font-family="${font}" font-size="14.5" fill="${c.textTertiary}" x="80" y="${inputY + 36}">Send a message...</text>
+      
+      <!-- Microphone icon -->
+      <g transform="translate(${SW - 46}, ${inputY + 20})" stroke="${c.textSecondary}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="23"/>
+        <line x1="8" y1="23" x2="16" y2="23"/>
+      </g>
+    `);
+  }
+
+  parts.push(homeIndicator(c.textPrimary, platform));
+
+  return parts.join("\n");
 }

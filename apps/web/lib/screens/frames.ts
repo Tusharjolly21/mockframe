@@ -67,18 +67,19 @@ function drawBar(style: FrameStyle, th: FrameTheme, x: number, y: number, w: num
     return dots(x + 18, cy) + `<text font-family="-apple-system,system-ui,sans-serif" font-size="12.5" fill="${th.barText}" text-anchor="middle" x="${x + w / 2}" y="${cy + 4}">${title}</text>`;
   }
   if (style === "safari") {
-    const pillW = Math.min(w - 150, 230);
-    const px = x + w / 2 - pillW / 2;
+    const pillX = x + 112;
+    const pillW = w - 112 - 76;
     const pill = th.dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)";
     const stroke = th.dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.09)";
+    const lockX = pillX + 12;
     return (
       dots(x + 18, cy) +
-      `<path d="M${x + 76} ${cy - 5} l-5 5 5 5" fill="none" stroke="${th.barText}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>` +
-      `<path d="M${x + 92} ${cy - 5} l5 5 -5 5" fill="none" stroke="${th.barText}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>` +
-      `<rect x="${px}" y="${cy - 11}" width="${pillW}" height="22" rx="6" fill="${pill}" stroke="${stroke}" stroke-width="1"/>` +
-      `<rect x="${px + pillW / 2 - 40}" y="${cy - 3.5}" width="6" height="6" rx="2.4" fill="none" stroke="${th.barText}" stroke-width="1.2"/>` +
-      `<path d="M${px + pillW / 2 - 38.5} ${cy - 3.5} v-2 a1.5 1.5 0 0 1 3 0 v2" fill="none" stroke="${th.barText}" stroke-width="1.2"/>` +
-      `<text font-family="-apple-system,system-ui,sans-serif" font-size="11.5" fill="${th.barText}" text-anchor="middle" x="${px + pillW / 2 + 2}" y="${cy + 4}">${title}</text>` +
+      `<path d="M${x + 82} ${cy - 5} l-5 5 l5 5" fill="none" stroke="${th.barText}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>` +
+      `<path d="M${x + 94} ${cy - 5} l5 5 l-5 5" fill="none" stroke="${th.barText}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>` +
+      `<rect x="${pillX}" y="${cy - 11}" width="${pillW}" height="22" rx="6" fill="${pill}" stroke="${stroke}" stroke-width="1"/>` +
+      `<rect x="${lockX}" y="${cy - 3}" width="6" height="5" rx="1" fill="none" stroke="${th.barText}" stroke-width="1.1"/>` +
+      `<path d="M${lockX + 1.5} ${cy - 3} v-1.5 a1.5 1.5 0 0 1 3 0 v1.5" fill="none" stroke="${th.barText}" stroke-width="1.1"/>` +
+      `<text font-family="-apple-system,system-ui,sans-serif" font-size="11" fill="${th.barText}" text-anchor="start" x="${lockX + 14}" y="${cy + 4}">${title}</text>` +
       `<path d="M${x + w - 56} ${cy + 4} v-11 m-4 4 l4 -4 4 4 m-11 5 v6 h14 v-6" fill="none" stroke="${th.barText}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` +
       `<path d="M${x + w - 32} ${cy - 6} v12 m-6 -6 h12" stroke="${th.barText}" stroke-width="1.6" stroke-linecap="round"/>`
     );
@@ -147,9 +148,11 @@ export function renderFramed(style: FrameStyle, th: FrameTheme, draw: ContentDra
   }
 
   // main card + soft shadow
-  parts.push(`<rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="${RX}" fill="${th.cardBg}"${shadowFilter ? ` style="${shadowFilter}"` : ""}/>`);
-  if (style === "card") {
-    parts.push(`<rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="${RX}" fill="none" stroke="${th.dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}" stroke-width="1"/>`);
+  if (style !== "none") {
+    parts.push(`<rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="${RX}" fill="${th.cardBg}"${shadowFilter ? ` style="${shadowFilter}"` : ""}/>`);
+    if (style === "card") {
+      parts.push(`<rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="${RX}" fill="none" stroke="${th.dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}" stroke-width="1"/>`);
+    }
   }
 
   // content clipped to the rounded card (bar, if any, is painted over its top)

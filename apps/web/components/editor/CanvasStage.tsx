@@ -497,6 +497,9 @@ export function CanvasStage() {
           watermark={!removeWatermark}
           animateLayerId={entrance.layerId}
           animationNonce={entrance.nonce}
+          onBlurZonesChange={(layerId, zones) => {
+            updateLayer(layerId, (l) => ({ ...l, blurZones: zones }));
+          }}
           panoramaIdx={useShotBatchStore.getState().shots.findIndex((s) => s.scene.id === scene.id) >= 0 ? useShotBatchStore.getState().shots.findIndex((s) => s.scene.id === scene.id) : undefined}
           panoramaTotal={useShotBatchStore.getState().shots.length > 1 ? useShotBatchStore.getState().shots.length : undefined}
         />

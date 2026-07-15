@@ -47,6 +47,10 @@ const TOOL_BACKGROUNDS: Record<string, CSSProperties> = {
     backgroundColor: "#0c4a6e",
     backgroundImage: "linear-gradient(to bottom right, #0284c7, #0369a1)",
   },
+  "appstore-promo": {
+    backgroundColor: "#1e1b4b",
+    backgroundImage: "radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15), transparent 50%), linear-gradient(135deg, #090514 0%, #1e1145 100%)",
+  },
   googlemaps: {
     backgroundColor: "#052e16",
     backgroundImage: "linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)",
@@ -161,12 +165,15 @@ export default function TemplatesPage() {
             const previewUrl = templatePreviewUrl(template);
             return (
               <RevealItem key={template.slug}>
-                <Link href={`/templates/${template.slug}`} className="group block h-full overflow-hidden rounded-lg border border-white/10 bg-[#101116] transition-colors hover:border-white/25">
-                  <div className="relative flex h-56 items-center justify-center overflow-hidden p-6" style={TOOL_BACKGROUNDS[template.slug]}>
-                    {previewUrl && (
+                <Link
+                  href={`/templates/${template.slug}`}
+                  className="group block h-full overflow-hidden rounded-lg border border-white/10 bg-[#101116] transition-colors hover:border-white/25"
+                >
+                  <div className="relative flex h-56 items-center justify-center overflow-hidden p-6" style={TOOL_BACKGROUNDS[template.slug as keyof typeof TOOL_BACKGROUNDS]}>
+                    {previewUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={previewUrl} alt={template.label} className="max-h-[82%] max-w-[86%] object-contain drop-shadow-[0_16px_24px_rgba(0,0,0,.3)] transition-transform duration-300 group-hover:scale-[1.025]" />
-                    )}
+                    ) : null}
                   </div>
                   <div className="border-t border-white/[0.08] p-4">
                     <div className="flex items-center justify-between gap-3">

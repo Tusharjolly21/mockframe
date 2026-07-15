@@ -1,0 +1,47 @@
+{
+  "id": "arc-browser",
+  "name": "Arc",
+  "brand": "browser-company",
+  "category": "browser",
+  "released": "2026-01",
+  "screen": {
+    "width": 2560,
+    "height": 1600,
+    "cornerRadius": 0
+  },
+  "aliases": [
+    "arc browser mockup",
+    "arc frame"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "arc mockup",
+      "arc browser mockup"
+    ]
+  },
+  "urlBarText": "mockframe.app",
+  "frame": {
+    "width": 3020,
+    "height": 1740,
+    "screenRect": {
+      "x": 466,
+      "y": 26,
+      "width": 2528,
+      "height": 1688
+    },
+    "maskPath": "M482 26 H2978 A16 16 0 0 1 2994 42 V1698 A16 16 0 0 1 2978 1714 H482 A16 16 0 0 1 466 1698 V42 A16 16 0 0 1 482 26 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "light",
+      "label": "Light",
+      "svg": "frame-light.svg"
+    },
+    {
+      "id": "dark",
+      "label": "Dark",
+      "svg": "frame-dark.svg"
+    }
+  ]
+}

@@ -31,6 +31,7 @@ import { renderXPost, renderXPostCard } from "./xpost";
 import { renderIosNotification, iosNotificationSize } from "./iosnotification";
 import { renderSpotify, spotifyCardSize } from "./spotify";
 import { renderAppStore, appStoreCardSize } from "./appstore";
+import { renderAppStorePromo, appStorePromoCardSize } from "./appstore-promo";
 import { renderGoogleMaps, googleMapsCardSize } from "./googlemaps";
 import { renderGooglePlay, googlePlayCardSize } from "./googleplay";
 import { SCREEN_APP_LABELS, type ScreenDoc } from "./types";
@@ -170,6 +171,7 @@ export function screenLogicalHeight(doc: ScreenDoc): number {
   if (doc.app === "ios-notification") return iosNotificationSize(doc).height;
   if (doc.app === "spotify" && doc.standalone) return spotifyCardSize(doc).height;
   if (doc.app === "appstore" && doc.standalone) return appStoreCardSize(doc).height;
+  if (doc.app === "appstore-promo") return appStorePromoCardSize(doc).height;
   if (doc.app === "googlemaps" && doc.standalone) return googleMapsCardSize(doc).height;
   if (doc.app === "googleplay" && doc.standalone) return googlePlayCardSize(doc).height;
   // template cards have a content-driven height — resolved via renderScreenSized
@@ -184,6 +186,7 @@ export function screenLogicalWidth(doc: ScreenDoc): number {
   if (doc.app === "ios-notification") return iosNotificationSize(doc).width;
   if (doc.app === "spotify" && doc.standalone) return spotifyCardSize(doc).width;
   if (doc.app === "appstore" && doc.standalone) return appStoreCardSize(doc).width;
+  if (doc.app === "appstore-promo") return appStorePromoCardSize(doc).width;
   if (doc.app === "googlemaps" && doc.standalone) return googleMapsCardSize(doc).width;
   if (doc.app === "googleplay" && doc.standalone) return googlePlayCardSize(doc).width;
   return SW;
@@ -210,6 +213,9 @@ function referencedAssetIds(doc: ScreenDoc): string[] {
   if (doc.app === "bluesky" && doc.link?.image) ids.push(doc.link.image);
   if (doc.app === "social") for (const cm of doc.commentList ?? []) if (cm.avatar) ids.push(cm.avatar);
   if (doc.app === "slack" || doc.app === "discord") for (const m of doc.messages) if (m.avatar) ids.push(m.avatar);
+  if (doc.app === "appstore-promo") {
+    if (doc.screenshot) ids.push(doc.screenshot);
+  }
   return ids;
 }
 
@@ -265,6 +271,10 @@ export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): {
       return flat(renderSpotify(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
     case "appstore":
       return flat(renderAppStore(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
+    case "appstore-promo": {
+      const screenshotUrl = doc.screenshot ? lookupUrl?.(doc.screenshot) : undefined;
+      return flat(renderAppStorePromo(doc, dp, screenshotUrl), screenLogicalHeight(doc), screenLogicalWidth(doc));
+    }
     case "googlemaps":
       return flat(renderGoogleMaps(doc), screenLogicalHeight(doc), screenLogicalWidth(doc));
     case "googleplay":

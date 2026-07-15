@@ -22,7 +22,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, CalendarDays, Code2, FileText, Heart, ImageIcon, ImagePlus, LayoutGrid, Link2, MessagesSquare, Mic, Paperclip, Phone, Quote, Search, Shuffle, Slack, SmilePlus, Sparkles, Trash2, X, Music, MapPin, Store, Bell } from "lucide-react";
 import type { MockupLayer } from "@framekit/scene";
-import { getDevice } from "@framekit/devices";
+import { getDevice, listDevices } from "@framekit/devices";
 import { ingestFile, resolveAsset } from "@/lib/assets";
 import {
   AI_MODEL_LABELS,
@@ -80,6 +80,7 @@ import {
   type IosNotificationDoc,
   type SpotifyDoc,
   type AppStoreDoc,
+  type AppStorePromoDoc,
   type GoogleMapsDoc,
   type GooglePlayDoc,
   defaultTemplateDoc,
@@ -162,7 +163,7 @@ const APPS: AppMeta[] = [
 
 /** Standalone-card Templates (window-framed content, no phone) — a separate
  *  section from the phone app roster. */
-type StandaloneTemplateApp = "code" | "social" | "github" | "stripe" | "testimonial";
+type StandaloneTemplateApp = "code" | "social" | "github" | "stripe" | "testimonial" | "appstore-promo";
 
 const TEMPLATE_TILES: { app: StandaloneTemplateApp; label: string; icon: React.ComponentType<{ size?: number; color?: string }>; tint: string }[] = [
   { app: "social", label: "Post URL", icon: Link2, tint: "#7c3aed" },
@@ -170,6 +171,7 @@ const TEMPLATE_TILES: { app: StandaloneTemplateApp; label: string; icon: React.C
   { app: "github", label: "GitHub graph", icon: SiGithub, tint: "#238636" },
   { app: "stripe", label: "Stripe graph", icon: SiStripe, tint: "#635bff" },
   { app: "testimonial", label: "Testimonial", icon: Quote, tint: "#6d5dfc" },
+  { app: "appstore-promo", label: "Store Promo", icon: Store, tint: "#007aff" },
 ];
 
 /** Apps whose doc carries a contact/profile photo (`avatar`). A runtime
@@ -197,18 +199,17 @@ const AVATAR_APPS = new Set<ScreenApp>([
   "testimonial",
   "spotify",
   "appstore",
+  "appstore-promo",
   "googleplay",
 ]);
 
-/** True when the doc is a standalone window-framed Template card (Code always;
- *  Bluesky/X only in their `standalone` mode) — gates the window-frame picker. */
 export function isTemplateCard(doc: ScreenDoc): boolean {
-  return doc.app === "code" || ((doc.app === "bluesky" || doc.app === "xpost" || doc.app === "social" || doc.app === "ios-notification" || doc.app === "spotify" || doc.app === "appstore" || doc.app === "googlemaps" || doc.app === "googleplay") && !!(doc as { standalone?: boolean }).standalone);
+  return doc.app === "code" || ((doc.app === "bluesky" || doc.app === "xpost" || doc.app === "social" || doc.app === "ios-notification" || doc.app === "spotify" || doc.app === "appstore" || doc.app === "appstore-promo" || doc.app === "googlemaps" || doc.app === "googleplay") && !!(doc as { standalone?: boolean }).standalone);
 }
 
 /** Any content that is currently exporting on its own, without a device. */
 function isStandaloneContent(doc: ScreenDoc): boolean {
-  return isTemplateCard(doc) || doc.app === "testimonial" || ((doc.app === "github" || doc.app === "stripe" || doc.app === "ios-notification" || doc.app === "spotify" || doc.app === "appstore" || doc.app === "googlemaps" || doc.app === "googleplay") && !!doc.standalone);
+  return isTemplateCard(doc) || doc.app === "testimonial" || ((doc.app === "github" || doc.app === "stripe" || doc.app === "ios-notification" || doc.app === "spotify" || doc.app === "appstore" || doc.app === "appstore-promo" || doc.app === "googlemaps" || doc.app === "googleplay") && !!doc.standalone);
 }
 
 /** iOS vs Android from the mockup's device — Apple = iOS, everything else
@@ -437,7 +438,9 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
                     ? "Profile photo"
                     : doc.app === "social" || doc.app === "xpost" || doc.app === "bluesky" || doc.app === "testimonial"
                       ? "Author photo"
-                      : "Their photo (DP)"
+                      : doc.app === "appstore-promo"
+                        ? "App Icon"
+                        : "Their photo (DP)"
           }
           value={(doc as { avatar?: string }).avatar}
           onChange={(avatar) => setDoc({ ...doc, avatar } as ScreenDoc)}
@@ -474,6 +477,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       {doc.app === "ios-notification" && <IosNotificationFields doc={doc} setDoc={setDoc} />}
       {doc.app === "spotify" && <SpotifyFields doc={doc} setDoc={setDoc} />}
       {doc.app === "appstore" && <AppStoreFields doc={doc} setDoc={setDoc} />}
+      {doc.app === "appstore-promo" && <AppStorePromoFields doc={doc as AppStorePromoDoc} setDoc={setDoc} />}
       {doc.app === "googlemaps" && <GoogleMapsFields doc={doc} setDoc={setDoc} />}
       {doc.app === "googleplay" && <GooglePlayFields doc={doc} setDoc={setDoc} />}
     </Section>
@@ -1243,14 +1247,29 @@ function LineFields({ doc, setDoc }: { doc: LineDoc; setDoc: (d: ScreenDoc) => v
 const DATING_BRANDS: DatingDoc["brand"][] = ["tinder", "bumble"];
 
 function DatingFields({ doc, setDoc }: { doc: DatingDoc; setDoc: (d: ScreenDoc) => void }) {
+  const isChat = doc.mode === "chat";
   return (
     <>
-      <Seg
-        id="dating-brand"
-        options={DATING_BRANDS.map((b) => ({ value: b, label: DATING_LABELS[b] }))}
-        value={doc.brand}
-        onChange={(v) => setDoc({ ...doc, brand: v as DatingDoc["brand"] })}
-      />
+      <div className="flex gap-2">
+        <div className="flex-1">
+          <span className="mb-1 block text-xs text-[#6b6b76]">Brand</span>
+          <Seg
+            id="dating-brand"
+            options={DATING_BRANDS.map((b) => ({ value: b, label: DATING_LABELS[b] }))}
+            value={doc.brand}
+            onChange={(v) => setDoc({ ...doc, brand: v as DatingDoc["brand"] })}
+          />
+        </div>
+        <div className="w-28">
+          <span className="mb-1 block text-xs text-[#6b6b76]">Mode</span>
+          <Seg
+            id="dating-mode"
+            options={[{ value: "profile", label: "Card" }, { value: "chat", label: "Chat" }]}
+            value={doc.mode || "profile"}
+            onChange={(v) => setDoc({ ...doc, mode: v as "profile" | "chat" })}
+          />
+        </div>
+      </div>
       <div className="mt-3 flex gap-2">
         <Field label="Name" value={doc.name} onChange={(name) => setDoc({ ...doc, name })} className="flex-1" />
         <NumField label="Age" value={doc.age} onChange={(age) => setDoc({ ...doc, age })} />
@@ -1258,21 +1277,33 @@ function DatingFields({ doc, setDoc }: { doc: DatingDoc; setDoc: (d: ScreenDoc) 
           <Toggle label="Verified" on={!!doc.verified} onClick={() => setDoc({ ...doc, verified: !doc.verified })} />
         </div>
       </div>
-      <div className="mt-2 flex gap-2">
-        <Field label="Job / role" value={doc.job ?? ""} onChange={(job) => setDoc({ ...doc, job: job || undefined })} className="flex-1" placeholder="Product Designer" />
-        <Field label="Distance" value={doc.distance ?? ""} onChange={(distance) => setDoc({ ...doc, distance: distance || undefined })} className="w-28" placeholder="2 miles away" />
-      </div>
-      <label className="mt-2 block">
-        <span className="mb-1 block text-xs text-[#6b6b76]">Bio</span>
-        <textarea value={doc.bio ?? ""} rows={3} onChange={(e) => setDoc({ ...doc, bio: e.target.value || undefined })} className="w-full resize-none rounded-lg border border-[#e4e4ec] bg-white px-2 py-1.5 text-[11px] text-[#17171c] outline-none focus:border-[#17171c]" />
-      </label>
-      <Field
-        label="Interests (comma separated)"
-        value={(doc.interests ?? []).join(", ")}
-        onChange={(v) => setDoc({ ...doc, interests: v.split(",").map((s) => s.trim()).filter(Boolean) })}
-        placeholder="Climbing, Design, Travel"
-      />
-      <p className="mt-2 text-[10px] leading-relaxed text-[#b0b0ba]">Upload a profile photo above — without one, the card uses a colored gradient.</p>
+      {!isChat ? (
+        <>
+          <div className="mt-2 flex gap-2">
+            <Field label="Job / role" value={doc.job ?? ""} onChange={(job) => setDoc({ ...doc, job: job || undefined })} className="flex-1" placeholder="Product Designer" />
+            <Field label="Distance" value={doc.distance ?? ""} onChange={(distance) => setDoc({ ...doc, distance: distance || undefined })} className="w-28" placeholder="2 miles away" />
+          </div>
+          <label className="mt-2 block">
+            <span className="mb-1 block text-xs text-[#6b6b76]">Bio</span>
+            <textarea value={doc.bio ?? ""} rows={3} onChange={(e) => setDoc({ ...doc, bio: e.target.value || undefined })} className="w-full resize-none rounded-lg border border-[#e4e4ec] bg-white px-2 py-1.5 text-[11px] text-[#17171c] outline-none focus:border-[#17171c]" />
+          </label>
+          <Field
+            label="Interests (comma separated)"
+            value={(doc.interests ?? []).join(", ")}
+            onChange={(v) => setDoc({ ...doc, interests: v.split(",").map((s) => s.trim()).filter(Boolean) })}
+            placeholder="Climbing, Design, Travel"
+          />
+          <p className="mt-2 text-[10px] leading-relaxed text-[#b0b0ba]">Upload a profile photo above — without one, the card uses a colored gradient.</p>
+        </>
+      ) : (
+        <div className="mt-3">
+          <MessageRows
+            messages={doc.messages || []}
+            onChange={(messages) => setDoc({ ...doc, messages })}
+            makeNew={(from) => ({ from, text: "" })}
+          />
+        </div>
+      )}
     </>
   );
 }
@@ -1576,6 +1607,7 @@ function YouTubeFields({ doc, setDoc }: { doc: YouTubeDoc; setDoc: (d: ScreenDoc
 const HINGE_VITAL_ICONS: HingeVital["icon"][] = ["age", "height", "location", "job", "school", "pronouns", "religion", "drinking"];
 
 function HingeFields({ doc, setDoc }: { doc: HingeDoc; setDoc: (d: ScreenDoc) => void }) {
+  const isChat = doc.mode === "chat";
   const patchCard = (i: number, c: HingeCard) => setDoc({ ...doc, cards: doc.cards.map((x, j) => (j === i ? c : x)) });
   const removeCard = (i: number) =>
     setDoc({ ...doc, cards: doc.cards.filter((_, j) => j !== i), liked: (doc.liked ?? []).filter((x) => x !== i).map((x) => (x > i ? x - 1 : x)) });
@@ -1587,57 +1619,82 @@ function HingeFields({ doc, setDoc }: { doc: HingeDoc; setDoc: (d: ScreenDoc) =>
   return (
     <>
       <div className="flex gap-2">
-        <Field label="Name" value={doc.name} onChange={(name) => setDoc({ ...doc, name })} className="flex-1" />
-        <NumField label="Age" value={doc.age} onChange={(age) => setDoc({ ...doc, age })} />
-        <div className="flex flex-col justify-end pb-0.5">
+        <div className="flex-1">
+          <Field label="Name" value={doc.name} onChange={(name) => setDoc({ ...doc, name })} className="w-full" />
+        </div>
+        <div className="w-20 shrink-0">
+          <NumField label="Age" value={doc.age} onChange={(age) => setDoc({ ...doc, age })} />
+        </div>
+        <div className="flex flex-col justify-end pb-0.5 shrink-0">
           <Toggle label="Verified" on={!!doc.verified} onClick={() => setDoc({ ...doc, verified: !doc.verified })} />
         </div>
       </div>
       <div className="mt-3">
-        <span className="mb-1 block text-xs text-[#6b6b76]">Vitals</span>
-        <div className="flex flex-col gap-1.5">
-          {doc.vitals.map((v, i) => (
-            <div key={i} className="flex items-center gap-1.5">
-              <select value={v.icon} onChange={(e) => patchV(i, { icon: e.target.value as HingeVital["icon"] })} className="w-24 shrink-0 rounded-md border border-[#e4e4ec] bg-white px-1.5 py-1 text-[11px] outline-none focus:border-[#17171c]">
-                {HINGE_VITAL_ICONS.map((ic) => (<option key={ic} value={ic}>{ic}</option>))}
-              </select>
-              <input value={v.text} placeholder="value" onChange={(e) => patchV(i, { text: e.target.value })} className="min-w-0 flex-1 rounded-md border border-[#e4e4ec] bg-white px-1.5 py-1 text-[11px] outline-none focus:border-[#17171c]" />
-              <button title="Remove" onClick={() => setDoc({ ...doc, vitals: doc.vitals.filter((_, j) => j !== i) })} className="fk-press shrink-0 rounded-md p-1 text-[#b0b0ba] hover:bg-black/6 hover:text-[#17171c]"><Trash2 size={12} /></button>
-            </div>
-          ))}
-        </div>
-        <button onClick={() => setDoc({ ...doc, vitals: [...doc.vitals, { icon: "location", text: "" }] })} className="fk-press mt-1.5 w-full rounded-lg border border-dashed border-[#c9c9d4] py-1 text-[11px] font-semibold text-[#6b6b76] hover:border-[#17171c] hover:text-[#17171c]">+ Add vital</button>
+        <span className="mb-1 block text-xs text-[#6b6b76]">Mode</span>
+        <Seg
+          id="hinge-mode"
+          options={[{ value: "profile", label: "Profile Stack" }, { value: "chat", label: "Chat View" }]}
+          value={doc.mode || "profile"}
+          onChange={(v) => setDoc({ ...doc, mode: v as "profile" | "chat" })}
+        />
       </div>
-      <div className="mt-3">
-        <span className="mb-1 block text-xs text-[#6b6b76]">Cards (photos &amp; prompts)</span>
-        <div className="flex flex-col gap-2">
-          {doc.cards.map((card, i) => {
-            const liked = (doc.liked ?? []).includes(i);
-            return (
-              <div key={i} className="rounded-xl border border-[#ececf2] p-1.5">
-                <div className="mb-1.5 flex items-center gap-1.5">
-                  <span className="rounded-md bg-[#f4f4f8] px-1.5 py-1 text-[10px] font-bold uppercase text-[#6b6b76]">{card.type}</span>
-                  <span className="flex-1" />
-                  <button title="Liked (purple heart)" onClick={() => toggleLike(i)} className={`fk-press rounded-md px-1.5 py-1 text-[11px] font-bold ${liked ? "bg-[#67295f] text-white" : "border border-[#e4e4ec] text-[#6b6b76]"}`}>♥</button>
-                  <button title="Remove" onClick={() => removeCard(i)} className="fk-press rounded-md p-1 text-[#b0b0ba] hover:bg-black/6 hover:text-[#17171c]"><Trash2 size={12} /></button>
+      {!isChat ? (
+        <>
+          <div className="mt-3">
+            <span className="mb-1 block text-xs text-[#6b6b76]">Vitals</span>
+            <div className="flex flex-col gap-1.5">
+              {doc.vitals.map((v, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <select value={v.icon} onChange={(e) => patchV(i, { icon: e.target.value as HingeVital["icon"] })} className="w-24 shrink-0 rounded-md border border-[#e4e4ec] bg-white px-1.5 py-1 text-[11px] outline-none focus:border-[#17171c]">
+                    {HINGE_VITAL_ICONS.map((ic) => (<option key={ic} value={ic}>{ic}</option>))}
+                  </select>
+                  <input value={v.text} placeholder="value" onChange={(e) => patchV(i, { text: e.target.value })} className="min-w-0 flex-1 rounded-md border border-[#e4e4ec] bg-white px-1.5 py-1 text-[11px] outline-none focus:border-[#17171c]" />
+                  <button title="Remove" onClick={() => setDoc({ ...doc, vitals: doc.vitals.filter((_, j) => j !== i) })} className="fk-press shrink-0 rounded-md p-1 text-[#b0b0ba] hover:bg-black/6 hover:text-[#17171c]"><Trash2 size={12} /></button>
                 </div>
-                {card.type === "photo" ? (
-                  <MediaUploadField label="Photo" value={card.image} onChange={(image) => patchCard(i, { type: "photo", image })} />
-                ) : (
-                  <div className="flex flex-col gap-1.5">
-                    <input value={card.label} placeholder="Prompt (e.g. The way to win me over is)" onChange={(e) => patchCard(i, { type: "prompt", label: e.target.value, answer: card.answer })} className="w-full rounded-md border border-[#e4e4ec] bg-white px-1.5 py-1 text-[11px] text-[#8c8a85] outline-none focus:border-[#17171c]" />
-                    <textarea value={card.answer} rows={2} placeholder="Answer" onChange={(e) => patchCard(i, { type: "prompt", label: card.label, answer: e.target.value })} className="w-full resize-none rounded-md border border-[#e4e4ec] bg-white px-1.5 py-1 text-[11px] text-[#17171c] outline-none focus:border-[#17171c]" />
+              ))}
+            </div>
+            <button onClick={() => setDoc({ ...doc, vitals: [...doc.vitals, { icon: "location", text: "" }] })} className="fk-press mt-1.5 w-full rounded-lg border border-dashed border-[#c9c9d4] py-1 text-[11px] font-semibold text-[#6b6b76] hover:border-[#17171c] hover:text-[#17171c]">+ Add vital</button>
+          </div>
+          <div className="mt-3">
+            <span className="mb-1 block text-xs text-[#6b6b76]">Cards (photos &amp; prompts)</span>
+            <div className="flex flex-col gap-2">
+              {doc.cards.map((card, i) => {
+                const liked = (doc.liked ?? []).includes(i);
+                return (
+                  <div key={i} className="rounded-xl border border-[#ececf2] p-1.5">
+                    <div className="mb-1.5 flex items-center gap-1.5">
+                      <span className="rounded-md bg-[#f4f4f8] px-1.5 py-1 text-[10px] font-bold uppercase text-[#6b6b76]">{card.type}</span>
+                      <span className="flex-1" />
+                      <button title="Liked (purple heart)" onClick={() => toggleLike(i)} className={`fk-press rounded-md px-1.5 py-1 text-[11px] font-bold ${liked ? "bg-[#67295f] text-white" : "border border-[#e4e4ec] text-[#6b6b76]"}`}>♥</button>
+                      <button title="Remove" onClick={() => removeCard(i)} className="fk-press rounded-md p-1 text-[#b0b0ba] hover:bg-black/6 hover:text-[#17171c]"><Trash2 size={12} /></button>
+                    </div>
+                    {card.type === "photo" ? (
+                      <MediaUploadField label="Photo" value={card.image} onChange={(image) => patchCard(i, { type: "photo", image })} />
+                    ) : (
+                      <div className="flex flex-col gap-1.5">
+                        <input value={card.label} placeholder="Prompt (e.g. The way to win me over is)" onChange={(e) => patchCard(i, { type: "prompt", label: e.target.value, answer: card.answer })} className="w-full rounded-md border border-[#e4e4ec] bg-white px-1.5 py-1 text-[11px] text-[#8c8a85] outline-none focus:border-[#17171c]" />
+                        <textarea value={card.answer} rows={2} placeholder="Answer" onChange={(e) => patchCard(i, { type: "prompt", label: card.label, answer: e.target.value })} className="w-full resize-none rounded-md border border-[#e4e4ec] bg-white px-1.5 py-1 text-[11px] text-[#17171c] outline-none focus:border-[#17171c]" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+            <div className="mt-2 flex gap-2">
+              <button onClick={() => setDoc({ ...doc, cards: [...doc.cards, { type: "photo" }] })} className="fk-press flex-1 rounded-lg border border-dashed border-[#c9c9d4] py-1.5 text-[11px] font-semibold text-[#6b6b76] hover:border-[#17171c] hover:text-[#17171c]">+ Photo</button>
+              <button onClick={() => setDoc({ ...doc, cards: [...doc.cards, { type: "prompt", label: "My simple pleasures", answer: "" }] })} className="fk-press flex-1 rounded-lg border border-dashed border-[#c9c9d4] py-1.5 text-[11px] font-semibold text-[#6b6b76] hover:border-[#17171c] hover:text-[#17171c]">+ Prompt</button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="mt-3">
+          <MessageRows
+            messages={doc.messages || []}
+            onChange={(messages) => setDoc({ ...doc, messages })}
+            makeNew={(from) => ({ from, text: "" })}
+          />
         </div>
-        <div className="mt-2 flex gap-2">
-          <button onClick={() => setDoc({ ...doc, cards: [...doc.cards, { type: "photo" }] })} className="fk-press flex-1 rounded-lg border border-dashed border-[#c9c9d4] py-1.5 text-[11px] font-semibold text-[#6b6b76] hover:border-[#17171c] hover:text-[#17171c]">+ Photo</button>
-          <button onClick={() => setDoc({ ...doc, cards: [...doc.cards, { type: "prompt", label: "My simple pleasures", answer: "" }] })} className="fk-press flex-1 rounded-lg border border-dashed border-[#c9c9d4] py-1.5 text-[11px] font-semibold text-[#6b6b76] hover:border-[#17171c] hover:text-[#17171c]">+ Prompt</button>
-        </div>
-      </div>
+      )}
     </>
   );
 }
@@ -2638,11 +2695,28 @@ function TestimonialFields({ doc, setDoc }: { doc: TestimonialDoc; setDoc: (d: S
 
       <div className="mt-3 flex items-center justify-between rounded-lg border border-[#ececf2] bg-[#fafafc] px-2.5 py-2">
         <div>
-          <p className="text-xs font-medium text-[#17171c]">Five-star rating</p>
+          <p className="text-xs font-medium text-[#17171c]">Rating stars</p>
           <p className="text-[10px] text-[#9a9aa4]">Adds social proof above the author</p>
         </div>
         <Toggle label={doc.showRating ? "On" : "Off"} on={doc.showRating} onClick={() => patch({ showRating: !doc.showRating })} />
       </div>
+
+      {doc.showRating && (
+        <div className="mt-2.5">
+          <Seg
+            id="testimonial-rating"
+            options={[
+              { value: "1", label: "1 ★" },
+              { value: "2", label: "2 ★" },
+              { value: "3", label: "3 ★" },
+              { value: "4", label: "4 ★" },
+              { value: "5", label: "5 ★" },
+            ]}
+            value={String(doc.rating || 5)}
+            onChange={(rating) => patch({ rating: Number(rating) })}
+          />
+        </div>
+      )}
     </>
   );
 }
@@ -3085,6 +3159,52 @@ function GooglePlayFields({ doc, setDoc }: { doc: GooglePlayDoc; setDoc: (d: Scr
       <div className="mt-2 flex gap-2">
         <Field label="App Size" value={doc.appSize} onChange={(appSize) => setDoc({ ...doc, appSize })} className="flex-1" placeholder="14 MB" />
         <Field label="Content Rating" value={doc.contentRating} onChange={(contentRating) => setDoc({ ...doc, contentRating })} className="flex-1" placeholder="Rated for 3+" />
+      </div>
+    </>
+  );
+}
+
+function AppStorePromoFields({ doc, setDoc }: { doc: AppStorePromoDoc; setDoc: (d: ScreenDoc) => void }) {
+  const phoneDevices = listDevices().filter(d => d.category === "phone");
+
+  return (
+    <>
+      <div className="flex gap-2">
+        <Field label="App Title" value={doc.title} onChange={(title) => setDoc({ ...doc, title })} className="flex-1" placeholder="MockFrame" />
+        <Field label="Subtitle" value={doc.subtitle} onChange={(subtitle) => setDoc({ ...doc, subtitle })} className="flex-1" placeholder="Screenshot Studio" />
+      </div>
+      <div className="mt-2 flex gap-2">
+        <Field label="Badge Text" value={doc.badgeText} onChange={(badgeText) => setDoc({ ...doc, badgeText })} className="flex-1" placeholder="APP OF THE DAY" />
+        <Field label="Reviews Count" value={doc.reviewsCountText} onChange={(reviewsCountText) => setDoc({ ...doc, reviewsCountText })} className="flex-1" placeholder="12.4K ratings" />
+      </div>
+      <div className="mt-2 flex gap-2">
+        <NumField label="Rating Value" value={doc.ratingValue} onChange={(r) => setDoc({ ...doc, ratingValue: Math.min(5, Math.max(0, r)) })} />
+        <Field label="Button Text" value={doc.buttonText ?? "GET"} onChange={(buttonText) => setDoc({ ...doc, buttonText })} className="w-24" placeholder="GET" />
+        <label className="w-20 shrink-0">
+          <span className="mb-1 block text-xs text-[#6b6b76]">Accent Color</span>
+          <input type="color" value={doc.accentColor ?? "#6366f1"} onChange={(e) => setDoc({ ...doc, accentColor: e.target.value })} className="h-9 w-full cursor-pointer rounded-lg border border-[#e4e4ec]" />
+        </label>
+      </div>
+      <div className="mt-2">
+        <label className="block text-xs font-semibold text-[#6b6b76] mb-1">Mockup Device</label>
+        <select
+          value={doc.deviceId || "iphone-16-pro"}
+          onChange={(e) => setDoc({ ...doc, deviceId: e.target.value })}
+          className="w-full bg-white border border-[#e4e4ec] rounded-lg px-2.5 py-1.5 text-xs text-[#17171c] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        >
+          {phoneDevices.map(d => (
+            <option key={d.id} value={d.id}>
+              {d.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="mt-4">
+        <AvatarField label="App Screenshot" value={doc.screenshot} onChange={(screenshot) => setDoc({ ...doc, screenshot })} />
+      </div>
+      <div className="mt-2 flex items-center gap-2">
+        <input type="checkbox" id="promo-dark" checked={!!doc.dark} onChange={(e) => setDoc({ ...doc, dark: e.target.checked })} className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+        <label htmlFor="promo-dark" className="text-xs text-[#6b6b76]">Dark Mode</label>
       </div>
     </>
   );

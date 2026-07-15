@@ -18,7 +18,7 @@ import { defaultTemplateDoc, encodeScreenAsset, resolveScreenAsset } from "./scr
  * at least one template.
  */
 
-export type TemplateApp = "code" | "social" | "github" | "stripe" | "testimonial" | "ios-notification" | "spotify" | "appstore" | "googlemaps" | "googleplay";
+export type TemplateApp = "code" | "social" | "github" | "stripe" | "testimonial" | "ios-notification" | "spotify" | "appstore" | "appstore-promo" | "googlemaps" | "googleplay";
 export type SceneGroupId = "iphone" | "ipad" | "mac" | "watch" | "android";
 
 export interface TemplateMeta {
@@ -69,6 +69,7 @@ export const TEMPLATES: TemplateMeta[] = [
   { slug: "ios-notification", app: "ios-notification", label: "iOS Notification", blurb: "Frosted-glass iOS notification banner. Edit title, body, app name, and time.", accent: "#38bdf8" },
   { slug: "spotify", app: "spotify", label: "Spotify playback", blurb: "Premium music card with album art, neon glow, custom song title, artist, and progress tracker.", accent: "#1db954" },
   { slug: "appstore", app: "appstore", label: "App Store detail", blurb: "App Store app info card with squircle icon, rating score, reviews count, and category details.", accent: "#007aff" },
+  { slug: "appstore-promo", app: "appstore-promo", label: "App Store Promo Card", blurb: "App Store marketing promo card with app icon, review stars, customizable copy and screenshot frame.", accent: "#007aff" },
   { slug: "googlemaps", app: "googlemaps", label: "Google Maps routing", blurb: "Vector route path card with GPS marker dots, destination time, and next-turn prompts.", accent: "#34a853" },
   { slug: "googleplay", app: "googleplay", label: "Google Play detail", blurb: "Google Play details card with squircle app icon, ratings value, reviews count, and PEGI age ratings.", accent: "#01875f" },
 ];
