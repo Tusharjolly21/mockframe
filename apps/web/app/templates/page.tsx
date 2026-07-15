@@ -35,6 +35,27 @@ const TOOL_BACKGROUNDS: Record<string, CSSProperties> = {
     backgroundColor: "#111827",
     backgroundImage: "radial-gradient(circle at 18% 20%,rgba(52,211,153,.22),transparent 34%),linear-gradient(138deg,#111827 0%,#183b45 54%,#6d5dfc 100%)",
   },
+  "ios-notification": {
+    backgroundColor: "#1e1b4b",
+    backgroundImage: "radial-gradient(circle at 50% 50%, rgba(99,102,241,0.18), transparent 70%)",
+  },
+  spotify: {
+    backgroundColor: "#09090b",
+    backgroundImage: "radial-gradient(circle at 50% 50%, rgba(29,185,84,0.15), transparent 75%)",
+  },
+  appstore: {
+    backgroundColor: "#0c4a6e",
+    backgroundImage: "linear-gradient(to bottom right, #0284c7, #0369a1)",
+  },
+  googlemaps: {
+    backgroundColor: "#052e16",
+    backgroundImage: "linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)",
+    backgroundSize: "20px 20px",
+  },
+  googleplay: {
+    backgroundColor: "#004d34",
+    backgroundImage: "radial-gradient(circle at 50% 50%, rgba(1,135,95,0.2), transparent 75%)",
+  },
 };
 
 export default function TemplatesPage() {

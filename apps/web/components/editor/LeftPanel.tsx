@@ -442,6 +442,94 @@ function MockupControls({ layer, onOpenFrame }: { layer: MockupLayer; onOpenFram
                 <Crop size={12} /> Edit screenshot · crop, straighten, filters
               </button>
             )}
+
+            {/* Redact & Blur Zones */}
+            <div className="mt-3 border-t border-[#ececf2] pt-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-[#17171c]">Blur / Redact Zones</span>
+                <button
+                  onClick={() => {
+                    const current = layer.blurZones || [];
+                    patch({ blurZones: [...current, { x: 25, y: 25, w: 50, h: 15 }] });
+                  }}
+                  className="fk-press rounded-lg border border-violet-200 bg-violet-50 px-2 py-1 text-[10.5px] font-semibold text-violet-700 hover:border-violet-400"
+                >
+                  + Add Blur Zone
+                </button>
+              </div>
+              <div className="space-y-2">
+                {(layer.blurZones || []).map((zone, i) => (
+                  <div key={i} className="rounded-xl bg-[#f6f6fa] p-2">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-semibold text-[#6b6b76]">Zone #{i + 1}</span>
+                      <button
+                        onClick={() => {
+                          const current = layer.blurZones || [];
+                          patch({ blurZones: current.filter((_, idx) => idx !== i) });
+                        }}
+                        className="text-red-500 hover:text-red-700 text-[10px] font-medium"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <SliderRow
+                        label="X Pos"
+                        value={zone.x}
+                        min={0}
+                        max={100}
+                        step={1}
+                        format={(v) => `${v}%`}
+                        onChange={(val) => {
+                          const current = [...(layer.blurZones || [])];
+                          current[i] = { ...current[i], x: val };
+                          patch({ blurZones: current });
+                        }}
+                      />
+                      <SliderRow
+                        label="Y Pos"
+                        value={zone.y}
+                        min={0}
+                        max={100}
+                        step={1}
+                        format={(v) => `${v}%`}
+                        onChange={(val) => {
+                          const current = [...(layer.blurZones || [])];
+                          current[i] = { ...current[i], y: val };
+                          patch({ blurZones: current });
+                        }}
+                      />
+                      <SliderRow
+                        label="Width"
+                        value={zone.w}
+                        min={5}
+                        max={100}
+                        step={1}
+                        format={(v) => `${v}%`}
+                        onChange={(val) => {
+                          const current = [...(layer.blurZones || [])];
+                          current[i] = { ...current[i], w: val };
+                          patch({ blurZones: current });
+                        }}
+                      />
+                      <SliderRow
+                        label="Height"
+                        value={zone.h}
+                        min={5}
+                        max={100}
+                        step={1}
+                        format={(v) => `${v}%`}
+                        onChange={(val) => {
+                          const current = [...(layer.blurZones || [])];
+                          current[i] = { ...current[i], h: val };
+                          patch({ blurZones: current });
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
         {editing && layer.media && (

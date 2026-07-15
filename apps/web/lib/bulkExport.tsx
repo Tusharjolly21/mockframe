@@ -14,7 +14,7 @@ import { buildZip, type ZipEntry } from "./zip";
  * html-to-image, then bundled with the store-mode zip writer.
  */
 
-async function renderSceneToPng(scene: SceneDocument, scale: number, watermark: boolean): Promise<Uint8Array> {
+async function renderSceneToPng(scene: SceneDocument, scale: number, watermark: boolean, panoramaIdx?: number, panoramaTotal?: number): Promise<Uint8Array> {
   const holder = document.createElement("div");
   holder.style.cssText = "position:fixed;left:-100000px;top:0;pointer-events:none;";
   document.body.appendChild(holder);
@@ -22,7 +22,7 @@ async function renderSceneToPng(scene: SceneDocument, scale: number, watermark: 
   try {
     // watermark is baked at the canvas stage (tiles + badge + forensic layer),
     // not via the renderer's DOM badge — keeps all export paths identical
-    root.render(<SceneRenderer scene={scene} resolveAsset={resolveAsset} />);
+    root.render(<SceneRenderer scene={scene} resolveAsset={resolveAsset} panoramaIdx={panoramaIdx} panoramaTotal={panoramaTotal} />);
     // let React commit + local data-URL images decode
     await new Promise((r) => setTimeout(r, 120));
     const node = holder.firstElementChild as HTMLElement | null;
@@ -56,7 +56,7 @@ export async function bulkExportZip(
   const entries: ZipEntry[] = [];
   for (let i = 0; i < items.length; i++) {
     const it = items[i];
-    const png = await renderSceneToPng(it.scene, opts.scale, opts.watermark);
+    const png = await renderSceneToPng(it.scene, opts.scale, opts.watermark, i, items.length);
     entries.push({ name: `${it.name}.png`, data: png });
     opts.onProgress?.(i + 1, items.length);
   }

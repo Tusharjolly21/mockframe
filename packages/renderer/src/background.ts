@@ -26,26 +26,42 @@ export function meshGradientCss(seed: number, colors: string[]): { backgroundCol
   return { backgroundColor: colors[0], backgroundImage: blobs.join(", ") };
 }
 
-export function backgroundToCss(bg: Background): React.CSSProperties {
+export function backgroundToCss(bg: Background, panoramaIdx?: number, panoramaTotal?: number): React.CSSProperties {
+  let css: React.CSSProperties = {};
   switch (bg.type) {
     case "solid":
-      return { backgroundColor: bg.color };
+      css = { backgroundColor: bg.color };
+      break;
     case "linear-gradient":
-      return {
+      css = {
         backgroundImage: `linear-gradient(${bg.angle}deg, ${bg.stops
           .map((s) => `${s.color} ${s.at * 100}%`)
           .join(", ")})`,
       };
+      break;
     case "radial-gradient":
-      return {
+      css = {
         backgroundImage: `radial-gradient(circle at ${bg.cx * 100}% ${bg.cy * 100}%, ${bg.stops
           .map((s) => `${s.color} ${s.at * 100}%`)
           .join(", ")})`,
       };
+      break;
     case "mesh-gradient":
-      return meshGradientCss(bg.seed, bg.colors);
+      css = meshGradientCss(bg.seed, bg.colors);
+      break;
     case "image":
     case "transparent":
-      return {};
+      css = {};
+      break;
   }
+  if (panoramaTotal && panoramaTotal > 1 && typeof panoramaIdx === "number" && bg.type !== "solid" && bg.type !== "transparent") {
+    css = {
+      ...css,
+      backgroundSize: `${panoramaTotal * 100}% 100%`,
+      backgroundPosition: `${-(panoramaIdx * 100)}% 0%`,
+      backgroundAttachment: "scroll",
+      backgroundRepeat: "no-repeat",
+    };
+  }
+  return css;
 }

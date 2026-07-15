@@ -20,7 +20,7 @@ import {
   SiYoutube,
 } from "@icons-pack/react-simple-icons";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, CalendarDays, Code2, FileText, Heart, ImageIcon, ImagePlus, LayoutGrid, Link2, MessagesSquare, Mic, Paperclip, Phone, Quote, Search, Shuffle, Slack, SmilePlus, Sparkles, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, CalendarDays, Code2, FileText, Heart, ImageIcon, ImagePlus, LayoutGrid, Link2, MessagesSquare, Mic, Paperclip, Phone, Quote, Search, Shuffle, Slack, SmilePlus, Sparkles, Trash2, X, Music, MapPin, Store, Bell } from "lucide-react";
 import type { MockupLayer } from "@framekit/scene";
 import { getDevice } from "@framekit/devices";
 import { ingestFile, resolveAsset } from "@/lib/assets";
@@ -77,6 +77,11 @@ import {
   type TikTokDoc,
   type WhatsAppDoc,
   type WhatsAppGroupDoc,
+  type IosNotificationDoc,
+  type SpotifyDoc,
+  type AppStoreDoc,
+  type GoogleMapsDoc,
+  type GooglePlayDoc,
   defaultTemplateDoc,
   type WhatsAppTicks,
   type XPostDoc,
@@ -190,17 +195,20 @@ const AVATAR_APPS = new Set<ScreenApp>([
   "xpost",
   "bluesky",
   "testimonial",
+  "spotify",
+  "appstore",
+  "googleplay",
 ]);
 
 /** True when the doc is a standalone window-framed Template card (Code always;
  *  Bluesky/X only in their `standalone` mode) — gates the window-frame picker. */
 export function isTemplateCard(doc: ScreenDoc): boolean {
-  return doc.app === "code" || ((doc.app === "bluesky" || doc.app === "xpost" || doc.app === "social") && !!(doc as { standalone?: boolean }).standalone);
+  return doc.app === "code" || ((doc.app === "bluesky" || doc.app === "xpost" || doc.app === "social" || doc.app === "ios-notification" || doc.app === "spotify" || doc.app === "appstore" || doc.app === "googlemaps" || doc.app === "googleplay") && !!(doc as { standalone?: boolean }).standalone);
 }
 
 /** Any content that is currently exporting on its own, without a device. */
 function isStandaloneContent(doc: ScreenDoc): boolean {
-  return isTemplateCard(doc) || doc.app === "testimonial" || ((doc.app === "github" || doc.app === "stripe") && !!doc.standalone);
+  return isTemplateCard(doc) || doc.app === "testimonial" || ((doc.app === "github" || doc.app === "stripe" || doc.app === "ios-notification" || doc.app === "spotify" || doc.app === "appstore" || doc.app === "googlemaps" || doc.app === "googleplay") && !!doc.standalone);
 }
 
 /** iOS vs Android from the mockup's device — Apple = iOS, everything else
@@ -463,6 +471,11 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       {doc.app === "bluesky" && <BlueskyFields doc={doc} setDoc={setDoc} />}
       {doc.app === "testimonial" && <TestimonialFields doc={doc} setDoc={setDoc} />}
       {doc.app === "code" && <CodeFields doc={doc} setDoc={setDoc} />}
+      {doc.app === "ios-notification" && <IosNotificationFields doc={doc} setDoc={setDoc} />}
+      {doc.app === "spotify" && <SpotifyFields doc={doc} setDoc={setDoc} />}
+      {doc.app === "appstore" && <AppStoreFields doc={doc} setDoc={setDoc} />}
+      {doc.app === "googlemaps" && <GoogleMapsFields doc={doc} setDoc={setDoc} />}
+      {doc.app === "googleplay" && <GooglePlayFields doc={doc} setDoc={setDoc} />}
     </Section>
   );
 }
@@ -2975,5 +2988,104 @@ function Toggle({ label, on, onClick }: { label: string; on: boolean; onClick: (
     >
       {label}
     </button>
+  );
+}
+
+function IosNotificationFields({ doc, setDoc }: { doc: IosNotificationDoc; setDoc: (d: ScreenDoc) => void }) {
+  return (
+    <>
+      <div className="flex gap-2">
+        <Field label="App Name" value={doc.appName} onChange={(appName) => setDoc({ ...doc, appName })} className="flex-1" placeholder="MockFrame" />
+        <Field label="Time" value={doc.time} onChange={(time) => setDoc({ ...doc, time })} className="w-24" placeholder="now" />
+      </div>
+      <div className="mt-2 flex gap-2">
+        <Field label="Title" value={doc.title} onChange={(title) => setDoc({ ...doc, title })} className="flex-1" placeholder="Alex Rivera" />
+        <Field label="Subtitle" value={doc.subtitle ?? ""} onChange={(subtitle) => setDoc({ ...doc, subtitle: subtitle || undefined })} className="flex-1" placeholder="MockFrame Update" />
+      </div>
+      <Field label="Body" value={doc.body} onChange={(body) => setDoc({ ...doc, body })} className="mt-2" placeholder="Notification body content" />
+      <div className="mt-3">
+        <span className="mb-1 block text-xs text-[#6b6b76]">App Icon</span>
+        <AvatarUploadButton value={doc.appIcon} onChange={(appIcon) => setDoc({ ...doc, appIcon })} />
+      </div>
+    </>
+  );
+}
+
+function SpotifyFields({ doc, setDoc }: { doc: SpotifyDoc; setDoc: (d: ScreenDoc) => void }) {
+  return (
+    <>
+      <div className="flex gap-2">
+        <Field label="Song Title" value={doc.title} onChange={(title) => setDoc({ ...doc, title })} className="flex-1" placeholder="Antigravity Beats" />
+        <Field label="Artist" value={doc.artist} onChange={(artist) => setDoc({ ...doc, artist })} className="flex-1" placeholder="Gemini Sounds" />
+      </div>
+      <Field label="Album" value={doc.album} onChange={(album) => setDoc({ ...doc, album })} className="mt-2" placeholder="Neural Pathways" />
+      <div className="mt-2 flex gap-2">
+        <Field label="Time Elapsed" value={doc.timeElapsed} onChange={(timeElapsed) => setDoc({ ...doc, timeElapsed })} className="flex-1" placeholder="1:32" />
+        <Field label="Time Total" value={doc.timeTotal} onChange={(timeTotal) => setDoc({ ...doc, timeTotal })} className="flex-1" placeholder="3:38" />
+      </div>
+      <div className="mt-3 flex items-center gap-4">
+        <NumField label="Progress %" value={doc.progressPercent} onChange={(p) => setDoc({ ...doc, progressPercent: Math.min(100, Math.max(0, p)) })} />
+        <Toggle label={doc.isPlaying ? "Playing" : "Paused"} on={!!doc.isPlaying} onClick={() => setDoc({ ...doc, isPlaying: !doc.isPlaying })} />
+      </div>
+    </>
+  );
+}
+
+function AppStoreFields({ doc, setDoc }: { doc: AppStoreDoc; setDoc: (d: ScreenDoc) => void }) {
+  return (
+    <>
+      <div className="flex gap-2">
+        <Field label="App Title" value={doc.title} onChange={(title) => setDoc({ ...doc, title })} className="flex-1" placeholder="MockFrame" />
+        <Field label="Subtitle" value={doc.subtitle} onChange={(subtitle) => setDoc({ ...doc, subtitle })} className="flex-1" placeholder="Screenshot Studio" />
+      </div>
+      <div className="mt-2 flex gap-2">
+        <Field label="Developer" value={doc.developer} onChange={(developer) => setDoc({ ...doc, developer })} className="flex-1" placeholder="Antigravity Inc." />
+        <Field label="Category" value={doc.category} onChange={(category) => setDoc({ ...doc, category })} className="w-24" placeholder="Design" />
+      </div>
+      <div className="mt-2 flex gap-2">
+        <NumField label="Rating (Value)" value={doc.ratingValue} onChange={(r) => setDoc({ ...doc, ratingValue: Math.min(5, Math.max(0, r)) })} />
+        <Field label="Rating (Count)" value={doc.ratingCount} onChange={(ratingCount) => setDoc({ ...doc, ratingCount })} className="w-24" placeholder="1.2K" />
+        <Field label="Button Text" value={doc.buttonText ?? "GET"} onChange={(buttonText) => setDoc({ ...doc, buttonText })} className="w-24" placeholder="GET" />
+      </div>
+    </>
+  );
+}
+
+function GoogleMapsFields({ doc, setDoc }: { doc: GoogleMapsDoc; setDoc: (d: ScreenDoc) => void }) {
+  return (
+    <>
+      <div className="flex gap-2">
+        <Field label="Starting Point" value={doc.start} onChange={(start) => setDoc({ ...doc, start })} className="flex-1" placeholder="Cupertino" />
+        <Field label="Destination" value={doc.destination} onChange={(destination) => setDoc({ ...doc, destination })} className="flex-1" placeholder="Mountain View" />
+      </div>
+      <div className="mt-2 flex gap-2">
+        <NumField label="Duration (min)" value={doc.durationMinutes} onChange={(d) => setDoc({ ...doc, durationMinutes: d })} />
+        <Field label="Distance text" value={doc.distanceText} onChange={(distanceText) => setDoc({ ...doc, distanceText })} className="w-28" placeholder="18.2 mi" />
+        <label className="w-16 shrink-0">
+          <span className="mb-1 block text-xs text-[#6b6b76]">Route Color</span>
+          <input type="color" value={doc.routeColor ?? "#1a73e8"} onChange={(e) => setDoc({ ...doc, routeColor: e.target.value })} className="h-9 w-full cursor-pointer rounded-lg border border-[#e4e4ec]" />
+        </label>
+      </div>
+      <Field label="Instruction" value={doc.instruction} onChange={(instruction) => setDoc({ ...doc, instruction })} className="mt-2" placeholder="Merge onto CA-85 N..." />
+    </>
+  );
+}
+
+function GooglePlayFields({ doc, setDoc }: { doc: GooglePlayDoc; setDoc: (d: ScreenDoc) => void }) {
+  return (
+    <>
+      <div className="flex gap-2">
+        <Field label="App Title" value={doc.title} onChange={(title) => setDoc({ ...doc, title })} className="flex-1" placeholder="Eye Care Plus" />
+        <Field label="Developer" value={doc.developer} onChange={(developer) => setDoc({ ...doc, developer })} className="flex-1" placeholder="healthcare4mobile" />
+      </div>
+      <div className="mt-2 flex gap-2">
+        <NumField label="Rating Value" value={doc.ratingValue} onChange={(r) => setDoc({ ...doc, ratingValue: Math.min(5, Math.max(0, r)) })} />
+        <Field label="Rating Count" value={doc.ratingCount} onChange={(ratingCount) => setDoc({ ...doc, ratingCount })} className="flex-1" placeholder="27K reviews" />
+      </div>
+      <div className="mt-2 flex gap-2">
+        <Field label="App Size" value={doc.appSize} onChange={(appSize) => setDoc({ ...doc, appSize })} className="flex-1" placeholder="14 MB" />
+        <Field label="Content Rating" value={doc.contentRating} onChange={(contentRating) => setDoc({ ...doc, contentRating })} className="flex-1" placeholder="Rated for 3+" />
+      </div>
+    </>
   );
 }

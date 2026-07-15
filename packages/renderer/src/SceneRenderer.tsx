@@ -24,6 +24,8 @@ function SceneRendererImpl({
   watermark = false,
   animateLayerId,
   animationNonce = 0,
+  panoramaIdx,
+  panoramaTotal,
 }: {
   scene: SceneDocument;
   resolveAsset: ResolveAsset;
@@ -34,6 +36,8 @@ function SceneRendererImpl({
   /** Editor-only entrance animation. Omitted for deterministic exports. */
   animateLayerId?: string | null;
   animationNonce?: number;
+  panoramaIdx?: number;
+  panoramaTotal?: number;
 }) {
   const { canvas } = scene;
   const bg = canvas.background;
@@ -67,7 +71,7 @@ function SceneRendererImpl({
           inset: -blurPad,
           pointerEvents: "none",
           filter: bgFilter,
-          ...backgroundToCss(bg),
+          ...backgroundToCss(bg, canvas.panoramaBackground ? panoramaIdx : undefined, canvas.panoramaBackground ? panoramaTotal : undefined),
         }}
       >
         {bg.type === "image" && (() => {
@@ -113,7 +117,7 @@ function SceneRendererImpl({
             <img src={asset.url} alt="" crossOrigin="anonymous" style={{ ...common, width: "100%", height: "100%", objectFit: bg.fit, opacity: bg.opacity }} />
           );
         }
-        return <div style={{ ...common, ...backgroundToCss(bg) }} />;
+        return <div style={{ ...common, ...backgroundToCss(bg, canvas.panoramaBackground ? panoramaIdx : undefined, canvas.panoramaBackground ? panoramaTotal : undefined) }} />;
       })()}
 
       {/* Portrait stage — spotlight glow + floor, behind the subject */}
@@ -237,6 +241,65 @@ function SceneRendererImpl({
           </div>
         );
       })()}
+
+      {/* Magnetic Connector Lines */}
+      {scene.connectors && scene.connectors.length > 0 && (
+        <svg
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            width: "100%",
+            height: "100%",
+            zIndex: 1000,
+          }}
+          viewBox={`0 0 ${canvas.width} ${canvas.height}`}
+        >
+          {scene.connectors.map((c) => {
+            const fromLayer = scene.layers.find((l) => l.id === c.fromLayerId);
+            const toLayer = scene.layers.find((l) => l.id === c.toLayerId);
+            if (!fromLayer || !toLayer) return null;
+
+            const fromX = canvas.width / 2 + fromLayer.transform.x;
+            const fromY = canvas.height / 2 + fromLayer.transform.y;
+            const toX = canvas.width / 2 + toLayer.transform.x;
+            const toY = canvas.height / 2 + toLayer.transform.y;
+
+            const color = c.color || "#635bff";
+            const thickness = c.thickness || 3;
+            const dashArray = c.dashArray || undefined;
+            const arrowHead = c.arrowHead !== false;
+
+            return (
+              <g key={c.id}>
+                {arrowHead && (
+                  <defs>
+                    <marker
+                      id={`arrow-${c.id}`}
+                      viewBox="0 0 10 10"
+                      refX="8"
+                      refY="5"
+                      markerWidth="5"
+                      markerHeight="5"
+                      orient="auto-start-reverse"
+                    >
+                      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill={color} />
+                    </marker>
+                  </defs>
+                )}
+                <path
+                  d={`M ${fromX} ${fromY} L ${toX} ${toY}`}
+                  stroke={color}
+                  strokeWidth={thickness}
+                  strokeDasharray={dashArray}
+                  markerEnd={arrowHead ? `url(#arrow-${c.id})` : undefined}
+                  fill="none"
+                />
+              </g>
+            );
+          })}
+        </svg>
+      )}
     </div>
   );
 }

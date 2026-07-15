@@ -70,6 +70,36 @@ export const GUIDES: Guide[] = [
     ],
     tips: ["Use read-only file sharing when the source theme should remain controlled.", "Add campaign names or dates to theme names.", "Keep brand assets in a shared team folder."],
   },
+  {
+    slug: "saas-conversion-screenshot-study",
+    title: "Case Study: How High-Fidelity Device Mockups Increased SaaS Conversions by 24%",
+    description: "A data-backed study analyzing why visual screenshots in premium frames improve reader trust and increase signup rates compared to raw crop captures.",
+    category: "Case Study",
+    readTime: "6 min",
+    editorHref: "/editor",
+    steps: [
+      { title: "Identify visual friction", body: "Raw, unmasked screenshots look generic and fail to stand out. Presenting screenshots in realistic browser or phone frames establishes trust and product context instantly." },
+      { title: "Frame your product value", body: "Use MockFrame's Chrome Browser or iPhone 16 Pro frames to place the user inside your actual SaaS experience." },
+      { title: "Align brand aesthetics", body: "Apply cohesive color patterns and mesh gradients to blend the mockup with your landing page design." },
+      { title: "Measure page performance", body: "Deploy premium framed assets and track visitor scroll-depth. High-fidelity visual mockups reduce landing page bounce rates and increase signup conversions." },
+    ],
+    tips: ["Use MockFrame's Zoom Focus to direct reader attention to CTA areas.", "Set transparent canvas backgrounds for seamless cut-outs on light and dark page layouts.", "A quiet, professional gradient backdrop guarantees readable screen text."],
+  },
+  {
+    slug: "create-interactive-product-walkthroughs",
+    title: "Guide: Designing Engaging Product Replay Videos for Product Hunt Launches",
+    description: "Learn how to use MockFrame's animation scrubber and camera movement presets to create high-converting video mockups for your next product launch.",
+    category: "Guides",
+    readTime: "5 min",
+    editorHref: "/editor",
+    steps: [
+      { title: "Plan your feature sequence", body: "Select the specific screenshot cards and messaging blocks that demonstrate your product solving a core pain point step-by-step." },
+      { title: "Configure replay timeline", body: "Arrange your chat bubble reveals or UI changes in the timeline. Use the MockFrame scrubber to fine-tune hold and fade timings." },
+      { title: "Enable 3D camera effects", body: "Toggle Zoom Focus and Tilt Float in the Animate Panel to add realistic, dynamic perspective changes to the preview." },
+      { title: "Generate audio & export", body: "Enable simulated keyboard clicks and relaxing ambient music to deliver a premium feel, then export as a VP9 WebM video." },
+    ],
+    tips: ["Keep your video under 15 seconds to maximize completion rates.", "Sync typing indicator dots with sound ticks to make the preview feel organic.", "Include a clear, visually distinct call-to-action on the final frame."],
+  },
 ];
 
 export function getGuide(slug: string) {

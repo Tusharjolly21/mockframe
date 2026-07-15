@@ -422,6 +422,7 @@ export function RightPanel() {
       </div>
 
       <MyTemplates />
+      <ConnectorsPanel />
 
       <div className="px-3 pt-4">
         <h3 className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">
@@ -1287,6 +1288,163 @@ function MyTemplates() {
           Style a scene — colors, positions, text — then save it here and reuse it on any future shot.
         </p>
       )}
+    </div>
+  );
+}
+
+function ConnectorsPanel() {
+  const scene = useSceneStore((s) => s.scene);
+  const setScene = useSceneStore((s) => s.setScene);
+  
+  const mockups = scene.layers.filter((l) => l.type === "mockup");
+  const [fromId, setFromId] = useState("");
+  const [toId, setToId] = useState("");
+  
+  // Set defaults on mount or when mockups change
+  useEffect(() => {
+    if (mockups.length >= 2) {
+      if (!fromId) setFromId(mockups[0].id);
+      if (!toId) setToId(mockups[1].id);
+    }
+  }, [mockups]);
+
+  const addConnector = () => {
+    if (!fromId || !toId || fromId === toId) return;
+    const connId = `conn-${Math.random().toString(36).slice(2, 9)}`;
+    const newConn = {
+      id: connId,
+      fromLayerId: fromId,
+      toLayerId: toId,
+      color: "#635bff",
+      thickness: 3,
+      dashArray: undefined,
+      arrowHead: true,
+    };
+    setScene((s) => ({
+      ...s,
+      connectors: [...(s.connectors || []), newConn],
+    }));
+  };
+
+  const deleteConnector = (id: string) => {
+    setScene((s) => ({
+      ...s,
+      connectors: (s.connectors || []).filter((c) => c.id !== id),
+    }));
+  };
+
+  const updateConnector = (id: string, patch: Partial<NonNullable<SceneDocument["connectors"]>[number]>) => {
+    setScene((s) => ({
+      ...s,
+      connectors: (s.connectors || []).map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    }));
+  };
+
+  if (mockups.length < 2) return null;
+
+  return (
+    <div className="px-3 pt-3 pb-3 border-b border-[#ececf2]">
+      <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">
+        Magnetic Connectors
+      </h3>
+      
+      {/* List existing connectors */}
+      <div className="space-y-2 mb-3">
+        {(scene.connectors || []).map((c, idx) => {
+          const fromL = mockups.find((l) => l.id === c.fromLayerId);
+          const toL = mockups.find((l) => l.id === c.toLayerId);
+          if (!fromL || !toL) return null;
+          
+          return (
+            <div key={c.id} className="rounded-xl border border-[#e4e4ec] bg-white p-2 text-xs">
+              <div className="flex items-center justify-between mb-1.5 font-semibold text-[#17171c]">
+                <span>Flow #{idx + 1}: Mockup → Mockup</span>
+                <button
+                  onClick={() => deleteConnector(c.id)}
+                  className="text-red-500 hover:text-red-700 text-[10px]"
+                >
+                  Delete
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 mt-1.5">
+                <label className="block">
+                  <span className="text-[9.5px] text-[#8a8a94] mb-0.5 block">Color</span>
+                  <input
+                    type="color"
+                    value={c.color || "#635bff"}
+                    onChange={(e) => updateConnector(c.id, { color: e.target.value })}
+                    className="w-full h-7 rounded border border-[#e4e4ec] cursor-pointer"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-[9.5px] text-[#8a8a94] mb-0.5 block">Thickness</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={12}
+                    value={c.thickness || 3}
+                    onChange={(e) => updateConnector(c.id, { thickness: Number(e.target.value) || 3 })}
+                    className="w-full h-7 rounded border border-[#e4e4ec] px-1.5 py-0.5 text-xs text-[#17171c]"
+                  />
+                </label>
+              </div>
+              
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => updateConnector(c.id, { dashArray: c.dashArray ? undefined : "6,6" })}
+                  className={`flex-1 rounded px-1.5 py-1 text-[10px] font-semibold border ${
+                    c.dashArray ? "bg-[#17171c] text-white border-[#17171c]" : "bg-white text-[#6b6b76] border-[#e4e4ec]"
+                  }`}
+                >
+                  {c.dashArray ? "Dashed" : "Solid"}
+                </button>
+                <button
+                  onClick={() => updateConnector(c.id, { arrowHead: c.arrowHead === false })}
+                  className={`flex-1 rounded px-1.5 py-1 text-[10px] font-semibold border ${
+                    c.arrowHead !== false ? "bg-[#17171c] text-white border-[#17171c]" : "bg-white text-[#6b6b76] border-[#e4e4ec]"
+                  }`}
+                >
+                  {c.arrowHead !== false ? "Arrow head" : "No arrow"}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Add new connector */}
+      <div className="flex flex-col gap-2 rounded-xl bg-[#f6f6fa] p-2">
+        <span className="text-[10px] font-bold text-[#17171c]">Link mockup layers</span>
+        <div className="flex gap-1.5">
+          <select
+            value={fromId}
+            onChange={(e) => setFromId(e.target.value)}
+            className="flex-1 rounded border border-[#e4e4ec] bg-white px-1.5 py-1 text-[10.5px] text-[#17171c] min-w-0"
+          >
+            {mockups.map((m, i) => (
+              <option key={m.id} value={m.id}>Mockup {i + 1}</option>
+            ))}
+          </select>
+          <span className="text-[#8a8a94] self-center text-[10px]">→</span>
+          <select
+            value={toId}
+            onChange={(e) => setToId(e.target.value)}
+            className="flex-1 rounded border border-[#e4e4ec] bg-white px-1.5 py-1 text-[10.5px] text-[#17171c] min-w-0"
+          >
+            {mockups.map((m, i) => (
+              <option key={m.id} value={m.id}>Mockup {i + 1}</option>
+            ))}
+          </select>
+        </div>
+        <button
+          onClick={addConnector}
+          disabled={!fromId || !toId || fromId === toId}
+          className="fk-press rounded-lg bg-[#17171c] py-1.5 text-[11px] font-semibold text-white hover:bg-black disabled:opacity-40"
+        >
+          Add flow line
+        </button>
+      </div>
     </div>
   );
 }

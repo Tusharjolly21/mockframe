@@ -174,6 +174,23 @@ export function MockupLayerView({
                 }}
               />
             )}
+            {layer.blurZones?.map((zone, i) => (
+              <div
+                key={i}
+                style={{
+                  position: "absolute",
+                  left: `${zone.x}%`,
+                  top: `${zone.y}%`,
+                  width: `${zone.w}%`,
+                  height: `${zone.h}%`,
+                  borderRadius: radius,
+                  backdropFilter: "blur(20px)",
+                  backgroundColor: "rgba(0, 0, 0, 0.15)",
+                  border: "1px dashed rgba(255, 255, 255, 0.4)",
+                  pointerEvents: "none",
+                }}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -313,6 +330,22 @@ export function MockupLayerView({
         {layer.glare && layer.glare.intensity > 0 && (
           <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: glareCss(layer.glare) }} />
         )}
+        {layer.blurZones?.map((zone, i) => (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              left: `${zone.x}%`,
+              top: `${zone.y}%`,
+              width: `${zone.w}%`,
+              height: `${zone.h}%`,
+              backdropFilter: "blur(20px)",
+              backgroundColor: "rgba(0, 0, 0, 0.15)",
+              border: "1px dashed rgba(255, 255, 255, 0.4)",
+              pointerEvents: "none",
+            }}
+          />
+        ))}
       </div>
     );
     return (
@@ -418,6 +451,22 @@ export function MockupLayerView({
         </g>
         <g dangerouslySetInnerHTML={{ __html: browserUrlOverlay(variant.overlay, layer.browserUrl) }} />
       </svg>
+      {layer.blurZones?.map((zone, i) => (
+        <div
+          key={i}
+          style={{
+            position: "absolute",
+            left: `${rect.x + (zone.x * rect.width) / 100}px`,
+            top: `${rect.y + (zone.y * rect.height) / 100}px`,
+            width: `${(zone.w * rect.width) / 100}px`,
+            height: `${(zone.h * rect.height) / 100}px`,
+            backdropFilter: "blur(20px)",
+            backgroundColor: "rgba(0, 0, 0, 0.15)",
+            border: "1px dashed rgba(255, 255, 255, 0.4)",
+            pointerEvents: "none",
+          }}
+        />
+      ))}
       </div>
       </div>
     </div>

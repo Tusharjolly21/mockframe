@@ -385,6 +385,31 @@ export function FrameControls() {
             e.target.value = "";
           }}
         />
+        {/* Panorama Background Toggle */}
+        <div className="mt-4 pt-3 border-t border-[#ececf2] flex items-center justify-between">
+          <span>
+            <span className="block text-xs font-semibold text-[#17171c]">Panorama Background</span>
+            <span className="block text-[10px] text-[#9a9aa4]">Aligns background continuously across all batch slides</span>
+          </span>
+          <button
+            onClick={() => {
+              setScene((s) => ({
+                ...s,
+                canvas: {
+                  ...s.canvas,
+                  panoramaBackground: !s.canvas.panoramaBackground,
+                },
+              }));
+            }}
+            className={`fk-press rounded-lg px-2.5 py-1 text-[11px] font-semibold ${
+              scene.canvas.panoramaBackground
+                ? "bg-[#17171c] text-white"
+                : "border border-[#e4e4ec] bg-white text-[#6b6b76]"
+            }`}
+          >
+            {scene.canvas.panoramaBackground ? "Enabled" : "Disabled"}
+          </button>
+        </div>
       </Section>
     </>
   );

@@ -91,10 +91,39 @@ export async function exportSceneVideo(o: VideoExportOpts): Promise<void> {
   rec.height = H;
   const ctx = rec.getContext("2d")!;
   const stream = rec.captureStream(30);
+  
+  interface SoundManagerGlobal {
+    dest?: MediaStreamAudioDestinationNode;
+    ctx?: AudioContext;
+    isPlayingKeyClick?: boolean;
+    isPlayingMusic?: boolean;
+    init: () => void;
+    playClick: () => void;
+    playPop: () => void;
+    startLofi: () => void;
+    stopLofi: () => void;
+  }
+  const soundManager = (window as unknown as { __soundManager?: SoundManagerGlobal }).__soundManager;
+  let combinedStream = stream;
+  if (soundManager?.dest && (soundManager.isPlayingKeyClick || soundManager.isPlayingMusic)) {
+    soundManager.init();
+    // if music is enabled, start playing it now so it is recorded
+    if (soundManager.isPlayingMusic) {
+      soundManager.startLofi();
+    }
+    const audioTracks = soundManager.dest.stream.getAudioTracks();
+    if (audioTracks.length > 0) {
+      combinedStream = new MediaStream([
+        ...stream.getVideoTracks(),
+        ...audioTracks
+      ]);
+    }
+  }
+  
   const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
     ? "video/webm;codecs=vp9"
     : "video/webm";
-  const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12_000_000 });
+  const recorder = new MediaRecorder(combinedStream, { mimeType: mime, videoBitsPerSecond: 12_000_000 });
   const chunks: Blob[] = [];
   recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
 
@@ -108,9 +137,16 @@ export async function exportSceneVideo(o: VideoExportOpts): Promise<void> {
   const stamp = () => drawDisclosure(ctx, W, H, disclosureCfg);
 
   await new Promise<void>((resolve) => {
-    recorder.onstop = () => resolve();
+    recorder.onstop = () => {
+      if (soundManager?.isPlayingMusic) {
+        soundManager.stopLofi();
+      }
+      resolve();
+    };
     recorder.start();
     const t0 = performance.now();
+    let lastIdx = -1;
+    let lastPhase = -1;
     const tick = (now: number) => {
       const t = now - t0;
       if (t >= totalDur) {
@@ -132,6 +168,23 @@ export async function exportSceneVideo(o: VideoExportOpts): Promise<void> {
       const into = t - acc;
       const phase = Math.floor(into / DOT_MS);
       const cur = shotFrame(seg.shot, phase);
+
+      // play click/pop sounds if enabled
+      if (soundManager?.isPlayingKeyClick) {
+        if (idx !== lastIdx) {
+          lastIdx = idx;
+          const currentShot = seg.shot;
+          if (currentShot.typing) {
+            soundManager.playClick();
+          } else if (!currentShot.settled) {
+            soundManager.playPop();
+          }
+        }
+        if (seg.shot.typing && phase !== lastPhase) {
+          lastPhase = phase;
+          soundManager.playClick();
+        }
+      }
 
       ctx.clearRect(0, 0, W, H);
       if (idx > 0 && into < seg.shot.fadeMs) {

@@ -7,6 +7,7 @@ import { Box, RotateCw } from "lucide-react";
 import { resolveAsset, ingestFile } from "@/lib/assets";
 import { placeAsset } from "@/lib/sceneOps";
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
+import { useShotBatchStore } from "@/lib/shotBatch";
 
 type Drag =
   | {
@@ -496,6 +497,8 @@ export function CanvasStage() {
           watermark={!removeWatermark}
           animateLayerId={entrance.layerId}
           animationNonce={entrance.nonce}
+          panoramaIdx={useShotBatchStore.getState().shots.findIndex((s) => s.scene.id === scene.id) >= 0 ? useShotBatchStore.getState().shots.findIndex((s) => s.scene.id === scene.id) : undefined}
+          panoramaTotal={useShotBatchStore.getState().shots.length > 1 ? useShotBatchStore.getState().shots.length : undefined}
         />
         </div>
 

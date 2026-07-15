@@ -186,6 +186,77 @@ export interface CodeDoc {
   standalone?: boolean;
 }
 
+export interface IosNotificationDoc {
+  app: "ios-notification";
+  chrome: ScreenChrome;
+  title: string;
+  subtitle?: string;
+  body: string;
+  time: string;
+  appName: string;
+  appIcon?: string;
+  avatar?: string;
+  dark?: boolean;
+  standalone?: boolean;
+}
+
+export interface SpotifyDoc {
+  app: "spotify";
+  chrome: ScreenChrome;
+  title: string;
+  artist: string;
+  album: string;
+  avatar?: string;
+  progressPercent: number; // 0 to 100
+  timeElapsed: string;
+  timeTotal: string;
+  isPlaying?: boolean;
+  dark?: boolean;
+  standalone?: boolean;
+}
+
+export interface AppStoreDoc {
+  app: "appstore";
+  chrome: ScreenChrome;
+  title: string;
+  subtitle: string;
+  ratingValue: number;
+  ratingCount: string;
+  developer: string;
+  category: string;
+  avatar?: string;
+  buttonText?: string;
+  dark?: boolean;
+  standalone?: boolean;
+}
+
+export interface GoogleMapsDoc {
+  app: "googlemaps";
+  chrome: ScreenChrome;
+  start: string;
+  destination: string;
+  durationMinutes: number;
+  distanceText: string;
+  routeColor?: string;
+  instruction: string;
+  dark?: boolean;
+  standalone?: boolean;
+}
+
+export interface GooglePlayDoc {
+  app: "googleplay";
+  chrome: ScreenChrome;
+  title: string;
+  developer: string;
+  ratingValue: number;
+  ratingCount: string;
+  appSize: string;
+  contentRating: string;
+  avatar?: string;
+  dark?: boolean;
+  standalone?: boolean;
+}
+
 export interface WhatsAppGroupDoc {
   app: "whatsapp-group";
   chrome: ScreenChrome;
@@ -674,7 +745,12 @@ export type ScreenDoc =
   | XPostDoc
   | BlueskyDoc
   | TestimonialDoc
-  | CodeDoc;
+  | CodeDoc
+  | IosNotificationDoc
+  | SpotifyDoc
+  | AppStoreDoc
+  | GoogleMapsDoc
+  | GooglePlayDoc;
 export type ScreenApp = ScreenDoc["app"];
 
 export const SCREEN_APP_LABELS: Record<ScreenApp, string> = {
@@ -705,6 +781,11 @@ export const SCREEN_APP_LABELS: Record<ScreenApp, string> = {
   bluesky: "Bluesky",
   testimonial: "Testimonial",
   code: "Code",
+  "ios-notification": "iOS Notification",
+  spotify: "Spotify",
+  appstore: "App Store",
+  googlemaps: "Google Maps",
+  googleplay: "Google Play",
 };
 
 export const SOCIAL_LABELS: Record<SocialNetwork, string> = {
@@ -824,6 +905,11 @@ export const APP_PLATFORMS: Record<ScreenApp, ("ios" | "android")[]> = {
   bluesky: ["ios", "android"],
   testimonial: ["ios", "android"],
   code: ["ios", "android"],
+  "ios-notification": ["ios", "android"],
+  spotify: ["ios", "android"],
+  appstore: ["ios", "android"],
+  googlemaps: ["ios", "android"],
+  googleplay: ["ios", "android"],
 };
 
 /** The platform a screen should render as, given its app + the device. */
@@ -1244,14 +1330,80 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
         fontSize: 13,
         standalone: true,
       };
+    case "ios-notification":
+      return {
+        app,
+        chrome,
+        title: "Alex Rivera",
+        subtitle: "MockFrame Update",
+        body: "Your mockup is fully compiled and ready to share! Click to view details.",
+        time: "now",
+        appName: "MockFrame",
+        dark: false,
+        standalone: true,
+      };
+    case "spotify":
+      return {
+        app,
+        chrome,
+        title: "Antigravity Beats",
+        artist: "Gemini Sounds",
+        album: "Neural Pathways",
+        progressPercent: 42,
+        timeElapsed: "1:32",
+        timeTotal: "3:38",
+        isPlaying: true,
+        dark: true,
+        standalone: true,
+      };
+    case "appstore":
+      return {
+        app,
+        chrome,
+        title: "MockFrame",
+        subtitle: "Screenshot Studio",
+        ratingValue: 4.9,
+        ratingCount: "1.2K",
+        developer: "Antigravity Inc.",
+        category: "Design",
+        buttonText: "GET",
+        dark: false,
+        standalone: true,
+      };
+    case "googleplay":
+      return {
+        app,
+        chrome,
+        title: "Eye Exercises & Eye Training Plans",
+        developer: "healthcare4mobile",
+        ratingValue: 4.6,
+        ratingCount: "27K reviews",
+        appSize: "14 MB",
+        contentRating: "Rated for 3+",
+        dark: false,
+        standalone: true,
+      };
+    case "googlemaps":
+      return {
+        app,
+        chrome,
+        start: "Cupertino",
+        destination: "Mountain View",
+        durationMinutes: 24,
+        distanceText: "18.2 mi",
+        routeColor: "#1a73e8",
+        instruction: "Merge onto CA-85 N toward Mountain View",
+        dark: false,
+        standalone: true,
+      };
   }
 }
 
 /** Template variants open as standalone cards instead of inside a phone. */
-export function defaultTemplateDoc(app: "bluesky" | "xpost" | "social" | "code" | "github" | "stripe" | "testimonial"): ScreenDoc {
+export function defaultTemplateDoc(app: "bluesky" | "xpost" | "social" | "code" | "github" | "stripe" | "testimonial" | "ios-notification" | "spotify" | "appstore" | "googlemaps" | "googleplay"): ScreenDoc {
   if (app === "code") return defaultScreenDoc("code");
   if (app === "testimonial") return defaultScreenDoc("testimonial");
-  if (app === "github" || app === "stripe") {
+  if (app === "github" || app === "stripe" || app === "ios-notification" || app === "spotify" || app === "appstore" || app === "googlemaps" || app === "googleplay") {
     return { ...defaultScreenDoc(app), standalone: true } as ScreenDoc;
   }
   if (app === "social") {

@@ -18,7 +18,7 @@ import { defaultTemplateDoc, encodeScreenAsset, resolveScreenAsset } from "./scr
  * at least one template.
  */
 
-export type TemplateApp = "code" | "social" | "github" | "stripe" | "testimonial";
+export type TemplateApp = "code" | "social" | "github" | "stripe" | "testimonial" | "ios-notification" | "spotify" | "appstore" | "googlemaps" | "googleplay";
 export type SceneGroupId = "iphone" | "ipad" | "mac" | "watch" | "android";
 
 export interface TemplateMeta {
@@ -66,6 +66,11 @@ export const TEMPLATES: TemplateMeta[] = [
   { slug: "github-contributions", app: "github", label: "GitHub contributions", blurb: "An editable contribution heatmap card. Fetch a profile, paint cells and resize it freely.", accent: "#238636" },
   { slug: "stripe-revenue", app: "stripe", label: "Stripe revenue", blurb: "A standalone revenue chart with editable data, dimensions and visual scale.", accent: "#635bff" },
   { slug: "testimonial", app: "testimonial", label: "Testimonial", blurb: "Premium quote cards with editable author details, photo, typography, dimensions, colors and social-proof styling.", accent: "#6d5dfc" },
+  { slug: "ios-notification", app: "ios-notification", label: "iOS Notification", blurb: "Frosted-glass iOS notification banner. Edit title, body, app name, and time.", accent: "#38bdf8" },
+  { slug: "spotify", app: "spotify", label: "Spotify playback", blurb: "Premium music card with album art, neon glow, custom song title, artist, and progress tracker.", accent: "#1db954" },
+  { slug: "appstore", app: "appstore", label: "App Store detail", blurb: "App Store app info card with squircle icon, rating score, reviews count, and category details.", accent: "#007aff" },
+  { slug: "googlemaps", app: "googlemaps", label: "Google Maps routing", blurb: "Vector route path card with GPS marker dots, destination time, and next-turn prompts.", accent: "#34a853" },
+  { slug: "googleplay", app: "googleplay", label: "Google Play detail", blurb: "Google Play details card with squircle app icon, ratings value, reviews count, and PEGI age ratings.", accent: "#01875f" },
 ];
 
 const ALL = [...SCENE_TEMPLATES, ...TEMPLATES];
@@ -123,6 +128,37 @@ export function makeTemplateScene(meta: TemplateMeta): SceneDocument {
           background: { type: "linear-gradient", angle: 138, stops: [{ at: 0, color: "#111827" }, { at: 0.52, color: "#183b45" }, { at: 1, color: "#6d5dfc" }] },
           backdrop: { pattern: { kind: "waves", intensity: 0.1, thickness: 0.3, color: "#d7fff5" } },
         })
+    : meta.app === "ios-notification"
+      ? createScene({
+          width: 1080,
+          height: 1080,
+          background: { type: "linear-gradient", angle: 138, stops: [{ at: 0, color: "#1e1b4b" }, { at: 0.5, color: "#311042" }, { at: 1, color: "#4338ca" }] },
+          backdrop: { pattern: { kind: "waves", intensity: 0.15, thickness: 0.35, color: "#a5b4fc" } },
+        })
+    : meta.app === "spotify"
+      ? createScene({
+          width: 1080,
+          height: 1080,
+          background: { type: "radial-gradient", cx: 0.5, cy: 0.5, stops: [{ at: 0, color: "#1e293b" }, { at: 1, color: "#09090b" }] },
+        })
+    : meta.app === "appstore"
+      ? createScene({
+          width: 1080,
+          height: 1080,
+          background: { type: "linear-gradient", angle: 135, stops: [{ at: 0, color: "#0284c7" }, { at: 1, color: "#075985" }] },
+        })
+    : meta.app === "googlemaps"
+      ? createScene({
+          width: 1080,
+          height: 1080,
+          background: { type: "linear-gradient", angle: 135, stops: [{ at: 0, color: "#166534" }, { at: 1, color: "#14532d" }] },
+        })
+    : meta.app === "googleplay"
+      ? createScene({
+          width: 1080,
+          height: 1080,
+          background: { type: "linear-gradient", angle: 135, stops: [{ at: 0, color: "#01875f" }, { at: 1, color: "#004d34" }] },
+        })
     : createScene({ width: 1920, height: 1080 });
   const iphone = getDevice("iphone-16-pro") ?? listDevices()[0];
   const layer = createMockupLayer({ deviceId: null, frameHeight: iphone.frame.height, canvasHeight: scene.canvas.height });
@@ -136,9 +172,19 @@ export function makeTemplateScene(meta: TemplateMeta): SceneDocument {
   };
   // Standalone cards resolve at 3x logical pixels. The generic device-derived
   // initial scale makes them tiny, so start them at a useful composition size.
+  let initialScale = 0.72;
+  if (isPost) initialScale = 0.5;
+  else if (isTestimonial) initialScale = 0.37;
+  else if (meta.app === "github") initialScale = 0.58;
+  else if (meta.app === "ios-notification") initialScale = 0.6;
+  else if (meta.app === "spotify") initialScale = 0.5;
+  else if (meta.app === "appstore") initialScale = 0.45;
+  else if (meta.app === "googlemaps") initialScale = 0.52;
+  else if (meta.app === "googleplay") initialScale = 0.45;
+
   layer.transform = {
     ...layer.transform,
-    scale: isPost ? 0.5 : isTestimonial ? 0.37 : meta.app === "github" ? 0.58 : 0.72,
+    scale: initialScale,
   };
   scene.id = `scene-template-${meta.app}`;
   layer.id = "layer-template";

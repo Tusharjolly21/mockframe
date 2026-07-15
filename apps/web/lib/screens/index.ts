@@ -28,6 +28,11 @@ import { renderTelegram } from "./telegram";
 import { renderTikTok } from "./tiktok";
 import { renderWhatsApp, renderWhatsAppGroup } from "./whatsapp";
 import { renderXPost, renderXPostCard } from "./xpost";
+import { renderIosNotification, iosNotificationSize } from "./iosnotification";
+import { renderSpotify, spotifyCardSize } from "./spotify";
+import { renderAppStore, appStoreCardSize } from "./appstore";
+import { renderGoogleMaps, googleMapsCardSize } from "./googlemaps";
+import { renderGooglePlay, googlePlayCardSize } from "./googleplay";
 import { SCREEN_APP_LABELS, type ScreenDoc } from "./types";
 
 export * from "./types";
@@ -162,6 +167,11 @@ export function screenLogicalHeight(doc: ScreenDoc): number {
   if (doc.app === "github" && doc.standalone) return githubStandaloneSize(doc).height;
   if (doc.app === "stripe" && doc.standalone) return stripeStandaloneSize(doc).height;
   if (doc.app === "testimonial") return testimonialSize(doc).height;
+  if (doc.app === "ios-notification") return iosNotificationSize(doc).height;
+  if (doc.app === "spotify" && doc.standalone) return spotifyCardSize(doc).height;
+  if (doc.app === "appstore" && doc.standalone) return appStoreCardSize(doc).height;
+  if (doc.app === "googlemaps" && doc.standalone) return googleMapsCardSize(doc).height;
+  if (doc.app === "googleplay" && doc.standalone) return googlePlayCardSize(doc).height;
   // template cards have a content-driven height — resolved via renderScreenSized
   return SH;
 }
@@ -171,6 +181,11 @@ export function screenLogicalWidth(doc: ScreenDoc): number {
   if (doc.app === "github" && doc.standalone) return githubStandaloneSize(doc).width;
   if (doc.app === "stripe" && doc.standalone) return stripeStandaloneSize(doc).width;
   if (doc.app === "testimonial") return testimonialSize(doc).width;
+  if (doc.app === "ios-notification") return iosNotificationSize(doc).width;
+  if (doc.app === "spotify" && doc.standalone) return spotifyCardSize(doc).width;
+  if (doc.app === "appstore" && doc.standalone) return appStoreCardSize(doc).width;
+  if (doc.app === "googlemaps" && doc.standalone) return googleMapsCardSize(doc).width;
+  if (doc.app === "googleplay" && doc.standalone) return googlePlayCardSize(doc).width;
   return SW;
 }
 
@@ -179,6 +194,7 @@ export function screenLogicalWidth(doc: ScreenDoc): number {
 function referencedAssetIds(doc: ScreenDoc): string[] {
   const ids: string[] = [];
   if ("avatar" in doc && doc.avatar) ids.push(doc.avatar);
+  if (doc.app === "ios-notification" && doc.appIcon) ids.push(doc.appIcon);
   if (doc.app === "youtube" && doc.thumbnail) ids.push(doc.thumbnail);
   if (doc.app === "story" && doc.background) ids.push(doc.background);
   if (doc.app === "hinge") for (const card of doc.cards) if (card.type === "photo" && card.image) ids.push(card.image);
@@ -243,6 +259,16 @@ export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): {
       return flat(renderHinge(doc, dp, lookupUrl));
     case "story":
       return flat(renderStory(doc, dp, lookupUrl));
+    case "ios-notification":
+      return flat(renderIosNotification(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
+    case "spotify":
+      return flat(renderSpotify(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
+    case "appstore":
+      return flat(renderAppStore(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
+    case "googlemaps":
+      return flat(renderGoogleMaps(doc), screenLogicalHeight(doc), screenLogicalWidth(doc));
+    case "googleplay":
+      return flat(renderGooglePlay(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
     case "github":
       return flat(renderGithub(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
     case "stripe":

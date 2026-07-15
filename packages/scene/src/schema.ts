@@ -194,6 +194,16 @@ export const MockupLayerSchema = z.object({
     })
     .optional(),
   effects: z.array(EffectSchema).optional(),
+  blurZones: z
+    .array(
+      z.object({
+        x: z.number(),
+        y: z.number(),
+        w: z.number(),
+        h: z.number(),
+      })
+    )
+    .optional(),
 });
 
 export const TextLayerSchema = z.object({
@@ -308,9 +318,23 @@ export const SceneDocumentSchema = z.object({
     cornerRadius: z.number().min(0).optional(),
     /** decorative ring drawn just inside the canvas edge */
     border: z.object({ width: z.number().min(0), color: z.string() }).optional(),
+    panoramaBackground: z.boolean().optional(),
   }),
   layers: z.array(LayerSchema), // z-ordered, index 0 = back
   timeline: TimelineSchema.optional(),
+  connectors: z
+    .array(
+      z.object({
+        id: z.string(),
+        fromLayerId: z.string(),
+        toLayerId: z.string(),
+        color: z.string().optional(),
+        thickness: z.number().optional(),
+        dashArray: z.string().optional(),
+        arrowHead: z.boolean().optional(),
+      })
+    )
+    .optional(),
 });
 
 /* ----------------------------------- types ----------------------------------- */
