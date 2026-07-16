@@ -2,14 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import {
   ArrowDown,
   ArrowUp,
   Box,
   Copy,
-  Clock3,
   FolderOpen,
   Image as ImageIcon,
   Layers,
@@ -31,6 +29,7 @@ import { addAppIcon, addText, duplicateLayer, removeLayer, reorderLayer } from "
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
 import { DraftsPanel } from "./DraftsPanel";
 import { ShotBatchPanel } from "./ShotBatchPanel";
+import { RealisticRenderPanel } from "./RealisticRenderPanel";
 import { IconButton, Popover } from "./ui";
 
 /** Surface a message via EditorShell's toast (same event pattern as framekit:fit). */
@@ -52,7 +51,7 @@ export function Toolbar() {
   const [layersOpen, setLayersOpen] = useState(false);
   const [draftsOpen, setDraftsOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
-  const [comingSoonOpen, setComingSoonOpen] = useState(false);
+  const [renderOpen, setRenderOpen] = useState(false);
   const layersRef = useRef<HTMLDivElement>(null);
   const draftsRef = useRef<HTMLDivElement>(null);
   const batchRef = useRef<HTMLDivElement>(null);
@@ -136,7 +135,7 @@ export function Toolbar() {
         }}
       />
 
-      <IconButton title="Realistic photo render — coming soon" onClick={() => setComingSoonOpen(true)}>
+      <IconButton title="Realistic photo render (Pro)" onClick={() => setRenderOpen(true)}>
         <Sparkles size={16} />
       </IconButton>
 
@@ -196,67 +195,8 @@ export function Toolbar() {
         3D
       </button>
     </div>
-    <AnimatePresence>
-      {comingSoonOpen && <ComingSoonDialog onClose={() => setComingSoonOpen(false)} />}
-    </AnimatePresence>
+    {renderOpen && <RealisticRenderPanel onClose={() => setRenderOpen(false)} onToast={toast} />}
     </>
-  );
-}
-
-function ComingSoonDialog({ onClose }: { onClose: () => void }) {
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
-
-  return createPortal(
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] grid place-items-center bg-[#17171c]/35 px-4 backdrop-blur-[3px]"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 10, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 8, scale: 0.98 }}
-        transition={{ type: "spring", stiffness: 420, damping: 30 }}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="coming-soon-title"
-        className="relative w-full max-w-[380px] overflow-hidden rounded-2xl bg-white p-6 text-center shadow-[0_24px_80px_rgba(20,20,40,0.24)]"
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          className="fk-press absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-[#8a8a94] hover:bg-[#f2f2f7] hover:text-[#17171c]"
-        >
-          <span className="text-xl leading-none">×</span>
-        </button>
-        <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[linear-gradient(135deg,#6d28d9,#0891b2)] text-white shadow-[0_8px_20px_rgba(109,40,217,0.25)]">
-          <Clock3 size={22} />
-        </span>
-        <h2 id="coming-soon-title" className="mt-4 text-[18px] font-bold text-[#17171c]">Realistic render is coming soon</h2>
-        <p className="mx-auto mt-2 max-w-[290px] text-[13px] leading-relaxed text-[#6b6b76]">
-          We&apos;re polishing the photoreal render workflow so it feels as smooth as the rest of MockFrame.
-        </p>
-        <button
-          type="button"
-          onClick={onClose}
-          className="fk-press mt-5 inline-flex items-center justify-center rounded-xl bg-[#17171c] px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-[#2b2b33]"
-        >
-          Continue editing
-        </button>
-      </motion.div>
-    </motion.div>,
-    document.body
   );
 }
 

@@ -12,6 +12,7 @@ import { renderScreenshotIntoMockup } from "@/lib/mockuuups";
 import { presentationForDevice } from "@/lib/deviceScene";
 import { decodeScreenAsset, isScreenAsset } from "@/lib/screens";
 import { useSceneStore, useViewStore } from "@/lib/store";
+import { openUpgrade } from "@/lib/billing/gate";
 import { ColorRow, Section, Seg, SliderRow } from "./ui";
 import { CaptureUrlDialog } from "./CaptureUrlDialog";
 import { DevicePicker } from "./DevicePicker";
@@ -545,6 +546,14 @@ function MockupControls({ layer, onOpenFrame }: { layer: MockupLayer; onOpenFram
             onApply={async (newId) => {
               setEditing(false);
               if (renderMeta) {
+                // re-rendering spends a real Mockuuups credit — Pro only. Gate on
+                // the client so a lapsed-Pro user with an existing render layer
+                // gets the upgrade modal instead of a raw "Re-render failed"
+                // toast (the server also enforces this via 402).
+                if (!useViewStore.getState().removeWatermark) {
+                  openUpgrade("Realistic renders");
+                  return;
+                }
                 // re-render the edited screenshot onto the SAME device photo so the
                 // change reflects on the device (the composite is baked server-side)
                 const edited = resolveAsset(newId);

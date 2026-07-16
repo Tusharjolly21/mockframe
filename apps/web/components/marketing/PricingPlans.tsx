@@ -19,13 +19,12 @@ const FREE_FEATURES = [
   "Custom devices, drafts & cloud sync",
 ];
 
-// Only list what a paying user can actually DO today. Photoreal renders are
-// built server-side but have no UI entry point (Toolbar shows a "coming soon"
-// dialog), so they are NOT sold here — re-add when RealisticRenderPanel is
-// wired up. Custom-device cloud sync isn't gated in /api/custom-devices, so it
-// isn't Pro either; it now sits in the free list where the code actually puts it.
+// Only list what a paying user can actually DO today. (Custom-device cloud sync
+// isn't gated in /api/custom-devices, so it isn't Pro — it sits in the free
+// list where the code actually puts it.)
 const PRO_FEATURES = [
   "12 more chat & DM screens",
+  "Photoreal device renders",
   "Premium background collections",
   "Video & GIF export",
   "4K & 6K output",

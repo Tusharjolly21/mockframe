@@ -13,16 +13,14 @@ import { toast } from "./Toolbar";
 
 // Two rules here:
 //  1. Never sell "remove the watermark" — exports are clean on every tier.
-//  2. Never list a benefit that doesn't work yet. This modal is the last thing
-//     someone reads before paying, so every line must be redeemable the moment
-//     the payment clears. Photoreal rendering is deliberately absent until
-//     RealisticRenderPanel has a UI entry point (Toolbar.tsx currently opens a
-//     "coming soon" dialog instead).
+//  2. Never list a benefit that doesn't work yet — every line must be
+//     redeemable the moment the payment clears. (Photoreal rendering is now
+//     wired up via the toolbar Sparkles button, so it's listed again.)
 const BENEFITS = [
   { icon: "chat-round-dots", title: "Every chat & DM screen", text: "Telegram, Instagram, Slack, Discord and 8 more, beyond the free WhatsApp & iMessage." },
+  { icon: "magic-stick-3", title: "Photoreal device renders", text: "Composite your screenshot into a real device photo, then keep editing on top." },
   { icon: "videocamera-record", title: "Video & GIF export", text: "Turn chat replays and animations into shareable videos." },
   { icon: "bolt", title: "4K & 6K + full-page capture", text: "Ultra-crisp exports and entire scrolling websites in one shot." },
-  { icon: "magic-stick-3", title: "Your brand, your templates", text: "Stamp your own watermark and save whole compositions to your account." },
 ] as const;
 
 function IconifyIcon({ name, size = 20, color = "#17171c", className = "" }: { name: string; size?: number; color?: string; className?: string }) {
