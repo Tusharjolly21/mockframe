@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { FirebaseConfigError, firebaseStorage, firebaseSetupHint } from "@/lib/server/firebaseAdmin";
 import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
+import { requestIsPro } from "@/lib/server/entitlement";
 
 export const runtime = "nodejs";
 
@@ -11,9 +12,16 @@ const SHARE_TTL_DAYS = 7;
 /**
  * Shareable links (PostSpark parity): POST a rendered PNG → stored under the
  * owner in Firebase Storage → returns a signed URL valid for 7 days.
+ *
+ * Pro-only, enforced HERE — hosting costs us storage + signed-URL bandwidth for
+ * a week per link, so the UI gate in RightPanel is a courtesy and this is the
+ * real one. Without it a direct POST from any guest gets free hosting.
  */
 export async function POST(req: NextRequest) {
   try {
+    if (!(await requestIsPro(req))) {
+      return NextResponse.json({ error: "Share links are a Pro feature — upgrade to create them" }, { status: 402 });
+    }
     const owner = await getRequestOwner(req);
     const bytes = Buffer.from(await req.arrayBuffer());
     if (!bytes.length) return NextResponse.json({ error: "Empty image" }, { status: 400 });

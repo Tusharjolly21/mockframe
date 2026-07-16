@@ -45,7 +45,7 @@ export function CanvasStage() {
   const scene = useSceneStore((s) => s.scene);
   const setScene = useSceneStore((s) => s.setScene);
   const updateLayer = useSceneStore((s) => s.updateLayer);
-  const { zoom, pan, selectedIds, setZoom, setPan, select, bumpAssets, threeD, removeWatermark, entrance } = useViewStore();
+  const { zoom, pan, selectedIds, setZoom, setPan, select, bumpAssets, threeD, entrance } = useViewStore();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<Drag | null>(null);
@@ -494,7 +494,6 @@ export function CanvasStage() {
         <SceneRenderer
           scene={scene}
           resolveAsset={resolveAsset}
-          watermark={!removeWatermark}
           animateLayerId={entrance.layerId}
           animationNonce={entrance.nonce}
           onBlurZonesChange={(layerId, zones) => {

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 const REASSURANCE = [
   "Free plan is the full editor — not a trial",
   "Annual works out to about ₹250 / month",
-  "Cancel anytime · lifetime never renews",
+  "Cancel anytime · no lock-in",
 ];
 
 export default function PricingPage() {

@@ -3,27 +3,35 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Check, Infinity as InfinityIcon } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { SolarIcon } from "./SolarIcon";
 import { formatPrice, perMonthPrice, yearlySavingsPct, type Currency } from "@/lib/billing/plans";
 
+// Clean exports lead the free list on purpose — it's the first objection a
+// visitor has about any tool in this category, and answering it up front is
+// worth more than hiding it as a Pro bullet.
 const FREE_FEATURES = [
+  "Watermark-free exports — always",
   "Every device frame + the full editor",
-  "Website capture & generated app screens",
-  "Templates: tweet, code & post cards",
+  "WhatsApp & iMessage chat screens",
+  "Website capture & app screen templates",
   "Themes, icons, glare & annotations",
-  "Drafts, bulk export & 1–3× output",
+  "Custom devices, drafts & cloud sync",
 ];
 
+// Only list what a paying user can actually DO today. Photoreal renders are
+// built server-side but have no UI entry point (Toolbar shows a "coming soon"
+// dialog), so they are NOT sold here — re-add when RealisticRenderPanel is
+// wired up. Custom-device cloud sync isn't gated in /api/custom-devices, so it
+// isn't Pro either; it now sits in the free list where the code actually puts it.
 const PRO_FEATURES = [
-  "Watermark-free exports",
-  "Custom-brand watermark",
-  "Photoreal device renders",
+  "12 more chat & DM screens",
+  "Premium background collections",
   "Video & GIF export",
   "4K & 6K output",
   "Full-page website capture",
+  "Custom-brand watermark",
   "Saved templates in your account",
-  "Cloud-synced custom devices",
 ];
 
 type Billing = "monthly" | "yearly";
@@ -55,7 +63,7 @@ export function PricingPlans() {
         <p className="mt-7 text-[40px] font-semibold leading-none">
           {currency === "INR" ? "₹0" : "$0"}
         </p>
-        <p className="mt-2 text-[13px] text-zinc-500">No account required to begin</p>
+        <p className="mt-2 text-[13px] text-zinc-500">No watermark · no account required</p>
         <ul className="mt-8 space-y-3">
           {FREE_FEATURES.map((f) => (
             <li key={f} className="flex items-start gap-2.5 text-[13.5px] text-zinc-300">
@@ -183,21 +191,7 @@ export function PricingPlans() {
             Get Pro {isYearly ? "Annual" : "Monthly"} <ArrowRight size={15} />
           </Link>
 
-          {/* Lifetime accent — the option no competitor offers */}
-          <Link
-            href="/editor?upgrade=1&plan=lifetime"
-            className="fk-press group mt-3 flex items-center justify-between gap-3 rounded-xl border border-violet-400/30 bg-violet-400/[0.06] px-4 py-3 hover:border-violet-400/60"
-          >
-            <span className="flex items-center gap-2.5 text-[12.5px] font-semibold text-violet-200">
-              <InfinityIcon size={16} className="text-violet-300" /> Prefer to pay once? Lifetime Pro
-            </span>
-            <span className="flex items-center gap-1.5 text-[13px] font-semibold text-white">
-              {formatPrice("lifetime", currency)}
-              <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
-            </span>
-          </Link>
-
-          <p className="mt-3 text-center text-[11px] text-zinc-600">
+          <p className="mt-4 text-center text-[11px] text-zinc-600">
             {currency === "INR" ? "UPI, cards & netbanking" : "International cards"} · secured by Razorpay
           </p>
         </div>

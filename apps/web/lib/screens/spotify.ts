@@ -1,6 +1,6 @@
 "use client";
 
-import { avatar, esc, textBlock, wrapText, UI_FONT, IOS_FONT, systemFont } from "./common";
+import { esc, systemFont } from "./common";
 import type { SpotifyDoc } from "./types";
 
 export function spotifyCardSize(doc: SpotifyDoc): { width: number; height: number } {

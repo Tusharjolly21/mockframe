@@ -8,44 +8,57 @@
  * test mode). Settlement is always INR.
  */
 
-export type PlanId = "monthly" | "yearly" | "lifetime";
+// Only recurring plans are sold. Lifetime was removed deliberately: at any
+// sane price it either cannibalises MRR (cheap) or scares off buyers (fair),
+// and the category's strongest players (Pika) refuse it outright. Legacy
+// one-time purchases already made are still honoured server-side — see
+// isBillingActive in lib/server/razorpay.ts.
+export type PlanId = "monthly" | "yearly";
 export type Currency = "INR" | "USD";
 
 export interface PlanDef {
   label: string;
-  kind: "subscription" | "one_time";
-  /** Razorpay subscription period (subscription plans only) */
-  period?: "monthly" | "yearly";
+  /** Razorpay subscription period */
+  period: "monthly" | "yearly";
   /** number of billing cycles Razorpay should run the mandate for */
-  totalCount?: number;
+  totalCount: number;
   /** minor units: paise for INR, cents for USD */
   price: Record<Currency, number>;
   blurb: string;
 }
 
+/**
+ * Pricing rationale (so the next edit doesn't re-break it):
+ *
+ * · USD tracks the category, which sits at $13–15/mo (Pika $13, Mockuuups $15,
+ *   PostSpark ~€10). $9.99 stays deliberately under that floor while no longer
+ *   pricing us as the cheap option we aren't.
+ * · INR is held at ₹499/₹2,999 on purpose. It's not a converted USD price —
+ *   it's the India price, and Razorpay already splits the currencies.
+ * · Annual stays exactly half the monthly run-rate, which is the framing the
+ *   pricing page renders ("SAVE 50%"): $9.99×12=119.88 → 59.99 · ₹499×12=5,988
+ *   → 2,999. Changing monthly without changing annual breaks that badge.
+ *
+ * Editing a price is safe: ensureRazorpayPlanId keys its cache on the amount,
+ * so a change mints a NEW Razorpay plan and existing subscribers keep the plan
+ * (and price) they signed up on. Checkout re-checks the client's displayed
+ * price and 409s a stale tab rather than charging it the wrong amount.
+ */
 export const PLANS: Record<PlanId, PlanDef> = {
   monthly: {
     label: "Monthly",
-    kind: "subscription",
     period: "monthly",
     totalCount: 120, // 10 years of cycles — effectively "until cancelled"
-    price: { INR: 49900, USD: 599 },
+    price: { INR: 49900, USD: 999 },
     blurb: "Cancel anytime",
   },
   yearly: {
     label: "Annual",
-    kind: "subscription",
     period: "yearly",
     totalCount: 20,
-    // exactly half the monthly run-rate: ₹499×12=5,988 → 2,999 · $5.99×12=71.88 → 35.99
-    price: { INR: 299900, USD: 3599 },
+    // exactly half the monthly run-rate: ₹499×12=5,988 → 2,999 · $9.99×12=119.88 → 59.99
+    price: { INR: 299900, USD: 5999 },
     blurb: "Half the monthly price",
-  },
-  lifetime: {
-    label: "Lifetime",
-    kind: "one_time",
-    price: { INR: 499900, USD: 5999 },
-    blurb: "Pay once, Pro forever",
   },
 };
 
@@ -63,7 +76,7 @@ export function yearlySavingsPct(currency: Currency, plans: Record<PlanId, PlanD
 }
 
 export function isPlanId(v: unknown): v is PlanId {
-  return v === "monthly" || v === "yearly" || v === "lifetime";
+  return v === "monthly" || v === "yearly";
 }
 
 export function isCurrency(v: unknown): v is Currency {

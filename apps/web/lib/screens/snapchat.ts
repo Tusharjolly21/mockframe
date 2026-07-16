@@ -59,6 +59,9 @@ export function renderSnapchat(doc: SnapchatDoc, avatarUrl?: string): string {
     `<path d="M26 64 l-10 11 10 11" fill="none" stroke="${c.text}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`,
     avatar(doc.contact, 60, 75, 19, "sc", avatarUrl),
     textBlock([truncate(`${doc.contact}${streak}`, 16.5, SW - 90 - 96)], { x: 90, y: doc.chrome._anim?.typing ? 74 : 80, size: 16.5, lineHeight: 19, color: c.text, weight: 700 }),
+    doc.verified
+      ? snapVerified(90 + textWidth(truncate(`${doc.contact}${streak}`, 16.5, SW - 90 - 96), 16.5) + 5, (doc.chrome._anim?.typing ? 74 : 80) - 13)
+      : "",
     ...(doc.chrome._anim?.typing ? [`<text font-family="${font}" font-size="11.5" fill="${c.me}" x="90" y="90">typing…</text>`] : []),
     // phone + video glyphs
     phoneIcon(SW - 74, 75, 20, c.text),
@@ -148,4 +151,15 @@ export function renderSnapchat(doc: SnapchatDoc, avatarUrl?: string): string {
   );
 
   return parts.join("\n");
+}
+
+function snapVerified(x: number, y: number): string {
+  const cx = x + 7, cy = y + 7;
+  const pts: string[] = [];
+  for (let i = 0; i < 10; i++) {
+    const rad = i % 2 ? 2.2 : 5;
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    pts.push(`${(cx + Math.cos(a) * rad).toFixed(1)},${(cy + Math.sin(a) * rad).toFixed(1)}`);
+  }
+  return `<circle cx="${cx}" cy="${cy}" r="7" fill="#ffb800"/><polygon points="${pts.join(" ")}" fill="#ffffff"/>`;
 }

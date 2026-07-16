@@ -4,6 +4,8 @@ import { isIP } from "node:net";
 import { NextRequest, NextResponse } from "next/server";
 import type { Page } from "puppeteer-core";
 import { requestIsPro } from "@/lib/server/entitlement";
+import { consumeDailyQuota, quotaSubject } from "@/lib/server/quota";
+import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
 
 export const runtime = "nodejs";
 // cold start downloads the ~66MB chromium pack before any page work — with a
@@ -18,6 +20,9 @@ export const maxDuration = 120;
 
 const MAX_DELAY = 10_000;
 const MAX_PAGE_HEIGHT = 8_000; // cap full-page captures — some pages are endless
+/** free website captures per caller per UTC day — generous enough that a real
+ *  user never notices, low enough that a script can't run up the bill */
+const FREE_CAPTURES_PER_DAY = 25;
 
 /** Fast hostname check, followed by DNS validation below to prevent rebinding. */
 function isBlockedHost(host: string): boolean {
@@ -166,10 +171,32 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const { url, dark = false, fullPage = false, loadLazy = true, width = 1440, delay = 0 } = body ?? {};
 
+  const isPro = await requestIsPro(req);
+
   // standard captures stay free; FULL-PAGE runs ride the 120s function ceiling
   // and are Pro-only, enforced here (UI lock is courtesy)
-  if (fullPage && !(await requestIsPro(req))) {
+  if (fullPage && !isPro) {
     return NextResponse.json({ error: "Full-page capture is a Pro feature — upgrade to use it" }, { status: 402 });
+  }
+
+  // Every capture boots headless Chromium on our bill, so the free tier is
+  // metered rather than paywalled — URL capture is a hook worth keeping open
+  // (PostSpark gives it away), but not worth handing to a shell loop.
+  // Pro is unmetered: they're paying for the compute.
+  if (!isPro) {
+    const owner = await getRequestOwner(req);
+    const quota = await consumeDailyQuota(quotaSubject(req, owner), "capture", FREE_CAPTURES_PER_DAY);
+    if (!quota.allowed) {
+      return attachOwnerCookie(
+        NextResponse.json(
+          {
+            error: `Free plan covers ${quota.limit} website captures a day. Upgrade for unlimited, or try again tomorrow.`,
+          },
+          { status: 429 }
+        ),
+        owner
+      );
+    }
   }
 
   let target: URL;

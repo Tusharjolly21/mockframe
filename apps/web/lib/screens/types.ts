@@ -55,7 +55,7 @@ export interface ChatMessage {
   link?: ChatLink;
   /** call-event card instead of a text bubble */
   call?: ChatCall;
-  /** voice-note bubble: waveform + duration (Pro) */
+  /** voice-note bubble: waveform + duration */
   voice?: { seconds: number };
   /** date-separator pill shown BEFORE this message ("Today", "Yesterday") */
   dateLabel?: string;
@@ -90,6 +90,7 @@ export interface WhatsAppDoc {
   contact: string;
   /** header presence line: "online", "typing…", or free text */
   presence: string;
+  verified?: boolean;
   /** chat wallpaper preset id (see wallpapers.ts); default when unset */
   wallpaper?: string;
   messages: Array<ChatMessage & { ticks?: WhatsAppTicks; reaction?: string }>;
@@ -295,6 +296,7 @@ export interface InstagramDoc {
   avatar?: string;
   username: string;
   presence: string; // "Active now", "Active 2h ago", …
+  verified?: boolean;
   /** "Seen" caption under the last outgoing message */
   seen?: boolean;
   messages: Array<ChatMessage & { reaction?: string }>;
@@ -307,6 +309,7 @@ export interface MessengerDoc {
   avatar?: string;
   contact: string;
   presence: string;
+  verified?: boolean;
   messages: Array<ChatMessage & { reaction?: string }>;
 }
 
@@ -317,6 +320,7 @@ export interface TelegramDoc {
   avatar?: string;
   contact: string;
   presence: string; // "last seen recently", "online", …
+  verified?: boolean;
   wallpaper?: string;
   messages: Array<ChatMessage & { ticks?: WhatsAppTicks; reaction?: string }>;
 }
@@ -330,6 +334,7 @@ export interface SnapchatDoc {
   /** uploaded photo asset id for the contact / group / author */
   avatar?: string;
   contact: string;
+  verified?: boolean;
   /** streak count shown next to the name; 0 hides it */
   streak: number;
   /** status line under the newest message; accent-colored for Screenshot!/Replied */

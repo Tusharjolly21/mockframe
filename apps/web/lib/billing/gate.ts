@@ -18,7 +18,14 @@ export function useIsPro(): boolean {
   return useViewStore((s) => s.removeWatermark);
 }
 
-/** Open the upgrade modal from anywhere in the editor. */
-export function openUpgrade(): void {
-  window.dispatchEvent(new CustomEvent("framekit:upgrade"));
+/**
+ * Open the upgrade modal from anywhere in the editor.
+ *
+ * `reason` names what the user was reaching for and is rendered as
+ * "<reason> are part of Pro." — so pass a plural noun phrase ("Batch exports",
+ * "Telegram screens"). Omit it for generic entry points and the modal keeps its
+ * default headline.
+ */
+export function openUpgrade(reason?: string): void {
+  window.dispatchEvent(new CustomEvent("framekit:upgrade", { detail: reason ? { reason } : undefined }));
 }

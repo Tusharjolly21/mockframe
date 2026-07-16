@@ -73,6 +73,9 @@ export function renderTelegram(
     statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.text, platform }),
     `<path d="M24 62 l-10 11 10 11" fill="none" stroke="${c.blue}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`,
     textBlock([doc.contact], { x: SW / 2, y: 72, size: 16.5, lineHeight: 19, color: c.text, weight: 600, anchor: "middle" }),
+    doc.verified
+      ? verifiedBadge(SW / 2 + textWidth(doc.contact, 16.5) / 2 + 4, 72 - 14)
+      : "",
     textBlock([doc.chrome._anim?.typing ? "typing…" : doc.presence || "last seen recently"], { x: SW / 2, y: 90, size: 12.5, lineHeight: 14, color: doc.chrome._anim?.typing ? c.blue : c.subtle, anchor: "middle" }),
     avatar(doc.contact, SW - 34, 73, 18, "tg", avatarUrl)
   );
@@ -164,4 +167,8 @@ function ticks(state: WhatsAppTicks, xRight: number, y: number, color: string): 
   const tick = (dx: number) =>
     `<path d="M${xRight - 14 + dx} ${y - 4} l 2.6 2.8 5.4 -6" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
   return state === "sent" ? tick(3) : tick(0) + tick(4.5);
+}
+
+function verifiedBadge(x: number, y: number): string {
+  return `<circle cx="${x + 8}" cy="${y + 8}" r="8" fill="#3897f0"/><path d="M${x + 4.5} ${y + 8.5} l2.5 2.5 4.5 -5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`;
 }

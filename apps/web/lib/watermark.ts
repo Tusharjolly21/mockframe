@@ -1,25 +1,40 @@
 "use client";
 
 /**
- * Export watermarking — three layers of protection, all baked into pixels
- * (so screenshots of an export carry them too):
+ * Export watermarking.
  *
- *  1. Tiled diagonal text across the WHOLE canvas, including device screens.
- *     Cropping can't remove it, and AI inpainting has to hallucinate the
- *     content underneath every tile — visibly degrading the screenshot.
- *  2. Corner brand badge (the classic "Made with MockFrame" pill).
- *  3. Invisible forensic watermark: a keyed ±2/255 spread-spectrum pattern in
- *     the blue channel. Survives PNG and mild JPEG/WebP compression; even if
- *     the visible marks are scrubbed, detectForensicWatermark() proves origin.
+ * We do NOT brand exports on any tier — free output is pixel-identical to Pro
+ * output. The `tile` and `badge` layers below are retained as capabilities but
+ * default OFF, and no call site enables them (see exportWatermarkOpts). They
+ * exist so the decision stays reversible, not because it's pending.
  *
- * Free tier gets all three; Pro (removeWatermark) still gets the forensic
- * layer only — invisible, and useful for abuse tracing.
+ * Why: tiling free exports destroys the artifact, so free users never publish,
+ * never form the habit, and never reach the point of needing 4K or the Pro chat
+ * set — which is where the revenue actually is. The paywall sits on capability
+ * instead. Competitors (PostSpark) don't watermark free output at all.
+ *
+ * What can still ship:
+ *
+ *  1. Invisible forensic watermark — a keyed ±2/255 spread-spectrum pattern in
+ *     the blue channel, surviving PNG and mild JPEG/WebP compression. This is
+ *     abuse tracing for fabricated chat screenshots (paired with the
+ *     `disclosure` label), NOT billing enforcement. detectForensicWatermark()
+ *     proves an image originated here.
+ *
+ *     FREE EXPORTS ONLY — exportWatermarkOpts passes `forensicKey: null` for
+ *     Pro. Free exports are anonymous, so this is the only thread back to
+ *     origin; a Pro export already has a billing record naming its author, so
+ *     marking it buys nothing and costs a full pixel pass. Note the mark does
+ *     NOT survive a resize (block alignment is lost), so treat it as weak
+ *     origin evidence, not enforcement — and nothing reads it automatically
+ *     today: detectForensicWatermark() has no callers and must be run by hand.
+ *  2. `custom` — the user's OWN brand mark, a Pro feature they opt into.
  */
 
 export interface WatermarkOptions {
-  /** draw the tiled diagonal text layer */
+  /** draw the tiled diagonal text layer — off on every tier, see module doc */
   tile?: boolean;
-  /** draw the corner badge */
+  /** draw the corner badge — off on every tier, see module doc */
   badge?: boolean;
   /** embed the invisible forensic pattern (key must match detection) */
   forensicKey?: string | null;
@@ -355,7 +370,9 @@ async function drawCustomWatermark(
 
 /** Bake watermark layers into an export canvas, in place. */
 export async function applyWatermark(canvas: HTMLCanvasElement, opts: WatermarkOptions = {}): Promise<HTMLCanvasElement> {
-  const { tile = true, badge = true, forensicKey = FORENSIC_KEY, brand = "MockFrame", custom, disclosure } = opts;
+  // tile/badge default OFF: an export that forgets to pass opts must come out
+  // clean, never branded.
+  const { tile = false, badge = false, forensicKey = FORENSIC_KEY, brand = "MockFrame", custom, disclosure } = opts;
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas;
   const { width: w, height: h } = canvas;

@@ -11,11 +11,18 @@ import { formatPrice, perMonthPrice, PLANS, yearlySavingsPct, type Currency, typ
 import { iconBody, ICON_VIEWBOX } from "@/lib/iconStickers";
 import { toast } from "./Toolbar";
 
+// Two rules here:
+//  1. Never sell "remove the watermark" — exports are clean on every tier.
+//  2. Never list a benefit that doesn't work yet. This modal is the last thing
+//     someone reads before paying, so every line must be redeemable the moment
+//     the payment clears. Photoreal rendering is deliberately absent until
+//     RealisticRenderPanel has a UI entry point (Toolbar.tsx currently opens a
+//     "coming soon" dialog instead).
 const BENEFITS = [
-  { icon: "export", title: "Clean exports", text: "Remove the MockFrame watermark — or stamp your own brand instead." },
-  { icon: "magic-stick-3", title: "Photo-real mockups", text: "Unlock realistic device-photo rendering for polished presentations." },
+  { icon: "chat-round-dots", title: "Every chat & DM screen", text: "Telegram, Instagram, Slack, Discord and 8 more, beyond the free WhatsApp & iMessage." },
   { icon: "videocamera-record", title: "Video & GIF export", text: "Turn chat replays and animations into shareable videos." },
   { icon: "bolt", title: "4K & 6K + full-page capture", text: "Ultra-crisp exports and entire scrolling websites in one shot." },
+  { icon: "magic-stick-3", title: "Your brand, your templates", text: "Stamp your own watermark and save whole compositions to your account." },
 ] as const;
 
 function IconifyIcon({ name, size = 20, color = "#17171c", className = "" }: { name: string; size?: number; color?: string; className?: string }) {
@@ -27,7 +34,18 @@ function IconifyIcon({ name, size = 20, color = "#17171c", className = "" }: { n
 }
 
 /** Pro upgrade — clean, spacious pricing surface backed by the existing Razorpay flow. */
-export function UpgradeModal({ initialPlan = "yearly", onClose }: { initialPlan?: PlanId; onClose: () => void }) {
+export function UpgradeModal({
+  initialPlan = "yearly",
+  reason,
+  onClose,
+}: {
+  /** what the user was reaching for, e.g. "Telegram screens" — named back to
+   *  them so the modal answers "why am I seeing this?" at the exact moment
+   *  they've already done the work and want the file */
+  reason?: string;
+  initialPlan?: PlanId;
+  onClose: () => void;
+}) {
   const { account } = useAuth();
   const setRemoveWatermark = useViewStore((s) => s.setRemoveWatermark);
   const [plan, setPlan] = useState<PlanId>(initialPlan);
@@ -91,8 +109,14 @@ export function UpgradeModal({ initialPlan = "yearly", onClose }: { initialPlan?
               <h2 className="text-[22px] font-medium tracking-[-0.03em]">Go Pro</h2>
                 </div>
               </div>
-              <h1 className="mt-12 max-w-[320px] text-[34px] font-medium leading-[1.05] tracking-[-0.04em]">Make every mockup look ready to ship.</h1>
-              <p className="mt-4 max-w-[320px] text-[14px] leading-6 text-zinc-400">A calmer workflow for teams that need beautiful, consistent screenshots at speed.</p>
+              <h1 className="mt-12 max-w-[320px] text-[34px] font-medium leading-[1.05] tracking-[-0.04em]">
+                {reason ? `${reason} are part of Pro.` : "Make every mockup look ready to ship."}
+              </h1>
+              <p className="mt-4 max-w-[320px] text-[14px] leading-6 text-zinc-400">
+                {reason
+                  ? "Your scene is saved exactly as you left it — upgrade and the export picks up right where you were."
+                  : "A calmer workflow for teams that need beautiful, consistent screenshots at speed."}
+              </p>
               <div className="mt-9 space-y-4">
                 {BENEFITS.map((benefit) => (
                   <div key={benefit.title} className="flex gap-3">
@@ -167,13 +191,11 @@ export function UpgradeModal({ initialPlan = "yearly", onClose }: { initialPlan?
                   className="flex items-end gap-1.5"
                 >
                   <span className="text-[40px] font-semibold leading-none tracking-[-0.03em] text-white">
-                    {plan === "lifetime"
-                      ? formatPrice("lifetime", currency, plans)
-                      : plan === "yearly"
-                        ? perMonthPrice("yearly", currency, plans)
-                        : formatPrice("monthly", currency, plans)}
+                    {plan === "yearly"
+                      ? perMonthPrice("yearly", currency, plans)
+                      : formatPrice("monthly", currency, plans)}
                   </span>
-                  <span className="pb-1 text-[13px] font-medium text-zinc-500">{plan === "lifetime" ? "once" : "/ month"}</span>
+                  <span className="pb-1 text-[13px] font-medium text-zinc-500">/ month</span>
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -182,30 +204,12 @@ export function UpgradeModal({ initialPlan = "yearly", onClose }: { initialPlan?
                 <motion.p key={plan} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="text-[11px] text-zinc-500">
                   {plan === "yearly"
                     ? `${formatPrice("yearly", currency, plans)} billed yearly`
-                    : plan === "monthly"
-                      ? "billed monthly · cancel anytime"
-                      : "one payment · Pro forever"}
+                    : "billed monthly · cancel anytime"}
                 </motion.p>
               </AnimatePresence>
             </div>
 
-            {/* Lifetime — the pay-once option, selectable */}
-            <button
-              onClick={() => setPlan("lifetime")}
-              className={`fk-press mt-4 flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition ${plan === "lifetime" ? "border-violet-400/70 bg-violet-400/[0.08]" : "border-white/[0.08] bg-white/[0.02] hover:border-white/20"}`}
-            >
-              <span className="flex items-center gap-2 text-[12.5px] font-semibold text-white">
-                <IconifyIcon name="infinity" size={15} color="#7c3aed" /> Prefer to pay once? Lifetime Pro
-              </span>
-              <span className="flex items-center gap-2 text-[13px] font-semibold text-white">
-                {formatPrice("lifetime", currency, plans)}
-                <span className={`grid h-4 w-4 place-items-center rounded-full border-2 ${plan === "lifetime" ? "border-violet-400 bg-violet-500" : "border-white/20"}`}>
-                  {plan === "lifetime" && <IconifyIcon name="check-circle" size={13} color="#ffffff" />}
-                </span>
-              </span>
-            </button>
-
-            {!account && <p className="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/[0.06] px-3 py-2.5 text-[11px] leading-5 text-amber-200/80">Sign in first so your Pro access follows you across devices.</p>}
+            {!account && <p className="mt-6 rounded-xl border border-amber-300/20 bg-amber-300/[0.06] px-3 py-2.5 text-[11px] leading-5 text-amber-200/80">Sign in first so your Pro access follows you across devices.</p>}
             {account ? (
               <button onClick={pay} disabled={busy} className="fk-press mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-white py-3.5 text-[13px] font-semibold text-zinc-900 shadow-[0_8px_20px_rgba(0,0,0,0.18)] hover:bg-zinc-200 disabled:opacity-50">
                 <IconifyIcon name="lock-keyhole" size={16} color="#ffffff" />

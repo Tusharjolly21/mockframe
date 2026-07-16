@@ -17,6 +17,7 @@ import { applyLayout, DEFAULT_MODS, LAYOUT_PRESETS, modifyPreset, type LayoutMod
 import { useSceneStore, useViewStore } from "@/lib/store";
 import { useEntitlementSync } from "@/lib/billing/client";
 import { openUpgrade } from "@/lib/billing/gate";
+import { guardProScreens } from "@/lib/billing/screenGate";
 import { applyTemplate, deleteUserTemplate, loadUserTemplates, saveUserTemplate, syncUserTemplatesFromServer, templateFromScene, type UserTemplate } from "@/lib/userTemplates";
 import { loadCustomWatermark } from "@/lib/customWatermark";
 import { DEFAULT_DISCLOSURE, DISCLOSURE_PRESETS, loadDisclosure, saveDisclosure, type DisclosureCfg } from "@/lib/disclosure";
@@ -70,13 +71,17 @@ export function RightPanel() {
 
   const removeWatermark = useViewStore((s) => s.removeWatermark);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const [upgradePlan, setUpgradePlan] = useState<"monthly" | "yearly" | "lifetime">("yearly");
+  const [upgradePlan, setUpgradePlan] = useState<"monthly" | "yearly">("yearly");
+  const [upgradeReason, setUpgradeReason] = useState<string | undefined>(undefined);
   // Pro gates anywhere in the editor (video export, renders, 4K…) open the
   // upgrade modal through this event
   useEffect(() => {
     const onUpgrade = (event: Event) => {
-      const requested = (event as CustomEvent<{ plan?: string }>).detail?.plan;
-      if (requested === "monthly" || requested === "yearly" || requested === "lifetime") setUpgradePlan(requested);
+      const detail = (event as CustomEvent<{ plan?: string; reason?: string }>).detail;
+      const requested = detail?.plan;
+      if (requested === "monthly" || requested === "yearly") setUpgradePlan(requested);
+      // undefined for generic gates — the modal falls back to its usual headline
+      setUpgradeReason(detail?.reason);
       setUpgradeOpen(true);
     };
     window.addEventListener("framekit:upgrade", onUpgrade);
@@ -96,6 +101,7 @@ export function RightPanel() {
   useEntitlementSync();
 
   const runExport = async () => {
+    if (!guardProScreens(scene, removeWatermark)) return;
     const node = exportNode();
     if (!node) return;
     setBusy("export");
@@ -158,6 +164,8 @@ export function RightPanel() {
   };
 
   const runCopy = async () => {
+    // copy-to-clipboard is an export in every sense that matters
+    if (!guardProScreens(scene, removeWatermark)) return;
     const node = exportNode();
     if (!node) return;
     setBusy("copy");
@@ -344,7 +352,9 @@ export function RightPanel() {
         </AnimatePresence>
       </div>
 
-      {/* free tier: upsell · Pro: custom brand watermark settings */}
+      {/* Pro: custom brand watermark settings · free: upsell that same feature.
+          NOT "remove watermark" — exports are already clean on every tier, and
+          implying otherwise sells a fix for a problem we don't have. */}
       <div className="px-3 pt-2">
         {removeWatermark ? (
           <button
@@ -359,11 +369,11 @@ export function RightPanel() {
             onClick={() => setUpgradeOpen(true)}
             className="fk-press flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#e4c34d] bg-[#fdf7de] py-1.5 text-[11px] font-semibold text-[#8a6d12] hover:border-[#d4a72c]"
           >
-            <Sparkles size={12} /> Remove watermark · add your own
+            <Sparkles size={12} /> Pro — stamp your own brand
           </button>
         )}
       </div>
-      {upgradeOpen && <UpgradeModal initialPlan={upgradePlan} onClose={() => setUpgradeOpen(false)} />}
+      {upgradeOpen && <UpgradeModal initialPlan={upgradePlan} reason={upgradeReason} onClose={() => setUpgradeOpen(false)} />}
       {watermarkOpen && (
         <WatermarkPanel
           onClose={() => {
@@ -1306,7 +1316,7 @@ function ConnectorsPanel() {
       if (!fromId) setFromId(mockups[0].id);
       if (!toId) setToId(mockups[1].id);
     }
-  }, [mockups]);
+  }, [mockups, fromId, toId]);
 
   const addConnector = () => {
     if (!fromId || !toId || fromId === toId) return;

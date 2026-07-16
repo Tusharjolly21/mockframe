@@ -63,6 +63,9 @@ export function renderMessenger(
     avatar(doc.contact, 58, 75, 18, "ms", avatarUrl),
     `<circle cx="71" cy="88" r="5.5" fill="${c.green}" stroke="${c.bg}" stroke-width="2"/>`,
     textBlock([doc.contact], { x: 86, y: 72, size: 15.5, lineHeight: 18, color: c.text, weight: 600 }),
+    doc.verified
+      ? verifiedBadge(86 + textWidth(doc.contact, 15.5) + 5, 72 - 13, c.blue)
+      : "",
     textBlock([doc.presence || "Active now"], { x: 86, y: 89, size: 11.5, lineHeight: 13, color: c.subtle }),
     phoneIcon(SW - 74, 75, 20, c.blue),
     videoIcon(SW - 34, 75, 25, c.blue)
@@ -156,4 +159,8 @@ export function renderMessenger(
   );
 
   return parts.join("\n");
+}
+
+function verifiedBadge(x: number, y: number, color: string): string {
+  return `<circle cx="${x + 7}" cy="${y + 7}" r="7" fill="${color}"/><path d="M${x + 4} ${y + 7.5} l2 2 4 -4" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`;
 }

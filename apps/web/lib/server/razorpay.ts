@@ -40,8 +40,6 @@ export function razorpay(): Razorpay {
  */
 export async function ensureRazorpayPlanId(plan: PlanId, currency: Currency): Promise<string> {
   const def = PLANS[plan];
-  if (def.kind !== "subscription" || !def.period) throw new Error(`${plan} is not a subscription plan`);
-
   const cacheKey = `${plan}_${currency}_${def.price[currency]}`; // price in key → price edits mint a new plan
   const ref = firestoreDb().collection("billing").doc("razorpayPlans");
   const snap = await ref.get();
@@ -88,8 +86,8 @@ export async function writeBilling(uid: string, record: BillingRecord): Promise<
   // Firestore rejects undefined values — prune optional fields that are absent
   const clean = Object.fromEntries(Object.entries(record).filter(([, v]) => v !== undefined));
   // mergeFields replaces the whole `billing` map (not a deep-merge) so stale
-  // fields from a prior record — e.g. an old subscriptionId after switching to
-  // lifetime — don't linger, while other user fields stay untouched.
+  // fields from a prior record — e.g. an old subscriptionId after re-subscribing
+  // on a different plan — don't linger, while other user fields stay untouched.
   await firestoreDb().collection("users").doc(uid).set({ billing: clean }, { mergeFields: ["billing"] });
 }
 
@@ -100,6 +98,9 @@ export async function readBilling(uid: string): Promise<BillingRecord | null> {
 
 export function isBillingActive(b: BillingRecord | null): boolean {
   if (!b) return false;
-  if (b.plan === "lifetime") return true; // lifetime never lapses
+  // Legacy lifetime purchases (no longer sold) were recorded as one-time and
+  // never lapse — keyed on `kind` so we honour them without referencing the
+  // removed "lifetime" plan id. Everyone else is active only while subscribed.
+  if (b.kind === "one_time") return true;
   return b.status === "active";
 }

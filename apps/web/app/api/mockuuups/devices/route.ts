@@ -1,14 +1,24 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { listDevices, MockuuupsError } from "@/lib/server/mockuuups";
+import { requestIsPro } from "@/lib/server/entitlement";
+import { consumeDailyQuota, quotaSubject } from "@/lib/server/quota";
+import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
 
 /**
  * GET /api/mockuuups/devices — the full device-model catalog (66 models),
  * grouped into the categories the picker shows and ordered newest-first so
  * users can browse many iPhones / Androids / iPads / laptops / desktops /
  * watches. Mockups are then fetched per model via /mockups?device=<slug>.
+ *
+ * Deliberately browsable without Pro: rendering is the paid act, and letting a
+ * free user see the catalog before hitting the gate is the upsell (same shape
+ * as Pro chat screens — compose free, pay at the point of output). Metered,
+ * though, because every call spends our upstream Mockuuups rate limit.
  */
 
 export const runtime = "nodejs";
+
+const FREE_CATALOG_CALLS_PER_DAY = 200;
 
 type CatKey = "iphone" | "android" | "ipad" | "laptop" | "desktop" | "watch" | "other";
 
@@ -31,7 +41,14 @@ const CATS: { key: CatKey; label: string }[] = [
   { key: "watch", label: "Watch" },
 ];
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const owner = await getRequestOwner(req);
+  if (!(await requestIsPro(req))) {
+    const quota = await consumeDailyQuota(quotaSubject(req, owner), "mockuuups-catalog", FREE_CATALOG_CALLS_PER_DAY);
+    if (!quota.allowed) {
+      return NextResponse.json({ error: "Too many catalog requests today — try again tomorrow" }, { status: 429 });
+    }
+  }
   try {
     const raw = await listDevices();
     // dedup by slug, keep API order (oldest→newest)
@@ -48,7 +65,7 @@ export async function GET() {
         .map((d) => ({ slug: d.slug, title: d.title })),
     })).filter((g) => g.devices.length > 0);
 
-    return NextResponse.json({ groups });
+    return attachOwnerCookie(NextResponse.json({ groups }), owner);
   } catch (err) {
     if (err instanceof MockuuupsError) return NextResponse.json({ error: err.message }, { status: err.status });
     return NextResponse.json({ error: "Failed to load devices" }, { status: 500 });

@@ -15,6 +15,29 @@ export interface BgCategory {
   swatches: BgSwatch[];
 }
 
+/**
+ * Pro-only background collections — the designer procedural art. Applying one
+ * while free opens the upgrade modal; Shuffle skips them for free users. Every
+ * solid, gradient, mesh and Unsplash photo stays free, so the free tier still
+ * has ~70 backgrounds and every building block. This gates curation, not
+ * capability — the underlying Background values are ordinary, and a free user
+ * can hand-build a similar look. Single source of truth for the gate.
+ */
+export const PRO_BG_CATEGORY_IDS = new Set([
+  "glass",
+  "refract",
+  "abstract",
+  "desktop",
+  "aurora",
+  "bokeh",
+  "topographic",
+  "grid",
+]);
+
+export function isProBgCategory(categoryId: string): boolean {
+  return PRO_BG_CATEGORY_IDS.has(categoryId);
+}
+
 const lin = (id: string, angle: number, colors: string[]): BgSwatch => ({
   id,
   bg: {
@@ -95,6 +118,26 @@ export const BG_CATEGORIES: BgCategory[] = [
       img("rf-sorbet"),
       img("rf-neon"),
     ],
+  },
+  {
+    id: "aurora",
+    label: "Aurora",
+    swatches: [img("au-borealis"), img("au-violet"), img("au-ember"), img("au-glacier")],
+  },
+  {
+    id: "bokeh",
+    label: "Bokeh",
+    swatches: [img("bk-noir"), img("bk-warm"), img("bk-candy"), img("bk-mint")],
+  },
+  {
+    id: "topographic",
+    label: "Topographic",
+    swatches: [img("topo-paper"), img("topo-noir"), img("topo-blue"), img("topo-sage")],
+  },
+  {
+    id: "grid",
+    label: "Grid",
+    swatches: [img("grid-sunset"), img("grid-cyber"), img("grid-mono"), img("grid-acid")],
   },
   {
     id: "cosmic",

@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence } from "motion/react";
 import type { Background, Backdrop, Effect, MockupLayer } from "@framekit/scene";
 import { backgroundToCss, noiseTile, overlayStyle, patternStyle } from "@framekit/renderer";
-import { Aperture, ArrowLeft, ArrowUpDown, Ban, Check, ChevronDown, Grid3x3, Image as ImageIcon, Pipette, SlidersHorizontal, Sparkles, Square, Sun } from "lucide-react";
+import { Aperture, ArrowLeft, ArrowUpDown, Ban, Check, ChevronDown, Grid3x3, Image as ImageIcon, Lock, Pipette, Search, SlidersHorizontal, Sparkles, Square, Sun, X } from "lucide-react";
 import {
   SiAppstore,
   SiDribbble,
@@ -14,7 +14,8 @@ import {
 } from "@icons-pack/react-simple-icons";
 import { findSizePreset, SIZE_CATEGORIES, type SizePreset } from "@/lib/canvasSizes";
 import { ingestFile, resolveAsset } from "@/lib/assets";
-import { BG_CATEGORIES, magicSwatches, type BgSwatch } from "@/lib/backgrounds";
+import { BG_CATEGORIES, isProBgCategory, magicSwatches, type BgSwatch } from "@/lib/backgrounds";
+import { openUpgrade, useIsPro } from "@/lib/billing/gate";
 import { extractPalette } from "@/lib/palette";
 import { useSceneStore, useViewStore } from "@/lib/store";
 import { ColorRow, Popover, Section, Seg, SliderRow } from "./ui";
@@ -419,6 +420,7 @@ function BackgroundDetail() {
   const scene = useSceneStore((s) => s.scene);
   const setScene = useSceneStore((s) => s.setScene);
   const bumpAssets = useViewStore((s) => s.bumpAssets);
+  const isPro = useIsPro();
   const fileRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<"gradients" | "wallpapers" | "textures" | "all">("gradients");
   const bg = scene.canvas.background;
@@ -426,8 +428,8 @@ function BackgroundDetail() {
   const categories = BG_CATEGORIES.filter((category) => {
     if (tab === "all") return true;
     if (tab === "textures") return category.id === "texture";
-    if (tab === "wallpapers") return ["desktop", "abstract", "earth"].includes(category.id);
-    return ["gradient", "spectral", "prism", "radiant", "cosmic", "mystic", "glass", "refract"].includes(category.id);
+    if (tab === "wallpapers") return ["desktop", "abstract", "earth", "aurora", "bokeh", "grid"].includes(category.id);
+    return ["gradient", "spectral", "prism", "radiant", "cosmic", "mystic", "glass", "refract", "topographic"].includes(category.id);
   });
   const swatchStyle = (swatch: BgSwatch): React.CSSProperties =>
     swatch.bg.type === "image"
@@ -470,7 +472,11 @@ function BackgroundDetail() {
         </button>
         <button
           onClick={() => {
-            const swatches = categories.flatMap((category) => category.swatches);
+            // free users shuffle only within unlocked collections, so Shuffle
+            // never lands on a background they'd then be blocked from keeping
+            const swatches = categories
+              .filter((category) => isPro || !isProBgCategory(category.id))
+              .flatMap((category) => category.swatches);
             const pick = swatches[Math.floor(Math.random() * swatches.length)];
             if (pick) setBg(pick.bg);
           }}
@@ -487,28 +493,44 @@ function BackgroundDetail() {
           }}
         />
       )}
-      {categories.map((category) => (
-        <div key={category.id} className="mb-4">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-[12px] font-bold text-[#17171c]">{category.label}</p>
-            <span className="text-[10px] text-[#9a9aa4]">{category.swatches.length} styles</span>
+      {categories.map((category) => {
+        const locked = !isPro && isProBgCategory(category.id);
+        return (
+          <div key={category.id} className="mb-4">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="flex items-center gap-1 text-[12px] font-bold text-[#17171c]">
+                {category.label}
+                {locked && (
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-[#f3eaff] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#7c3aed]">
+                    <Lock size={8} /> Pro
+                  </span>
+                )}
+              </p>
+              <span className="text-[10px] text-[#9a9aa4]">{category.swatches.length} styles</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {category.swatches.map((swatch) => {
+                const active = JSON.stringify(swatch.bg) === JSON.stringify(bg);
+                return (
+                  <button
+                    key={swatch.id}
+                    onClick={() => (locked ? openUpgrade("Premium backgrounds") : setBg(swatch.bg))}
+                    title={locked ? "Premium background — upgrade to use" : swatch.id}
+                    className={`fk-tile relative h-14 rounded-xl border ${active ? "border-[#17171c] shadow-[0_0_0_1.5px_#17171c]" : "border-[#e4e4ec]"}`}
+                    style={swatchStyle(swatch)}
+                  >
+                    {locked && (
+                      <span className="absolute right-1 top-1 grid h-4 w-4 place-items-center rounded-full bg-black/55 text-white backdrop-blur-sm">
+                        <Lock size={9} />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            {category.swatches.map((swatch) => {
-              const active = JSON.stringify(swatch.bg) === JSON.stringify(bg);
-              return (
-                <button
-                  key={swatch.id}
-                  onClick={() => setBg(swatch.bg)}
-                  title={swatch.id}
-                  className={`fk-tile h-14 rounded-xl border ${active ? "border-[#17171c] shadow-[0_0_0_1.5px_#17171c]" : "border-[#e4e4ec]"}`}
-                  style={swatchStyle(swatch)}
-                />
-              );
-            })}
-          </div>
-        </div>
-      ))}
+        );
+      })}
       <input
         ref={fileRef}
         type="file"
@@ -553,43 +575,158 @@ const UNSPLASH_PHOTOS = [
   { id: "blue-mist", label: "Blue mist", photo: "photo-1483347756197-71ef80e95f73" },
 ] as const;
 
+/** Client shape mirroring lib/server/unsplash.ts UnsplashPhoto. */
+interface UnsplashItem {
+  id: string;
+  thumb: string;
+  regular: string;
+  downloadLocation: string;
+  color: string;
+  alt: string;
+  authorName: string;
+  authorLink: string;
+  photoLink: string;
+}
+
+/** Curated fallback used only when the API key is absent or unreachable — keeps
+ *  the picker useful offline / before UNSPLASH_ACCESS_KEY is set. */
+const FALLBACK_UNSPLASH: UnsplashItem[] = UNSPLASH_PHOTOS.map((p) => ({
+  id: p.id,
+  thumb: `https://images.unsplash.com/${p.photo}?auto=format&fit=crop&w=240&q=70`,
+  regular: `https://images.unsplash.com/${p.photo}?auto=format&fit=crop&w=2400&q=88`,
+  downloadLocation: "", // no live API → nothing to trigger
+  color: "#e4e4ec",
+  alt: p.label,
+  authorName: "",
+  authorLink: "",
+  photoLink: `https://unsplash.com/?${"utm_source=MockFrame&utm_medium=referral"}`,
+}));
+
 function UnsplashPhotos({ onPick }: { onPick: (assetId: string) => void }) {
-  const [loading, setLoading] = useState<string | null>(null);
-  const pick = async (photo: (typeof UNSPLASH_PHOTOS)[number]) => {
-    if (loading) return;
-    setLoading(photo.id);
+  const [query, setQuery] = useState("");
+  const [photos, setPhotos] = useState<UnsplashItem[]>(FALLBACK_UNSPLASH);
+  const [state, setState] = useState<"loading" | "ok" | "fallback" | "empty">("loading");
+  const [applying, setApplying] = useState<string | null>(null);
+
+  // debounced live search (editorial feed when the query is empty)
+  useEffect(() => {
+    let cancelled = false;
+    setState("loading");
+    const delay = query.trim() ? 350 : 0;
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/unsplash?q=${encodeURIComponent(query.trim())}&page=1`);
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (data.configured === false || (!res.ok && !query.trim())) {
+          setPhotos(FALLBACK_UNSPLASH);
+          setState("fallback");
+          return;
+        }
+        const list: UnsplashItem[] = Array.isArray(data.photos) ? data.photos : [];
+        setPhotos(list);
+        setState(list.length ? "ok" : "empty");
+      } catch {
+        if (!cancelled) {
+          setPhotos(FALLBACK_UNSPLASH);
+          setState("fallback");
+        }
+      }
+    }, delay);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query]);
+
+  const applyPhoto = async (p: UnsplashItem) => {
+    if (applying) return;
+    setApplying(p.id);
     try {
-      const res = await fetch(`https://images.unsplash.com/${photo.photo}?auto=format&fit=crop&w=2400&q=88`);
+      let url = p.regular;
+      // guideline-required: register the download so the photographer is credited,
+      // and use the canonical URL it returns
+      if (p.downloadLocation) {
+        const dl = await fetch("/api/unsplash/download", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ location: p.downloadLocation }),
+        });
+        if (dl.ok) {
+          const dj = await dl.json().catch(() => ({}));
+          if (dj.url) url = `${dj.url}${dj.url.includes("?") ? "&" : "?"}w=2400&q=88&fm=jpg&fit=max`;
+        }
+      }
+      const res = await fetch(url);
       if (!res.ok) throw new Error();
       const blob = await res.blob();
-      const asset = await ingestFile(new File([blob], `unsplash-${photo.id}.jpg`, { type: blob.type || "image/jpeg" }));
+      const asset = await ingestFile(new File([blob], `unsplash-${p.id}.jpg`, { type: blob.type || "image/jpeg" }));
       onPick(asset.id);
     } catch {
-      /* offline — thumbnails simply won't apply */
+      /* offline / blocked — the tile simply won't apply */
     } finally {
-      setLoading(null);
+      setApplying(null);
     }
   };
+
   return (
     <div className="mb-4">
-      <div className="mb-2 flex items-center justify-between">
-        <p className="text-[13px] font-bold text-[#17171c]">Unsplash</p>
-        <span className="text-[10px] text-[#9a9aa4]">curated photos</span>
-      </div>
-      <div className="grid grid-cols-4 gap-2">
-        {UNSPLASH_PHOTOS.map((photo) => (
-          <button
-            key={photo.id}
-            onClick={() => pick(photo)}
-            className={`fk-tile relative h-14 overflow-hidden rounded-xl border border-[#e4e4ec] ${loading === photo.id ? "opacity-60" : ""}`}
-            title={`${photo.label} · Unsplash`}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`https://images.unsplash.com/${photo.photo}?auto=format&fit=crop&w=240&q=70`} alt={photo.label} loading="lazy" className="h-full w-full object-cover" />
-            {loading === photo.id && <span className="absolute inset-0 grid place-items-center bg-black/30 text-[10px] font-bold text-white">Loading</span>}
+      <div className="mb-2 flex items-center gap-1.5 rounded-lg border border-[#e4e4ec] bg-white px-2">
+        <Search size={13} className="shrink-0 text-[#9a9aa4]" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search Unsplash photos…"
+          className="min-w-0 flex-1 bg-transparent py-1.5 text-[12px] outline-none placeholder:text-[#b4b4bc]"
+        />
+        {query && (
+          <button onClick={() => setQuery("")} title="Clear" className="shrink-0 text-[#9a9aa4] hover:text-[#17171c]">
+            <X size={12} />
           </button>
-        ))}
+        )}
       </div>
+
+      {state === "empty" ? (
+        <p className="py-4 text-center text-[11px] text-[#9a9aa4]">No photos for “{query.trim()}”.</p>
+      ) : (
+        <div className="grid grid-cols-4 gap-2">
+          {photos.map((p) => (
+            <div key={p.id} className="group relative">
+              <button
+                onClick={() => applyPhoto(p)}
+                className={`fk-tile h-14 w-full overflow-hidden rounded-xl border border-[#e4e4ec] ${applying === p.id ? "opacity-60" : ""}`}
+                title={p.authorName ? `Photo by ${p.authorName} on Unsplash` : `${p.alt} · Unsplash`}
+                style={{ background: p.color }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.thumb} alt={p.alt} loading="lazy" className="h-full w-full object-cover" />
+                {applying === p.id && (
+                  <span className="absolute inset-0 grid place-items-center bg-black/30 text-[9px] font-bold text-white">Adding…</span>
+                )}
+              </button>
+              {p.authorName && (
+                <a
+                  href={p.authorLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  title={`${p.authorName} on Unsplash`}
+                  className="pointer-events-none absolute inset-x-0 bottom-0 truncate rounded-b-xl bg-gradient-to-t from-black/70 to-transparent px-1 pb-0.5 pt-2 text-[7.5px] font-medium text-white opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100"
+                >
+                  {p.authorName}
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <p className="mt-2 text-center text-[10px] text-[#9a9aa4]">
+        {state === "fallback" ? "Curated picks · " : "Photos from "}
+        <a href={`https://unsplash.com/?${"utm_source=MockFrame&utm_medium=referral"}`} target="_blank" rel="noreferrer" className="underline hover:text-[#17171c]">
+          Unsplash
+        </a>
+      </p>
     </div>
   );
 }
@@ -711,7 +848,7 @@ function PatternDetail() {
   const { backdrop, patch } = useBackdrop();
   const pattern = backdrop?.pattern;
   const setPattern = (preset: PatternPreset) => {
-    const { id: _id, label: _label, ...nextPattern } = preset;
+    const { id: _, label: __, ...nextPattern } = preset;
     patch({ pattern: nextPattern });
   };
   const randomizedKinds = new Set<PatternKind>(["circles", "dots", "sight", "diamonds", "mixed-shapes", "confetti"]);
@@ -728,7 +865,7 @@ function PatternDetail() {
       <div className="grid grid-cols-2 gap-2">
         {PATTERN_PRESETS.map((preset) => {
           const active = pattern?.kind === preset.kind;
-          const { id: _id, label: _label, ...previewPattern } = preset;
+          const { id: _, label: __, ...previewPattern } = preset;
           return (
             <button
               key={preset.id}

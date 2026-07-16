@@ -219,21 +219,33 @@ export function renderSocial(doc: SocialPostDoc, avatarUrl?: string, lookupUrl?:
     const lines = wrapText(cm.text, 14.5, cardW - 44 - M);
     if (net === "threads") {
       // flat: name + @ then text
+      let hx = cx + 42 + textWidth(cm.user, 13.5) + 5;
       parts.push(
-        `<text font-family="${font}" font-size="13.5" font-weight="700" fill="${c.text}" x="${cx + 42}" y="${cy + 2}">${esc(cm.user)}</text>`,
-        `<text font-family="${font}" font-size="12.5" fill="${c.subtle}" x="${cx + 42 + textWidth(cm.user, 13.5) + 6}" y="${cy + 2}">${esc(cm.time || "1h")}</text>`
+        `<text font-family="${font}" font-size="13.5" font-weight="700" fill="${c.text}" x="${cx + 42}" y="${cy + 2}">${esc(cm.user)}</text>`
+      );
+      if (cm.verified) {
+        parts.push(verifiedSeal(hx, cy + 2 - 11, c.text));
+        hx += 20;
+      }
+      parts.push(
+        `<text font-family="${font}" font-size="12.5" fill="${c.subtle}" x="${hx}" y="${cy + 2}">${esc(cm.time || "1h")}</text>`
       );
       lines.forEach((l, k) => parts.push(`<text font-family="${font}" font-size="14.5" fill="${c.text}" x="${cx + 42}" y="${cy + 20 + k * 19}">${esc(l)}</text>`));
       cy += 20 + lines.length * 19 + 16;
     } else {
       // gray comment bubble with bold name
-      const bw = Math.min(cardW - 44, Math.max(...lines.map((l) => textWidth(l, 14.5)), textWidth(cm.user, 13)) + 24);
+      const nameW = textWidth(cm.user, 13);
+      const badgeW = cm.verified ? 20 : 0;
+      const bw = Math.min(cardW - 44, Math.max(...lines.map((l) => textWidth(l, 14.5)), nameW + badgeW) + 24);
       const bh = 22 + lines.length * 19 + 8;
       const bubbleBg = dark ? "#3a3b3c" : "#f0f2f5";
       parts.push(
         `<rect x="${cx + 40}" y="${cy - 10}" width="${bw.toFixed(0)}" height="${bh}" rx="16" fill="${bubbleBg}"/>`,
         `<text font-family="${font}" font-size="13" font-weight="700" fill="${c.text}" x="${cx + 52}" y="${cy + 6}">${esc(cm.user)}</text>`
       );
+      if (cm.verified) {
+        parts.push(verifiedSeal(cx + 52 + nameW + 4, cy + 6 - 11, accent === "#000000" ? "#0095f6" : accent));
+      }
       lines.forEach((l, k) => parts.push(`<text font-family="${font}" font-size="14.5" fill="${c.text}" x="${cx + 52}" y="${cy + 24 + k * 19}">${esc(l)}</text>`));
       // Like · Reply · time row
       const ry2 = cy - 10 + bh + 14;

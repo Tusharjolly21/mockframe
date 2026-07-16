@@ -66,6 +66,9 @@ export function renderInstagram(
     avatar(doc.username, 58, 75, 18, "ig", avatarUrl),
     `<circle cx="71" cy="88" r="5.5" fill="${c.green}" stroke="${c.bg}" stroke-width="2"/>`,
     textBlock([doc.username], { x: 86, y: 72, size: 15, lineHeight: 18, color: c.text, weight: 600 }),
+    doc.verified
+      ? verifiedSeal(86 + textWidth(doc.username, 15) + 5, 72 - 12, "#0095f6")
+      : "",
     textBlock([doc.presence || "Active now"], { x: 86, y: 89, size: 11.5, lineHeight: 13, color: c.subtle }),
     phoneIcon(SW - 74, 75, 20, c.text),
     videoIcon(SW - 34, 75, 25, c.text)
@@ -153,4 +156,13 @@ export function renderInstagram(
   );
 
   return parts.join("\n");
+}
+
+function verifiedSeal(x: number, y: number, color: string): string {
+  const cx = x + 8, cy = y + 8;
+  const petals = Array.from({ length: 8 }, (_, i) => {
+    const a = (i / 8) * Math.PI * 2;
+    return `<circle cx="${(cx + Math.cos(a) * 8).toFixed(1)}" cy="${(cy + Math.sin(a) * 8).toFixed(1)}" r="3" fill="${color}"/>`;
+  }).join("");
+  return `${petals}<circle cx="${cx}" cy="${cy}" r="7.5" fill="${color}"/><path d="M${cx - 3.6} ${cy} l 2.6 2.8 4.8 -5.6" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`;
 }

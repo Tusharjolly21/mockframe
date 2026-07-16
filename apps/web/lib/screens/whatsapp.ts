@@ -75,6 +75,9 @@ export function renderWhatsApp(
     `<path d="M24 62 l-10 11 10 11" fill="none" stroke="${c.accent}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`,
     avatar(doc.contact, 52, 73, 19, "wa", avatarUrl),
     textBlock([doc.contact], { x: 80, y: 70, size: 16.5, lineHeight: 19, color: c.text, weight: 600 }),
+    doc.verified
+      ? verifiedBadge(80 + textWidth(doc.contact, 16.5) + 5, 70 - 13, c.accent)
+      : "",
     textBlock([doc.chrome._anim?.typing ? "typing…" : doc.presence || "online"], { x: 80, y: 87, size: 12, lineHeight: 14, color: doc.chrome._anim?.typing ? c.accent : c.subtle }),
     videoIcon(SW - 76, 73, 25, c.text),
     phoneIcon(SW - 34, 73, 21, c.text)
@@ -489,4 +492,8 @@ function ticks(state: WhatsAppTicks, xRight: number, y: number, grey: string, bl
   const tick = (dx: number) =>
     `<path d="M${xRight - 14 + dx} ${y - 4} l 2.6 2.8 5.4 -6" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
   return state === "sent" ? tick(3) : tick(0) + tick(4.5);
+}
+
+function verifiedBadge(x: number, y: number, color: string): string {
+  return `<circle cx="${x + 7}" cy="${y + 7}" r="7" fill="${color}"/><path d="M${x + 4} ${y + 7.5} l2 2 4 -4" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`;
 }

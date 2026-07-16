@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { razorpay, readBilling, verifyRazorpaySignature, writeBilling } from "@/lib/server/razorpay";
+import { readBilling, verifyRazorpaySignature, writeBilling } from "@/lib/server/razorpay";
 import { isPlanId } from "@/lib/billing/plans";
 
 export const runtime = "nodejs";
@@ -43,18 +43,8 @@ export async function POST(req: NextRequest) {
 
   try {
     // uid/plan travel in notes (set at checkout creation) so attribution never
-    // depends on a browser session existing. Subscriptions carry notes on the
-    // entity, but a one-time (lifetime) Order's notes are NOT copied onto the
-    // payment entity — so fetch the order to recover them.
-    let notes: Record<string, string> = subscription?.notes ?? payment?.notes ?? {};
-    if (!notes.uid && payment?.order_id) {
-      try {
-        const order = await razorpay().orders.fetch(payment.order_id);
-        notes = (order?.notes as Record<string, string>) ?? notes;
-      } catch (e) {
-        console.error("[billing/webhook] order fetch", e);
-      }
-    }
+    // depends on a browser session existing.
+    const notes: Record<string, string> = subscription?.notes ?? payment?.notes ?? {};
     const uid = notes.uid;
     const plan = notes.plan;
 
@@ -67,18 +57,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true, skipped: "stale" });
       }
 
-      if (type === "payment.captured" && plan === "lifetime") {
-        await writeBilling(uid, {
-          plan,
-          status: "active",
-          kind: "one_time",
-          paymentId: payment?.id,
-          orderId: payment?.order_id,
-          via: "webhook",
-          eventAt,
-          updatedAt: FieldValue.serverTimestamp(),
-        });
-      } else if (type === "subscription.activated" || type === "subscription.charged" || type === "subscription.resumed") {
+      if (type === "subscription.activated" || type === "subscription.charged" || type === "subscription.resumed") {
         await writeBilling(uid, {
           plan,
           status: "active",

@@ -3,11 +3,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { FirebaseConfigError, firebaseSetupHint, firebaseStorage, firestoreDb } from "@/lib/server/firebaseAdmin";
 import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
+import { requestIsPro } from "@/lib/server/entitlement";
 
 export const runtime = "nodejs";
 
-const MAX_IMAGE_BYTES = 40 * 1024 * 1024;
-const MAX_ASSETS_PER_OWNER = 500; // generous, but bounds runaway/abusive writes
+/**
+ * Storage ceilings, per tier. The old flat 40MB × 500 let a single anonymous
+ * owner park ~20GB in Storage for free — a bill set by strangers rather than
+ * by us. Free limits are still well above what a real session uses (a 4K
+ * screenshot is ~5MB); Pro keeps the original headroom because Pro pays for it.
+ */
+const MAX_IMAGE_BYTES_FREE = 12 * 1024 * 1024;
+const MAX_IMAGE_BYTES_PRO = 40 * 1024 * 1024;
+const MAX_ASSETS_FREE = 120;
+const MAX_ASSETS_PRO = 500;
+
+const mb = (bytes: number) => Math.round(bytes / (1024 * 1024));
 
 function configError() {
   return NextResponse.json({ error: "Firebase is not configured", hint: firebaseSetupHint() }, { status: 501 });
@@ -68,17 +79,37 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const owner = await getRequestOwner(req);
+    const isPro = await requestIsPro(req);
+    const maxBytes = isPro ? MAX_IMAGE_BYTES_PRO : MAX_IMAGE_BYTES_FREE;
+    const maxAssets = isPro ? MAX_ASSETS_PRO : MAX_ASSETS_FREE;
+
     const form = await req.formData();
     const file = form.get("file");
     if (!(file instanceof File)) return NextResponse.json({ error: "Missing file" }, { status: 400 });
     if (!file.type.startsWith("image/")) return NextResponse.json({ error: "Only image uploads are supported" }, { status: 415 });
-    if (file.size > MAX_IMAGE_BYTES) return NextResponse.json({ error: "Image exceeds 40MB" }, { status: 413 });
+    if (file.size > maxBytes) {
+      return NextResponse.json(
+        {
+          error: isPro
+            ? `Image exceeds ${mb(maxBytes)}MB`
+            : `Image exceeds ${mb(maxBytes)}MB — upgrade to upload files up to ${mb(MAX_IMAGE_BYTES_PRO)}MB`,
+        },
+        { status: 413 }
+      );
+    }
 
     // bound total objects per owner so a runaway/abusive client can't write
     // unlimited large blobs into Storage
     const existing = await assetsCollection(owner.ownerId).count().get();
-    if (existing.data().count >= MAX_ASSETS_PER_OWNER) {
-      return NextResponse.json({ error: "Asset limit reached — delete some uploads to add more" }, { status: 429 });
+    if (existing.data().count >= maxAssets) {
+      return NextResponse.json(
+        {
+          error: isPro
+            ? "Asset limit reached — delete some uploads to add more"
+            : `Upload limit reached (${maxAssets}) — delete some uploads, or upgrade for ${MAX_ASSETS_PRO}`,
+        },
+        { status: 429 }
+      );
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());

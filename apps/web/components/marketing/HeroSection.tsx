@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 import { FakeScreen } from "./FakeScreen";
 import { SolarIcon } from "./SolarIcon";
+import { TiltMockupCard } from "./TiltMockupCard";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -115,7 +116,7 @@ export function HeroSection({ devicesCount }: { devicesCount: number }) {
             </div>
           </motion.div>
 
-          <motion.div variants={stageItem} className="mb-24 hidden md:block">
+          <motion.div variants={stageItem} className="mb-20 hidden md:block">
             <FlowArrow />
           </motion.div>
 
@@ -131,33 +132,43 @@ export function HeroSection({ devicesCount }: { devicesCount: number }) {
               <motion.img
                 src="/hero/hero-iphone.webp"
                 alt="Photoreal iPhone 16 Pro mockup with a WhatsApp screenshot"
-                className="w-[180px] drop-shadow-[0_36px_60px_rgba(0,0,0,0.6)] sm:w-[210px]"
+                className="w-[180px] drop-shadow-[0_36px_60px_rgba(0,0,0,0.6)] sm:w-[200px]"
                 animate={float}
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
               />
             </div>
           </motion.div>
 
-          <motion.div variants={stageItem} className="mb-24 hidden sm:block">
+          <motion.div variants={stageItem} className="mb-20 hidden sm:block">
             <FlowArrow />
           </motion.div>
 
           {/* 03 — styled & exported */}
           <motion.div variants={stageItem} className="hidden flex-col items-center sm:flex">
             <StepLabel n="03" text="Styled & exported" />
-            <div
-              className="mt-4 flex h-[300px] w-[220px] items-center justify-center overflow-hidden rounded-[20px] border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] sm:h-[340px] sm:w-[260px]"
-              style={{
-                background:
-                  "radial-gradient(120% 100% at 20% 0%, #6d28d9 0%, #4f46e5 34%, #0e7490 78%, #155e75 100%)",
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/hero/hero-iphone.webp"
-                alt="Exported mockup — iPhone on a styled gradient background"
-                className="h-[82%] w-auto drop-shadow-[0_24px_44px_rgba(0,0,0,0.45)]"
-              />
+            <div className="mt-4">
+              <TiltMockupCard
+                width="260px"
+                height="400px"
+                background="radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.25) 0%, transparent 60%), radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.2) 0%, transparent 60%), linear-gradient(135deg, #090812 0%, #151126 100%)"
+              >
+                {/* 1. Grid Pattern */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none rounded-[24px]" />
+                
+                {/* 2. Glowing Orbs */}
+                <div className="absolute top-[20%] left-[20%] w-[120px] h-[120px] bg-violet-600/30 rounded-full blur-[40px] pointer-events-none" />
+                <div className="absolute bottom-[20%] right-[10%] w-[100px] h-[100px] bg-cyan-600/20 rounded-full blur-[30px] pointer-events-none" />
+
+                {/* 3. Phone mockup in center (Z-depth) */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/hero/hero-iphone.webp"
+                    alt="Exported mockup phone"
+                    className="h-[84%] w-auto drop-shadow-[0_20px_40px_rgba(0,0,0,0.6)] pointer-events-none select-none"
+                  />
+                </div>
+              </TiltMockupCard>
             </div>
           </motion.div>
         </div>

@@ -13,8 +13,8 @@ export const runtime = "nodejs";
 
 /**
  * POST { plan, currency } → the payload Razorpay Checkout needs on the client.
- * Lifetime is a one-time Order; monthly/yearly are Subscriptions. The uid is
- * attached to notes so webhooks can attribute the payment without a session.
+ * Both plans are Subscriptions. The uid is attached to notes so webhooks can
+ * attribute the payment without a session.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -42,26 +42,10 @@ export async function POST(req: NextRequest) {
     }
     const notes = { uid: owner.uid, plan };
 
-    if (def.kind === "one_time") {
-      const order = await razorpay().orders.create({
-        amount: def.price[currency],
-        currency,
-        receipt: `life_${owner.uid.slice(0, 30)}`,
-        notes,
-      });
-      return NextResponse.json({
-        mode: "order",
-        keyId: razorpayKeyId(),
-        orderId: order.id,
-        amount: def.price[currency],
-        currency,
-      });
-    }
-
     const planId = await ensureRazorpayPlanId(plan, currency);
     const sub = await razorpay().subscriptions.create({
       plan_id: planId,
-      total_count: def.totalCount ?? 120,
+      total_count: def.totalCount,
       notes,
     });
     return NextResponse.json({

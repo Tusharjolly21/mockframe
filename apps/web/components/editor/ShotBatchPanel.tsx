@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronDown, Copy, Download, Plus, Trash2 } from "lucide-react";
+import { Check, ChevronDown, Copy, Download, Lock, Plus, Trash2 } from "lucide-react";
 import { bulkExportZip } from "@/lib/bulkExport";
+import { openUpgrade } from "@/lib/billing/gate";
+import { guardProScreens } from "@/lib/billing/screenGate";
 import { resolveAsset } from "@/lib/assets";
 import { useShotBatchStore } from "@/lib/shotBatch";
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
@@ -15,6 +17,9 @@ export function ShotBatchPanel({ onToast }: { onToast: (message: string) => void
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [listOpen, setListOpen] = useState(false);
   const activeShot = shots.find((shot) => shot.id === activeId) ?? shots[0];
+  // subscribed, not getState() — the lock must clear the moment checkout lands
+  const isProLive = useViewStore((s) => s.removeWatermark);
+  const zipLocked = shots.length > 1 && !isProLive;
 
   const activate = (id: string) => {
     const next = useShotBatchStore.getState().activate(id, useSceneStore.getState().scene);
@@ -48,6 +53,18 @@ export function ShotBatchPanel({ onToast }: { onToast: (message: string) => void
 
   const exportAll = async () => {
     if (!shots.length) return;
+    const isPro = useViewStore.getState().removeWatermark;
+    // The multi-shot ZIP is Pro: whoever exports a set at once is shipping an
+    // App Store listing and has a budget. Nothing is taken away — free users
+    // still export every shot individually via the Export button (exactly what
+    // PostSpark's free tier does), so this sells the one-click ZIP, not the
+    // capability. A single-shot "batch" IS just a normal export, so it stays free.
+    if (shots.length > 1 && !isPro) {
+      openUpgrade("Batch exports");
+      return;
+    }
+    // every shot is its own scene — a Pro screen in any one of them gates the ZIP
+    if (!guardProScreens(shots.map((shot) => shot.scene), isPro)) return;
     setProgress({ done: 0, total: shots.length });
     try {
       await bulkExportZip(
@@ -125,9 +142,14 @@ export function ShotBatchPanel({ onToast }: { onToast: (message: string) => void
       )}
 
       <button onClick={exportAll} disabled={!!progress} className="fk-press mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#17171c] px-3 py-2.5 text-xs font-semibold text-white disabled:opacity-55">
-        {progress ? <Copy size={14} /> : <Download size={14} />}
+        {progress ? <Copy size={14} /> : zipLocked ? <Lock size={13} className="text-[#e4c34d]" /> : <Download size={14} />}
         {progress ? `Rendering ${progress.done}/${progress.total}` : `Export all ${shots.length} shots · ZIP`}
       </button>
+      {zipLocked && (
+        <p className="mt-1.5 text-center text-[10.5px] leading-snug text-[#8a8a94]">
+          One ZIP for the whole set is Pro — or open each shot and export it on its own.
+        </p>
+      )}
     </div>
   );
 }

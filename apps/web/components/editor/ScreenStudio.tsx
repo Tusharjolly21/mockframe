@@ -1,16 +1,20 @@
 "use client";
 
 import {
+  SiAppstore,
   SiBluesky,
   SiDiscord,
   SiFacebook,
   SiGmail,
   SiGithub,
+  SiGooglemaps,
+  SiGoogleplay,
   SiImessage,
   SiLine,
   SiMessenger,
   SiReddit,
   SiSignal,
+  SiSpotify,
   SiStripe,
   SiTinder,
   SiSnapchat,
@@ -20,7 +24,7 @@ import {
   SiYoutube,
 } from "@icons-pack/react-simple-icons";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, CalendarDays, Code2, FileText, Heart, ImageIcon, ImagePlus, LayoutGrid, Link2, MessagesSquare, Mic, Paperclip, Phone, Quote, Search, Shuffle, Slack, SmilePlus, Sparkles, Trash2, X, Music, MapPin, Store, Bell } from "lucide-react";
+import { ArrowDown, ArrowUp, Bell, CalendarDays, Code2, FileText, Heart, ImageIcon, ImagePlus, LayoutGrid, Link2, MessagesSquare, Mic, Paperclip, Phone, Quote, Search, Shuffle, Slack, SmilePlus, Sparkles, Trash2, X, Store } from "lucide-react";
 import type { MockupLayer } from "@framekit/scene";
 import { getDevice, listDevices } from "@framekit/devices";
 import { ingestFile, resolveAsset } from "@/lib/assets";
@@ -100,8 +104,7 @@ import { toast } from "./Toolbar";
 import { CODE_THEME_LABELS } from "@/lib/screens/code";
 import { FRAME_LABELS, FRAME_STYLES } from "@/lib/screens/frames";
 import { CODE_FONT_LABELS } from "@/lib/screens/fonts";
-import { useSceneStore, useViewStore } from "@/lib/store";
-import { openUpgrade } from "@/lib/billing/gate";
+import { useSceneStore } from "@/lib/store";
 import { Section, Seg, SliderRow } from "./ui";
 import { InstagramBrandIcon, LinkedInBrandIcon, ThreadsBrandIcon, XBrandIcon } from "@/components/SocialBrandIcon";
 
@@ -114,8 +117,8 @@ import { InstagramBrandIcon, LinkedInBrandIcon, ThreadsBrandIcon, XBrandIcon } f
 /* Categorized catalog — the picker groups + searches these so it stays
    navigable as the roster grows toward Mockly's 50+ generators. Add a new
    generator by dropping one row here (+ its renderer + doc arm). */
-type ScreenCat = "Messaging" | "AI Chats" | "Social" | "Dating" | "Dev & Charts" | "Email";
-const CAT_ORDER: ScreenCat[] = ["Messaging", "AI Chats", "Social", "Dating", "Dev & Charts", "Email"];
+type ScreenCat = "Messaging" | "AI Chats" | "Social" | "Dating" | "Dev & Charts" | "Email" | "Apps & Store";
+const CAT_ORDER: ScreenCat[] = ["Messaging", "AI Chats", "Social", "Dating", "Dev & Charts", "Email", "Apps & Store"];
 
 interface AppMeta {
   app: ScreenApp;
@@ -159,6 +162,13 @@ const APPS: AppMeta[] = [
   { app: "github", label: "GitHub", icon: SiGithub, tint: "#1f2328", cat: "Dev & Charts", kw: "contribution graph heatmap commits dev profile" },
   { app: "stripe", label: "Stripe", icon: SiStripe, tint: "#635bff", cat: "Dev & Charts", kw: "chart revenue dashboard mrr graph payments money" },
   { app: "email", label: "Email", icon: SiGmail, tint: "#ea4335", cat: "Email", kw: "gmail outlook apple mail" },
+  // These five have full renderers and field editors but were only reachable
+  // via /templates deep-links — finished work nobody could find from the editor.
+  { app: "spotify", label: "Spotify", icon: SiSpotify, tint: "#1db954", cat: "Apps & Store", kw: "music now playing song album track player podcast" },
+  { app: "appstore", label: "App Store", icon: SiAppstore, tint: "#0d84ff", cat: "Apps & Store", kw: "ios apple listing app page rating download install" },
+  { app: "googleplay", label: "Google Play", icon: SiGoogleplay, tint: "#01875f", cat: "Apps & Store", kw: "android listing app page rating download install store" },
+  { app: "googlemaps", label: "Google Maps", icon: SiGooglemaps, tint: "#ea4335", cat: "Apps & Store", kw: "navigation route directions drive trip journey eta" },
+  { app: "ios-notification", label: "Notification", icon: Bell, tint: "#ff9500", cat: "Apps & Store", kw: "ios push banner alert lock screen notify" },
 ];
 
 /** Standalone-card Templates (window-framed content, no phone) — a separate
@@ -818,23 +828,19 @@ function MsgExtras<
         <button title="Date separator before this message" onClick={() => patch({ dateLabel: m.dateLabel ? undefined : "Today" } as Partial<M>)} className={chipCls(m.dateLabel != null)}>
           <CalendarDays size={12} /> Date
         </button>
-        {/* Pro chat pack: voice notes + reactions */}
+        {/* Chat fidelity is free on every app. The paywall is the Pro app set
+            (gated at export) — not a crippled WhatsApp. A free tier that looks
+            broken reads as a bad product, not a smaller one. */}
         <button
-          title="Voice-note bubble (Pro)"
-          onClick={() => {
-            if (!useViewStore.getState().removeWatermark) return openUpgrade();
-            patch({ voice: m.voice ? undefined : { seconds: 12 } } as Partial<M>);
-          }}
+          title="Voice-note bubble"
+          onClick={() => patch({ voice: m.voice ? undefined : { seconds: 12 } } as Partial<M>)}
           className={chipCls(!!m.voice)}
         >
           <Mic size={12} /> Voice
         </button>
         <button
-          title="Emoji reaction on this bubble (Pro)"
-          onClick={() => {
-            if (!useViewStore.getState().removeWatermark) return openUpgrade();
-            patch({ reaction: m.reaction ? undefined : "❤️" } as Partial<M>);
-          }}
+          title="Emoji reaction on this bubble"
+          onClick={() => patch({ reaction: m.reaction ? undefined : "❤️" } as Partial<M>)}
           className={chipCls(!!m.reaction)}
         >
           <SmilePlus size={12} /> React
