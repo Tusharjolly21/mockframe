@@ -151,6 +151,8 @@ export function HeroSection({ devicesCount }: { devicesCount: number }) {
                 src="/hero/hero-iphone.webp"
                 alt="Photoreal iPhone 16 Pro mockup with a WhatsApp screenshot"
                 className="w-[168px] drop-shadow-[0_30px_55px_rgba(0,0,0,0.55)]"
+                width={560}
+                height={1332}
                 animate={float}
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
               />
@@ -223,6 +225,9 @@ export function HeroSection({ devicesCount }: { devicesCount: number }) {
                       src="/hero/hero-iphone.webp"
                       alt="A WhatsApp screenshot styled into a premium exported mockup"
                       className="h-[356px] w-auto select-none drop-shadow-[0_40px_60px_rgba(0,0,0,0.66)]"
+                      width={560}
+                      height={1332}
+                      fetchPriority="high"
                       draggable={false}
                     />
                     {/* specular sheen sweep (loops, no user gesture needed) */}

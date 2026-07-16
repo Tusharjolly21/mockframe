@@ -47,3 +47,4 @@ psd/
 *.psb
 .vercel
 .env*
+.superpowers/
