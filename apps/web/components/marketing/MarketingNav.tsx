@@ -10,6 +10,7 @@ import { SITE_NAME } from "@/lib/site";
 
 const LINKS: [string, string][] = [
   ["/mockups", "Mockups"],
+  ["/app-store-screenshots", "App Store Screenshots"],
   ["/tools", "Tools"],
   ["/templates", "Templates"],
   ["/guides", "Guides"],
