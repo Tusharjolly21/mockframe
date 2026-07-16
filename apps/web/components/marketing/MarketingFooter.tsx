@@ -41,6 +41,7 @@ const COLS: { title: string; links: [string, string][] }[] = [
     title: "Tools",
     links: [
       ["/tools", "All tools"],
+      ["/tools/app-promo-video-maker", "App promo video maker"],
       ["/tools/website-screenshot", "Website screenshots"],
       ["/tools/code-screenshot", "Code screenshots"],
       ["/tools/tweet-screenshot", "X post images"],

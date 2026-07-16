@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "motion/react";
 import { track, trackOnce } from "@/lib/analytics";
 import { ingestFile } from "@/lib/assets";
@@ -17,6 +18,9 @@ import { LeftPanel } from "./LeftPanel";
 import { RightPanel } from "./RightPanel";
 import { LogoChip, Toolbar } from "./Toolbar";
 
+// Heavy (@remotion/player) + client-only — load it only when the promo flow opens.
+const PromoPanel = dynamic(() => import("./promo/PromoPanel"), { ssr: false });
+
 export function EditorShell({
   initialDeviceId,
   initialScreenApp,
@@ -24,6 +28,7 @@ export function EditorShell({
   openUpgradeOnLoad = false,
   upgradePlan,
   openCaptureOnLoad = false,
+  openPromoOnLoad = false,
   embedded = false,
 }: {
   initialDeviceId?: string;
@@ -32,12 +37,25 @@ export function EditorShell({
   openUpgradeOnLoad?: boolean;
   upgradePlan?: string;
   openCaptureOnLoad?: boolean;
+  openPromoOnLoad?: boolean;
   embedded?: boolean;
 }) {
   const setScene = useSceneStore((s) => s.setScene);
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const [toast, setToast] = useState<string | null>(null);
+  const [promoOpen, setPromoOpen] = useState(false);
   const extensionCaptures = useRef(new Set<string>());
+
+  // Promo video flow opens from the toolbar button (framekit:promo-open) or the
+  // /editor?promo=1 deep link used by the landing page.
+  useEffect(() => {
+    const open = () => setPromoOpen(true);
+    window.addEventListener("framekit:promo-open", open);
+    return () => window.removeEventListener("framekit:promo-open", open);
+  }, []);
+  useEffect(() => {
+    if (openPromoOnLoad) setPromoOpen(true);
+  }, [openPromoOnLoad]);
 
   useEffect(() => {
     track("editor_opened", { entry: initialDeviceId ? "device_page" : openCalibrate ? "calibrate" : "direct" });
@@ -323,6 +341,8 @@ export function EditorShell({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {promoOpen && <PromoPanel onClose={() => setPromoOpen(false)} />}
     </div>
   );
 }

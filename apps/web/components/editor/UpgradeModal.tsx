@@ -19,7 +19,7 @@ import { toast } from "./Toolbar";
 const BENEFITS = [
   { icon: "chat-round-dots", title: "Every chat & DM screen", text: "Telegram, Instagram, Slack, Discord and 8 more, beyond the free WhatsApp & iMessage." },
   { icon: "magic-stick-3", title: "Photoreal device renders", text: "Composite your screenshot into a real device photo, then keep editing on top." },
-  { icon: "videocamera-record", title: "Video & GIF export", text: "Turn chat replays and animations into shareable videos." },
+  { icon: "videocamera-record", title: "Promo videos, video & GIF", text: "Animated app-ad videos for Reels & Facebook, plus chat-replay video and GIF export." },
   { icon: "bolt", title: "4K & 6K + full-page capture", text: "Ultra-crisp exports and entire scrolling websites in one shot." },
 ] as const;
 

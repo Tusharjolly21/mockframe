@@ -30,11 +30,18 @@ const CHAT_SLUGS = new Set([
   "fake-messenger-chat-generator",
 ]);
 
+const VIDEO_SLUGS = new Set(["app-promo-video-maker"]);
+
 const SECTIONS: { heading: string; blurb: string; tools: ToolPage[] }[] = [
+  {
+    heading: "Video & motion",
+    blurb: "Turn a screenshot into an animated promo video, ready for Instagram and Facebook.",
+    tools: TOOL_PAGES.filter((t) => VIDEO_SLUGS.has(t.slug)),
+  },
   {
     heading: "Screenshot & capture tools",
     blurb: "Turn a URL, a code snippet, a post or an app screen into a finished, framed image.",
-    tools: TOOL_PAGES.filter((t) => !CHAT_SLUGS.has(t.slug)),
+    tools: TOOL_PAGES.filter((t) => !CHAT_SLUGS.has(t.slug) && !VIDEO_SLUGS.has(t.slug)),
   },
   {
     heading: "Chat & DM mockups",

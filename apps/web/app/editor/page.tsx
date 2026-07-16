@@ -19,8 +19,8 @@ export const metadata: Metadata = {
 export default async function EditorPage({
   searchParams,
 }: {
-  searchParams: Promise<{ device?: string; screen?: string; calibrate?: string; upgrade?: string; capture?: string; plan?: string }>;
+  searchParams: Promise<{ device?: string; screen?: string; calibrate?: string; upgrade?: string; capture?: string; plan?: string; promo?: string }>;
 }) {
-  const { device, screen, calibrate, upgrade, capture, plan } = await searchParams;
-  return <EditorShell initialDeviceId={device} initialScreenApp={screen} openCalibrate={calibrate === "1"} openUpgradeOnLoad={upgrade === "1"} upgradePlan={plan} openCaptureOnLoad={capture === "1"} />;
+  const { device, screen, calibrate, upgrade, capture, plan, promo } = await searchParams;
+  return <EditorShell initialDeviceId={device} initialScreenApp={screen} openCalibrate={calibrate === "1"} openUpgradeOnLoad={upgrade === "1"} upgradePlan={plan} openCaptureOnLoad={capture === "1"} openPromoOnLoad={promo === "1"} />;
 }

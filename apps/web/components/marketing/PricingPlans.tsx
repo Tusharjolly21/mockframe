@@ -24,6 +24,7 @@ const FREE_FEATURES = [
 // list where the code actually puts it.)
 const PRO_FEATURES = [
   "12 more chat & DM screens",
+  "Animated app promo videos (MP4)",
   "Photoreal device renders",
   "Premium background collections",
   "Video & GIF export",

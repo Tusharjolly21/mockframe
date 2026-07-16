@@ -72,6 +72,52 @@ The rewrites are already in `next.config.ts`. To turn it on:
 
 ---
 
+## 5 · Promo video rendering (Remotion Lambda)
+
+The **App Promo Video Maker** (`/tools/app-promo-video-maker`, toolbar clapperboard,
+`/editor?promo=1`) exports real **MP4/H.264** videos. Rendering runs through a
+small render service with two paths — you only need to set up the first for
+production:
+
+- **Production → Remotion Lambda.** Vercel's serverless runtime can't run headless
+  Chromium, so cloud renders go to AWS Lambda. One-time setup (from `apps/web`):
+  ```bash
+  # 1. AWS creds with the Remotion Lambda policy (see remotion.dev/docs/lambda/setup)
+  export REMOTION_AWS_ACCESS_KEY_ID=...            # an IAM user, Remotion Lambda policy
+  export REMOTION_AWS_SECRET_ACCESS_KEY=...
+  # 2. Deploy the render function + the promo site bundle
+  npx remotion lambda functions deploy
+  npx remotion lambda sites create remotion/promo/index.ts --site-name=mockframe-promo
+  ```
+  Then set these env vars in Vercel (Production + Preview):
+
+  | Var | Value |
+  |---|---|
+  | `REMOTION_AWS_ACCESS_KEY_ID` | IAM access key |
+  | `REMOTION_AWS_SECRET_ACCESS_KEY` | IAM secret |
+  | `REMOTION_AWS_REGION` | e.g. `us-east-1` (default) |
+  | `REMOTION_LAMBDA_FUNCTION_NAME` | printed by `functions deploy` |
+  | `REMOTION_LAMBDA_SITE_NAME` | the `--site-name` you used (`mockframe-promo`) |
+
+  **Re-run `npx remotion lambda sites create … --site-name=mockframe-promo` whenever a
+  composition changes** — it re-uploads the bundle so cloud renders match the editor
+  preview. Cost is ~$0.01–0.05 per 10s video; the route enforces a 40/day per-caller
+  cap and Pro-only access on top.
+
+- **Local / self-hosted Node → local renderer.** If the `REMOTION_LAMBDA_*` vars are
+  **not** set, `/api/v1/promo-render` falls back to `@remotion/renderer` and renders
+  on the box itself (downloads a headless-shell once, then reuses it). This is how the
+  feature works in `npm run dev` with **zero AWS setup** — great for testing, but it
+  won't run on Vercel serverless, so production needs the Lambda path above.
+
+> **Fonts:** the compositions use Inter via a system stack. For pixel-identical
+> cloud renders, embed Inter as a font file in the promo bundle (see
+> remotion.dev/docs/fonts) rather than relying on the host's installed fonts.
+
+> **Music:** promo videos ship **silent** by default. To offer background tracks,
+> drop **cleared/royalty-free** audio into `public/promo-music/` and pass its URL as
+> `musicUrl` — never bundle copyrighted audio (IG/FB will mute or block the upload).
+
 ## Before you go public
 - **Firestore + Storage security rules — DEPLOY THESE.** `firestore.rules` and `storage.rules` (repo root, wired via `firebase.json`) deny ALL direct client access, because every read/write goes through server API routes on the Admin SDK (which bypasses rules). This is what stops a signed-in user from writing their own `users/{uid}.billing` entitlement via the Web SDK to self-grant Pro. Deploy with:
   ```sh

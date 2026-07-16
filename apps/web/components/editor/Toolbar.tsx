@@ -7,6 +7,7 @@ import {
   ArrowDown,
   ArrowUp,
   Box,
+  Clapperboard,
   Copy,
   FolderOpen,
   Image as ImageIcon,
@@ -137,6 +138,10 @@ export function Toolbar() {
 
       <IconButton title="Realistic photo render (Pro)" onClick={() => setRenderOpen(true)}>
         <Sparkles size={16} />
+      </IconButton>
+
+      <IconButton title="Promo video — animated app ad (Pro)" onClick={() => window.dispatchEvent(new CustomEvent("framekit:promo-open"))}>
+        <Clapperboard size={16} />
       </IconButton>
 
       <div className="relative" ref={batchRef}>

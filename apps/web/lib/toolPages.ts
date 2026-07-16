@@ -127,6 +127,38 @@ export const TOOL_PAGES: ToolPage[] = [
     related: ["website-screenshot", "code-screenshot", "fake-whatsapp-chat-generator"],
   },
 
+  {
+    slug: "app-promo-video-maker",
+    name: "App Promo Video Maker",
+    eyebrow: "Animated ads for Instagram & Facebook",
+    description:
+      "Turn an app screenshot into a short, animated promo video for Instagram Reels, Stories and Facebook — pick a template, drop in your screen, edit the text, and export an MP4. No editing software.",
+    overview:
+      "A still screenshot doesn't stop the scroll — motion does. This tool wraps your app screen in a scripted ~10-second animation: a title card animates in, the phone rises and turns in 3D, feature captions pop, and a call-to-action lands at the end. Pick one of six templates (from a calm brand hero to a punchy ad-style beat cut), drop in your screenshot, edit the text lines, choose your colour and aspect ratio, and preview it live. Export a real MP4 in 9:16 for Reels and Stories, 1:1 for the feed, or 16:9 — the format Instagram and Facebook actually want, ready to upload.",
+    editorHref: "/editor?promo=1",
+    cta: "Make a promo video",
+    image: "/hero/promo-video.png",
+    imageAlt: "An animated app promo video shown in a phone mockup",
+    accent: "#7c3aed",
+    steps: [
+      ["Pick a template", "Choose from six motion styles — Rise & Reveal, 3D Spin, Feature Pop, Scroll Story, Tilt Parallax or Quick Cut."],
+      ["Add your screen & words", "Upload your app screenshot and edit the headline, captions and accent colour."],
+      ["Export an MP4", "Preview it live, choose 9:16, 1:1 or 16:9, and download a share-ready MP4 for Instagram or Facebook."],
+    ],
+    benefits: [
+      ["Six ready-made styles", "From a calm brand hero to a fast ad-style beat cut — every template is animated and edit-ready."],
+      ["Made for social", "Export vertical 9:16 for Reels & Stories, square for the feed, or wide 16:9 — as real H.264 MP4."],
+      ["No editing software", "Everything runs in the browser: swap the screenshot, type your copy, and render. No After Effects."],
+    ],
+    faq: [
+      ["What formats can I export?", "MP4 (H.264) in 9:16 for Reels and Stories, 1:1 for the feed, and 16:9 — the formats Instagram and Facebook accept and play cleanly."],
+      ["How long are the videos?", "Around 8–12 seconds depending on the template — the ideal length for a scroll-stopping social ad."],
+      ["Can I change the text and colours?", "Yes. Every template has editable text lines and an accent colour, plus a choice of premium backgrounds and aspect ratios."],
+      ["Is it free?", "You can build and preview a promo video for free. Exporting the finished MP4 is a Pro feature."],
+    ],
+    related: ["app-store-screenshot", "fake-whatsapp-chat-generator", "website-screenshot"],
+  },
+
   /* --- chat / DM screen generators --------------------------------------
      These target the "fake <app> chat" search demand, but every page is
      framed for legitimate uses — product demos, UI design, tutorials,
