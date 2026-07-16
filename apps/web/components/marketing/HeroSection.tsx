@@ -136,8 +136,10 @@ export function HeroSection({ devicesCount }: { devicesCount: number }) {
             <FlowArrow />
           </motion.div>
 
-          {/* 02 — dropped into a real device (clean, floating) */}
-          <motion.div variants={stageItem} className="flex flex-col items-center">
+          {/* 02 — dropped into a real device (clean, floating). Hidden on the
+              smallest screens so mobile shows just the premium 03 payoff card
+              instead of two devices crammed side by side. */}
+          <motion.div variants={stageItem} className="hidden flex-col items-center sm:flex">
             <StepLabel n="02" text="Dropped into a real device" />
             <div className="relative mt-5">
               <div

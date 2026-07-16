@@ -74,7 +74,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#f4f4f7] text-[#17171c]">
       {/* header */}
       <header className="flex items-center gap-3 border-b border-[#e6e6ee] bg-white px-5 py-3">
-        <Link href="/editor" className="flex items-center gap-2">
+        <Link href="/" aria-label="MockFrame home" className="flex items-center gap-2">
           <BrandMark size={28} />
           <span className="text-[15px] font-bold tracking-tight">MockFrame</span>
         </Link>

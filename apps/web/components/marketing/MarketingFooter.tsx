@@ -55,7 +55,9 @@ const COLS: { title: string; links: [string, string][] }[] = [
 export function MarketingFooter() {
   return (
     <footer className="border-t border-white/10 bg-[#09090b] px-6 py-16">
-      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 md:grid-cols-5">
+      {/* brand block spans 2 cols; with 4 link columns that's 6 total (was 5,
+          which wrapped "Tools" onto a second row when "Chat mockups" was added) */}
+      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 md:grid-cols-6">
         <div className="col-span-2 md:col-span-2">
           <Link href="/" className="flex items-center gap-2">
             <BrandMark size={28} />

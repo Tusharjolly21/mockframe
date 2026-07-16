@@ -263,7 +263,7 @@ function ComingSoonDialog({ onClose }: { onClose: () => void }) {
 export function LogoChip() {
   return (
     <div className="fk-card pointer-events-auto flex items-center gap-1 rounded-2xl px-2.5 py-1.5">
-      <Link href="/editor" className="flex items-center gap-2 pr-1">
+      <Link href="/" aria-label="MockFrame home" className="flex items-center gap-2 pr-1">
         <BrandMark size={28} />
         <span className="text-[14px] font-bold tracking-tight text-[#17171c]">MockFrame</span>
       </Link>
