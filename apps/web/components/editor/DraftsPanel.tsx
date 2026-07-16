@@ -28,7 +28,7 @@ export function DraftsPanel({ onClose, onToast }: { onClose: () => void; onToast
   const [section, setSection] = useState<"scene" | "template">("scene");
 
   const refresh = useCallback(() => {
-    listDrafts().then(setDrafts, () => setDrafts([]));
+    listDrafts().then((all) => setDrafts(all.filter((d) => d.kind !== "pack")), () => setDrafts([]));
   }, []);
   useEffect(refresh, [refresh]);
 
@@ -64,7 +64,7 @@ export function DraftsPanel({ onClose, onToast }: { onClose: () => void; onToast
   };
 
   const duplicate = async (rec: DraftRecord) => {
-    await saveDraft({ scene: rec.scene, name: `${rec.name} copy`, kind: rec.kind, thumbnail: rec.thumbnail, assets: rec.assets });
+    await saveDraft({ scene: rec.scene, name: `${rec.name} copy`, kind: rec.kind === "template" ? "template" : "scene", thumbnail: rec.thumbnail, assets: rec.assets });
     refresh();
   };
 

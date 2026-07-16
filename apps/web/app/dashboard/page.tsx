@@ -50,14 +50,14 @@ export default function DashboardPage() {
     setMenuId(null);
     const name = window.prompt("Rename scene", rec.name)?.trim();
     if (!name || name === rec.name) return;
-    await saveDraft({ scene: rec.scene, id: rec.id, name, kind: rec.kind, assets: rec.assets, thumbnail: rec.thumbnail });
+    await saveDraft({ scene: rec.scene, id: rec.id, name, kind: rec.kind === "template" ? "template" : "scene", assets: rec.assets, thumbnail: rec.thumbnail });
     if (useDraftsUi.getState().currentId === rec.id) setCurrent(rec.id, name);
     refresh();
   }
 
   async function duplicate(rec: DraftRecord) {
     setMenuId(null);
-    await saveDraft({ scene: rec.scene, name: `${rec.name} copy`, kind: rec.kind, assets: rec.assets, thumbnail: rec.thumbnail });
+    await saveDraft({ scene: rec.scene, name: `${rec.name} copy`, kind: rec.kind === "template" ? "template" : "scene", assets: rec.assets, thumbnail: rec.thumbnail });
     refresh();
   }
 

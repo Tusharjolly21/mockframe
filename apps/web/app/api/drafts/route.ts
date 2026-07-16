@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { migrateScene } from "@framekit/scene";
+import { PackDocumentSchema } from "@/lib/pack/schema";
 import { FirebaseConfigError, firebaseSetupHint, firestoreDb } from "@/lib/server/firebaseAdmin";
 import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
 
@@ -31,9 +32,10 @@ export async function GET(req: NextRequest) {
       return {
         id: doc.id,
         name: data.name ?? "Untitled draft",
-        kind: data.kind === "template" ? "template" : "scene",
+        kind: data.kind === "template" ? "template" : data.kind === "pack" ? "pack" : "scene",
         updatedAt: typeof data.updatedAtMs === "number" ? data.updatedAtMs : Date.now(),
         scene: data.scene,
+        ...(data.pack ? { pack: data.pack } : {}),
         assets: Array.isArray(data.assets) ? data.assets : [],
         thumbnail: data.thumbnail,
       };
@@ -59,10 +61,17 @@ export async function POST(req: NextRequest) {
   }
 
   let scene: unknown;
-  try {
-    scene = migrateScene(body.scene);
-  } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Invalid scene" }, { status: 400 });
+  let pack: unknown;
+  if (body.kind === "pack") {
+    const parsed = PackDocumentSchema.safeParse(body.pack);
+    if (!parsed.success) return NextResponse.json({ error: "Invalid pack" }, { status: 400 });
+    pack = parsed.data;
+  } else {
+    try {
+      scene = migrateScene(body.scene);
+    } catch (err) {
+      return NextResponse.json({ error: err instanceof Error ? err.message : "Invalid scene" }, { status: 400 });
+    }
   }
 
   try {
@@ -71,9 +80,9 @@ export async function POST(req: NextRequest) {
     const updatedAt = Date.now();
     const record = {
       name: typeof body.name === "string" && body.name.trim() ? body.name.trim().slice(0, 120) : "Untitled draft",
-      kind: body.kind === "template" ? "template" : "scene",
+      kind: body.kind === "template" ? "template" : body.kind === "pack" ? "pack" : "scene",
       updatedAtMs: updatedAt,
-      scene,
+      ...(pack !== undefined ? { pack } : { scene }),
       assets: Array.isArray(body.assets) ? body.assets : [],
       thumbnail: typeof body.thumbnail === "string" ? body.thumbnail : undefined,
       createdAt: FieldValue.serverTimestamp(),
@@ -82,7 +91,15 @@ export async function POST(req: NextRequest) {
     };
     await draftsCollection(owner.ownerId).doc(id).set(record, { merge: true });
     return attachOwnerCookie(
-      NextResponse.json({ id, name: record.name, kind: record.kind, updatedAt, scene, assets: record.assets, thumbnail: record.thumbnail }),
+      NextResponse.json({
+        id,
+        name: record.name,
+        kind: record.kind,
+        updatedAt,
+        ...(pack !== undefined ? { pack } : { scene }),
+        assets: record.assets,
+        thumbnail: record.thumbnail,
+      }),
       owner
     );
   } catch (err) {

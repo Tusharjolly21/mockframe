@@ -15,7 +15,7 @@ import { decodeScreenAsset, isScreenAsset } from "./screens";
 export interface DraftRecord {
   id: string;
   name: string;
-  kind: "scene" | "template";
+  kind: "scene" | "template" | "pack";
   updatedAt: number;
   scene: SceneDocument;
   /** uploaded (non-builtin) assets the scene references, inlined as data URLs */
@@ -64,7 +64,7 @@ async function listLocalDrafts(): Promise<DraftRecord[]> {
 }
 
 function normalizeDraftRecord(record: DraftRecord): DraftRecord {
-  return { ...record, kind: record.kind === "template" ? "template" : "scene" };
+  return { ...record, kind: record.kind === "template" || record.kind === "pack" ? record.kind : "scene" };
 }
 
 async function deleteLocalDraft(id: string): Promise<void> {
