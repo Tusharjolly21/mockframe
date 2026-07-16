@@ -607,6 +607,10 @@ function UnsplashPhotos({ onPick }: { onPick: (assetId: string) => void }) {
   const [photos, setPhotos] = useState<UnsplashItem[]>(FALLBACK_UNSPLASH);
   const [state, setState] = useState<"loading" | "ok" | "fallback" | "empty">("loading");
   const [applying, setApplying] = useState<string | null>(null);
+  // the photo currently applied as the background — shown as a persistent
+  // "Photo by X on Unsplash" credit (Unsplash API guidelines require visible,
+  // linked attribution of both the photographer and Unsplash)
+  const [credit, setCredit] = useState<UnsplashItem | null>(null);
 
   // debounced live search (editorial feed when the query is empty)
   useEffect(() => {
@@ -662,6 +666,7 @@ function UnsplashPhotos({ onPick }: { onPick: (assetId: string) => void }) {
       const blob = await res.blob();
       const asset = await ingestFile(new File([blob], `unsplash-${p.id}.jpg`, { type: blob.type || "image/jpeg" }));
       onPick(asset.id);
+      if (p.authorName) setCredit(p); // keep the applied photo's attribution on screen
     } catch {
       /* offline / blocked — the tile simply won't apply */
     } finally {
@@ -689,12 +694,12 @@ function UnsplashPhotos({ onPick }: { onPick: (assetId: string) => void }) {
       {state === "empty" ? (
         <p className="py-4 text-center text-[11px] text-[#9a9aa4]">No photos for “{query.trim()}”.</p>
       ) : (
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-x-2 gap-y-1.5">
           {photos.map((p) => (
-            <div key={p.id} className="group relative">
+            <div key={p.id} className="flex flex-col">
               <button
                 onClick={() => applyPhoto(p)}
-                className={`fk-tile h-14 w-full overflow-hidden rounded-xl border border-[#e4e4ec] ${applying === p.id ? "opacity-60" : ""}`}
+                className={`fk-tile h-16 w-full overflow-hidden rounded-xl border border-[#e4e4ec] ${applying === p.id ? "opacity-60" : ""}`}
                 title={p.authorName ? `Photo by ${p.authorName} on Unsplash` : `${p.alt} · Unsplash`}
                 style={{ background: p.color }}
               >
@@ -704,14 +709,14 @@ function UnsplashPhotos({ onPick }: { onPick: (assetId: string) => void }) {
                   <span className="absolute inset-0 grid place-items-center bg-black/30 text-[9px] font-bold text-white">Adding…</span>
                 )}
               </button>
+              {/* always-visible photographer credit (Unsplash API guideline) */}
               {p.authorName && (
                 <a
                   href={p.authorLink}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  title={`${p.authorName} on Unsplash`}
-                  className="pointer-events-none absolute inset-x-0 bottom-0 truncate rounded-b-xl bg-gradient-to-t from-black/70 to-transparent px-1 pb-0.5 pt-2 text-[7.5px] font-medium text-white opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100"
+                  title={`Photo by ${p.authorName} on Unsplash`}
+                  className="mt-0.5 block truncate px-0.5 text-[8.5px] leading-tight text-[#8a8a94] hover:text-[#17171c] hover:underline"
                 >
                   {p.authorName}
                 </a>
@@ -721,7 +726,21 @@ function UnsplashPhotos({ onPick }: { onPick: (assetId: string) => void }) {
         </div>
       )}
 
-      <p className="mt-2 text-center text-[10px] text-[#9a9aa4]">
+      {/* canonical, always-visible attribution for the applied photo */}
+      {credit && (
+        <p className="mt-2.5 truncate text-center text-[10px] text-[#8a8a94]">
+          Photo by{" "}
+          <a href={credit.authorLink} target="_blank" rel="noreferrer" className="font-medium text-[#5a5a66] underline hover:text-[#17171c]">
+            {credit.authorName}
+          </a>{" "}
+          on{" "}
+          <a href={credit.photoLink} target="_blank" rel="noreferrer" className="font-medium text-[#5a5a66] underline hover:text-[#17171c]">
+            Unsplash
+          </a>
+        </p>
+      )}
+
+      <p className="mt-1.5 text-center text-[10px] text-[#9a9aa4]">
         {state === "fallback" ? "Curated picks · " : "Photos from "}
         <a href={`https://unsplash.com/?${"utm_source=MockFrame&utm_medium=referral"}`} target="_blank" rel="noreferrer" className="underline hover:text-[#17171c]">
           Unsplash
