@@ -96,6 +96,28 @@ export async function readBilling(uid: string): Promise<BillingRecord | null> {
   return snap.exists ? ((snap.data()?.billing as BillingRecord | undefined) ?? null) : null;
 }
 
+/**
+ * Atomically apply a webhook billing event: read the current record, drop it if
+ * an equal-or-newer event was already recorded (`eventAt`), else write. Done in
+ * one transaction so concurrent/retried Razorpay deliveries can't clobber each
+ * other (e.g. a late `subscription.charged` re-activating a `cancelled` sub).
+ * Returns whether the write was applied.
+ */
+export async function applyBillingEvent(uid: string, record: BillingRecord): Promise<{ applied: boolean }> {
+  const db = firestoreDb();
+  const ref = db.collection("users").doc(uid);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const current = snap.exists ? (snap.data()?.billing as BillingRecord | undefined) : undefined;
+    if (record.eventAt && current?.eventAt && record.eventAt <= current.eventAt) {
+      return { applied: false };
+    }
+    const clean = Object.fromEntries(Object.entries(record).filter(([, v]) => v !== undefined));
+    tx.set(ref, { billing: clean }, { mergeFields: ["billing"] });
+    return { applied: true };
+  });
+}
+
 export function isBillingActive(b: BillingRecord | null): boolean {
   if (!b) return false;
   // Legacy lifetime purchases (no longer sold) were recorded as one-time and

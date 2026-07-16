@@ -170,10 +170,16 @@ export function RightPanel() {
     if (!node) return;
     setBusy("copy");
     try {
+      // pass the promise to ClipboardItem (Safari needs it) but also await it so
+      // a render/clipboard failure surfaces as a toast instead of an unhandled
+      // rejection + a silently un-busied button
       const blob = renderPng(node);
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      await blob;
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Couldn’t copy image");
     } finally {
       setBusy(null);
     }
@@ -366,7 +372,10 @@ export function RightPanel() {
           </button>
         ) : (
           <button
-            onClick={() => setUpgradeOpen(true)}
+            onClick={() => {
+              setUpgradeReason(undefined); // generic upsell — don't inherit a prior gate's headline
+              setUpgradeOpen(true);
+            }}
             className="fk-press flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#e4c34d] bg-[#fdf7de] py-1.5 text-[11px] font-semibold text-[#8a6d12] hover:border-[#d4a72c]"
           >
             <Sparkles size={12} /> Pro — stamp your own brand

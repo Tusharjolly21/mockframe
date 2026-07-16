@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { readBilling, verifyRazorpaySignature, writeBilling } from "@/lib/server/razorpay";
+import { applyBillingEvent, verifyRazorpaySignature } from "@/lib/server/razorpay";
 import { isPlanId } from "@/lib/billing/plans";
 
 export const runtime = "nodejs";
@@ -49,28 +49,16 @@ export async function POST(req: NextRequest) {
     const plan = notes.plan;
 
     if (uid && isPlanId(plan)) {
-      // drop duplicate / out-of-order deliveries: never apply an event older
-      // than the one already recorded (Razorpay retries, and doesn't guarantee
-      // ordering — otherwise a late "charged" could re-activate a cancelled sub)
-      const current = await readBilling(uid);
-      if (eventAt && current?.eventAt && eventAt <= current.eventAt) {
-        return NextResponse.json({ ok: true, skipped: "stale" });
-      }
-
-      if (type === "subscription.activated" || type === "subscription.charged" || type === "subscription.resumed") {
-        await writeBilling(uid, {
+      // The stale-event drop (never apply an event older-or-equal to the one
+      // already recorded) and the write happen atomically in applyBillingEvent —
+      // Razorpay retries and doesn't guarantee ordering, so a non-transactional
+      // read-then-write could let a late "charged" clobber a newer "cancelled".
+      const activate = type === "subscription.activated" || type === "subscription.charged" || type === "subscription.resumed";
+      const lapse = type === "subscription.halted" || type === "subscription.cancelled" || type === "subscription.completed" || type === "subscription.paused";
+      if (activate || lapse) {
+        await applyBillingEvent(uid, {
           plan,
-          status: "active",
-          kind: "subscription",
-          subscriptionId: subscription?.id,
-          via: "webhook",
-          eventAt,
-          updatedAt: FieldValue.serverTimestamp(),
-        });
-      } else if (type === "subscription.halted" || type === "subscription.cancelled" || type === "subscription.completed" || type === "subscription.paused") {
-        await writeBilling(uid, {
-          plan,
-          status: type === "subscription.halted" ? "halted" : "cancelled",
+          status: activate ? "active" : type === "subscription.halted" ? "halted" : "cancelled",
           kind: "subscription",
           subscriptionId: subscription?.id,
           via: "webhook",

@@ -29,10 +29,13 @@ export async function GET(req: NextRequest) {
   }
   let r: Response;
   try {
-    r = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    // redirect: "manual" so a whitelisted CDN can't 3xx us onto an off-list or
+    // internal host — the host check above only covers the URL we were given.
+    r = await fetch(url, { signal: AbortSignal.timeout(10_000), redirect: "manual" });
   } catch {
     return NextResponse.json({ error: "Fetch failed" }, { status: 502 });
   }
+  if (r.status >= 300 && r.status < 400) return NextResponse.json({ error: "Redirect not allowed" }, { status: 502 });
   if (!r.ok) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const type = r.headers.get("content-type") ?? "image/jpeg";
   if (!type.startsWith("image/")) return NextResponse.json({ error: "Not an image" }, { status: 415 });

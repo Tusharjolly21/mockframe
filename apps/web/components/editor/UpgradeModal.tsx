@@ -92,7 +92,7 @@ export function UpgradeModal({
         transition={{ type: "spring", stiffness: 320, damping: 30 }}
         className="relative max-h-[min(760px,calc(100vh-32px))] w-[min(860px,96vw)] overflow-y-auto rounded-[24px] border border-white/[0.08] bg-[#0f1014] shadow-[0_32px_100px_rgba(0,0,0,0.6)]"
       >
-        <button onClick={onClose} title="Close" className="fk-press absolute right-5 top-5 z-10 grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/[0.04] text-white hover:bg-white/10">
+        <button onClick={onClose} disabled={busy} title="Close" className="fk-press absolute right-5 top-5 z-10 grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/[0.04] text-white hover:bg-white/10 disabled:opacity-40">
           <IconifyIcon name="close-circle" size={20} color="#ffffff" />
         </button>
 

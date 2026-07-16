@@ -73,5 +73,9 @@ The rewrites are already in `next.config.ts`. To turn it on:
 ---
 
 ## Before you go public
-- **Firestore + Storage security rules** must be owner-scoped (locked down) — the app scopes by uid server-side, but tighten the rules so the DB can't be read/written cross-user.
+- **Firestore + Storage security rules — DEPLOY THESE.** `firestore.rules` and `storage.rules` (repo root, wired via `firebase.json`) deny ALL direct client access, because every read/write goes through server API routes on the Admin SDK (which bypasses rules). This is what stops a signed-in user from writing their own `users/{uid}.billing` entitlement via the Web SDK to self-grant Pro. Deploy with:
+  ```sh
+  firebase deploy --only firestore:rules,storage:rules
+  ```
+  Verify in the Firebase console that the deployed rules match the repo (they are the security boundary — the server code trusts whatever is in the DB).
 - Free-tier watermark + guest export flow already work.

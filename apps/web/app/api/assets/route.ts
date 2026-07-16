@@ -20,6 +20,18 @@ const MAX_ASSETS_PRO = 500;
 
 const mb = (bytes: number) => Math.round(bytes / (1024 * 1024));
 
+/** Identify a raster image by magic bytes. Returns the canonical content-type,
+ *  or null for anything not in the allowlist (SVG, HTML, scripts, etc.). */
+function sniffRasterType(buf: Buffer): string | null {
+  if (buf.length < 12) return null;
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return "image/png";
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "image/jpeg";
+  if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38) return "image/gif";
+  // RIFF....WEBP
+  if (buf.toString("ascii", 0, 4) === "RIFF" && buf.toString("ascii", 8, 12) === "WEBP") return "image/webp";
+  return null;
+}
+
 function configError() {
   return NextResponse.json({ error: "Firebase is not configured", hint: firebaseSetupHint() }, { status: 501 });
 }
@@ -99,7 +111,10 @@ export async function POST(req: NextRequest) {
     }
 
     // bound total objects per owner so a runaway/abusive client can't write
-    // unlimited large blobs into Storage
+    // unlimited large blobs into Storage. NOTE: count-then-write is not
+    // transactional, so N concurrent uploads from ONE owner can overshoot the
+    // cap by up to N — a bounded soft cap, accepted (real single-owner
+    // concurrency is tiny). Tighten with a counter doc if abuse appears.
     const existing = await assetsCollection(owner.ownerId).count().get();
     if (existing.data().count >= maxAssets) {
       return NextResponse.json(
@@ -113,6 +128,14 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    // Sniff magic bytes — never trust the client-supplied MIME. This rejects
+    // SVG (which can carry <script> and would execute from the storage origin
+    // when opened via a signed URL) and any non-raster payload wearing an
+    // image/* label. The stored contentType is pinned to the sniffed type.
+    const sniffedType = sniffRasterType(buffer);
+    if (!sniffedType) {
+      return NextResponse.json({ error: "Only PNG, JPEG, WebP or GIF images are supported" }, { status: 415 });
+    }
     const sha256 = createHash("sha256").update(buffer).digest("hex");
     const requestedId = String(form.get("id") ?? "");
     const id = /^[a-zA-Z0-9_-]{1,100}$/.test(requestedId) ? requestedId : randomUUID();
@@ -125,14 +148,14 @@ export async function POST(req: NextRequest) {
     await bucketFile.save(buffer, {
       resumable: false,
       metadata: {
-        contentType: file.type,
+        contentType: sniffedType, // pinned to the verified raster type, not client MIME
         metadata: { ownerId: owner.ownerId, originalName: file.name, sha256 },
       },
     });
 
     const record = {
       name: file.name || name,
-      mime: file.type,
+      mime: sniffedType,
       width,
       height,
       bytes: file.size,

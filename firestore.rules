@@ -1,0 +1,19 @@
+rules_version = '2';
+
+// SECURITY: entitlement (users/{uid}.billing) and every other document in this
+// app are read and written ONLY by server API routes using the Firebase Admin
+// SDK, which BYPASSES these rules. No client ever touches Firestore directly —
+// the browser bundle uses firebase/auth only. So we deny all client access.
+//
+// This is the control that stops a signed-in user from opening the console,
+// instantiating the Firestore Web SDK with the public web config, and writing
+// their own `users/{uid}.billing = { kind: "one_time", status: "active" }` to
+// self-grant Pro. Do NOT relax to `if request.auth.uid == uid` on users/{uid}
+// without carving `billing` out — that would reopen the bypass.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

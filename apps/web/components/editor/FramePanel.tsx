@@ -45,6 +45,7 @@ export function FrameControls() {
   const scene = useSceneStore((s) => s.scene);
   const setScene = useSceneStore((s) => s.setScene);
   const bumpAssets = useViewStore((s) => s.bumpAssets);
+  const isPro = useIsPro();
   const fileRef = useRef<HTMLInputElement>(null);
   const colorRef = useRef<HTMLInputElement>(null);
   // previous look, so the transparent-background toggle is reversible
@@ -83,8 +84,10 @@ export function FrameControls() {
   }, [firstAssetId]);
   const magic = useMemo(() => magicSwatches(palette), [palette]);
 
-  const Swatch = ({ s }: { s: BgSwatch }) => {
+  const Swatch = ({ s, catId }: { s: BgSwatch; catId?: string }) => {
     const active = JSON.stringify(s.bg) === bgKey;
+    // same gate as BackgroundDetail — Pro collections open the upgrade modal
+    const locked = !isPro && !!catId && isProBgCategory(catId);
     const style: React.CSSProperties =
       s.bg.type === "image"
         ? {
@@ -95,13 +98,19 @@ export function FrameControls() {
         : (backgroundToCss(s.bg) as React.CSSProperties);
     return (
       <button
-        onClick={() => setBg(s.bg)}
-        className={`fk-tile h-12 rounded-xl border ${
+        onClick={() => (locked ? openUpgrade("Premium backgrounds") : setBg(s.bg))}
+        className={`fk-tile relative h-12 rounded-xl border ${
           active ? "border-[#17171c] shadow-[0_0_0_1.5px_#17171c]" : "border-[#e4e4ec]"
         }`}
         style={style}
-        title={s.id}
-      />
+        title={locked ? "Premium background — upgrade to use" : s.id}
+      >
+        {locked && (
+          <span className="absolute right-1 top-1 grid h-4 w-4 place-items-center rounded-full bg-black/55 text-white backdrop-blur-sm">
+            <Lock size={9} />
+          </span>
+        )}
+      </button>
     );
   };
 
@@ -277,7 +286,9 @@ export function FrameControls() {
           </button>
           <button
             onClick={() => {
-              const all = BG_CATEGORIES.flatMap((c) => c.swatches);
+              // free users shuffle only within unlocked collections (matches
+              // BackgroundDetail) so Shuffle never applies a Pro background
+              const all = BG_CATEGORIES.filter((c) => isPro || !isProBgCategory(c.id)).flatMap((c) => c.swatches);
               const pick = all[Math.floor(Math.random() * all.length)];
               if (pick) setBg(pick.bg);
             }}
@@ -356,7 +367,7 @@ export function FrameControls() {
               </button>
               <div className="grid grid-cols-4 gap-2">
                 {shown.map((s) => (
-                  <Swatch key={s.id} s={s} />
+                  <Swatch key={s.id} s={s} catId={cat.id} />
                 ))}
               </div>
             </div>
@@ -463,8 +474,12 @@ function BackgroundDetail() {
       <div className="mb-3 grid grid-cols-2 gap-2">
         <button
           onClick={() => {
-            const first = BG_CATEGORIES.flatMap((category) => category.swatches)[0];
-            if (first) setBg(first.bg);
+            // a tasteful colorful default, not the first solid (which was always
+            // plain white). Pick a random gradient so "Auto" actually does
+            // something; free-tier safe (the gradient collection is never Pro).
+            const gradients = BG_CATEGORIES.find((category) => category.id === "gradient")?.swatches ?? [];
+            const pick = gradients[Math.floor(Math.random() * gradients.length)];
+            if (pick) setBg(pick.bg);
           }}
           className="fk-press rounded-xl border border-[#e4e4ec] bg-white py-2 text-[11px] font-semibold"
         >
@@ -622,7 +637,9 @@ function UnsplashPhotos({ onPick }: { onPick: (assetId: string) => void }) {
         const res = await fetch(`/api/unsplash?q=${encodeURIComponent(query.trim())}&page=1`);
         const data = await res.json().catch(() => ({}));
         if (cancelled) return;
-        if (data.configured === false || (!res.ok && !query.trim())) {
+        // no key OR any API failure (429 rate-limit, 500) → curated fallback, so
+        // we never tell the user "no photos" when the API actually errored
+        if (data.configured === false || !res.ok) {
           setPhotos(FALLBACK_UNSPLASH);
           setState("fallback");
           return;
@@ -699,7 +716,7 @@ function UnsplashPhotos({ onPick }: { onPick: (assetId: string) => void }) {
             <div key={p.id} className="flex flex-col">
               <button
                 onClick={() => applyPhoto(p)}
-                className={`fk-tile h-16 w-full overflow-hidden rounded-xl border border-[#e4e4ec] ${applying === p.id ? "opacity-60" : ""}`}
+                className={`fk-tile relative h-16 w-full overflow-hidden rounded-xl border border-[#e4e4ec] ${applying === p.id ? "opacity-60" : ""}`}
                 title={p.authorName ? `Photo by ${p.authorName} on Unsplash` : `${p.alt} · Unsplash`}
                 style={{ background: p.color }}
               >

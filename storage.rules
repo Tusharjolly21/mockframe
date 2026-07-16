@@ -1,0 +1,14 @@
+rules_version = '2';
+
+// SECURITY: all Storage writes (asset uploads, share PNGs) happen server-side
+// via the Firebase Admin SDK, and all reads use time-limited signed URLs — both
+// bypass these rules. No client touches Storage directly. Deny all direct
+// client access so nobody can enumerate or overwrite objects with the public
+// web config.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

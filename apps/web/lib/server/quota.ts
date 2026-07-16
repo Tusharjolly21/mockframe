@@ -26,8 +26,16 @@ export interface QuotaResult {
  */
 export function quotaSubject(req: NextRequest, owner: RequestOwner): string {
   if (owner.uid) return `user_${owner.uid}`;
-  const fwd = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const ip = fwd || req.headers.get("x-real-ip") || "unknown";
+  // Trusted client IP. On Vercel `x-real-ip` is set by the platform to the real
+  // client IP and cannot be spoofed by the caller. `x-forwarded-for`'s LEFTMOST
+  // entry IS caller-controlled (Vercel appends the real IP to the right), so we
+  // must never key on split(",")[0] — that would let an attacker rotate the
+  // header and get a fresh quota bucket per request. Fall back to the RIGHTMOST
+  // XFF hop (the one a trusted proxy stamped), never the leftmost.
+  const realIp = req.headers.get("x-real-ip")?.trim();
+  const xff = req.headers.get("x-forwarded-for");
+  const rightmostHop = xff?.split(",").map((s) => s.trim()).filter(Boolean).pop();
+  const ip = realIp || rightmostHop || "unknown";
   // hashed so we don't store raw IPs
   return `ip_${createHash("sha256").update(ip).digest("hex").slice(0, 32)}`;
 }
