@@ -1,5 +1,7 @@
 import { getDevice, type DeviceCategory } from "@framekit/devices";
-import { createMockupLayer, createScene, type Background, type SceneDocument } from "@framekit/scene";
+import { createMockupLayer, createScene, type Background, type MockupLayer, type SceneDocument } from "@framekit/scene";
+import { encodeScreenAsset } from "./screens";
+import { defaultScreenDoc, SCREEN_APP_LABELS, type ScreenApp } from "./screens/types";
 
 type DeviceLike = {
   category: DeviceCategory;
@@ -89,5 +91,34 @@ export function buildDeviceScene(deviceId: string): SceneDocument | null {
   scene.id = `scene-device-${device.id}`;
   layer.id = "layer-device";
   scene.layers.push(layer);
+  return scene;
+}
+
+/** The phone the /tools chat-screen deep-links open on. */
+const SCREEN_DEVICE_ID = "iphone-16-pro";
+
+export function isScreenApp(value: string): value is ScreenApp {
+  return value in SCREEN_APP_LABELS;
+}
+
+/**
+ * A starting scene for a chat/app screen (the /tools "…chat generator" pages
+ * land here via ?screen=<app>): an iPhone holding that app's default screen,
+ * ready to edit. Returns null for an unknown app.
+ */
+export function buildScreenScene(app: ScreenApp): SceneDocument | null {
+  const scene = buildDeviceScene(SCREEN_DEVICE_ID);
+  if (!scene) return null;
+  const layer = scene.layers.find((l): l is MockupLayer => l.type === "mockup");
+  if (!layer) return scene;
+  layer.media = {
+    assetId: encodeScreenAsset(defaultScreenDoc(app)),
+    kind: "image",
+    fit: "cover",
+    offsetX: 0,
+    offsetY: 0,
+    scale: 1,
+  };
+  scene.id = `scene-screen-${app}`;
   return scene;
 }

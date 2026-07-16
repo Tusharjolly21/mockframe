@@ -26,6 +26,17 @@ const COLS: { title: string; links: [string, string][] }[] = [
     ],
   },
   {
+    title: "Chat mockups",
+    links: [
+      ["/tools/fake-whatsapp-chat-generator", "WhatsApp chat"],
+      ["/tools/fake-imessage-generator", "iMessage / texts"],
+      ["/tools/fake-instagram-dm-generator", "Instagram DM"],
+      ["/tools/fake-telegram-chat-generator", "Telegram chat"],
+      ["/tools/fake-snapchat-generator", "Snapchat"],
+      ["/tools/fake-messenger-chat-generator", "Messenger"],
+    ],
+  },
+  {
     title: "Tools",
     links: [
       ["/tools/website-screenshot", "Website screenshots"],

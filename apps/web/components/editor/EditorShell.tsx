@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { track, trackOnce } from "@/lib/analytics";
 import { ingestFile } from "@/lib/assets";
 import { loadCustomDevices, syncCustomDevicesFromServer } from "@/lib/customDevices";
-import { buildDeviceScene } from "@/lib/deviceScene";
+import { buildDeviceScene, buildScreenScene, isScreenApp } from "@/lib/deviceScene";
 import { saveCurrentDraft } from "@/lib/drafts";
 import { useShotBatchStore } from "@/lib/shotBatch";
 import { duplicateLayer, groupLayers, placeAsset, removeLayer, ungroupLayers } from "@/lib/sceneOps";
@@ -19,6 +19,7 @@ import { LogoChip, Toolbar } from "./Toolbar";
 
 export function EditorShell({
   initialDeviceId,
+  initialScreenApp,
   openCalibrate = false,
   openUpgradeOnLoad = false,
   upgradePlan,
@@ -26,6 +27,7 @@ export function EditorShell({
   embedded = false,
 }: {
   initialDeviceId?: string;
+  initialScreenApp?: string;
   openCalibrate?: boolean;
   openUpgradeOnLoad?: boolean;
   upgradePlan?: string;
@@ -67,6 +69,17 @@ export function EditorShell({
     useSceneStore.temporal.getState().clear();
     window.history.replaceState({}, "", "/editor");
   }, [initialDeviceId]);
+
+  // Deep-link: /editor?screen=<app> (from the /tools chat-screen generator
+  // pages) opens an iPhone pre-loaded with that app's default chat screen.
+  useEffect(() => {
+    if (!initialScreenApp || !isScreenApp(initialScreenApp)) return;
+    const scene = buildScreenScene(initialScreenApp);
+    if (!scene) return;
+    useSceneStore.setState({ scene });
+    useSceneStore.temporal.getState().clear();
+    window.history.replaceState({}, "", "/editor");
+  }, [initialScreenApp]);
 
   // /calibrate entry: open the custom-mockup calibration modal once the panels
   // have mounted, then drop the param so refresh doesn't reopen it
