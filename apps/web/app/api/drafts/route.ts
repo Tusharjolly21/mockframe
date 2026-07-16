@@ -84,7 +84,10 @@ export async function POST(req: NextRequest) {
       updatedAtMs: updatedAt,
       ...(pack !== undefined ? { pack } : { scene }),
       assets: Array.isArray(body.assets) ? body.assets : [],
-      thumbnail: typeof body.thumbnail === "string" ? body.thumbnail : undefined,
+      // Firestore rejects an explicit `undefined` value (throws instead of
+      // just omitting the field) — pack saves never send a thumbnail, so
+      // this key must be left out entirely rather than set to undefined.
+      ...(typeof body.thumbnail === "string" ? { thumbnail: body.thumbnail } : {}),
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
       ownerId: owner.ownerId,
