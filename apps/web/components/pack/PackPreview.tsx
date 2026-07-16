@@ -21,6 +21,16 @@ export function PackPreview() {
     return () => ro.disconnect();
   }, []);
 
+  // if the active tab's target gets disabled (or the store restored one that
+  // no longer exists), fall back to the first enabled target instead of
+  // rendering a scene for a size the user can't export
+  useEffect(() => {
+    if (pack.targets[activeTarget]) return;
+    const anyEnabled = PACK_TARGET_IDS.some((id) => pack.targets[id]);
+    if (!anyEnabled) return; // nothing enabled — don't loop trying to switch
+    setActiveTarget(PACK_TARGET_IDS.find((id) => pack.targets[id]) ?? "appstore-69");
+  }, [pack.targets, activeTarget, setActiveTarget]);
+
   const screenIndex = Math.max(0, pack.screens.findIndex((s) => s.id === activeScreenId));
   const scene = useMemo(
     () =>

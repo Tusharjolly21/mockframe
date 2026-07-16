@@ -108,6 +108,7 @@ export function PackStudio() {
             ))}
           </div>
           <button
+            aria-label="Dismiss"
             className="text-white/40 hover:text-white"
             onClick={() => {
               setError(null);

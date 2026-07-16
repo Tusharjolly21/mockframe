@@ -24,11 +24,19 @@ export function ScreenStrip() {
         return (
           <div
             key={screen.id}
+            role="button"
+            tabIndex={0}
             draggable
-            onDragStart={() => setDragIndex(i)}
+            onDragStart={(e) => { e.dataTransfer.setData("text/plain", String(i)); setDragIndex(i); }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => dragIndex !== null && (reorder(dragIndex, i), setDragIndex(null))}
             onClick={() => setActiveScreen(screen.id)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                if (e.key === " ") e.preventDefault();
+                setActiveScreen(screen.id);
+              }
+            }}
             className={`group relative cursor-pointer rounded-lg border p-1 transition ${
               screen.id === activeScreenId ? "border-violet-500 bg-violet-500/10" : "border-white/10 hover:border-white/25"
             }`}
@@ -43,7 +51,7 @@ export function ScreenStrip() {
             </div>
             <div className="mt-1 flex items-center justify-between px-0.5 text-[11px] text-white/50">
               <span>{String(i + 1).padStart(2, "0")}</span>
-              <span className="hidden gap-1 group-hover:flex">
+              <span className="flex gap-1 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
                 <button aria-label="Move up" onClick={(e) => { e.stopPropagation(); moveScreenById(screen.id, -1); }}>↑</button>
                 <button aria-label="Move down" onClick={(e) => { e.stopPropagation(); moveScreenById(screen.id, 1); }}>↓</button>
                 <button aria-label="Remove" onClick={(e) => { e.stopPropagation(); removeScreenById(screen.id); }}>×</button>
