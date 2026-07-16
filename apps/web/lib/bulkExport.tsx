@@ -14,7 +14,7 @@ import { buildZip, type ZipEntry } from "./zip";
  * html-to-image, then bundled with the store-mode zip writer.
  */
 
-async function renderSceneToPng(scene: SceneDocument, scale: number, watermark: boolean, panoramaIdx?: number, panoramaTotal?: number): Promise<Uint8Array> {
+export async function renderSceneToPng(scene: SceneDocument, scale: number, watermark: boolean, panoramaIdx?: number, panoramaTotal?: number): Promise<Uint8Array> {
   const holder = document.createElement("div");
   holder.style.cssText = "position:fixed;left:-100000px;top:0;pointer-events:none;";
   document.body.appendChild(holder);
