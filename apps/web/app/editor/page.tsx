@@ -1,4 +1,14 @@
+import type { Metadata } from "next";
 import { EditorShell } from "@/components/editor/EditorShell";
+
+// The editor is the app itself, not indexable content — it was ranking on the
+// generic default title (duplicate-title risk). noindex,follow keeps it out of
+// the index while still following its links. Not robots-disallowed, so Google
+// can crawl the page and actually SEE this directive.
+export const metadata: Metadata = {
+  title: "Editor",
+  robots: { index: false, follow: true },
+};
 
 /**
  * The editor. `?device=<id>` deep-links a specific device (from the /mockups

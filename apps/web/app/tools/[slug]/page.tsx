@@ -26,14 +26,39 @@ export default async function ToolPageRoute({ params }: { params: Promise<{ slug
   const tool = toolPage((await params).slug);
   if (!tool) notFound();
 
+  const toolUrl = `${SITE_URL}/tools/${tool.slug}`;
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "WebApplication",
-    name: tool.name,
-    url: `${SITE_URL}/tools/${tool.slug}`,
-    applicationCategory: "DesignApplication",
-    operatingSystem: "Web",
-    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        name: tool.name,
+        url: toolUrl,
+        applicationCategory: "DesignApplication",
+        operatingSystem: "Web",
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      },
+      // HowTo — the numbered steps below are visible on the page, so this is a
+      // legitimate rich-result claim (Google requires the steps be on-page).
+      {
+        "@type": "HowTo",
+        name: `How to use the ${tool.name}`,
+        description: tool.description,
+        step: tool.steps.map(([title, body], i) => ({
+          "@type": "HowToStep",
+          position: i + 1,
+          name: title,
+          text: body,
+        })),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: SITE_NAME, item: SITE_URL },
+          { "@type": "ListItem", position: 2, name: tool.name, item: toolUrl },
+        ],
+      },
+    ],
   };
 
   return (

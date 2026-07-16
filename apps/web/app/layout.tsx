@@ -9,17 +9,49 @@ const GOOGLE_ANALYTICS_ID = "G-CN1PEZYM0L";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "MockFrame — Screenshot Mockup Studio",
+    // keyword-led default (used for any page without its own title), brand last
+    // per Google's title guidance; page-level titles override via the template.
+    default: "MockFrame — Device Mockup & Screenshot Generator",
     template: `%s — ${SITE_NAME}`,
   },
   description:
-    "Place screenshots in pixel-accurate device and browser frames, style the scene, and export production-quality images.",
+    "Free device mockup generator. Drop any screenshot into a photoreal iPhone, MacBook or browser frame, add chat and app screens, style the scene, and export a share-ready image in seconds — no design tools, right in your browser.",
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  robots: { index: true, follow: true },
   openGraph: {
     siteName: SITE_NAME,
     type: "website",
     url: SITE_URL,
+    locale: "en_US",
   },
   twitter: { card: "summary_large_image" },
+};
+
+/** Global Organization + WebSite JSON-LD — establishes the brand as an entity
+ *  (knowledge panel eligibility). No competitor in this niche emits either.
+ *  NOTE: no SearchAction/sitelinks-searchbox — that requires a real site-search
+ *  endpoint returning results, which we don't have; claiming it would be false. */
+const ORG_AND_SITE_JSONLD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: `${SITE_URL}/icon.svg`,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      publisher: { "@id": `${SITE_URL}/#organization` },
+    },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -52,6 +84,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           cz-shortcut-listen, Grammarly, etc.) mutate <body> before React
           hydrates — this silences that attribute-only noise, nothing else. */}
       <body className="bg-zinc-950 text-zinc-200 antialiased" suppressHydrationWarning>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_AND_SITE_JSONLD) }}
+        />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

@@ -18,8 +18,13 @@ import { defaultTemplateDoc, encodeScreenAsset, resolveScreenAsset } from "./scr
  * at least one template.
  */
 
+import { SCENE_GROUPS, type SceneGroup, type SceneGroupId } from "./sceneGroups";
+// Re-export so existing client consumers keep importing these from here; the
+// data itself lives in the server-safe ./sceneGroups module.
+export { SCENE_GROUPS };
+export type { SceneGroup, SceneGroupId };
+
 export type TemplateApp = "code" | "social" | "github" | "stripe" | "testimonial" | "ios-notification" | "spotify" | "appstore" | "appstore-promo" | "googlemaps" | "googleplay";
-export type SceneGroupId = "iphone" | "ipad" | "mac" | "watch" | "android";
 
 export interface TemplateMeta {
   slug: string;
@@ -33,21 +38,6 @@ export interface TemplateMeta {
   /** which device category card this scene lives under */
   group?: SceneGroupId;
 }
-
-export interface SceneGroup {
-  id: SceneGroupId;
-  label: string;
-  blurb: string;
-  accent: string;
-}
-
-/** Category cards on /templates. Only those with ≥1 template are shown. */
-export const SCENE_GROUPS: SceneGroup[] = [
-  { id: "ipad", label: "iPad", blurb: "Clean floating iPad scenes for app, portfolio & product shots.", accent: "#9fb4c9" },
-  { id: "mac", label: "Mac", blurb: "MacBook Pro & Air mockups in premium studio angles.", accent: "#c9c2b4" },
-  { id: "watch", label: "Apple Watch", blurb: "Apple Watch Ultra mockups — drop your watchOS screen in.", accent: "#c4b4c9" },
-  { id: "android", label: "Android", blurb: "Pixel & Galaxy device mockups. Coming soon.", accent: "#a9c9b4" },
-];
 
 /** Premium device mockups, one card each inside their category. */
 export const SCENE_TEMPLATES: TemplateMeta[] = [
