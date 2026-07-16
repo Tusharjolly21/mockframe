@@ -19,8 +19,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ allowed: false, reason: "signin" } satisfies PackExportVerdict, { status: 401 });
     }
     const isPro = isBillingActive(await readBilling(owner.uid));
-    const ref = firestoreDb().doc(`mockframeOwners/${owner.ownerId}/kv/pack-exports`);
-    const verdict = await firestoreDb().runTransaction(async (txn): Promise<PackExportVerdict> => {
+    const db = firestoreDb();
+    // SECURITY: Counter lives in private/ (not kv/) so clients cannot reset it via PUT /api/store/pack-exports.
+    const ref = db.doc(`mockframeOwners/${owner.ownerId}/private/pack-exports`);
+    const verdict = await db.runTransaction(async (txn): Promise<PackExportVerdict> => {
       const snap = await txn.get(ref);
       const priorExports = snap.exists ? Number((snap.data()?.value as { count?: number } | undefined)?.count) || 0 : 0;
       const decision = packExportDecision({ signedIn: true, isPro, priorExports });
