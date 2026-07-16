@@ -13,7 +13,7 @@ export function ScreenStrip() {
   const reorder = (from: number, to: number) => {
     if (from === to) return;
     const step = from < to ? 1 : -1;
-    let id = pack.screens[from].id;
+    const id = pack.screens[from].id;
     for (let i = from; i !== to; i += step) moveScreenById(id, step as 1 | -1);
   };
 
