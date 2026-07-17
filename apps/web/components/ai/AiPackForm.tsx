@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { firebaseFetch } from "@/lib/firebaseClient";
 import { savePack } from "@/lib/pack/persist";
-import type { PackDocument } from "@/lib/pack/schema";
+import { PackDocumentSchema } from "@/lib/pack/schema";
 import { AuthModal } from "@/components/AuthModal";
 import { UpgradeModal } from "@/components/editor/UpgradeModal";
 import { useEntitlementSync } from "@/lib/billing/client";
@@ -85,7 +85,13 @@ export function AiPackForm() {
 
       if (res.status === 200) {
         const json = (await res.json()) as { pack: unknown; remaining: number | null };
-        await savePack(json.pack as PackDocument);
+        const parsed = PackDocumentSchema.safeParse(json.pack);
+        if (!parsed.success) {
+          setErrorMessage("Generation returned an unusable pack — please retry.");
+          setStatus("error");
+          return;
+        }
+        await savePack(parsed.data);
         window.open("/app-store-screenshots", "_blank");
         setSuccess({ remaining: json.remaining });
         setStatus("success");

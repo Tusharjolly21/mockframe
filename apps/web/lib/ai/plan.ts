@@ -97,7 +97,10 @@ export function buildPackFromPlan(plan: AiPackPlan, appName: string): PackDocume
       })
     );
     screen.captions = {
-      en: { title: s.caption.title, ...(s.caption.subtitle ? { subtitle: s.caption.subtitle } : {}) },
+      en: {
+        title: s.caption.title.slice(0, 120),
+        ...(s.caption.subtitle ? { subtitle: s.caption.subtitle.slice(0, 160) } : {}),
+      },
     };
     return screen;
   });

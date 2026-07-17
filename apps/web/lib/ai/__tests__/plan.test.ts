@@ -77,4 +77,14 @@ describe("buildPackFromPlan", () => {
     const enc = encodeAiScreenAsset({ app: "aiapp", appName: "X" });
     expect(decodeScreenAsset(enc)).toMatchObject({ app: "aiapp", appName: "X" });
   });
+
+  it("clamps overlong captions to the PackDocumentSchema caps", () => {
+    const plan = samplePlan(8);
+    plan.screens[0].caption.title = "T".repeat(300);
+    plan.screens[0].caption.subtitle = "S".repeat(300);
+    const pack = buildPackFromPlan(plan, "Focusly");
+    expect(PackDocumentSchema.safeParse(pack).success).toBe(true);
+    expect(pack.screens[0].captions.en.title.length).toBe(120);
+    expect(pack.screens[0].captions.en.subtitle?.length).toBe(160);
+  });
 });
