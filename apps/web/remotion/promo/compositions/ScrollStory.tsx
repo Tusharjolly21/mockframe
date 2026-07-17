@@ -3,15 +3,15 @@ import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } fr
 import type { PromoInputProps } from "../../../lib/promo/inputProps";
 import { Background } from "../kit/Background";
 import { RealDeviceFrame, usePreloadScreenshots } from "../kit/RealDeviceFrame";
-import { Caption, Eyebrow, Headline } from "../kit/AnimatedText";
-import { CutFlash, PromoAudio, Watermark } from "../kit/Overlay";
-import { EASE_IN_OUT, EASE_OUT, rgba, screenAt } from "../kit/theme";
+import { Caption, Eyebrow, MaskHeadline } from "../kit/AnimatedText";
+import { CutFlash, Glow, PromoAudio, Watermark } from "../kit/Overlay";
+import { EASE_IN_OUT, EASE_OUT, screenAt } from "../kit/theme";
 
 /** Scroll Story — the phone rises, then each app screen scrolls top-to-bottom
- *  before a hard cut to the next. Adapts its segments to the screenshot count. */
-export const ScrollStory: FC<PromoInputProps> = ({ deviceId, screenshots, texts, accent, background, watermark, musicUrl, width, height }) => {
+ *  before a motion-blurred cut to the next. Adapts to the screenshot count. */
+export const ScrollStory: FC<PromoInputProps> = ({ deviceId, screenshots, texts, accent, background, pattern, watermark, musicUrl, width, height }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames: dur } = useVideoConfig();
   usePreloadScreenshots(screenshots.map((s) => s.url));
   const [headline = "", subhead = ""] = texts;
 
@@ -19,37 +19,41 @@ export const ScrollStory: FC<PromoInputProps> = ({ deviceId, screenshots, texts,
   const rise = spring({ frame: frame - 6, fps, config: { damping: 16, mass: 0.8, stiffness: 150 } });
   const phoneY = interpolate(rise, [0, 1], [height * 0.55, 0]);
   const enterScale = interpolate(rise, [0, 1], [0.9, 1]);
+  const dolly = interpolate(frame, [0, dur], [1.02, 1.07], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
   // divide the post-intro time evenly across the screens
   const intro = 36;
   const n = screenshots.length;
-  const segLen = Math.max(1, (durationInFrames - intro) / n);
+  const segLen = Math.max(1, (dur - intro) / n);
   const local = Math.max(0, frame - intro);
   const seg = Math.min(n - 1, Math.floor(local / segLen));
   const inSeg = local - seg * segLen;
   const panY = interpolate(inSeg, [segLen * 0.1, segLen * 0.9], [0.4, -0.4], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE_IN_OUT });
   const shot = screenAt(screenshots, seg);
   const cuts = Array.from({ length: n - 1 }, (_, i) => intro + (i + 1) * segLen);
+  // brief blur at each cut so the swap reads as a designed transition
+  const blur = cuts.reduce((b, c) => b + interpolate(frame, [c - 6, c - 1, c + 1, c + 7], [0, 7, 7, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }), 0);
 
   const rotY = Math.sin((frame / fps) * 0.7) * 5;
-  const outro = interpolate(frame, [durationInFrames - 16, durationInFrames], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE_OUT });
+  const outro = interpolate(frame, [dur - 16, dur], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE_OUT });
   const groupO = interpolate(outro, [0, 1], [1, 0.3]);
 
   return (
     <AbsoluteFill style={{ opacity: groupO }}>
-      <Background background={background} accent={accent} />
+      <Background background={background} accent={accent} pattern={pattern} />
       <PromoAudio musicUrl={musicUrl} />
+      <Glow accent={accent} strength={0.2} />
 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: height * 0.07 }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: height * 0.02 }}>
           <Eyebrow text="See it in action" enterAt={4} size={width * 0.02} accent={accent} />
-          <Headline text={headline} enterAt={12} size={width * 0.05} maxWidth={width * 0.86} />
+          <MaskHeadline text={headline} enterAt={12} size={width * 0.05} maxWidth={width * 0.86} accent={accent} />
         </div>
       </AbsoluteFill>
 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", marginTop: height * 0.03 }}>
-        <div style={{ transform: `translateY(${phoneY}px)` }}>
-          <RealDeviceFrame deviceId={deviceId} width={phoneW} screenshot={shot} rotateY={rotY} scale={enterScale} zoom={1.14} panY={panY} />
+        <div style={{ transform: `translateY(${phoneY}px)`, filter: blur > 0.3 ? `blur(${blur}px)` : undefined }}>
+          <RealDeviceFrame deviceId={deviceId} width={phoneW} screenshot={shot} rotateY={rotY} scale={enterScale * dolly} zoom={1.14} panY={panY} />
         </div>
       </AbsoluteFill>
 

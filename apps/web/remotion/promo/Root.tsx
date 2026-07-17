@@ -42,6 +42,7 @@ export function RemotionRoot() {
                 texts: t.textSlots.map((slot) => slot.placeholder),
                 accent: t.defaultAccent,
                 background: t.defaultBackground,
+                pattern: null,
                 watermark: false,
                 musicUrl: null,
                 width: DEFAULT_DIMS.width,

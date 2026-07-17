@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { Audio, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Audio, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { FONT_STACK, rgba } from "./theme";
 
 /** Free-tier watermark, burned into non-Pro renders and previews. */
@@ -28,6 +28,17 @@ export const Watermark: FC<{ width: number }> = ({ width }) => (
 export const PromoAudio: FC<{ musicUrl: string | null }> = ({ musicUrl }) => {
   if (!musicUrl) return null;
   return <Audio src={musicUrl} volume={(f) => interpolate(f, [0, 20], [0, 0.8], { extrapolateRight: "clamp" })} />;
+};
+
+/** A soft accent glow bloom centred behind the subject. */
+export const Glow: FC<{ accent: string; strength: number; size?: number }> = ({ accent, strength, size = 0.9 }) => {
+  const { width } = useVideoConfig();
+  if (strength <= 0.001) return null;
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+      <div style={{ width: width * size, height: width * size, borderRadius: "50%", background: `radial-gradient(circle, ${rgba(accent, strength)} 0%, transparent 62%)`, filter: "blur(24px)" }} />
+    </AbsoluteFill>
+  );
 };
 
 /** A quick white flash on each cut frame — masks the screen swap, ad-style. */

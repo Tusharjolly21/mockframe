@@ -17,6 +17,7 @@ describe("buildPromoInputProps", () => {
       texts: project.texts,
       accent: project.accent,
       background: project.background,
+      pattern: null,
       watermark: true,
       musicUrl: null,
       width: 1080,

@@ -48,6 +48,12 @@ export function punchAt(frame: number, cues: number[], amp = 0.06, span = 7): nu
   return v;
 }
 
+/** Motion blur px from how fast a value changed since the previous frame. Sharp
+ *  when settled, blurred while moving fast — the trick that kills 30fps strobe. */
+export function velBlur(now: number, prev: number, k = 0.6, max = 10): number {
+  return Math.min(max, Math.abs(now - prev) * k);
+}
+
 /** A shared, modern type stack. Inter is loaded by the app shell and present on
  *  most render hosts; the fallbacks keep previews and local renders looking
  *  right. (For Lambda, embed Inter as a font file — see DEPLOY.md.) */

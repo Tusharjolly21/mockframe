@@ -21,6 +21,7 @@ export const PromoRenderRequestSchema = z.object({
   texts: z.array(z.string().max(80)).max(6),
   accent: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   background: z.string().min(1),
+  pattern: z.string().nullable(),
   format: z.enum(PROMO_FORMATS),
 });
 

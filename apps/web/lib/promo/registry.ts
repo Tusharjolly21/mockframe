@@ -122,6 +122,7 @@ export function createPromoProject(templateId: string, screenshotAssetIds: strin
     texts: t.textSlots.map((slot) => slot.placeholder),
     accent: t.defaultAccent,
     background: t.defaultBackground,
+    pattern: null,
     format: "9:16",
     durationInFrames: t.defaultDurationInFrames,
     music: null,

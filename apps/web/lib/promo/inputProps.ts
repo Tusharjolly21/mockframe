@@ -14,6 +14,7 @@ export type PromoInputProps = {
   texts: string[];
   accent: string;
   background: string;
+  pattern: string | null;
   watermark: boolean;
   /** Absolute/fetchable URL of the music track, or null for a silent render. */
   musicUrl: string | null;
@@ -32,6 +33,7 @@ export function buildPromoInputProps(
     texts: project.texts,
     accent: project.accent,
     background: project.background,
+    pattern: project.pattern,
     watermark: opts.watermark,
     musicUrl: opts.musicUrl ?? null,
     width,

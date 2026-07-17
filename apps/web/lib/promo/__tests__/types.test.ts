@@ -8,6 +8,7 @@ const valid = {
   texts: ["Hello", "World"],
   accent: "#7c3aed",
   background: "aurora",
+  pattern: null,
   format: "9:16",
   durationInFrames: 300,
   music: null,

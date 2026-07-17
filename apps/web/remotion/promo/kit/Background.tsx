@@ -1,7 +1,21 @@
 import type { FC } from "react";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
+import { patternStyle } from "@framekit/renderer";
 import { getPromoBackground } from "./backgrounds";
 import { rgba } from "./theme";
+
+/** Decorative pattern behind the subject (reuses the app's backdrop patterns). */
+const PatternLayer: FC<{ kind: string; accent: string }> = ({ kind, accent }) => (
+  <div
+    style={patternStyle({
+      kind: kind as Parameters<typeof patternStyle>[0]["kind"],
+      intensity: 0.16,
+      thickness: 0.5,
+      color: accent,
+      blendMode: "soft-light",
+    })}
+  />
+);
 
 /** Fine film grain as an inline SVG turbulence data URI (no external asset). */
 const GRAIN_URI =
@@ -12,7 +26,7 @@ const GRAIN_URI =
  * soft vignette and a whisper of film grain. Driven by the composition frame so
  * the light keeps moving under the product.
  */
-export const Background: FC<{ background: string; accent: string }> = ({ background, accent }) => {
+export const Background: FC<{ background: string; accent: string; pattern?: string | null }> = ({ background, accent, pattern }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
   const bg = getPromoBackground(background);
@@ -21,6 +35,7 @@ export const Background: FC<{ background: string; accent: string }> = ({ backgro
 
   return (
     <AbsoluteFill style={{ backgroundColor: bg.base, overflow: "hidden" }}>
+      {pattern && pattern !== "none" && <PatternLayer kind={pattern} accent={accent} />}
       {/* drifting mesh blobs */}
       {bg.blobs.map((blob, i) => {
         const phase = i * 1.7;

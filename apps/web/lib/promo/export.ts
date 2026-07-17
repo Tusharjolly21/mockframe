@@ -50,6 +50,7 @@ export async function exportPromoVideo(project: PromoProject): Promise<void> {
       texts: project.texts,
       accent: project.accent,
       background: project.background,
+      pattern: project.pattern,
       format: project.format,
     }),
   });

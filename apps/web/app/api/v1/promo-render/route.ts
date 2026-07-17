@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
   }
-  const { templateId, deviceId, screenshots, texts, accent, background, format } = parsed.data;
+  const { templateId, deviceId, screenshots, texts, accent, background, pattern, format } = parsed.data;
 
   const template = getPromoTemplate(templateId);
   if (!template) {
@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
     texts,
     accent,
     background,
+    pattern,
     watermark: false, // paid render
     musicUrl: null,
     width: dims.width,

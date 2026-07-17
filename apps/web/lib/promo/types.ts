@@ -25,6 +25,8 @@ export const PromoProjectSchema = z.object({
   texts: z.array(z.string()).max(6),
   accent: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   background: z.string().min(1),
+  /** A decorative pattern behind the subject, or null for none. */
+  pattern: z.string().nullable(),
   format: z.enum(PROMO_FORMATS),
   durationInFrames: z.number().int().positive().max(MAX_FRAMES),
   music: z.string().nullable(),

@@ -13,7 +13,7 @@ import { cutsPassed, EASE_CINE, EASE_OUT, rgba, screenAt } from "../kit/theme";
  *   camera dolly + banking with zoom-blur-through screen transitions →
  *   a glow payoff and settle.
  */
-export const RiseReveal: FC<PromoInputProps> = ({ deviceId, screenshots, texts, accent, background, watermark, musicUrl, width, height }) => {
+export const RiseReveal: FC<PromoInputProps> = ({ deviceId, screenshots, texts, accent, background, pattern, watermark, musicUrl, width, height }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames: dur } = useVideoConfig();
   usePreloadScreenshots(screenshots.map((s) => s.url));
@@ -58,7 +58,7 @@ export const RiseReveal: FC<PromoInputProps> = ({ deviceId, screenshots, texts, 
     <AbsoluteFill>
       {/* parallax backdrop — drifts opposite the bank for depth */}
       <AbsoluteFill style={{ transform: `translateX(${bank * -1.6}px) scale(1.06)` }}>
-        <Background background={background} accent={accent} />
+        <Background background={background} accent={accent} pattern={pattern} />
       </AbsoluteFill>
       <PromoAudio musicUrl={musicUrl} />
 
