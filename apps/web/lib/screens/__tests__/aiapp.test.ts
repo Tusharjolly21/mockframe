@@ -52,4 +52,11 @@ describe("renderAiApp", () => {
     const svg = renderAiApp(doc("home-feed", { dark: true, chrome: { time: "9:41", battery: 100, dark: true }, palette: { primary: "#8b5cf6", bg: "#0e0e12", card: "#1a1a21", text: "#f4f4f8", muted: "#9a9aa6" } }));
     expect(svg).toContain("#0e0e12");
   });
+
+  it("sanitizes malicious palette colors preventing SVG attribute injection", () => {
+    const svg = renderAiApp(doc("list", { palette: { primary: '"><script>alert(1)</script>', bg: "#ffffff", card: "#ffffff", text: "#000000", muted: "#808080" } }));
+    expect(svg).not.toContain('"><script>');
+    expect(svg).not.toContain('alert(1)');
+    expect(svg).toContain("#888888"); // fallback color for invalid palette
+  });
 });
