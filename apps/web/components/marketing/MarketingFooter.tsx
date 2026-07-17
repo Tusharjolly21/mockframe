@@ -10,6 +10,7 @@ const COLS: { title: string; links: [string, string][] }[] = [
       ["/editor", "Editor"],
       ["/mockups", "Device mockups"],
       ["/app-store-screenshots", "App Store Screenshots"],
+      ["/ai", "AI Generator"],
       ["/templates", "Templates"],
       ["/pricing", "Pricing"],
       ["/developers/api", "Render API alpha"],

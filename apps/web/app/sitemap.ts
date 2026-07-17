@@ -14,6 +14,7 @@ const UPDATED = {
   site: new Date("2026-07-16"), // marketing shell / homepage
   tools: new Date("2026-07-17"), // tool pages + FAQ + /tools hub + app promo video maker
   packStudio: new Date("2026-07-16"), // App Store screenshot pack studio landing page + FAQ
+  ai: new Date("2026-07-17"), // AI pack generator landing page
   guides: new Date("2026-06-20"),
   templates: new Date("2026-06-01"),
   devices: new Date("2026-06-01"),
@@ -24,6 +25,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/`, lastModified: UPDATED.site, changeFrequency: "weekly", priority: 1 },
     { url: `${SITE_URL}/mockups`, lastModified: UPDATED.devices, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/app-store-screenshots`, lastModified: UPDATED.packStudio, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${SITE_URL}/ai`, lastModified: UPDATED.ai, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/tools`, lastModified: UPDATED.tools, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/templates`, lastModified: UPDATED.templates, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/pricing`, lastModified: UPDATED.site, changeFrequency: "monthly", priority: 0.8 },
