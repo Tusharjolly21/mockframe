@@ -38,7 +38,7 @@ export const Background: FC<{ background: string; accent: string }> = ({ backgro
               height: size,
               borderRadius: "50%",
               background: `radial-gradient(circle, ${blob.color} 0%, transparent 68%)`,
-              filter: "blur(20px)",
+              filter: "blur(8px)",
             }}
           />
         );
@@ -55,7 +55,7 @@ export const Background: FC<{ background: string; accent: string }> = ({ backgro
           transform: "translate(-50%, -50%)",
           borderRadius: "50%",
           background: `radial-gradient(circle, ${rgba(accent, 0.16)} 0%, transparent 60%)`,
-          filter: "blur(30px)",
+          filter: "blur(14px)",
         }}
       />
 

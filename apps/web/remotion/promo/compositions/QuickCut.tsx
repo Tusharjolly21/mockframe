@@ -52,7 +52,7 @@ export const QuickCut: FC<PromoInputProps> = ({ deviceId, screenshots, texts, ac
 
       {/* DEVICE + FEATURE CUTS */}
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", opacity: deviceO }}>
-        <div style={{ transform: `translateX(${reframe}px) scale(${deviceScale})`, filter: `drop-shadow(0 40px 90px ${rgba(accent, 0.32)})` }}>
+        <div style={{ transform: `translateX(${reframe}px) scale(${deviceScale})` }}>
           <RealDeviceFrame deviceId={deviceId} width={phoneW} screenshot={shot} rotateY={rotY} />
         </div>
       </AbsoluteFill>

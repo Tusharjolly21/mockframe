@@ -37,7 +37,7 @@ export const FeaturePop: FC<PromoInputProps> = ({ deviceId, screenshots, texts, 
       </AbsoluteFill>
 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", marginTop: -height * 0.05 }}>
-        <div style={{ transform: `translateY(${float}px)`, filter: `drop-shadow(0 40px 90px ${rgba(accent, 0.28)})` }}>
+        <div style={{ transform: `translateY(${float}px)` }}>
           <RealDeviceFrame deviceId={deviceId} width={phoneW} screenshot={shot} rotateY={rotY} scale={deviceScale} />
         </div>
       </AbsoluteFill>

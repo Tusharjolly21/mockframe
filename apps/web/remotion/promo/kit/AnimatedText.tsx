@@ -1,6 +1,50 @@
 import type { FC } from "react";
 import { interpolate, useCurrentFrame } from "remotion";
-import { EASE_OUT, FONT_STACK, rgba } from "./theme";
+import { EASE_CINE, EASE_OUT, FONT_STACK, rgba } from "./theme";
+
+/** Kinetic headline: each word wipes up from behind a mask, staggered — the
+ *  premium "type reveal" look. Optionally underlined by a swiping accent bar. */
+export const MaskHeadline: FC<{
+  text: string;
+  enterAt: number;
+  size: number;
+  color?: string;
+  align?: "center" | "left";
+  maxWidth?: number;
+  accent?: string;
+}> = ({ text, enterAt, size, color = "#ffffff", align = "center", maxWidth, accent }) => {
+  const words = text.split(" ");
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: align === "center" ? "center" : "flex-start", gap: size * 0.12, maxWidth }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: `${size * 0.06}px ${size * 0.26}px`, justifyContent: align === "center" ? "center" : "flex-start" }}>
+        {words.map((word, i) => (
+          <MaskWord key={i} word={word} enterAt={enterAt + i * 4} size={size} color={color} align={align} />
+        ))}
+      </div>
+      {accent && <AccentBar enterAt={enterAt + Math.min(words.length, 4) * 4 + 4} width={size * 2.4} accent={accent} thickness={size * 0.09} />}
+    </div>
+  );
+};
+
+const MaskWord: FC<{ word: string; enterAt: number; size: number; color: string; align: "center" | "left" }> = ({ word, enterAt, size, color }) => {
+  const frame = useCurrentFrame();
+  const p = interpolate(frame, [enterAt, enterAt + 20], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE_CINE });
+  const y = interpolate(p, [0, 1], [112, 0]);
+  return (
+    <span style={{ display: "inline-block", overflow: "hidden", paddingBottom: size * 0.06 }}>
+      <span style={{ display: "inline-block", transform: `translateY(${y}%)`, fontFamily: FONT_STACK, fontWeight: 800, fontSize: size, lineHeight: 1.0, letterSpacing: -size * 0.03, color }}>
+        {word}
+      </span>
+    </span>
+  );
+};
+
+/** A short accent bar that swipes out from the left — a clean underline accent. */
+export const AccentBar: FC<{ enterAt: number; width: number; accent: string; thickness?: number }> = ({ enterAt, width, accent, thickness = 6 }) => {
+  const frame = useCurrentFrame();
+  const p = interpolate(frame, [enterAt, enterAt + 16], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE_CINE });
+  return <div style={{ width, height: thickness, borderRadius: thickness, background: `linear-gradient(90deg, ${accent}, ${rgba(accent, 0.4)})`, transform: `scaleX(${p})`, transformOrigin: "left", boxShadow: `0 0 ${thickness * 2.4}px ${rgba(accent, 0.7)}` }} />;
+};
 
 /** opacity + rise reveal, clamped, premium easing. */
 export function useReveal(enterAt: number, duration = 18) {
@@ -98,10 +142,9 @@ export const Chip: FC<{ text: string; enterAt: number; size: number; accent: str
         color: "#fff",
         padding: `${size * 0.7}px ${size * 1.15}px`,
         borderRadius: 999,
-        background: "rgba(255,255,255,0.07)",
-        border: "1px solid rgba(255,255,255,0.12)",
-        backdropFilter: "blur(8px)",
-        boxShadow: `0 10px 30px rgba(0,0,0,0.3)`,
+        background: "rgba(20,20,26,0.66)",
+        border: "1px solid rgba(255,255,255,0.14)",
+        boxShadow: `0 10px 30px rgba(0,0,0,0.35)`,
       }}
     >
       <span style={{ width: size * 0.85, height: size * 0.85, borderRadius: size * 0.28, background: accent, boxShadow: `0 0 ${size * 1.4}px ${rgba(accent, 0.8)}` }} />

@@ -40,7 +40,7 @@ export const TiltParallax: FC<PromoInputProps> = ({ deviceId, screenshots, texts
   );
 
   const device = (
-    <div style={{ transform: `translateY(${floatY}px)`, filter: `drop-shadow(0 40px 100px ${rgba(accent, 0.32)})`, opacity: interpolate(enter, [0, 1], [0, 1]) }}>
+    <div style={{ transform: `translateY(${floatY}px)`, opacity: interpolate(enter, [0, 1], [0, 1]) }}>
       <RealDeviceFrame deviceId={deviceId} width={phoneW} screenshot={shot} rotateX={rotX} rotateY={rotY} scale={interpolate(enter, [0, 1], [0.86, 1]) * breathe} perspective={width * 2.2} />
     </div>
   );

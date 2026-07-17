@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { continueRender, delayRender } from "remotion";
 import { getDevice } from "@framekit/devices";
 import { MockupLayerView, type ResolvedAsset } from "@framekit/renderer";
@@ -58,25 +58,35 @@ export const RealDeviceFrame: React.FC<{
   style?: React.CSSProperties;
 }> = ({ deviceId, width, screenshot, variant, rotateX = 0, rotateY = 0, rotateZ = 0, scale = 1, perspective = 2600, zoom = 1, panY = 0, style }) => {
   const device = getDevice(deviceId) ?? getDevice("iphone-16-pro");
-  if (!device) return null;
 
-  const frameW = device.plate?.width ?? device.frame.width;
-  const frameH = device.plate?.height ?? device.frame.height;
+  const frameW = device ? device.plate?.width ?? device.frame.width : 1;
+  const frameH = device ? device.plate?.height ?? device.frame.height : 1;
   const s = width / frameW;
-  const offsetY = panY * device.frame.screenRect.height;
+  const offsetY = device ? panY * device.frame.screenRect.height : 0;
 
-  const layer: MockupLayer = {
-    type: "mockup",
-    id: `promo-${deviceId}`,
-    deviceId: device.id,
-    frameVariant: variant,
-    media: { assetId: "shot", kind: "image", fit: "cover", offsetX: 0, offsetY, scale: zoom },
-    transform: { ...IDENTITY_TRANSFORM },
-    shadow: { ...DEFAULT_SHADOW, opacity: 0.55, softness: 90, distance: 46 },
-  };
+  // Memoize the layer + resolver by VALUE so MockupLayerView's `memo` holds while
+  // the composition only tweaks the (cheap) CSS wrapper transform. Without this
+  // the heavy device SVG re-rasterizes every frame → the jank the user saw.
+  const layer = useMemo<MockupLayer>(
+    () => ({
+      type: "mockup",
+      id: `promo-${device?.id ?? deviceId}`,
+      deviceId: device?.id ?? deviceId,
+      frameVariant: variant,
+      media: { assetId: "shot", kind: "image", fit: "cover", offsetX: 0, offsetY, scale: zoom },
+      transform: { ...IDENTITY_TRANSFORM },
+      shadow: { ...DEFAULT_SHADOW, opacity: 0.5, softness: 90, distance: 46 },
+    }),
+    [device?.id, deviceId, variant, offsetY, zoom],
+  );
 
-  const resolveAsset = (id: string): ResolvedAsset | undefined =>
-    id === "shot" ? { url: screenshot.url, width: screenshot.width, height: screenshot.height } : undefined;
+  const resolveAsset = useCallback(
+    (id: string): ResolvedAsset | undefined =>
+      id === "shot" ? { url: screenshot.url, width: screenshot.width, height: screenshot.height } : undefined,
+    [screenshot.url, screenshot.width, screenshot.height],
+  );
+
+  if (!device) return null;
 
   return (
     <div style={{ perspective, ...style }}>

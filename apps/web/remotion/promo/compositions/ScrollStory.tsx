@@ -48,7 +48,7 @@ export const ScrollStory: FC<PromoInputProps> = ({ deviceId, screenshots, texts,
       </AbsoluteFill>
 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", marginTop: height * 0.03 }}>
-        <div style={{ transform: `translateY(${phoneY}px)`, filter: `drop-shadow(0 40px 90px ${rgba(accent, 0.26)})` }}>
+        <div style={{ transform: `translateY(${phoneY}px)` }}>
           <RealDeviceFrame deviceId={deviceId} width={phoneW} screenshot={shot} rotateY={rotY} scale={enterScale} zoom={1.14} panY={panY} />
         </div>
       </AbsoluteFill>

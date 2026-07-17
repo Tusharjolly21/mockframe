@@ -6,6 +6,8 @@ import { Easing } from "remotion";
 export const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1); // decisive settle
 export const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
 export const EASE_OUT_BACK = Easing.bezier(0.34, 1.56, 0.64, 1); // tiny overshoot
+export const EASE_CINE = Easing.bezier(0.16, 1, 0.3, 1); // long, weighty settle (expo-out)
+export const EASE_IN_EXPO = Easing.bezier(0.7, 0, 0.84, 0); // accelerate into a move
 
 // Spring configs.
 export const SPRING_SOFT = { damping: 18, mass: 0.9, stiffness: 120 } as const;
