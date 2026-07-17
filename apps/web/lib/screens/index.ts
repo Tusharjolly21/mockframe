@@ -2,6 +2,7 @@
 
 import type { ResolvedAsset } from "@framekit/renderer";
 import { SH, SW, svgDataUri } from "./common";
+import { renderAiApp } from "./aiapp";
 import { renderAiChat } from "./aichat";
 import { renderBluesky, renderBlueskyCard } from "./bluesky";
 import { renderCode } from "./code";
@@ -225,6 +226,8 @@ export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): {
   const dp = "avatar" in doc && doc.avatar ? lookupUrl?.(doc.avatar) : undefined;
   const flat = (inner: string, h = SH, w = SW) => ({ url: svgDataUri(inner, h, w), logicalH: h, logicalW: w });
   switch (doc.app) {
+    case "aiapp":
+      return flat(renderAiApp(doc));
     case "imessage":
       return flat(renderIMessage(doc, dp, lookupUrl));
     case "whatsapp":

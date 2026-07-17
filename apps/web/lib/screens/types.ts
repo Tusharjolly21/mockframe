@@ -746,7 +746,32 @@ export interface StripeDoc {
   contentScale?: number;
 }
 
+export interface AiAppItem {
+  title: string;
+  subtitle?: string;
+  value?: string;
+  emoji?: string;
+}
+
+/** AI-generated generic app screen: fully parameterized concept UI. The AI
+ *  supplies content + palette; the renderer owns layout, so output quality is
+ *  deterministic regardless of what the model writes. */
+export interface AiAppDoc {
+  app: "aiapp";
+  chrome: ScreenChrome;
+  archetype: "onboarding" | "home-feed" | "dashboard" | "list" | "detail" | "profile" | "settings" | "chat";
+  appName: string;
+  dark?: boolean;
+  palette: { primary: string; bg: string; card: string; text: string; muted: string };
+  header: { title: string; subtitle?: string };
+  items: AiAppItem[];
+  stats?: { label: string; value: string }[];
+  cta?: string;
+  tabs?: string[];
+}
+
 export type ScreenDoc =
+  | AiAppDoc
   | IMessageDoc
   | WhatsAppDoc
   | WhatsAppGroupDoc
@@ -783,6 +808,7 @@ export type ScreenDoc =
 export type ScreenApp = ScreenDoc["app"];
 
 export const SCREEN_APP_LABELS: Record<ScreenApp, string> = {
+  aiapp: "AI App",
   imessage: "iMessage",
   whatsapp: "WhatsApp",
   "whatsapp-group": "WA Group",
@@ -922,6 +948,7 @@ export function defaultSocialDoc(network: SocialNetwork): SocialPostDoc {
 /** Which platforms each app actually exists on — the picker filters by the
  *  mockup device's platform, so iMessage never shows on an Android phone. */
 export const APP_PLATFORMS: Record<ScreenApp, ("ios" | "android")[]> = {
+  aiapp: ["ios", "android"],
   imessage: ["ios"], // Apple-only — the whole point of the platform filter
   whatsapp: ["ios", "android"],
   "whatsapp-group": ["ios", "android"],
@@ -1463,6 +1490,16 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
         instruction: "Merge onto CA-85 N toward Mountain View",
         dark: false,
         standalone: true,
+      };
+    case "aiapp":
+      return {
+        app,
+        chrome,
+        archetype: "home-feed",
+        appName: "App",
+        palette: { primary: "#6366f1", bg: "#f9fafb", card: "#ffffff", text: "#1f2937", muted: "#9ca3af" },
+        header: { title: "Welcome" },
+        items: [],
       };
   }
 }
