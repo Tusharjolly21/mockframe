@@ -15,7 +15,10 @@ export const runtime = "nodejs";
 export async function POST(req: NextRequest) {
   try {
     const owner = await getRequestOwner(req);
-    if (!owner.uid) {
+    // Anonymous Firebase sessions are guests, not sign-ins — the client mints one
+    // automatically whenever Firebase config is present, so treating uid alone as
+    // "signed in" would let every guest claim the first-free pack.
+    if (!owner.uid || owner.signInProvider === "anonymous") {
       return NextResponse.json({ allowed: false, reason: "signin" } satisfies PackExportVerdict, { status: 401 });
     }
     const isPro = isBillingActive(await readBilling(owner.uid));

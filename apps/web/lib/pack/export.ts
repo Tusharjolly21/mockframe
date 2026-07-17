@@ -34,7 +34,9 @@ export async function exportPackZip(
   for (let i = 0; i < compiled.length; i++) {
     const entry = compiled[i];
     try {
-      const png = await renderSceneToPng(entry.scene, 1, opts.clean, entry.panoramaIdx, entry.panoramaTotal);
+      // renderSceneToPng's 3rd arg is "apply the free-tier watermark treatment",
+      // the inverse of our `clean` (Pro / first-free) flag — see bulkExport.tsx.
+      const png = await renderSceneToPng(entry.scene, 1, !opts.clean, entry.panoramaIdx, entry.panoramaTotal);
       entries.push({ name: entry.path, data: png });
     } catch {
       failed.push(entry.path);

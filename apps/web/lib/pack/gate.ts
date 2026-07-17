@@ -10,6 +10,8 @@ export type PackExportVerdict =
   | { allowed: false; reason: "signin" | "pro" };
 
 export function packExportDecision(opts: {
+  /** Non-anonymous authenticated user — the caller must exclude Firebase
+   *  anonymous-provider sessions (guests) before setting this true. */
   signedIn: boolean;
   isPro: boolean;
   priorExports: number;
