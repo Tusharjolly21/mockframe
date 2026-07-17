@@ -1,4 +1,12 @@
-import { z } from "zod";
+// NOTE: imports the "zod/v4" classic API, not the top-level "zod" package
+// (which resolves to zod's v3 classic API here). @anthropic-ai/sdk's
+// zodOutputFormat() calls zod-v4-only internals (z.toJSONSchema) and throws
+// at runtime on a schema built from the v3 API — see apps/web/app/api/ai-pack
+// /route.ts, which is the (only) consumer that needs wire-schema derivation.
+// zod/v4's classic API is call-compatible with v3 for everything used below
+// (z.object/z.string/z.enum/z.array/.optional/.regex/.min/.max), so this is a
+// drop-in for every other consumer (buildPackFromPlan, plan.test.ts, etc).
+import { z } from "zod/v4";
 import { createPack, createPackScreen, PACK_STYLE_IDS, type PackDocument } from "../pack/schema";
 
 /**
