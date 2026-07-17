@@ -54,9 +54,12 @@ export const RealDeviceFrame: React.FC<{
   zoom?: number;
   /** pan the screenshot vertically, as a ratio of screen height (−0.5..0.5) — a scroll */
   panY?: number;
+  /** glass-glare strength (0..~0.16). The glare band slides across the screen as
+   *  rotateY changes, so turns read as light interaction, not a CSS transform. */
+  glare?: number;
   /** extra CSS (e.g. a drop-shadow filter) on the 3D wrapper */
   style?: React.CSSProperties;
-}> = ({ deviceId, width, screenshot, variant, rotateX = 0, rotateY = 0, rotateZ = 0, scale = 1, perspective = 2600, zoom = 1, panY = 0, style }) => {
+}> = ({ deviceId, width, screenshot, variant, rotateX = 0, rotateY = 0, rotateZ = 0, scale = 1, perspective = 2600, zoom = 1, panY = 0, glare = 0, style }) => {
   const device = getDevice(deviceId) ?? getDevice("iphone-16-pro");
 
   const frameW = device ? device.plate?.width ?? device.frame.width : 1;
@@ -91,10 +94,24 @@ export const RealDeviceFrame: React.FC<{
   return (
     <div style={{ perspective, ...style }}>
       <div style={{ transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`, transformStyle: "preserve-3d" }}>
-        <div style={{ width, height: frameH * s }}>
+        <div style={{ width, height: frameH * s, position: "relative" }}>
           <div style={{ transform: `scale(${s})`, transformOrigin: "0 0", width: frameW }}>
             <MockupLayerView layer={layer} resolveAsset={resolveAsset} />
           </div>
+          {glare > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: width * 0.16,
+                overflow: "hidden",
+                pointerEvents: "none",
+                background: `linear-gradient(105deg, transparent 42%, rgba(255,255,255,${glare}) 50%, transparent 58%)`,
+                backgroundSize: "280% 100%",
+                backgroundPosition: `${50 - rotateY * 2.2}% 0%`,
+              }}
+            />
+          )}
         </div>
       </div>
     </div>

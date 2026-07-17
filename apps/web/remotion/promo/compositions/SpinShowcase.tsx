@@ -3,12 +3,14 @@ import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } fr
 import type { PromoInputProps } from "../../../lib/promo/inputProps";
 import { Background } from "../kit/Background";
 import { RealDeviceFrame, usePreloadScreenshots } from "../kit/RealDeviceFrame";
-import { Caption, Eyebrow, MaskHeadline } from "../kit/AnimatedText";
+import { Caption, CharHeadline, Eyebrow } from "../kit/AnimatedText";
 import { CutFlash, Glow, LightSweep, PromoAudio, Watermark } from "../kit/Overlay";
+import { ContactShadow, FloorGlow, Particles } from "../kit/Stage";
 import { cutsPassed, EASE_OUT, screenAt, velBlur } from "../kit/theme";
 
 /** Fast turntable — the phone whips in and snaps between app screens on quick
- *  whip-turns, motion-blurred at the turn so the swap reads clean. */
+ *  whip-turns. Glare slides across the glass as it turns, speed streaks fire at
+ *  the whip peaks, and the swap is motion-blurred so it reads clean. */
 export const SpinShowcase: FC<PromoInputProps> = ({ deviceId, screenshots, texts, accent, background, pattern, watermark, musicUrl, width, height }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames: dur } = useVideoConfig();
@@ -19,7 +21,7 @@ export const SpinShowcase: FC<PromoInputProps> = ({ deviceId, screenshots, texts
   const cuts = [78, 146, 210];
   const shot = screenAt(screenshots, cutsPassed(frame, cuts));
 
-  // rotation as a pure fn of frame → derive velocity for motion blur
+  // rotation as a pure fn of frame → derive velocity for motion blur + streaks
   const rotYfn = (f: number) => {
     const enter = spring({ frame: f, fps, config: { damping: 16, mass: 0.7, stiffness: 190 } });
     const enterRotY = interpolate(enter, [0, 1], [-84, 0]);
@@ -47,6 +49,8 @@ export const SpinShowcase: FC<PromoInputProps> = ({ deviceId, screenshots, texts
       <AbsoluteFill style={{ transform: `translateX(${rotY * 0.8}px) scale(1.06)` }}>
         <Background background={background} accent={accent} pattern={pattern} />
       </AbsoluteFill>
+      <FloorGlow accent={accent} strength={0.13} />
+      <Particles accent={accent} seed={11} />
       <PromoAudio musicUrl={musicUrl} />
       <Glow accent={accent} strength={0.22} />
 
@@ -56,14 +60,24 @@ export const SpinShowcase: FC<PromoInputProps> = ({ deviceId, screenshots, texts
 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", opacity: groupO }}>
         <div style={{ filter: blur > 0.3 ? `blur(${blur}px)` : undefined }}>
-          <RealDeviceFrame deviceId={deviceId} width={phoneW} screenshot={shot} rotateX={rotX} rotateY={rotY} scale={enterScale * dolly} perspective={width * 2.2} />
+          <div style={{ position: "relative" }}>
+            <RealDeviceFrame deviceId={deviceId} width={phoneW} screenshot={shot} rotateX={rotX} rotateY={rotY} scale={enterScale * dolly} perspective={width * 2.2} glare={0.15} />
+            <ContactShadow width={phoneW} opacity={0.4 * interpolate(enter, [0, 1], [0, 1])} />
+          </div>
         </div>
       </AbsoluteFill>
+
+      {/* speed streaks — only while the whip is fast */}
+      {blur > 1.5 && (
+        <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", pointerEvents: "none", opacity: Math.min(blur / 10, 0.35) }}>
+          <div style={{ width: "150%", height: phoneW * 0.45, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent)", transform: "skewX(-18deg)" }} />
+        </AbsoluteFill>
+      )}
 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: height * 0.1, opacity: groupO }}>
         <div style={{ position: "relative", height: width * 0.16, width: width * 0.84 }}>
           <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "center", opacity: headlineO }}>
-            <MaskHeadline text={headline} enterAt={8} size={width * 0.052} maxWidth={width * 0.84} accent={accent} />
+            <CharHeadline text={headline} enterAt={8} size={width * 0.052} maxWidth={width * 0.84} accent={accent} />
           </div>
           <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "center", opacity: captionO }}>
             <Caption text={caption} enterAt={half} size={width * 0.032} maxWidth={width * 0.8} />

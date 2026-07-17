@@ -3,15 +3,16 @@ import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } fr
 import type { PromoInputProps } from "../../../lib/promo/inputProps";
 import { Background } from "../kit/Background";
 import { RealDeviceFrame, usePreloadScreenshots } from "../kit/RealDeviceFrame";
-import { Caption, Eyebrow, MaskHeadline } from "../kit/AnimatedText";
+import { Caption, CharHeadline, Eyebrow } from "../kit/AnimatedText";
 import { LightSweep, PromoAudio, Watermark } from "../kit/Overlay";
+import { ContactShadow, FloorGlow, Particles } from "../kit/Stage";
 import { cutsPassed, EASE_CINE, EASE_OUT, rgba, screenAt } from "../kit/theme";
 
 /**
  * Hero Launch — a cinematic app-launch spot:
- *   hook (mask-reveal type) → weighted device arrival with motion blur →
- *   camera dolly + banking with zoom-blur-through screen transitions →
- *   a glow payoff and settle.
+ *   char-cascade hook → weighted device arrival (motion-blurred) landing on a
+ *   contact shadow → camera dolly + banking with moving glass glare and
+ *   zoom-blur-through screen transitions → glow payoff and settle.
  */
 export const RiseReveal: FC<PromoInputProps> = ({ deviceId, screenshots, texts, accent, background, pattern, watermark, musicUrl, width, height }) => {
   const frame = useCurrentFrame();
@@ -23,8 +24,8 @@ export const RiseReveal: FC<PromoInputProps> = ({ deviceId, screenshots, texts, 
   const cuts = [138, 214];
   const shot = screenAt(screenshots, cutsPassed(frame, cuts));
 
-  // ── device entrance (weighted, slight overshoot) — as a pure fn of frame so
-  //    we can derive velocity for motion blur.
+  // ── device entrance (weighted, slight overshoot) — pure fn of frame so we can
+  //    derive velocity for motion blur.
   const enterAt = 28;
   const enter = (f: number) => spring({ frame: f - enterAt, fps, config: { damping: 14, mass: 0.85, stiffness: 130 } });
   const yPct = (f: number) => interpolate(enter(f), [0, 1], [82, 0]);
@@ -60,6 +61,8 @@ export const RiseReveal: FC<PromoInputProps> = ({ deviceId, screenshots, texts, 
       <AbsoluteFill style={{ transform: `translateX(${bank * -1.6}px) scale(1.06)` }}>
         <Background background={background} accent={accent} pattern={pattern} />
       </AbsoluteFill>
+      <FloorGlow accent={accent} strength={0.12 + glow * 0.2} />
+      <Particles accent={accent} />
       <PromoAudio musicUrl={musicUrl} />
 
       {/* glow bloom behind the device */}
@@ -71,14 +74,17 @@ export const RiseReveal: FC<PromoInputProps> = ({ deviceId, screenshots, texts, 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: height * 0.075, transform: `translateY(${outroLift}px)`, opacity: headlineO }}>
         <Eyebrow text="Introducing" enterAt={4} size={width * 0.021} accent={accent} />
         <div style={{ marginTop: height * 0.022 }}>
-          <MaskHeadline text={headline} enterAt={12} size={width * 0.066} maxWidth={width * 0.86} accent={accent} />
+          <CharHeadline text={headline} enterAt={10} size={width * 0.066} maxWidth={width * 0.86} accent={accent} />
         </div>
       </AbsoluteFill>
 
-      {/* device — the star */}
+      {/* device — the star, grounded on a contact shadow */}
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", marginTop: height * 0.055, transform: `translateY(${outroLift}px)` }}>
         <div style={{ transform: `translateY(${yPct(frame) * (height / 100) + floatY}px)`, filter: blur > 0.3 ? `blur(${blur}px)` : undefined }}>
-          <RealDeviceFrame deviceId={deviceId} width={phoneW} screenshot={shot} rotateX={enterRotX} rotateY={bank} scale={deviceScale} perspective={width * 2.4} />
+          <div style={{ position: "relative" }}>
+            <RealDeviceFrame deviceId={deviceId} width={phoneW} screenshot={shot} rotateX={enterRotX} rotateY={bank} scale={deviceScale} perspective={width * 2.4} glare={0.12} />
+            <ContactShadow width={phoneW} opacity={0.42 * e} />
+          </div>
         </div>
       </AbsoluteFill>
 
