@@ -33,9 +33,9 @@ describe("promo registry", () => {
 
   it("createPromoProject builds a schema-valid project seeded from the template", () => {
     for (const id of PROMO_TEMPLATE_IDS) {
-      const p = createPromoProject(id, "asset_9");
+      const p = createPromoProject(id, ["asset_9"]);
       expect(PromoProjectSchema.safeParse(p).success).toBe(true);
-      expect(p.screenshotAssetId).toBe("asset_9");
+      expect(p.screenshotAssetIds).toEqual(["asset_9"]);
       expect(p.format).toBe("9:16");
       const t = getPromoTemplate(id)!;
       expect(p.texts).toEqual(t.textSlots.map((slot) => slot.placeholder));
@@ -43,6 +43,6 @@ describe("promo registry", () => {
   });
 
   it("createPromoProject throws on an unknown template", () => {
-    expect(() => createPromoProject("nope", "asset_1")).toThrow();
+    expect(() => createPromoProject("nope", ["asset_1"])).toThrow();
   });
 });

@@ -30,6 +30,17 @@ export const PromoAudio: FC<{ musicUrl: string | null }> = ({ musicUrl }) => {
   return <Audio src={musicUrl} volume={(f) => interpolate(f, [0, 20], [0, 0.8], { extrapolateRight: "clamp" })} />;
 };
 
+/** A quick white flash on each cut frame — masks the screen swap, ad-style. */
+export const CutFlash: FC<{ cues: number[]; strength?: number }> = ({ cues, strength = 0.45 }) => {
+  const frame = useCurrentFrame();
+  let o = 0;
+  for (const c of cues) {
+    o = Math.max(o, interpolate(frame, [c - 2, c, c + 6], [0, strength, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
+  }
+  if (o <= 0.001) return null;
+  return <div style={{ position: "absolute", inset: 0, background: "#ffffff", opacity: o, mixBlendMode: "overlay", pointerEvents: "none" }} />;
+};
+
 /** A diagonal specular light sweep that crosses the frame once, on cue. */
 export const LightSweep: FC<{ startAt: number; durationInFrames?: number }> = ({ startAt, durationInFrames = 26 }) => {
   const frame = useCurrentFrame();

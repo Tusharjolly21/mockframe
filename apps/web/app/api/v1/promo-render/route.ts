@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
   }
-  const { templateId, texts, accent, background, format, screenshotDataUrl } = parsed.data;
+  const { templateId, deviceId, screenshots, texts, accent, background, format } = parsed.data;
 
   const template = getPromoTemplate(templateId);
   if (!template) {
@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
 
   const dims = FORMAT_DIMENSIONS[format];
   const inputProps: PromoInputProps = {
-    screenshotUrl: screenshotDataUrl,
+    deviceId,
+    screenshots: screenshots.map((s) => ({ url: s.dataUrl, width: s.width, height: s.height })),
     texts,
     accent,
     background,

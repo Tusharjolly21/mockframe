@@ -112,13 +112,13 @@ export function getPromoTemplate(id: string): PromoTemplateMeta | undefined {
   return PROMO_TEMPLATES.find((t) => t.id === id);
 }
 
-export function createPromoProject(templateId: string, screenshotAssetId: string): PromoProject {
+export function createPromoProject(templateId: string, screenshotAssetIds: string[] = []): PromoProject {
   const t = getPromoTemplate(templateId);
   if (!t) throw new Error(`Unknown promo template: ${templateId}`);
   return {
     templateId: t.id,
     deviceId: "iphone-16-pro",
-    screenshotAssetId,
+    screenshotAssetIds,
     texts: t.textSlots.map((slot) => slot.placeholder),
     accent: t.defaultAccent,
     background: t.defaultBackground,

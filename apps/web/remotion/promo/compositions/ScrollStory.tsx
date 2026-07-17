@@ -2,32 +2,41 @@ import type { FC } from "react";
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import type { PromoInputProps } from "../../../lib/promo/inputProps";
 import { Background } from "../kit/Background";
-import { DeviceFrame } from "../kit/DeviceFrame";
+import { RealDeviceFrame, usePreloadScreenshots } from "../kit/RealDeviceFrame";
 import { Caption, Eyebrow, Headline } from "../kit/AnimatedText";
-import { LightSweep, PromoAudio, Watermark } from "../kit/Overlay";
-import { EASE_IN_OUT, EASE_OUT, rgba } from "../kit/theme";
+import { CutFlash, PromoAudio, Watermark } from "../kit/Overlay";
+import { EASE_IN_OUT, EASE_OUT, rgba, screenAt } from "../kit/theme";
 
-/** Scroll Story — the phone rises, then the screenshot auto-scrolls top to
- *  bottom to reveal the whole app, with a thin progress rail and pinned copy. */
-export const ScrollStory: FC<PromoInputProps> = ({ screenshotUrl, texts, accent, background, watermark, musicUrl, width, height }) => {
+/** Scroll Story — the phone rises, then each app screen scrolls top-to-bottom
+ *  before a hard cut to the next. Adapts its segments to the screenshot count. */
+export const ScrollStory: FC<PromoInputProps> = ({ deviceId, screenshots, texts, accent, background, watermark, musicUrl, width, height }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
+  usePreloadScreenshots(screenshots.map((s) => s.url));
   const [headline = "", subhead = ""] = texts;
 
-  const phoneW = Math.min(width * 0.52, (height * 0.58) / 2.03);
-  const rise = spring({ frame: frame - 8, fps, config: { damping: 19, mass: 0.95, stiffness: 120 } });
-  const phoneY = interpolate(rise, [0, 1], [height * 0.5, 0]);
-  const phoneScale = interpolate(rise, [0, 1], [0.9, 1]);
+  const phoneW = Math.min(width * 0.56, (height * 0.58) / 2.03);
+  const rise = spring({ frame: frame - 6, fps, config: { damping: 16, mass: 0.8, stiffness: 150 } });
+  const phoneY = interpolate(rise, [0, 1], [height * 0.55, 0]);
+  const enterScale = interpolate(rise, [0, 1], [0.9, 1]);
 
-  const scrollStart = 40;
-  const scrollEnd = Math.round(durationInFrames * 0.82);
-  const scroll = interpolate(frame, [scrollStart, scrollEnd], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE_IN_OUT });
+  // divide the post-intro time evenly across the screens
+  const intro = 36;
+  const n = screenshots.length;
+  const segLen = Math.max(1, (durationInFrames - intro) / n);
+  const local = Math.max(0, frame - intro);
+  const seg = Math.min(n - 1, Math.floor(local / segLen));
+  const inSeg = local - seg * segLen;
+  const panY = interpolate(inSeg, [segLen * 0.1, segLen * 0.9], [0.4, -0.4], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE_IN_OUT });
+  const shot = screenAt(screenshots, seg);
+  const cuts = Array.from({ length: n - 1 }, (_, i) => intro + (i + 1) * segLen);
 
-  const outro = interpolate(frame, [durationInFrames - 18, durationInFrames], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE_OUT });
-  const groupOpacity = interpolate(outro, [0, 1], [1, 0.35]);
+  const rotY = Math.sin((frame / fps) * 0.7) * 5;
+  const outro = interpolate(frame, [durationInFrames - 16, durationInFrames], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE_OUT });
+  const groupO = interpolate(outro, [0, 1], [1, 0.3]);
 
   return (
-    <AbsoluteFill style={{ opacity: groupOpacity }}>
+    <AbsoluteFill style={{ opacity: groupO }}>
       <Background background={background} accent={accent} />
       <PromoAudio musicUrl={musicUrl} />
 
@@ -39,20 +48,16 @@ export const ScrollStory: FC<PromoInputProps> = ({ screenshotUrl, texts, accent,
       </AbsoluteFill>
 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", marginTop: height * 0.03 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: width * 0.03, transform: `translateY(${phoneY}px) scale(${phoneScale})` }}>
-          <DeviceFrame width={phoneW} screenshotUrl={screenshotUrl} accent={accent} scrollProgress={scroll} />
-          {/* scroll progress rail */}
-          <div style={{ width: width * 0.008, height: phoneW * 1.5, borderRadius: 999, background: "rgba(255,255,255,0.12)", overflow: "hidden", opacity: interpolate(frame, [scrollStart - 8, scrollStart + 6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
-            <div style={{ width: "100%", height: `${Math.max(8, scroll * 100)}%`, background: `linear-gradient(${accent}, ${rgba(accent, 0.4)})`, borderRadius: 999 }} />
-          </div>
+        <div style={{ transform: `translateY(${phoneY}px)`, filter: `drop-shadow(0 40px 90px ${rgba(accent, 0.26)})` }}>
+          <RealDeviceFrame deviceId={deviceId} width={phoneW} screenshot={shot} rotateY={rotY} scale={enterScale} zoom={1.14} panY={panY} />
         </div>
       </AbsoluteFill>
 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: height * 0.075 }}>
-        <Caption text={subhead} enterAt={30} size={width * 0.03} maxWidth={width * 0.8} />
+        <Caption text={subhead} enterAt={26} size={width * 0.03} maxWidth={width * 0.8} />
       </AbsoluteFill>
 
-      <LightSweep startAt={scrollEnd} />
+      <CutFlash cues={cuts} />
       {watermark && <Watermark width={width} />}
     </AbsoluteFill>
   );

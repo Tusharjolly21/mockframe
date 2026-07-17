@@ -1,4 +1,4 @@
-import { Composition } from "remotion";
+import { Composition, staticFile } from "remotion";
 import type { PromoInputProps } from "../../lib/promo/inputProps";
 import { FORMAT_DIMENSIONS, PROMO_FPS } from "../../lib/promo/types";
 import { PROMO_TEMPLATES } from "../../lib/promo/registry";
@@ -6,8 +6,12 @@ import { PROMO_COMPONENTS } from "./templates";
 
 const DEFAULT_DIMS = FORMAT_DIMENSIONS["9:16"];
 
-const PLACEHOLDER_SHOT =
-  "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80";
+// Local sample screens so `npx remotion` tooling/previews render something real.
+const PLACEHOLDER_SHOTS = [
+  { url: staticFile("screens/iphone-16-pro.jpg"), width: 828, height: 1800 },
+  { url: staticFile("screens/iphone-16.jpg"), width: 830, height: 1800 },
+  { url: staticFile("screens/pixel-9-pro.jpg"), width: 806, height: 1800 },
+];
 
 /** Registered compositions for the Lambda render site and `npx remotion` tooling.
  *  The in-editor preview drives <Player> with the same components directly, so
@@ -33,7 +37,8 @@ export function RemotionRoot() {
             })}
             defaultProps={
               {
-                screenshotUrl: PLACEHOLDER_SHOT,
+                deviceId: "iphone-16-pro",
+                screenshots: PLACEHOLDER_SHOTS,
                 texts: t.textSlots.map((slot) => slot.placeholder),
                 accent: t.defaultAccent,
                 background: t.defaultBackground,

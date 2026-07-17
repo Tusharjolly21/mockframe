@@ -15,10 +15,13 @@ export const FORMAT_DIMENSIONS: Record<PromoFormat, { width: number; height: num
 /** Max 30 seconds at 30 fps. */
 const MAX_FRAMES = 30 * PROMO_FPS;
 
+/** Up to 4 app screens per ad — enough to tell a story in ~10s, cheap to render. */
+export const MAX_SCREENSHOTS = 4;
+
 export const PromoProjectSchema = z.object({
   templateId: z.string().min(1),
   deviceId: z.string().min(1),
-  screenshotAssetId: z.string().min(1),
+  screenshotAssetIds: z.array(z.string().min(1)).min(1).max(MAX_SCREENSHOTS),
   texts: z.array(z.string()).max(6),
   accent: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   background: z.string().min(1),

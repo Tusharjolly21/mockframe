@@ -2,44 +2,62 @@ import type { FC } from "react";
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import type { PromoInputProps } from "../../../lib/promo/inputProps";
 import { Background } from "../kit/Background";
-import { DeviceFrame } from "../kit/DeviceFrame";
+import { RealDeviceFrame, usePreloadScreenshots } from "../kit/RealDeviceFrame";
 import { Caption, Eyebrow, Headline } from "../kit/AnimatedText";
-import { LightSweep, PromoAudio, Watermark } from "../kit/Overlay";
-import { EASE_OUT } from "../kit/theme";
+import { CutFlash, LightSweep, PromoAudio, Watermark } from "../kit/Overlay";
+import { cutsPassed, EASE_OUT, punchAt, rgba, screenAt } from "../kit/theme";
 
-/** Rise & Reveal — title in, phone springs up from below, settles and floats,
- *  caption slides in, then a gentle outro lift. */
-export const RiseReveal: FC<PromoInputProps> = ({ screenshotUrl, texts, accent, background, watermark, musicUrl, width, height }) => {
+/** Hero Launch — kinetic title, phone rockets up, punch-in, then cuts through
+ *  each app screen with a light sweep, and a settle. Multiple beats, real frame. */
+export const RiseReveal: FC<PromoInputProps> = ({ deviceId, screenshots, texts, accent, background, watermark, musicUrl, width, height }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
+  usePreloadScreenshots(screenshots.map((s) => s.url));
   const [headline = "", caption = ""] = texts;
 
-  const phoneW = Math.min(width * 0.56, (height * 0.62) / 2.03);
+  const phoneW = Math.min(width * 0.6, (height * 0.6) / 2.03);
+  const cuts = [96, 160, 220];
+  const shot = screenAt(screenshots, cutsPassed(frame, cuts));
 
-  const rise = spring({ frame: frame - 14, fps, config: { damping: 18, mass: 0.95, stiffness: 120 } });
-  const phoneY = interpolate(rise, [0, 1], [height * 0.6, 0]);
-  const float = Math.sin((frame / fps) * 1.5) * (height * 0.008);
-  const phoneScale = interpolate(rise, [0, 1], [0.92, 1]);
+  // rocket entrance
+  const rise = spring({ frame: frame - 12, fps, config: { damping: 15, mass: 0.7, stiffness: 150 } });
+  const phoneY = interpolate(rise, [0, 1], [height * 0.72, 0]);
+  const enterRotZ = interpolate(rise, [0, 1], [-7, 0]);
+  const float = Math.sin((frame / fps) * 1.7) * (height * 0.006);
+
+  // life + energy: slow push-in + gentle Y swing + punch on each cut
+  const pushIn = interpolate(frame, [20, durationInFrames], [1, 1.06], { extrapolateLeft: "clamp" });
+  const rotY = Math.sin((frame / fps) * 0.9) * 7;
+  const scale = interpolate(rise, [0, 1], [0.86, 1]) * pushIn + punchAt(frame, cuts, 0.05);
 
   const outro = interpolate(frame, [durationInFrames - 20, durationInFrames], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE_OUT });
   const groupY = interpolate(outro, [0, 1], [0, -height * 0.03]);
-  const groupOpacity = interpolate(outro, [0, 1], [1, 0.3]);
+  const groupOpacity = interpolate(outro, [0, 1], [1, 0.25]);
 
   return (
     <AbsoluteFill>
       <Background background={background} accent={accent} />
       <PromoAudio musicUrl={musicUrl} />
-      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", transform: `translateY(${groupY}px)`, opacity: groupOpacity }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: height * 0.028 }}>
-          <Eyebrow text="Introducing" enterAt={4} size={width * 0.022} accent={accent} />
-          <Headline text={headline} enterAt={12} size={width * 0.062} maxWidth={width * 0.84} />
-          <div style={{ transform: `translateY(${phoneY + float}px) scale(${phoneScale})`, marginTop: height * 0.012 }}>
-            <DeviceFrame width={phoneW} screenshotUrl={screenshotUrl} accent={accent} />
-          </div>
-          <Caption text={caption} enterAt={62} size={width * 0.03} maxWidth={width * 0.78} />
+
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: height * 0.08, transform: `translateY(${groupY}px)`, opacity: groupOpacity }}>
+        <Eyebrow text="Introducing" enterAt={4} size={width * 0.021} accent={accent} />
+        <div style={{ marginTop: height * 0.02 }}>
+          <Headline text={headline} enterAt={10} size={width * 0.064} maxWidth={width * 0.86} />
         </div>
       </AbsoluteFill>
-      <LightSweep startAt={70} />
+
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", marginTop: height * 0.06, opacity: groupOpacity }}>
+        <div style={{ transform: `translateY(${phoneY + float}px)`, filter: `drop-shadow(0 40px 90px ${rgba(accent, 0.28)})` }}>
+          <RealDeviceFrame deviceId={deviceId} width={phoneW} screenshot={shot} rotateY={rotY} rotateZ={enterRotZ} scale={scale} />
+        </div>
+      </AbsoluteFill>
+
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: height * 0.07, opacity: groupOpacity }}>
+        <Caption text={caption} enterAt={58} size={width * 0.03} maxWidth={width * 0.8} />
+      </AbsoluteFill>
+
+      <LightSweep startAt={60} />
+      <CutFlash cues={cuts} />
       {watermark && <Watermark width={width} />}
     </AbsoluteFill>
   );

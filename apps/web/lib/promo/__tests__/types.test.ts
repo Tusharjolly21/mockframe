@@ -4,7 +4,7 @@ import { FORMAT_DIMENSIONS, PROMO_FORMATS, PROMO_FPS, PromoProjectSchema } from 
 const valid = {
   templateId: "rise-reveal",
   deviceId: "iphone-16-pro",
-  screenshotAssetId: "asset_1",
+  screenshotAssetIds: ["asset_1", "asset_2"],
   texts: ["Hello", "World"],
   accent: "#7c3aed",
   background: "aurora",
@@ -41,7 +41,9 @@ describe("promo types", () => {
     expect(PromoProjectSchema.safeParse({ ...valid, durationInFrames: 901 }).success).toBe(false);
   });
 
-  it("rejects an empty screenshotAssetId", () => {
-    expect(PromoProjectSchema.safeParse({ ...valid, screenshotAssetId: "" }).success).toBe(false);
+  it("requires at least one screenshot and caps at 4", () => {
+    expect(PromoProjectSchema.safeParse({ ...valid, screenshotAssetIds: [] }).success).toBe(false);
+    expect(PromoProjectSchema.safeParse({ ...valid, screenshotAssetIds: ["a", "b", "c", "d", "e"] }).success).toBe(false);
+    expect(PromoProjectSchema.safeParse({ ...valid, screenshotAssetIds: ["a"] }).success).toBe(true);
   });
 });

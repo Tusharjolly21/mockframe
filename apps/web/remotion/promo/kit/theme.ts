@@ -26,6 +26,26 @@ export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
+/** Pick a screen by (wrapping) index — templates cut through the screenshot list. */
+export function screenAt<T>(list: T[], index: number): T {
+  const n = list.length;
+  return list[((index % n) + n) % n];
+}
+
+/** How many cut points have passed at this frame (drives the active screen). */
+export function cutsPassed(frame: number, cuts: number[]): number {
+  let n = 0;
+  for (const c of cuts) if (frame >= c) n++;
+  return n;
+}
+
+/** A short scale "bump" near each cue frame — the little zoom-punch on a beat. */
+export function punchAt(frame: number, cues: number[], amp = 0.06, span = 7): number {
+  let v = 0;
+  for (const c of cues) v += Math.max(0, 1 - Math.abs(frame - c) / span) * amp;
+  return v;
+}
+
 /** A shared, modern type stack. Inter is loaded by the app shell and present on
  *  most render hosts; the fallbacks keep previews and local renders looking
  *  right. (For Lambda, embed Inter as a font file — see DEPLOY.md.) */

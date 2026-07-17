@@ -2,32 +2,33 @@ import type { FC } from "react";
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import type { PromoInputProps } from "../../../lib/promo/inputProps";
 import { Background } from "../kit/Background";
-import { DeviceFrame } from "../kit/DeviceFrame";
+import { RealDeviceFrame, usePreloadScreenshots } from "../kit/RealDeviceFrame";
 import { Chip, Eyebrow } from "../kit/AnimatedText";
-import { PromoAudio, Watermark } from "../kit/Overlay";
-import { EASE_OUT } from "../kit/theme";
+import { CutFlash, PromoAudio, Watermark } from "../kit/Overlay";
+import { cutsPassed, EASE_OUT, punchAt, rgba, screenAt } from "../kit/theme";
 
-/** Feature Pop — the phone holds centre while three feature chips pop in one by
- *  one, each accompanied by a subtle zoom-to-device pulse. */
-export const FeaturePop: FC<PromoInputProps> = ({ screenshotUrl, texts, accent, background, watermark, musicUrl, width, height }) => {
+/** Feature Burst — the phone holds centre while three feature chips slam in one
+ *  after another, each firing a zoom-punch and cutting to the next app screen. */
+export const FeaturePop: FC<PromoInputProps> = ({ deviceId, screenshots, texts, accent, background, watermark, musicUrl, width, height }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
+  usePreloadScreenshots(screenshots.map((s) => s.url));
   const features = [texts[0] ?? "", texts[1] ?? "", texts[2] ?? ""];
 
-  const phoneW = Math.min(width * 0.5, (height * 0.56) / 2.03);
-  const enter = spring({ frame, fps, config: { damping: 20, mass: 1, stiffness: 120 } });
-  const float = Math.sin((frame / fps) * 1.3) * (height * 0.006);
+  const phoneW = Math.min(width * 0.54, (height * 0.56) / 2.03);
+  const cues = [44, 128, 212]; // feature entrances = screen cuts
+  const shot = screenAt(screenshots, cutsPassed(frame, cues));
 
-  // each feature enters at these frames; the device gives a tiny zoom pulse on each
-  const cues = [42, 100, 158];
-  const pulse = cues.reduce((acc, c) => acc + Math.max(0, 1 - Math.abs(frame - c) / 12) * 0.03, 0);
-  const deviceScale = interpolate(enter, [0, 1], [0.85, 1]) + pulse;
+  const enter = spring({ frame, fps, config: { damping: 17, mass: 0.8, stiffness: 160 } });
+  const float = Math.sin((frame / fps) * 1.5) * (height * 0.006);
+  const rotY = Math.sin((frame / fps) * 0.8) * 6;
+  const deviceScale = interpolate(enter, [0, 1], [0.82, 1]) + punchAt(frame, cues, 0.05);
 
-  const outro = interpolate(frame, [durationInFrames - 20, durationInFrames], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE_OUT });
-  const groupOpacity = interpolate(outro, [0, 1], [1, 0.3]);
+  const outro = interpolate(frame, [durationInFrames - 18, durationInFrames], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE_OUT });
+  const groupO = interpolate(outro, [0, 1], [1, 0.3]);
 
   return (
-    <AbsoluteFill style={{ opacity: groupOpacity }}>
+    <AbsoluteFill style={{ opacity: groupO }}>
       <Background background={background} accent={accent} />
       <PromoAudio musicUrl={musicUrl} />
 
@@ -35,20 +36,29 @@ export const FeaturePop: FC<PromoInputProps> = ({ screenshotUrl, texts, accent, 
         <Eyebrow text="Why teams choose us" enterAt={6} size={width * 0.02} accent={accent} />
       </AbsoluteFill>
 
-      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", marginTop: -height * 0.06 }}>
-        <div style={{ transform: `translateY(${float}px) scale(${deviceScale})`, opacity: interpolate(enter, [0, 1], [0, 1]) }}>
-          <DeviceFrame width={phoneW} screenshotUrl={screenshotUrl} accent={accent} />
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", marginTop: -height * 0.05 }}>
+        <div style={{ transform: `translateY(${float}px)`, filter: `drop-shadow(0 40px 90px ${rgba(accent, 0.28)})` }}>
+          <RealDeviceFrame deviceId={deviceId} width={phoneW} screenshot={shot} rotateY={rotY} scale={deviceScale} />
         </div>
       </AbsoluteFill>
 
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: height * 0.08 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: height * 0.018, alignItems: "center" }}>
-          {features.map((f, i) => (
-            <Chip key={i} text={f} enterAt={cues[i]} size={width * 0.03} accent={accent} />
-          ))}
+          {features.map((f, i) => {
+            // each chip is visible from its cue and gently lifts away just before the next
+            const start = cues[i];
+            const end = cues[i + 1] ?? durationInFrames;
+            const o = interpolate(frame, [start, start + 12, end - 14, end - 2], [0, 1, 1, 0.15], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            return (
+              <div key={i} style={{ opacity: o }}>
+                <Chip text={f} enterAt={start} size={width * 0.032} accent={accent} />
+              </div>
+            );
+          })}
         </div>
       </AbsoluteFill>
 
+      <CutFlash cues={cues} />
       {watermark && <Watermark width={width} />}
     </AbsoluteFill>
   );

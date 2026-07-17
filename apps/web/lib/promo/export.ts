@@ -30,20 +30,27 @@ function triggerDownload(url: string, filename: string) {
 
 /** Render the project to MP4 on the server and download the file. */
 export async function exportPromoVideo(project: PromoProject): Promise<void> {
-  const asset = resolveAsset(project.screenshotAssetId);
-  if (!asset?.url) throw new Error("Add a screenshot first");
+  if (project.screenshotAssetIds.length === 0) throw new Error("Add a screenshot first");
 
-  const screenshotDataUrl = await toDataUrl(asset.url);
+  const screenshots = await Promise.all(
+    project.screenshotAssetIds.map(async (id) => {
+      const asset = resolveAsset(id);
+      if (!asset?.url) throw new Error("A screenshot could not be loaded");
+      return { dataUrl: await toDataUrl(asset.url), width: asset.width, height: asset.height };
+    }),
+  );
+
   const res = await fetch("/api/v1/promo-render", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       templateId: project.templateId,
+      deviceId: project.deviceId,
+      screenshots,
       texts: project.texts,
       accent: project.accent,
       background: project.background,
       format: project.format,
-      screenshotDataUrl,
     }),
   });
 
