@@ -100,13 +100,15 @@ production:
   | `REMOTION_LAMBDA_SITE_NAME` | the `--site-name` you used (`mockframe-promo`) |
   | `REMOTION_FRAMES_PER_LAMBDA` | optional; frames per render lambda (default 40). Lower = more parallel = faster, needs concurrency quota. |
 
-  > ⚠️ **New AWS accounts have a tiny Lambda concurrency quota** (~10, sometimes
-  > effectively 2) and a 3008 MB memory cap — parallel renders throttle with
-  > "Rate Exceeded". Fix once: AWS Console → **Service Quotas → AWS Lambda →
-  > Concurrent executions → Request increase at account level** (ask for 1000).
-  > Also make sure a valid credit card is on the account (unverified accounts
-  > stay restricted). Until granted, cloud renders are limited/slow — local dev
-  > rendering keeps working regardless.
+  > ⚠️ **Lambda concurrency quota (measured 2026-07-18): exactly 10.** AWS's
+  > first automatic bump landed at the standard 10 (was effectively ~2 at account
+  > creation). At 10: `REMOTION_FRAMES_PER_LAMBDA=60` works (≤6 render lambdas +
+  > orchestrator + combiner ≈ 8 peak, ~6.5 min per 10s video), but that exceeds
+  > the render route's `maxDuration=300` — so **don't flip the Vercel env vars on
+  > yet**. Request the REAL increase: Service Quotas → Lambda → Concurrent
+  > executions → request **1000** (if it stalls at 10, open an AWS Support case —
+  > "basic" support is free). At ≥100, set `REMOTION_FRAMES_PER_LAMBDA=20` for
+  > ~60–90s renders. Local dev rendering works regardless.
 
   **Re-run `npx remotion lambda sites create … --site-name=mockframe-promo` whenever a
   composition changes** — it re-uploads the bundle so cloud renders match the editor
