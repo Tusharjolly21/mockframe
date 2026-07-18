@@ -124,7 +124,7 @@ export const PACK_LAUNCH_SURFACES: Record<LaunchSurfaceId, LaunchSurface> = {
   },
   "og-image": {
     id: "og-image",
-    label: "OG Image",
+    label: "Social / OG",
     width: 1200,
     height: 630,
     orientation: "landscape",
@@ -133,7 +133,7 @@ export const PACK_LAUNCH_SURFACES: Record<LaunchSurfaceId, LaunchSurface> = {
   },
   "x-post": {
     id: "x-post",
-    label: "X Post",
+    label: "X / LinkedIn",
     width: 1600,
     height: 900,
     orientation: "landscape",
@@ -142,7 +142,7 @@ export const PACK_LAUNCH_SURFACES: Record<LaunchSurfaceId, LaunchSurface> = {
   },
   "story": {
     id: "story",
-    label: "Story",
+    label: "Instagram Story",
     width: 1080,
     height: 1920,
     orientation: "portrait",
