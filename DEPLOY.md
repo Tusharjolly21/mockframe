@@ -96,8 +96,17 @@ production:
   | `REMOTION_AWS_ACCESS_KEY_ID` | IAM access key |
   | `REMOTION_AWS_SECRET_ACCESS_KEY` | IAM secret |
   | `REMOTION_AWS_REGION` | e.g. `us-east-1` (default) |
-  | `REMOTION_LAMBDA_FUNCTION_NAME` | printed by `functions deploy` |
+  | `REMOTION_LAMBDA_FUNCTION_NAME` | printed by `functions deploy` (currently `remotion-render-4-0-489-mem2048mb-disk2048mb-600sec`) |
   | `REMOTION_LAMBDA_SITE_NAME` | the `--site-name` you used (`mockframe-promo`) |
+  | `REMOTION_FRAMES_PER_LAMBDA` | optional; frames per render lambda (default 40). Lower = more parallel = faster, needs concurrency quota. |
+
+  > ⚠️ **New AWS accounts have a tiny Lambda concurrency quota** (~10, sometimes
+  > effectively 2) and a 3008 MB memory cap — parallel renders throttle with
+  > "Rate Exceeded". Fix once: AWS Console → **Service Quotas → AWS Lambda →
+  > Concurrent executions → Request increase at account level** (ask for 1000).
+  > Also make sure a valid credit card is on the account (unverified accounts
+  > stay restricted). Until granted, cloud renders are limited/slow — local dev
+  > rendering keeps working regardless.
 
   **Re-run `npx remotion lambda sites create … --site-name=mockframe-promo` whenever a
   composition changes** — it re-uploads the bundle so cloud renders match the editor

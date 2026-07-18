@@ -54,6 +54,11 @@ async function renderOnLambda({ templateId, inputProps }: { templateId: string; 
     imageFormat: "jpeg",
     privacy: "public",
     downloadBehavior: { type: "download", fileName: "mockframe-promo.mp4" },
+    // How many frames each Lambda renders. Lower = more parallel lambdas =
+    // faster, but needs account concurrency headroom. New AWS accounts start
+    // with a tiny concurrency quota — raise it in Service Quotas, then tune
+    // this down (e.g. 20) for ~15-way parallel renders.
+    framesPerLambda: Number(process.env.REMOTION_FRAMES_PER_LAMBDA) || 40,
   });
 
   // Poll until done. A ~10s promo finishes well within the default timeout.
