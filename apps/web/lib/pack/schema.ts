@@ -93,6 +93,64 @@ export const PACK_STYLE_IDS = [
 
 export type PackStyleId = (typeof PACK_STYLE_IDS)[number];
 
+export const PACK_LAUNCH_SURFACE_IDS = [
+  "product-hunt",
+  "og-image",
+  "x-post",
+  "story",
+] as const;
+
+export type LaunchSurfaceId = (typeof PACK_LAUNCH_SURFACE_IDS)[number];
+
+export interface LaunchSurface {
+  id: LaunchSurfaceId;
+  label: string;
+  width: number;
+  height: number;
+  orientation: "landscape" | "portrait";
+  deviceId: string;
+  file: string;
+}
+
+export const PACK_LAUNCH_SURFACES: Record<LaunchSurfaceId, LaunchSurface> = {
+  "product-hunt": {
+    id: "product-hunt",
+    label: "Product Hunt",
+    width: 1270,
+    height: 760,
+    orientation: "landscape",
+    deviceId: PACK_TARGETS["play-feature"].deviceId,
+    file: "Launch Kit/product-hunt.png",
+  },
+  "og-image": {
+    id: "og-image",
+    label: "OG Image",
+    width: 1200,
+    height: 630,
+    orientation: "landscape",
+    deviceId: PACK_TARGETS["play-feature"].deviceId,
+    file: "Launch Kit/og-image.png",
+  },
+  "x-post": {
+    id: "x-post",
+    label: "X Post",
+    width: 1600,
+    height: 900,
+    orientation: "landscape",
+    deviceId: PACK_TARGETS["play-feature"].deviceId,
+    file: "Launch Kit/x-post.png",
+  },
+  "story": {
+    id: "story",
+    label: "Story",
+    width: 1080,
+    height: 1920,
+    orientation: "portrait",
+    deviceId: PACK_TARGETS["play-feature"].deviceId,
+    file: "Launch Kit/story.png",
+  },
+};
+
 export const CaptionSchema = z.object({
   title: z.string().max(120),
   subtitle: z.string().max(160).optional(),
@@ -131,10 +189,31 @@ export const PackDocumentSchema = z.object({
     "play-phone": z.boolean(),
     "play-feature": z.boolean(),
   }),
+  launch: z
+    .object({
+      tagline: z.string().max(120),
+      surfaces: z.object({
+        "product-hunt": z.boolean(),
+        "og-image": z.boolean(),
+        "x-post": z.boolean(),
+        "story": z.boolean(),
+      }),
+    })
+    .optional(),
 });
 
 export type PackScreen = z.infer<typeof PackScreenSchema>;
 export type PackDocument = z.infer<typeof PackDocumentSchema>;
+
+export const DEFAULT_LAUNCH = {
+  tagline: "",
+  surfaces: {
+    "product-hunt": false,
+    "og-image": false,
+    "x-post": false,
+    "story": false,
+  },
+};
 
 export function createPackScreen(assetId?: string): PackScreen {
   return {
@@ -165,5 +244,10 @@ export function createPack(): PackDocument {
       "play-phone": true,
       "play-feature": true,
     },
+    launch: structuredClone(DEFAULT_LAUNCH),
   };
+}
+
+export function packLaunch(pack: PackDocument): NonNullable<PackDocument["launch"]> {
+  return pack.launch ?? structuredClone(DEFAULT_LAUNCH);
 }
