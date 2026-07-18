@@ -120,7 +120,7 @@ export const PACK_LAUNCH_SURFACES: Record<LaunchSurfaceId, LaunchSurface> = {
     height: 760,
     orientation: "landscape",
     deviceId: PACK_TARGETS["play-feature"].deviceId,
-    file: "Launch Kit/product-hunt.png",
+    file: "Launch Kit/product-hunt-1270x760.png",
   },
   "og-image": {
     id: "og-image",
@@ -129,7 +129,7 @@ export const PACK_LAUNCH_SURFACES: Record<LaunchSurfaceId, LaunchSurface> = {
     height: 630,
     orientation: "landscape",
     deviceId: PACK_TARGETS["play-feature"].deviceId,
-    file: "Launch Kit/og-image.png",
+    file: "Launch Kit/social-og-1200x630.png",
   },
   "x-post": {
     id: "x-post",
@@ -138,7 +138,7 @@ export const PACK_LAUNCH_SURFACES: Record<LaunchSurfaceId, LaunchSurface> = {
     height: 900,
     orientation: "landscape",
     deviceId: PACK_TARGETS["play-feature"].deviceId,
-    file: "Launch Kit/x-post.png",
+    file: "Launch Kit/x-linkedin-1600x900.png",
   },
   "story": {
     id: "story",
@@ -147,7 +147,7 @@ export const PACK_LAUNCH_SURFACES: Record<LaunchSurfaceId, LaunchSurface> = {
     height: 1920,
     orientation: "portrait",
     deviceId: PACK_TARGETS["play-feature"].deviceId,
-    file: "Launch Kit/story.png",
+    file: "Launch Kit/instagram-story-1080x1920.png",
   },
 };
 

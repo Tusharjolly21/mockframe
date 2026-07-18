@@ -7,7 +7,16 @@ import {
   type Background,
   type SceneDocument,
 } from "@framekit/scene";
-import { PACK_TARGET_IDS, PACK_TARGETS, type PackDocument, type PackTargetId } from "./schema";
+import {
+  PACK_LAUNCH_SURFACE_IDS,
+  PACK_LAUNCH_SURFACES,
+  PACK_TARGET_IDS,
+  PACK_TARGETS,
+  packLaunch,
+  type LaunchSurfaceId,
+  type PackDocument,
+  type PackTargetId,
+} from "./schema";
 import { PACK_STYLES, type PackStyle } from "./styles";
 
 /**
@@ -142,6 +151,82 @@ export function compileFeatureGraphic(pack: PackDocument): SceneDocument {
   return SceneDocumentSchema.parse(scene);
 }
 
+/**
+ * One launch-kit promo surface (Product Hunt / OG / X / Story): app name +
+ * tagline over the hero screen, in the surface's exact canvas dims. Mirrors
+ * `compileFeatureGraphic`'s left-text/right-device layout for landscape
+ * surfaces; the portrait story gets a stacked top-third headline layout.
+ */
+export function compileLaunchScene(pack: PackDocument, surfaceId: LaunchSurfaceId): SceneDocument {
+  const surface = PACK_LAUNCH_SURFACES[surfaceId];
+  const style = PACK_STYLES[pack.styleId];
+  const hero = pack.screens[0];
+  const tagline = packLaunch(pack).tagline.trim();
+  const portrait = surface.orientation === "portrait";
+  const W = surface.width;
+  const H = surface.height;
+
+  const scene: SceneDocument = {
+    schemaVersion: 3,
+    id: createId(),
+    canvas: { width: W, height: H, background: packBackground(pack, style) },
+    layers: [],
+  };
+
+  const headlineSize = Math.round(portrait ? W * 0.07 : Math.min(W, H) * 0.06);
+  const taglineSize = Math.round(headlineSize * 0.55);
+
+  const headline = createTextLayer(pack.appName.trim() || "Your app");
+  headline.font = { family: pack.style.fontFamily, weight: 800, size: headlineSize, lineHeight: 1.1, letterSpacing: -0.02 };
+  headline.color = style.captionColor;
+  if (portrait) {
+    headline.maxWidth = Math.round(W * 0.86);
+    headline.transform = { ...headline.transform, y: Math.round(-0.32 * H) };
+  } else {
+    headline.maxWidth = Math.round(W * 0.42);
+    headline.transform = {
+      ...headline.transform,
+      x: Math.round(-0.24 * W),
+      y: tagline ? -Math.round(headlineSize * 0.6) : 0,
+    };
+  }
+  scene.layers.push(headline);
+
+  if (tagline) {
+    const sub = createTextLayer(tagline);
+    sub.font = { family: pack.style.fontFamily, weight: 500, size: taglineSize, lineHeight: 1.3, letterSpacing: 0 };
+    sub.color = style.subtitleColor;
+    if (portrait) {
+      sub.maxWidth = Math.round(W * 0.8);
+      sub.transform = { ...sub.transform, y: Math.round(-0.32 * H + headlineSize * 1.15) };
+    } else {
+      sub.maxWidth = Math.round(W * 0.42);
+      sub.transform = { ...sub.transform, x: Math.round(-0.24 * W), y: Math.round(headlineSize * 0.55) };
+    }
+    scene.layers.push(sub);
+  }
+
+  const device = getDevice(surface.deviceId);
+  if (device && hero) {
+    const layer = createMockupLayer({
+      deviceId: device.id,
+      media: hero.assetId
+        ? { assetId: hero.assetId, kind: "image", fit: "cover", offsetX: 0, offsetY: 0, scale: 1 }
+        : null,
+    });
+    layer.transform = {
+      ...layer.transform,
+      scale: round3((H * (portrait ? 0.62 : 1.6)) / device.frame.height),
+      x: portrait ? 0 : Math.round(0.26 * W),
+      y: portrait ? Math.round(0.18 * H) : Math.round(0.42 * H),
+      rotate: portrait ? 0 : -8,
+    };
+    scene.layers.push(layer);
+  }
+
+  return SceneDocumentSchema.parse(scene);
+}
+
 /** Every screen × enabled portrait target (screens numbered 01..NN), then the feature graphic. */
 export function compilePack(pack: PackDocument): CompiledEntry[] {
   const style = PACK_STYLES[pack.styleId];
@@ -160,8 +245,22 @@ export function compilePack(pack: PackDocument): CompiledEntry[] {
   if (pack.targets["play-feature"]) {
     entries.push({ path: "Play Store/feature-graphic-1024x500.png", scene: compileFeatureGraphic(pack) });
   }
+  const launch = pack.launch;
+  if (launch) {
+    for (const id of PACK_LAUNCH_SURFACE_IDS) {
+      if (!launch.surfaces[id]) continue;
+      entries.push({ path: PACK_LAUNCH_SURFACES[id].file, scene: compileLaunchScene(pack, id) });
+    }
+  }
   return entries;
 }
+
+const LAUNCH_SURFACE_DESCRIPTIONS: Record<LaunchSurfaceId, string> = {
+  "product-hunt": "Product Hunt gallery image.",
+  "og-image": "og:image / Twitter card meta tag.",
+  "x-post": "X / LinkedIn launch post.",
+  "story": "Instagram / TikTok story.",
+};
 
 export function packReadme(pack: PackDocument, failed: string[] = []): string {
   const lines: string[] = [
@@ -182,6 +281,14 @@ export function packReadme(pack: PackDocument, failed: string[] = []): string {
   if (pack.targets["play-feature"])
     lines.push("Play Store/feature-graphic-1024x500.png  → Play Console → Main store listing → Feature graphic.");
   lines.push("", "Files are numbered in the order they appear in the store gallery.");
+  const launch = pack.launch;
+  const enabledLaunchIds = launch ? PACK_LAUNCH_SURFACE_IDS.filter((id) => launch.surfaces[id]) : [];
+  if (enabledLaunchIds.length) {
+    lines.push("", "LAUNCH KIT", "----------------");
+    for (const id of enabledLaunchIds) {
+      lines.push(`${PACK_LAUNCH_SURFACES[id].file}  → ${LAUNCH_SURFACE_DESCRIPTIONS[id]}`);
+    }
+  }
   if (failed.length) {
     lines.push("", "FAILED TO RENDER", "----------------");
     for (const f of failed) lines.push(f);
