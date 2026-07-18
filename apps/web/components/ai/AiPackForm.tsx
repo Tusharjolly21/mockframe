@@ -62,6 +62,10 @@ export function AiPackForm() {
   const [success, setSuccess] = useState<SuccessState | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [importUrl, setImportUrl] = useState("");
+  const [importBusy, setImportBusy] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importPending, setImportPending] = useState<{ appName: string; description: string } | null>(null);
   const rotateRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const nextImageId = useRef(0);
@@ -113,6 +117,64 @@ export function AiPackForm() {
       if (target) URL.revokeObjectURL(target.previewUrl);
       return prev.filter((img) => img.id !== id);
     });
+  }
+
+  // URL import: pre-fills appName/description only — never touches images,
+  // mode, or generation state, and never consumes a generation.
+  async function handleImport() {
+    const raw = importUrl.trim();
+    if (!raw || importBusy || status === "loading") return;
+    const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+
+    setImportBusy(true);
+    setImportError(null);
+    setImportPending(null);
+
+    try {
+      const res = await firebaseFetch("/api/ai-import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: normalized }),
+      });
+
+      if (res.status === 200) {
+        const json = (await res.json()) as { appName: string; description: string };
+        const hasExisting = appName.trim().length > 0 || description.trim().length > 0;
+        if (hasExisting) {
+          setImportPending({ appName: json.appName, description: json.description });
+        } else {
+          setAppName(json.appName.slice(0, APP_NAME_MAX));
+          setDescription(json.description.slice(0, DESCRIPTION_MAX));
+        }
+        return;
+      }
+      if (res.status === 401) {
+        setAuthOpen(true);
+        return;
+      }
+      if (res.status === 400) {
+        setImportError("That URL doesn't look right.");
+        return;
+      }
+      if (res.status === 429) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        setImportError(body?.error ?? "Daily import limit reached — try again tomorrow.");
+        return;
+      }
+      // 422 / 502 / 501 (and any other unhandled status) share the same copy.
+      setImportError("Couldn't read that page — paste your details manually.");
+    } catch {
+      setImportError("Couldn't read that page — paste your details manually.");
+    } finally {
+      setImportBusy(false);
+    }
+  }
+
+  function applyImport() {
+    if (!importPending) return;
+    setAppName(importPending.appName.slice(0, APP_NAME_MAX));
+    setDescription(importPending.description.slice(0, DESCRIPTION_MAX));
+    setImportPending(null);
   }
 
   const trimmedName = appName.trim();
@@ -266,6 +328,59 @@ export function AiPackForm() {
         </div>
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
+          <div>
+            <label htmlFor="ai-import-url" className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/50">
+              Import from a URL <span className="normal-case text-white/30">(optional)</span>
+            </label>
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+              <input
+                id="ai-import-url"
+                value={importUrl}
+                onChange={(e) => setImportUrl(e.target.value)}
+                placeholder="https://yourapp.com"
+                disabled={loading || importBusy}
+                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-3 text-[14px] text-white outline-none placeholder:text-zinc-600 focus:border-violet-400 focus:ring-2 focus:ring-violet-400/10 disabled:opacity-50"
+              />
+              <button
+                type="button"
+                onClick={() => void handleImport()}
+                disabled={loading || importBusy || importUrl.trim().length === 0}
+                className="fk-press flex shrink-0 items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/[0.03] px-4 py-3 text-[13px] font-semibold text-white/80 hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {importBusy ? (
+                  <>
+                    <IconifyIcon name="refresh-circle" size={15} color="currentColor" className="animate-spin" />
+                    Reading…
+                  </>
+                ) : (
+                  "Import"
+                )}
+              </button>
+            </div>
+            {importError && <p className="mt-1.5 text-[11px] text-red-300">{importError}</p>}
+            {importPending && (
+              <div className="mt-2 flex flex-col items-start gap-2 rounded-lg border border-violet-400/20 bg-violet-400/[0.06] px-3.5 py-3 text-[12px] text-white/70 sm:flex-row sm:items-center sm:justify-between">
+                <span>Replace what you&apos;ve typed?</span>
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    type="button"
+                    onClick={applyImport}
+                    className="fk-press rounded-md bg-white px-3 py-1.5 text-[12px] font-semibold text-zinc-900 hover:bg-zinc-200"
+                  >
+                    Replace
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImportPending(null)}
+                    className="fk-press rounded-md border border-white/15 px-3 py-1.5 text-[12px] font-medium text-white/70 hover:bg-white/[0.06]"
+                  >
+                    Keep mine
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div>
             <label htmlFor="ai-app-name" className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/50">
               App name
