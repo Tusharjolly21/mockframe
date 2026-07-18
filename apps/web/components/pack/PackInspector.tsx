@@ -1,6 +1,13 @@
 "use client";
 
-import { PACK_STYLE_IDS, PACK_TARGET_IDS, PACK_TARGETS } from "@/lib/pack/schema";
+import {
+  PACK_LAUNCH_SURFACE_IDS,
+  PACK_LAUNCH_SURFACES,
+  PACK_STYLE_IDS,
+  PACK_TARGET_IDS,
+  PACK_TARGETS,
+  packLaunch,
+} from "@/lib/pack/schema";
 import { PACK_STYLES, mixHex } from "@/lib/pack/styles";
 import { setCaption } from "@/lib/pack/ops";
 import { usePackStore } from "@/lib/pack/store";
@@ -146,6 +153,38 @@ export function PackInspector() {
             />
             {PACK_TARGETS[id].label}
             <span className="text-white/35">{PACK_TARGETS[id].width}×{PACK_TARGETS[id].height}</span>
+          </label>
+        ))}
+      </Section>
+
+      <Section title="Launch Kit">
+        <input
+          value={packLaunch(pack).tagline}
+          onChange={(e) =>
+            update((p) => ({ ...p, launch: { ...packLaunch(p), tagline: e.target.value.slice(0, 120) } }))
+          }
+          placeholder="One-line pitch for your launch graphics"
+          className="mb-2 w-full rounded-md border border-white/10 bg-black/30 px-2.5 py-1.5 outline-none focus:border-violet-500"
+        />
+        {PACK_LAUNCH_SURFACE_IDS.map((id) => (
+          <label key={id} className="mb-1.5 flex items-center gap-2 text-[12px] text-white/70">
+            <input
+              type="checkbox"
+              checked={packLaunch(pack).surfaces[id]}
+              onChange={(e) =>
+                update((p) => ({
+                  ...p,
+                  launch: {
+                    ...packLaunch(p),
+                    surfaces: { ...packLaunch(p).surfaces, [id]: e.target.checked },
+                  },
+                }))
+              }
+            />
+            {PACK_LAUNCH_SURFACES[id].label}
+            <span className="text-white/35">
+              {PACK_LAUNCH_SURFACES[id].width}×{PACK_LAUNCH_SURFACES[id].height}
+            </span>
           </label>
         ))}
       </Section>

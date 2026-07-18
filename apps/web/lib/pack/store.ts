@@ -4,12 +4,12 @@ import { create } from "zustand";
 import { ingestFile } from "../assets";
 import { addScreens, moveScreen, removeScreen } from "./ops";
 import { loadLatestPack, savePack } from "./persist";
-import { createPack, type PackDocument, type PackTargetId } from "./schema";
+import { createPack, type PackDocument } from "./schema";
 
 interface PackState {
   pack: PackDocument;
   activeScreenId: string;
-  activeTarget: PackTargetId;
+  activeTarget: string;
   hydrated: boolean;
   exporting: boolean;
   progress: { done: number; total: number } | null;
@@ -21,7 +21,7 @@ interface PackState {
   removeScreenById: (id: string) => void;
   moveScreenById: (id: string, delta: -1 | 1) => void;
   setActiveScreen: (id: string) => void;
-  setActiveTarget: (t: PackTargetId) => void;
+  setActiveTarget: (t: string) => void;
   setExporting: (exporting: boolean, progress?: { done: number; total: number } | null) => void;
   dismissWarnings: () => void;
 }
