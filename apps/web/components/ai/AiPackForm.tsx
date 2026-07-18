@@ -191,6 +191,10 @@ export function AiPackForm() {
 
   async function submit() {
     if (!formValid || status === "loading") return;
+    // Committing to a generation supersedes any stale URL-import confirm/error
+    // from a request that raced ahead of this submit.
+    setImportPending(null);
+    setImportError(null);
     setStatus("loading");
     setErrorMessage(null);
     setMessageIndex(0);
@@ -270,6 +274,8 @@ export function AiPackForm() {
         setStatus("idle");
         return;
       }
+      // Handles the documented 422/501/502 failure statuses, but the fallback
+      // copy also intentionally covers 500 and any other unexpected status.
       const body = (await res.json().catch(() => null)) as { error?: string } | null;
       setErrorMessage(body?.error ?? "Generation failed — please retry.");
       setStatus("error");
@@ -320,6 +326,10 @@ export function AiPackForm() {
             onClick={() => {
               setStatus("idle");
               setSuccess(null);
+              // Also drop any import confirm/error left over from before
+              // this generation cycle — it no longer refers to this form state.
+              setImportPending(null);
+              setImportError(null);
             }}
             className="fk-press mt-5 text-[12px] font-medium text-violet-400 hover:text-violet-300"
           >
@@ -546,7 +556,7 @@ export function AiPackForm() {
 
           <button
             type="submit"
-            disabled={!formValid || loading}
+            disabled={!formValid || loading || importBusy}
             className="fk-press flex w-full items-center justify-center gap-2.5 rounded-lg bg-white py-3.5 text-[13px] font-semibold text-zinc-900 shadow-[0_8px_20px_rgba(0,0,0,0.18)] hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? (
