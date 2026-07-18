@@ -7,7 +7,7 @@
 // (z.object/z.string/z.enum/z.array/.optional/.regex/.min/.max), so this is a
 // drop-in for every other consumer (buildPackFromPlan, plan.test.ts, etc).
 import { z } from "zod/v4";
-import { createPack, createPackScreen, PACK_STYLE_IDS, type PackDocument } from "../pack/schema";
+import { createPack, createPackScreen, PACK_STYLE_IDS, type PackDocument, type PackMarketing } from "../pack/schema";
 
 /**
  * Everything the AI generation flow needs that is PURE: the plan schema Claude
@@ -21,6 +21,17 @@ export const AI_DAILY_LIMIT = 20;
 const ARCHETYPES = ["onboarding", "home-feed", "dashboard", "list", "detail", "profile", "settings", "chat"] as const;
 
 const HEX_COLOR = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+
+/* Structured-outputs caveat (same as AiScreenDocSchema below): plain strings,
+   no .max()/.regex() — the SDK strips those keywords from the wire schema.
+   buildPackFromPlan/buildRealPackFromPlan clamp with .slice() at the boundary. */
+const MarketingPlanSchema = z.object({
+  appStoreSubtitle: z.string(),
+  appStoreDescription: z.string(),
+  keywords: z.array(z.string()),
+  productHuntTagline: z.string(),
+  launchTweet: z.string(),
+});
 
 /* Structured-outputs caveat: no regex/min/max string constraints in the wire
    schema (the SDK strips unsupported keywords and validates client-side —
@@ -55,6 +66,7 @@ export const AiPackPlanSchema = z.object({
     caption: z.object({ title: z.string(), subtitle: z.string().optional() }),
     doc: AiScreenDocSchema,
   })).min(8).max(10),
+  marketing: MarketingPlanSchema,
 });
 
 export type AiPackPlan = z.infer<typeof AiPackPlanSchema>;
@@ -67,6 +79,7 @@ export const RealPackPlanSchema = z.object({
     ref: z.string(),
     caption: z.object({ title: z.string(), subtitle: z.string().optional() }),
   })).min(2).max(10),
+  marketing: MarketingPlanSchema,
 });
 
 export type RealPackPlan = z.infer<typeof RealPackPlanSchema>;
@@ -81,7 +94,9 @@ Concept UI rules: content must be SPECIFIC to this app (real-sounding feature na
 
 Palette: pick ONE accent (the accent field) that fits the app's domain and use it as palette.primary on every screen. Light UI (bg near-white, card white) or dark UI (bg near-black, card #1a1a21-ish) - choose what fits the app, keep it consistent, text must contrast bg. Pick styleId to match the mood (dark-pro for dark UIs, bold-gradient/accent-split for vivid consumer apps, minimal-light for utilities).
 
-All colors are 6-digit lowercase hex like #0ea5e9.`;
+All colors are 6-digit lowercase hex like #0ea5e9.
+
+Marketing copy: also write the launch copy for this app in the marketing field. appStoreSubtitle: at most 30 characters, benefit-led, complements the app name (App Store shows it right under the name). appStoreDescription: 2-4 short paragraphs, first line is the hook. keywords: 6-12 single words or short phrases, no duplicates of the app name. productHuntTagline: at most 60 characters, punchy, "what it does in one line". launchTweet: at most 280 characters, first-person founder voice, at most 1 emoji, no hashtag spam.`;
 
 export const AI_REAL_SYSTEM_PROMPT = `You are an expert App Store marketing designer for MockFrame. Given an app's name, description, and real screenshots, curate and caption a screenshot pack that tells a conversion story.
 
@@ -91,7 +106,9 @@ Caption rules: titles are benefit-led, at most 6 words, no ending period, must d
 
 Palette: pick ONE accent (the accent field) from the app's visible brand colors and use it on every screen. Light UI (bg near-white, card white) or dark UI (bg near-black, card #1a1a21-ish) - choose what fits the app, keep it consistent, text must contrast bg. Pick styleId to match the mood (dark-pro for dark UIs, bold-gradient/accent-split for vivid consumer apps, minimal-light for utilities).
 
-All colors are 6-digit lowercase hex like #0ea5e9.`;
+All colors are 6-digit lowercase hex like #0ea5e9.
+
+Marketing copy: also write the launch copy for this app in the marketing field. appStoreSubtitle: at most 30 characters, benefit-led, complements the app name (App Store shows it right under the name). appStoreDescription: 2-4 short paragraphs, first line is the hook. keywords: 6-12 single words or short phrases, no duplicates of the app name. productHuntTagline: at most 60 characters, punchy, "what it does in one line". launchTweet: at most 280 characters, first-person founder voice, at most 1 emoji, no hashtag spam.`;
 
 export function aiUserPrompt(appName: string, description: string, accent?: string): string {
   return `App name: ${appName}\nDescription: ${description}${accent ? `\nBrand accent color (must use): ${accent}` : ""}`;
@@ -113,6 +130,19 @@ export function aiRealUserPrompt(appName: string, description: string | undefine
  *  "use client" and this file runs in a server route. Format pinned by test. */
 export function encodeAiScreenAsset(doc: object): string {
   return "screen:" + encodeURIComponent(JSON.stringify(doc));
+}
+
+/** Structured-outputs strips length constraints from the wire schema (see
+ *  MarketingPlanSchema above), so AI-returned marketing copy is clamped here
+ *  at the plan → PackDocument boundary, same pattern as caption clamping. */
+function clampMarketing(m: AiPackPlan["marketing"]): PackMarketing {
+  return {
+    appStoreSubtitle: m.appStoreSubtitle.slice(0, 30),
+    appStoreDescription: m.appStoreDescription.slice(0, 600),
+    keywords: m.keywords.slice(0, 12).map((k) => k.slice(0, 25)),
+    productHuntTagline: m.productHuntTagline.slice(0, 60),
+    launchTweet: m.launchTweet.slice(0, 280),
+  };
 }
 
 export function buildPackFromPlan(plan: AiPackPlan, appName: string): PackDocument {
@@ -138,6 +168,9 @@ export function buildPackFromPlan(plan: AiPackPlan, appName: string): PackDocume
     };
     return screen;
   });
+  const marketing = clampMarketing(plan.marketing);
+  pack.marketing = marketing;
+  if (pack.launch) pack.launch.tagline = marketing.productHuntTagline.slice(0, 120);
   return pack;
 }
 
@@ -182,5 +215,8 @@ export function buildRealPackFromPlan(plan: RealPackPlan, appName: string, refId
     };
     return screen;
   });
+  const marketing = clampMarketing(plan.marketing);
+  pack.marketing = marketing;
+  if (pack.launch) pack.launch.tagline = marketing.productHuntTagline.slice(0, 120);
   return pack;
 }

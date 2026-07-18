@@ -3,6 +3,14 @@ import { PackDocumentSchema } from "../../pack/schema";
 import { decodeScreenAsset } from "../../screens";
 import { AiPackPlanSchema, buildPackFromPlan, encodeAiScreenAsset, type AiPackPlan } from "../plan";
 
+export const TEST_MARKETING = {
+  appStoreSubtitle: "Plan your day",
+  appStoreDescription: "Hook line.\n\nMore detail.",
+  keywords: ["planner", "focus"],
+  productHuntTagline: "The calmest way to plan",
+  launchTweet: "I built this to plan calmly.",
+};
+
 function samplePlan(screens = 8): AiPackPlan {
   return AiPackPlanSchema.parse({
     styleId: "bold-gradient",
@@ -21,6 +29,7 @@ function samplePlan(screens = 8): AiPackPlan {
         tabs: ["Home", "Stats"],
       },
     })),
+    marketing: TEST_MARKETING,
   });
 }
 

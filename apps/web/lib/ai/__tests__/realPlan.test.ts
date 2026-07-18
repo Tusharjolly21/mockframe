@@ -2,9 +2,17 @@ import { describe, expect, it } from "vitest";
 import { PackDocumentSchema } from "../../pack/schema";
 import { buildRealPackFromPlan, RealPackPlanSchema, repairRealPlanScreens, type RealPackPlan } from "../plan";
 
+const TEST_MARKETING = {
+  appStoreSubtitle: "Plan your day",
+  appStoreDescription: "Hook line.\n\nMore detail.",
+  keywords: ["planner", "focus"],
+  productHuntTagline: "The calmest way to plan",
+  launchTweet: "I built this to plan calmly.",
+};
+
 const REFS = ["a1", "b2", "c3", "d4"];
 const plan = (screens: RealPackPlan["screens"]): RealPackPlan =>
-  RealPackPlanSchema.parse({ styleId: "minimal-light", accent: "#0ea5e9", captionPosition: "top", screens });
+  RealPackPlanSchema.parse({ styleId: "minimal-light", accent: "#0ea5e9", captionPosition: "top", screens, marketing: TEST_MARKETING });
 
 const s = (ref: string, title = `cap ${ref}`) => ({ ref, caption: { title } });
 
