@@ -156,6 +156,14 @@ export const CaptionSchema = z.object({
   subtitle: z.string().max(160).optional(),
 });
 
+export const MarketingSchema = z.object({
+  appStoreSubtitle: z.string().max(30),
+  appStoreDescription: z.string().max(600),
+  keywords: z.array(z.string().max(25)).max(12),
+  productHuntTagline: z.string().max(60),
+  launchTweet: z.string().max(280),
+});
+
 export const PackScreenSchema = z.object({
   id: z.string(),
   /** uploaded screenshot; null until the user drops one */
@@ -200,10 +208,12 @@ export const PackDocumentSchema = z.object({
       }),
     })
     .optional(),
+  marketing: MarketingSchema.optional(),
 });
 
 export type PackScreen = z.infer<typeof PackScreenSchema>;
 export type PackDocument = z.infer<typeof PackDocumentSchema>;
+export type PackMarketing = z.infer<typeof MarketingSchema>;
 
 export const DEFAULT_LAUNCH = {
   tagline: "",
