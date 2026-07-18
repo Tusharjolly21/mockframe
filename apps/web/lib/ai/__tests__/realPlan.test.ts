@@ -23,6 +23,10 @@ describe("repairRealPlanScreens", () => {
     const out = repairRealPlanScreens([s("x"), s("y")], REFS);
     expect(out.map((x) => x.ref)).toEqual(REFS);
   });
+  it("makes ref repair lossless under duplicate refIds (each provided VALUE exactly once)", () => {
+    const out = repairRealPlanScreens([s("b2")], ["a1", "a1", "b2"]);
+    expect(out.map((x) => x.ref)).toEqual(["b2", "a1"]);
+  });
 });
 
 describe("buildRealPackFromPlan", () => {

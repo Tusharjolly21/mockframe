@@ -157,6 +157,7 @@ export function repairRealPlanScreens(screens: RealPackPlan["screens"], refIds: 
   // Second pass: append missing refs in original order
   for (const ref of refIds) {
     if (!seenRefs.has(ref)) {
+      seenRefs.add(ref);
       validScreens.push({ ref, caption: { title: "" } });
     }
   }
@@ -173,7 +174,6 @@ export function buildRealPackFromPlan(plan: RealPackPlan, appName: string, refId
   const repairedScreens = repairRealPlanScreens(plan.screens, refIds);
   pack.screens = repairedScreens.map((s) => {
     const screen = createPackScreen(s.ref);
-    screen.assetId = s.ref;
     screen.captions = {
       en: {
         title: s.caption.title.slice(0, 120),
