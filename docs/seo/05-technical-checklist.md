@@ -50,6 +50,7 @@ Audited 2026-07-18 against the actual codebase. ✅ = shipped & verified,
 
 ## Hygiene
 - ✅ No `meta keywords` (dead), no doorway-pattern near-duplicates (tool pages have unique overviews/FAQs)
+- ⬜ robots.txt: explicitly ALLOW AI crawlers (GPTBot, ClaudeBot, PerplexityBot, Google-Extended) — LLM referrals are a growing free channel; brandbird courts them, deviceframes forfeits them
 - ✅ Trailing-slash and www→apex consistency handled by Next/Vercel defaults — verify once on prod
 - ⬜ 404 monitoring: check GSC crawl errors monthly
 - ⬜ When a page type is retired: 301 to nearest hub, never delete to 404

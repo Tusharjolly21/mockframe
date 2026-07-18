@@ -52,7 +52,7 @@ system judges the whole domain.)
 |---|---|---|---|
 | `/mockups/c/[category]` | "iphone mockup generator", "android mockup" (category-level, higher volume than device-level) | mockuphone `/type/*`, brandbird category hubs | curated device grid + category buying-guide copy + category FAQ |
 | `/compare/[a]-vs-[b]` | "[x] vs [y]" | zero competitors do it; comparison queries visible in autocomplete | hand-verified feature/pricing tables, honest verdicts |
-| `/alternatives/[x]` | "[x] alternative(s)", "[x] free" | AlternativeTo ranks for these; dead screely = orphaned demand | real roundup incl. competitors |
+| `/alternatives/[x]` | "[x] alternative(s)", "[x] free" | mockuuups runs 8 such pages (only player); AlternativeTo ranks for these; dead screely/smartmockups = orphaned demand | real roundup incl. competitors — out-execute mockuuups on table depth + verified dates |
 | `/specs/[topic]` | "app store screenshot sizes 2026" etc. | high-volume spec lookups; roundup blogs maintain stale tables | maintained tables + direct CTA into correctly-sized templates |
 | more `/tools/*` | one intent per tool ("instagram story mockup") | brandbird's ~70 tool pages are its engine | each = real working tool, unique overview+FAQ (existing bar) |
 
