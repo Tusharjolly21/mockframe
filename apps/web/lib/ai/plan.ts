@@ -59,6 +59,18 @@ export const AiPackPlanSchema = z.object({
 
 export type AiPackPlan = z.infer<typeof AiPackPlanSchema>;
 
+export const RealPackPlanSchema = z.object({
+  styleId: z.enum(PACK_STYLE_IDS),
+  accent: HEX_COLOR,
+  captionPosition: z.enum(["top", "bottom"]),
+  screens: z.array(z.object({
+    ref: z.string(),
+    caption: z.object({ title: z.string(), subtitle: z.string().optional() }),
+  })).min(2).max(10),
+});
+
+export type RealPackPlan = z.infer<typeof RealPackPlanSchema>;
+
 export const AI_SYSTEM_PROMPT = `You are an expert App Store marketing designer for MockFrame. Given an app's name and description, design a complete App Store screenshot pack: 8-10 screens that tell a conversion story.
 
 Narrative structure: screen 1 hooks with the core promise (onboarding or home-feed archetype), screens 2-6 show the strongest features (mix archetypes: dashboard, list, detail, chat), later screens build trust (profile/settings/stats), final screen closes with a call to action.
@@ -71,8 +83,30 @@ Palette: pick ONE accent (the accent field) that fits the app's domain and use i
 
 All colors are 6-digit lowercase hex like #0ea5e9.`;
 
+export const AI_REAL_SYSTEM_PROMPT = `You are an expert App Store marketing designer for MockFrame. Given an app's name, description, and real screenshots, curate and caption a screenshot pack that tells a conversion story.
+
+Narrative structure: screen 1 hooks with the core promise, screens 2-6 show the strongest features, later screens build trust, final screen closes with a call to action. Order screens to guide the user through a natural conversion journey.
+
+Caption rules: titles are benefit-led, at most 6 words, no ending period, must describe what each screenshot actually shows (reference it by its ref ID). Subtitles optional, at most 10 words, only when they add information.
+
+Palette: pick ONE accent (the accent field) from the app's visible brand colors and use it on every screen. Light UI (bg near-white, card white) or dark UI (bg near-black, card #1a1a21-ish) - choose what fits the app, keep it consistent, text must contrast bg. Pick styleId to match the mood (dark-pro for dark UIs, bold-gradient/accent-split for vivid consumer apps, minimal-light for utilities).
+
+All colors are 6-digit lowercase hex like #0ea5e9.`;
+
 export function aiUserPrompt(appName: string, description: string, accent?: string): string {
   return `App name: ${appName}\nDescription: ${description}${accent ? `\nBrand accent color (must use): ${accent}` : ""}`;
+}
+
+export function aiRealUserPrompt(appName: string, description: string | undefined, accent: string | undefined, refIds: string[]): string {
+  let prompt = `App name: ${appName}`;
+  if (description) prompt += `\nDescription: ${description}`;
+  if (accent) prompt += `\nBrand accent color (must use): ${accent}`;
+  prompt += `\n\nAvailable screenshots:`;
+  refIds.forEach((ref, i) => {
+    prompt += `\nScreenshot ${i + 1} (ref: ${ref})`;
+  });
+  prompt += `\n\nSelect and caption 2-10 of these screenshots in conversion-story order. Reference each by its ref ID.`;
+  return prompt;
 }
 
 /** Mirrors lib/screens encodeScreenAsset — duplicated because that module is
@@ -96,6 +130,50 @@ export function buildPackFromPlan(plan: AiPackPlan, appName: string): PackDocume
         ...s.doc,
       })
     );
+    screen.captions = {
+      en: {
+        title: s.caption.title.slice(0, 120),
+        ...(s.caption.subtitle ? { subtitle: s.caption.subtitle.slice(0, 160) } : {}),
+      },
+    };
+    return screen;
+  });
+  return pack;
+}
+
+export function repairRealPlanScreens(screens: RealPackPlan["screens"], refIds: string[]): RealPackPlan["screens"] {
+  const refSet = new Set(refIds);
+  const seenRefs = new Set<string>();
+  const validScreens: RealPackPlan["screens"] = [];
+
+  // First pass: keep valid refs, drop unknown/dupes
+  for (const screen of screens) {
+    if (refSet.has(screen.ref) && !seenRefs.has(screen.ref)) {
+      seenRefs.add(screen.ref);
+      validScreens.push(screen);
+    }
+  }
+
+  // Second pass: append missing refs in original order
+  for (const ref of refIds) {
+    if (!seenRefs.has(ref)) {
+      validScreens.push({ ref, caption: { title: "" } });
+    }
+  }
+
+  return validScreens;
+}
+
+export function buildRealPackFromPlan(plan: RealPackPlan, appName: string, refIds: string[]): PackDocument {
+  const pack = createPack();
+  pack.appName = appName.slice(0, 60);
+  pack.styleId = plan.styleId;
+  pack.style = { ...pack.style, accent: plan.accent, captionPosition: plan.captionPosition };
+
+  const repairedScreens = repairRealPlanScreens(plan.screens, refIds);
+  pack.screens = repairedScreens.map((s) => {
+    const screen = createPackScreen(s.ref);
+    screen.assetId = s.ref;
     screen.captions = {
       en: {
         title: s.caption.title.slice(0, 120),
