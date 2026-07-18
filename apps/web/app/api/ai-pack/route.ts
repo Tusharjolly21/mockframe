@@ -123,15 +123,19 @@ export async function POST(req: NextRequest) {
       }
       const refIds = body.screenshots.map((s) => s.refId);
       const content: Array<TextBlockParam | ImageBlockParam> = [];
-      body.screenshots.forEach((s, i) => {
-        // schema's IMAGE_DATA_URL regex already guarantees this matches
-        const [, subtype, data] = s.image.match(/^data:image\/(png|jpeg|webp);base64,([\s\S]+)$/)!;
+      for (let i = 0; i < body.screenshots.length; i++) {
+        const shot = body.screenshots[i];
+        // defense-in-depth: schema's IMAGE_DATA_URL regex should already guarantee
+        // this matches, but never trust a destructure of a possibly-null match.
+        const m = shot.image.match(/^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/);
+        if (!m) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+        const [, subtype, data] = m;
         content.push({
           type: "image",
           source: { type: "base64", media_type: `image/${subtype}` as "image/png" | "image/jpeg" | "image/webp", data },
         });
-        content.push({ type: "text", text: `Screenshot ${i + 1} (ref: ${s.refId})` });
-      });
+        content.push({ type: "text", text: `Screenshot ${i + 1} (ref: ${shot.refId})` });
+      }
       content.push({ type: "text", text: aiRealUserPrompt(body.appName, body.description, body.accent, refIds) });
 
       return await generateAndAccount(client, db, counterRef, signedIn, isPro, prior, owner, {

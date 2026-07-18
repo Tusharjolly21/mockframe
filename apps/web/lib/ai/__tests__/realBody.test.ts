@@ -62,6 +62,40 @@ describe("AiPackBodySchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("rejects a bare-prefix data URL with an empty payload", () => {
+    const result = RealBodySchema.safeParse({
+      mode: "real",
+      appName: "Focusly",
+      screenshots: [
+        { refId: "s1", image: PNG_PREFIX },
+        { refId: "s2", image: validImage() },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a payload containing characters outside the base64 charset (space or <)", () => {
+    const spaceResult = RealBodySchema.safeParse({
+      mode: "real",
+      appName: "Focusly",
+      screenshots: [
+        { refId: "s1", image: PNG_PREFIX + "AAAA BBBB" },
+        { refId: "s2", image: validImage() },
+      ],
+    });
+    expect(spaceResult.success).toBe(false);
+
+    const angleBracketResult = RealBodySchema.safeParse({
+      mode: "real",
+      appName: "Focusly",
+      screenshots: [
+        { refId: "s1", image: PNG_PREFIX + "<script>" },
+        { refId: "s2", image: validImage() },
+      ],
+    });
+    expect(angleBracketResult.success).toBe(false);
+  });
 });
 
 describe("hasDuplicateRefs", () => {

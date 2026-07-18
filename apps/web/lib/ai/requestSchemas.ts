@@ -7,7 +7,8 @@ import { z } from "zod/v4";
  */
 
 export const HEX = /^#[0-9a-fA-F]{6}$/;
-const IMAGE_DATA_URL = /^data:image\/(png|jpeg|webp);base64,/;
+// full-string match: prefix + a non-empty base64 payload (no bare-prefix / empty-payload bodies)
+const IMAGE_DATA_URL = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
 const REF_ID = /^[A-Za-z0-9_-]{1,64}$/;
 // ~400KB binary ≈ ~547K base64 chars + header slack
 const MAX_IMAGE_CHARS = 560_000;
