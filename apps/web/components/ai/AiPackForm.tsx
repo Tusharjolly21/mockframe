@@ -136,29 +136,47 @@ export function AiPackForm() {
       setMessageIndex((i) => (i + 1) % loadingMessages.length);
     }, LOADING_ROTATE_MS);
 
-    try {
-      let requestBody: Record<string, unknown>;
-      if (hasImages) {
-        const screenshots: { refId: string; image: string }[] = [];
-        for (const entry of images) {
-          const asset = await ingestFile(entry.file);
-          const image = await downscaleForAi(entry.file);
-          screenshots.push({ refId: asset.id, image });
+    // Image prep runs in its own try/catch, ahead of the network try below,
+    // and in two passes: pass 1 downscales every image before pass 2 ingests
+    // any of them. ingestFile() has no eviction API, so ingesting-then-
+    // downscaling would leave earlier full-res assets orphaned in the
+    // module-level asset map if a later image failed to decode — decoding
+    // everything first means a bad image aborts before anything is ingested.
+    let screenshots: { refId: string; image: string }[] = [];
+    if (hasImages) {
+      try {
+        const dataUrls = await Promise.all(images.map((entry) => downscaleForAi(entry.file)));
+        screenshots = await Promise.all(
+          images.map(async (entry, i) => {
+            const asset = await ingestFile(entry.file);
+            return { refId: asset.id, image: dataUrls[i] };
+          })
+        );
+      } catch {
+        if (rotateRef.current) {
+          clearInterval(rotateRef.current);
+          rotateRef.current = null;
         }
-        requestBody = {
-          mode: "real",
-          appName: trimmedName,
-          ...(trimmedDescription ? { description: trimmedDescription } : {}),
-          ...(accent.trim() ? { accent: accent.trim() } : {}),
-          screenshots,
-        };
-      } else {
-        requestBody = {
-          appName: trimmedName,
-          description: trimmedDescription,
-          ...(accent.trim() ? { accent: accent.trim() } : {}),
-        };
+        setErrorMessage("One of your images couldn't be read — remove it and try again.");
+        setStatus("error");
+        return;
       }
+    }
+
+    try {
+      const requestBody: Record<string, unknown> = hasImages
+        ? {
+            mode: "real",
+            appName: trimmedName,
+            ...(trimmedDescription ? { description: trimmedDescription } : {}),
+            ...(accent.trim() ? { accent: accent.trim() } : {}),
+            screenshots,
+          }
+        : {
+            appName: trimmedName,
+            description: trimmedDescription,
+            ...(accent.trim() ? { accent: accent.trim() } : {}),
+          };
 
       const res = await firebaseFetch("/api/ai-pack", {
         method: "POST",
