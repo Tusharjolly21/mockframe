@@ -27,10 +27,16 @@ const MAX_REDIRECT_HOPS = 3;
  * Known residual (matches the capture route's posture): there is a TOCTOU
  * gap between assertPublicUrl's DNS lookup and fetch's own resolution of the
  * same hostname. Acceptable — not solved here.
+ *
+ * Timing: a single cumulative 20s deadline is shared across the initial
+ * fetch and every redirect hop (rather than a fresh per-hop timeout), so the
+ * worst case (initial + MAX_REDIRECT_HOPS redirects) stays well under the
+ * route's 30s maxDuration instead of compounding to ~32s.
  */
 async function fetchWithGuardedRedirects(startUrl: URL): Promise<{ response: Response; finalUrl: URL }> {
   let current = startUrl;
   let redirects = 0;
+  const deadline = AbortSignal.timeout(20000);
 
   while (true) {
     try {
@@ -41,7 +47,7 @@ async function fetchWithGuardedRedirects(startUrl: URL): Promise<{ response: Res
 
     const response = await fetch(current, {
       redirect: "manual",
-      signal: AbortSignal.timeout(8000),
+      signal: deadline,
       headers: {
         accept: "text/html",
         "user-agent": "MockFrameBot/1.0 (+https://mockframe.app)",
@@ -77,6 +83,7 @@ async function readBodyCapped(response: Response): Promise<string> {
       }
     }
   } finally {
+    await reader.cancel().catch(() => {});
     reader.releaseLock?.();
   }
 
@@ -126,6 +133,7 @@ export async function POST(req: NextRequest) {
 
     const contentType = response.headers.get("content-type") || "";
     if (!contentType.includes("text/html")) {
+      response.body?.cancel().catch(() => {});
       return NextResponse.json({ error: "That page isn't a web page we can read" }, { status: 502 });
     }
 
