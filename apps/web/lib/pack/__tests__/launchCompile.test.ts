@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { SceneDocumentSchema } from "@framekit/scene";
+import { SceneDocumentSchema, type TextLayer } from "@framekit/scene";
 import { compileLaunchScene, compilePack, packReadme } from "../compile";
-import { createPack, PACK_LAUNCH_SURFACES, PACK_LAUNCH_SURFACE_IDS } from "../schema";
+import { createPack, PACK_LAUNCH_SURFACES, PACK_LAUNCH_SURFACE_IDS, type LaunchSurfaceId } from "../schema";
 
-function packWith(surfaces: Partial<Record<string, boolean>>, tagline = "Plan your day, effortlessly") {
+function packWith(surfaces: Partial<Record<LaunchSurfaceId, boolean>>, tagline = "Plan your day, effortlessly") {
   const p = createPack();
   p.appName = "Focusly";
   p.screens[0].assetId = "screen:demo";
-  p.launch = { tagline, surfaces: { "product-hunt": false, "og-image": false, "x-post": false, "story": false, ...surfaces } as any };
+  p.launch = { tagline, surfaces: { "product-hunt": false, "og-image": false, "x-post": false, "story": false, ...surfaces } };
   return p;
 }
 
@@ -25,7 +25,7 @@ describe("compileLaunchScene", () => {
     const p = packWith({}, "");
     const scene = compileLaunchScene(p, "og-image");
     const texts = scene.layers.filter((l) => l.type === "text");
-    expect(texts.some((t: any) => t.content === "Focusly")).toBe(true);
+    expect(texts.some((t) => (t as TextLayer).content === "Focusly")).toBe(true);
     expect(texts.length).toBe(1);
   });
   it("renders without a hero asset (null media)", () => {
@@ -42,7 +42,7 @@ describe("compilePack launch entries", () => {
     expect(paths).toEqual(["Launch Kit/product-hunt-1270x760.png", "Launch Kit/instagram-story-1080x1920.png"]);
   });
   it("emits NO launch entries when launch is absent (back-compat)", () => {
-    const p = createPack(); delete (p as any).launch;
+    const p = createPack(); delete p.launch;
     p.appName = "X"; p.screens[0].assetId = "screen:x";
     const paths = compilePack(p).map((e) => e.path);
     expect(paths.every((x) => !x.startsWith("Launch Kit/"))).toBe(true);
