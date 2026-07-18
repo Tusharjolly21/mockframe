@@ -89,26 +89,25 @@ production:
   npx remotion lambda functions deploy
   npx remotion lambda sites create remotion/promo/index.ts --site-name=mockframe-promo
   ```
-  Then set these env vars in Vercel (Production + Preview):
+  Then set these env vars in Vercel (Production + Preview) — **live values as
+  deployed 2026-07-18**:
 
   | Var | Value |
   |---|---|
-  | `REMOTION_AWS_ACCESS_KEY_ID` | IAM access key |
-  | `REMOTION_AWS_SECRET_ACCESS_KEY` | IAM secret |
-  | `REMOTION_AWS_REGION` | e.g. `us-east-1` (default) |
-  | `REMOTION_LAMBDA_FUNCTION_NAME` | printed by `functions deploy` (currently `remotion-render-4-0-489-mem2048mb-disk2048mb-600sec`) |
-  | `REMOTION_LAMBDA_SITE_NAME` | the `--site-name` you used (`mockframe-promo`) |
-  | `REMOTION_FRAMES_PER_LAMBDA` | optional; frames per render lambda (default 40). Lower = more parallel = faster, needs concurrency quota. |
+  | `REMOTION_AWS_ACCESS_KEY_ID` | IAM access key (from `apps/web/.env.local`) |
+  | `REMOTION_AWS_SECRET_ACCESS_KEY` | IAM secret (from `apps/web/.env.local`) |
+  | `REMOTION_AWS_REGION` | `eu-north-1` |
+  | `REMOTION_LAMBDA_FUNCTION_NAME` | `remotion-render-4-0-489-mem2048mb-disk2048mb-600sec` |
+  | `REMOTION_LAMBDA_SITE_NAME` | `mockframe-promo` |
+  | `REMOTION_FRAMES_PER_LAMBDA` | `15` |
 
-  > ⚠️ **Lambda concurrency quota (measured 2026-07-18): exactly 10.** AWS's
-  > first automatic bump landed at the standard 10 (was effectively ~2 at account
-  > creation). At 10: `REMOTION_FRAMES_PER_LAMBDA=60` works (≤6 render lambdas +
-  > orchestrator + combiner ≈ 8 peak, ~6.5 min per 10s video), but that exceeds
-  > the render route's `maxDuration=300` — so **don't flip the Vercel env vars on
-  > yet**. Request the REAL increase: Service Quotas → Lambda → Concurrent
-  > executions → request **1000** (if it stalls at 10, open an AWS Support case —
-  > "basic" support is free). At ≥100, set `REMOTION_FRAMES_PER_LAMBDA=20` for
-  > ~60–90s renders. Local dev rendering works regardless.
+  > ℹ️ **Region matters: Lambda concurrency quotas are PER-REGION.** This account
+  > has the full default **1,000 in eu-north-1** (verified: 16-λ render, 169s,
+  > $0.043, no throttling) but was stuck at 10 in us-east-1 (that deployment has
+  > been deleted). Production runs in **eu-north-1**. If you ever redeploy in
+  > another region, check its applied "Concurrent executions" quota in Service
+  > Quotas first. Site redeploys (after composition changes):
+  > `REMOTION_AWS_REGION=eu-north-1 npx remotion lambda sites create remotion/promo/index.ts --site-name=mockframe-promo`
 
   **Re-run `npx remotion lambda sites create … --site-name=mockframe-promo` whenever a
   composition changes** — it re-uploads the bundle so cloud renders match the editor
