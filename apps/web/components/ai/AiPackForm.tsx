@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { firebaseFetch } from "@/lib/firebaseClient";
 import { savePack } from "@/lib/pack/persist";
-import { PackDocumentSchema } from "@/lib/pack/schema";
+import { PackDocumentSchema, type PackMarketing } from "@/lib/pack/schema";
 import { AuthModal } from "@/components/AuthModal";
 import { UpgradeModal } from "@/components/editor/UpgradeModal";
 import { useEntitlementSync } from "@/lib/billing/client";
 import { ICON_VIEWBOX, iconBody } from "@/lib/iconStickers";
 import { ingestFile } from "@/lib/assets";
 import { downscaleForAi } from "@/lib/ai/clientImages";
+import { LaunchCopyPanel } from "@/components/ai/LaunchCopyPanel";
 
 const UPGRADE_REASON = "AI-generated screenshot packs";
 
@@ -28,6 +29,7 @@ type Status = "idle" | "loading" | "success" | "error";
 
 interface SuccessState {
   remaining: number | null;
+  marketing?: PackMarketing;
 }
 
 interface PendingImage {
@@ -260,7 +262,7 @@ export function AiPackForm() {
         }
         await savePack(parsed.data);
         window.open("/app-store-screenshots", "_blank");
-        setSuccess({ remaining: json.remaining });
+        setSuccess({ remaining: json.remaining, marketing: parsed.data.marketing });
         setStatus("success");
         return;
       }
@@ -321,6 +323,7 @@ export function AiPackForm() {
               {success.remaining} free generation{success.remaining === 1 ? "" : "s"} left
             </p>
           )}
+          {success.marketing && <LaunchCopyPanel marketing={success.marketing} />}
           <button
             type="button"
             onClick={() => {
