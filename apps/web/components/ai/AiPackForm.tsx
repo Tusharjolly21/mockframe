@@ -8,6 +8,8 @@ import { AuthModal } from "@/components/AuthModal";
 import { UpgradeModal } from "@/components/editor/UpgradeModal";
 import { useEntitlementSync } from "@/lib/billing/client";
 import { ICON_VIEWBOX, iconBody } from "@/lib/iconStickers";
+import { ingestFile } from "@/lib/assets";
+import { downscaleForAi } from "@/lib/ai/clientImages";
 
 const UPGRADE_REASON = "AI-generated screenshot packs";
 
@@ -15,14 +17,23 @@ const APP_NAME_MAX = 60;
 const DESCRIPTION_MIN = 10;
 const DESCRIPTION_MAX = 600;
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+const MIN_IMAGES = 2;
+const MAX_IMAGES = 10;
 
-const LOADING_MESSAGES = ["Designing your narrative…", "Writing captions…", "Painting concept screens…"] as const;
+const CONCEPT_LOADING_MESSAGES = ["Designing your narrative…", "Writing captions…", "Painting concept screens…"] as const;
+const REAL_LOADING_MESSAGES = ["Reading your screenshots…", ...CONCEPT_LOADING_MESSAGES] as const;
 const LOADING_ROTATE_MS = 6000;
 
 type Status = "idle" | "loading" | "success" | "error";
 
 interface SuccessState {
   remaining: number | null;
+}
+
+interface PendingImage {
+  id: string;
+  file: File;
+  previewUrl: string;
 }
 
 function IconifyIcon({ name, size = 20, color = "#ffffff", className = "" }: { name: string; size?: number; color?: string; className?: string }) {
@@ -42,6 +53,9 @@ export function AiPackForm() {
   const [appName, setAppName] = useState("");
   const [description, setDescription] = useState("");
   const [accent, setAccent] = useState("");
+  const [images, setImages] = useState<PendingImage[]>([]);
+  const [imageNotice, setImageNotice] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [messageIndex, setMessageIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -49,6 +63,9 @@ export function AiPackForm() {
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const rotateRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const nextImageId = useRef(0);
+  const imagesRef = useRef<PendingImage[]>([]);
 
   useEffect(() => {
     return () => {
@@ -56,12 +73,59 @@ export function AiPackForm() {
     };
   }, []);
 
+  // keep a live ref so the unmount cleanup below can revoke whatever object
+  // URLs are current at teardown time, not just the ones from first render
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
+  useEffect(() => {
+    return () => {
+      imagesRef.current.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+    };
+  }, []);
+
+  function addImages(fileList: FileList | File[]) {
+    const incoming = Array.from(fileList);
+    const imageFiles = incoming.filter((f) => f.type.startsWith("image/"));
+    const rejectedCount = incoming.length - imageFiles.length;
+
+    const capacity = Math.max(0, MAX_IMAGES - images.length);
+    const accepted = imageFiles.slice(0, capacity);
+    const excessCount = imageFiles.length - accepted.length;
+
+    const notices: string[] = [];
+    if (rejectedCount > 0) notices.push(`${rejectedCount} file${rejectedCount === 1 ? "" : "s"} skipped — images only`);
+    if (excessCount > 0) notices.push(`Only ${MAX_IMAGES} images allowed — ${excessCount} ignored`);
+    setImageNotice(notices.length ? notices.join(". ") : null);
+
+    if (accepted.length === 0) return;
+    const entries = accepted.map((file) => ({
+      id: `img-${(nextImageId.current += 1)}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }));
+    setImages((prev) => [...prev, ...entries]);
+  }
+
+  function removeImage(id: string) {
+    setImages((prev) => {
+      const target = prev.find((img) => img.id === id);
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((img) => img.id !== id);
+    });
+  }
+
   const trimmedName = appName.trim();
   const trimmedDescription = description.trim();
   const accentValid = accent.trim() === "" || HEX_COLOR.test(accent.trim());
   const nameValid = trimmedName.length > 0 && trimmedName.length <= APP_NAME_MAX;
-  const descriptionValid = trimmedDescription.length >= DESCRIPTION_MIN && trimmedDescription.length <= DESCRIPTION_MAX;
-  const formValid = nameValid && descriptionValid && accentValid;
+  const hasImages = images.length > 0;
+  const imagesValid = images.length === 0 || images.length >= MIN_IMAGES;
+  const descriptionValid = hasImages
+    ? trimmedDescription.length <= DESCRIPTION_MAX
+    : trimmedDescription.length >= DESCRIPTION_MIN && trimmedDescription.length <= DESCRIPTION_MAX;
+  const formValid = nameValid && descriptionValid && accentValid && imagesValid;
+  const loadingMessages = hasImages ? REAL_LOADING_MESSAGES : CONCEPT_LOADING_MESSAGES;
 
   async function submit() {
     if (!formValid || status === "loading") return;
@@ -69,18 +133,37 @@ export function AiPackForm() {
     setErrorMessage(null);
     setMessageIndex(0);
     rotateRef.current = setInterval(() => {
-      setMessageIndex((i) => (i + 1) % LOADING_MESSAGES.length);
+      setMessageIndex((i) => (i + 1) % loadingMessages.length);
     }, LOADING_ROTATE_MS);
 
     try {
-      const res = await firebaseFetch("/api/ai-pack", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      let requestBody: Record<string, unknown>;
+      if (hasImages) {
+        const screenshots: { refId: string; image: string }[] = [];
+        for (const entry of images) {
+          const asset = await ingestFile(entry.file);
+          const image = await downscaleForAi(entry.file);
+          screenshots.push({ refId: asset.id, image });
+        }
+        requestBody = {
+          mode: "real",
+          appName: trimmedName,
+          ...(trimmedDescription ? { description: trimmedDescription } : {}),
+          ...(accent.trim() ? { accent: accent.trim() } : {}),
+          screenshots,
+        };
+      } else {
+        requestBody = {
           appName: trimmedName,
           description: trimmedDescription,
           ...(accent.trim() ? { accent: accent.trim() } : {}),
-        }),
+        };
+      }
+
+      const res = await firebaseFetch("/api/ai-pack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
       });
 
       if (res.status === 200) {
@@ -184,8 +267,97 @@ export function AiPackForm() {
           </div>
 
           <div>
+            <label className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/50">
+              Add your real screenshots <span className="normal-case text-white/30">(optional) — 2–10 images</span>
+            </label>
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (!loading) setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                if (!loading && e.dataTransfer.files?.length) addImages(e.dataTransfer.files);
+              }}
+              className={`mt-2 rounded-lg border border-dashed px-3.5 py-3 transition ${
+                dragOver ? "border-violet-400 bg-violet-400/[0.06]" : "border-white/15"
+              }`}
+            >
+              {images.length === 0 ? (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={loading}
+                  className="fk-press flex w-full flex-col items-center justify-center gap-1.5 py-4 text-white/50 hover:text-white/70 disabled:opacity-50"
+                >
+                  <IconifyIcon name="gallery" size={20} color="currentColor" />
+                  <span className="text-[12px]">Drag &amp; drop or click to add screenshots</span>
+                </button>
+              ) : (
+                <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+                  {images.map((img) => (
+                    <div key={img.id} className="group relative aspect-[9/19] overflow-hidden rounded-md bg-black/40">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={img.previewUrl} alt="" className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        aria-label={`Remove screenshot ${img.file.name}`}
+                        onClick={() => removeImage(img.id)}
+                        disabled={loading}
+                        className="fk-press absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-black/70 text-[12px] leading-none text-white opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 disabled:opacity-0"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  {images.length < MAX_IMAGES && (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={loading}
+                      aria-label="Add more screenshots"
+                      className="fk-press flex aspect-[9/19] items-center justify-center rounded-md border border-dashed border-white/20 text-[18px] text-white/40 hover:border-violet-400 hover:text-white disabled:opacity-50"
+                    >
+                      +
+                    </button>
+                  )}
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                disabled={loading}
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.length) addImages(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+            <div className="mt-1.5 flex items-center justify-between text-[11px]">
+              <span className={images.length === 1 ? "text-amber-400" : "text-white/30"}>
+                {images.length === 1
+                  ? "Add at least one more or remove it"
+                  : images.length > 1
+                    ? `${images.length} screenshots ready`
+                    : ""}
+              </span>
+              {images.length > 0 && (
+                <span className="text-white/30">
+                  {images.length}/{MAX_IMAGES}
+                </span>
+              )}
+            </div>
+            {imageNotice && <p className="mt-1 text-[11px] text-amber-400">{imageNotice}</p>}
+          </div>
+
+          <div>
             <label htmlFor="ai-description" className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/50">
-              What does it do?
+              What does it do? {hasImages && <span className="normal-case text-white/30">(optional)</span>}
             </label>
             <textarea
               id="ai-description"
@@ -198,10 +370,12 @@ export function AiPackForm() {
               className="mt-2 w-full resize-none rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-3 text-[14px] leading-6 text-white outline-none placeholder:text-zinc-600 focus:border-violet-400 focus:ring-2 focus:ring-violet-400/10 disabled:opacity-50"
             />
             <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className={trimmedDescription.length > 0 && !descriptionValid ? "text-amber-400" : "text-white/30"}>
-                {trimmedDescription.length < DESCRIPTION_MIN
-                  ? `At least ${DESCRIPTION_MIN} characters — ${DESCRIPTION_MIN - trimmedDescription.length} to go`
-                  : "Looks good"}
+              <span className={!hasImages && trimmedDescription.length > 0 && !descriptionValid ? "text-amber-400" : "text-white/30"}>
+                {hasImages
+                  ? "Optional — we can read your screenshots"
+                  : trimmedDescription.length < DESCRIPTION_MIN
+                    ? `At least ${DESCRIPTION_MIN} characters — ${DESCRIPTION_MIN - trimmedDescription.length} to go`
+                    : "Looks good"}
               </span>
               <span className="text-white/30">
                 {description.length}/{DESCRIPTION_MAX}
@@ -252,7 +426,7 @@ export function AiPackForm() {
 
           {loading && (
             <div className="text-center">
-              <p className="text-[12px] font-medium text-white/60">{LOADING_MESSAGES[messageIndex]}</p>
+              <p className="text-[12px] font-medium text-white/60">{loadingMessages[messageIndex]}</p>
               <p className="mt-1 text-[11px] text-white/30">This can take up to a minute — don&apos;t close this tab.</p>
             </div>
           )}
