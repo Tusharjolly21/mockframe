@@ -98,7 +98,7 @@ All colors are 6-digit lowercase hex like #0ea5e9.
 
 Marketing copy: also write the launch copy for this app in the marketing field. appStoreSubtitle: at most 30 characters, benefit-led, complements the app name (App Store shows it right under the name). appStoreDescription: 2-4 short paragraphs, first line is the hook. keywords: 6-12 single words or short phrases, no duplicates of the app name. productHuntTagline: at most 60 characters, punchy, "what it does in one line". launchTweet: at most 280 characters, first-person founder voice, at most 1 emoji, no hashtag spam.`;
 
-export const AI_REAL_SYSTEM_PROMPT = `You are an expert App Store marketing designer for MockFrame. Given an app's name, description, and real screenshots, curate and caption a screenshot pack that tells a conversion story.
+export const AI_REAL_SYSTEM_PROMPT = `You are an expert App Store marketing designer for MockFrame. Given an app's name, description, and real screenshots, caption every screenshot provided (do not omit any) to build a screenshot pack that tells a conversion story.
 
 Narrative structure: screen 1 hooks with the core promise, screens 2-6 show the strongest features, later screens build trust, final screen closes with a call to action. Order screens to guide the user through a natural conversion journey.
 
@@ -110,19 +110,38 @@ All colors are 6-digit lowercase hex like #0ea5e9.
 
 Marketing copy: also write the launch copy for this app in the marketing field. appStoreSubtitle: at most 30 characters, benefit-led, complements the app name (App Store shows it right under the name). appStoreDescription: 2-4 short paragraphs, first line is the hook. keywords: 6-12 single words or short phrases, no duplicates of the app name. productHuntTagline: at most 60 characters, punchy, "what it does in one line". launchTweet: at most 280 characters, first-person founder voice, at most 1 emoji, no hashtag spam.`;
 
-export function aiUserPrompt(appName: string, description: string, accent?: string): string {
-  return `App name: ${appName}\nDescription: ${description}${accent ? `\nBrand accent color (must use): ${accent}` : ""}`;
+export function aiUserPrompt(
+  appName: string,
+  description: string,
+  accent?: string,
+  tone?: string,
+  audience?: string
+): string {
+  let prompt = `App name: ${appName}\nDescription: ${description}`;
+  if (accent) prompt += `\nBrand accent color (must use): ${accent}`;
+  if (tone) prompt += `\nTone: ${tone}`;
+  if (audience) prompt += `\nAudience: ${audience}`;
+  return prompt;
 }
 
-export function aiRealUserPrompt(appName: string, description: string | undefined, accent: string | undefined, refIds: string[]): string {
+export function aiRealUserPrompt(
+  appName: string,
+  description: string | undefined,
+  accent: string | undefined,
+  refIds: string[],
+  tone?: string,
+  audience?: string
+): string {
   let prompt = `App name: ${appName}`;
   if (description) prompt += `\nDescription: ${description}`;
   if (accent) prompt += `\nBrand accent color (must use): ${accent}`;
+  if (tone) prompt += `\nTone: ${tone}`;
+  if (audience) prompt += `\nAudience: ${audience}`;
   prompt += `\n\nAvailable screenshots:`;
   refIds.forEach((ref, i) => {
     prompt += `\nScreenshot ${i + 1} (ref: ${ref})`;
   });
-  prompt += `\n\nSelect and caption 2-10 of these screenshots in conversion-story order. Reference each by its ref ID.`;
+  prompt += `\n\nCaption every screenshot listed above, in conversion-story order (do not omit any). Reference each by its ref ID.`;
   return prompt;
 }
 
@@ -172,6 +191,62 @@ export function buildPackFromPlan(plan: AiPackPlan, appName: string): PackDocume
   pack.marketing = marketing;
   if (pack.launch) pack.launch.tagline = marketing.productHuntTagline.slice(0, 120);
   return pack;
+}
+
+/* Structured-outputs caveat (same as AiScreenDocSchema above): no .min()/.max()
+   on the title/subtitle strings themselves — only the array length is
+   constrained (both supported by the SDK's structured-outputs subset).
+   applyCaptions (pack/ops.ts) clamps title/subtitle at the plan → pack
+   boundary, same pattern as buildPackFromPlan. */
+export const RecaptionPlanSchema = z.object({
+  captions: z
+    .array(z.object({ title: z.string(), subtitle: z.string().optional() }))
+    .min(1)
+    .max(10),
+});
+
+export type RecaptionPlan = z.infer<typeof RecaptionPlanSchema>;
+
+export const AI_RECAPTION_SYSTEM_PROMPT = `You are an expert App Store marketing copywriter for MockFrame. Given an app's name and existing screenshot pack, rewrite the caption for every screen.
+
+Caption rules: titles are benefit-led, at most 6 words, no ending period. Subtitles optional, at most 10 words, only when they add information beyond the title.
+
+Adapt the copy to the app (its name and description), the requested tone (if given), and the target audience (if given) — the same feature should read differently for a "playful" tone aimed at "students" than a "professional" tone aimed at "enterprise teams". Keep captions specific to what each screen actually shows; never generic filler like "Great features" or "Amazing app".
+
+Return exactly one caption per screen, in the same order the screens were given.`;
+
+export function aiRecaptionUserPrompt(
+  appName: string,
+  description: string | undefined,
+  tone: string | undefined,
+  audience: string | undefined,
+  screens: { archetype?: string; currentTitle?: string }[]
+): string {
+  let prompt = `App name: ${appName}`;
+  if (description) prompt += `\nDescription: ${description}`;
+  if (tone) prompt += `\nTone: ${tone}`;
+  if (audience) prompt += `\nAudience: ${audience}`;
+  prompt += `\n\nScreens (rewrite one caption per screen, in order):`;
+  screens.forEach((s, i) => {
+    const parts: string[] = [];
+    if (s.archetype) parts.push(`archetype: ${s.archetype}`);
+    if (s.currentTitle) parts.push(`current title: "${s.currentTitle}"`);
+    prompt += `\nScreen ${i + 1}${parts.length ? ` (${parts.join(", ")})` : ""}`;
+  });
+  return prompt;
+}
+
+/** Structured-outputs returns however many captions the model produced, which
+ *  is not guaranteed to match the pack's screen count — clamp deterministically
+ *  at the plan → applyCaptions boundary, mirroring repairRealPlanScreens. Never
+ *  throws: truncates when too many, pads blank titles when too few. */
+export function repairRecaption(
+  captions: RecaptionPlan["captions"],
+  n: number
+): { title: string; subtitle?: string }[] {
+  const repaired = captions.slice(0, n).map((c) => ({ ...c }));
+  while (repaired.length < n) repaired.push({ title: "" });
+  return repaired;
 }
 
 export function repairRealPlanScreens(screens: RealPackPlan["screens"], refIds: string[]): RealPackPlan["screens"] {

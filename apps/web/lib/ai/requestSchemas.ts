@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { TONE_IDS } from "../pack/schema";
 
 /**
  * Request-body schema for /api/ai-pack — the concept/real mode union — kept
@@ -18,6 +19,8 @@ export const ConceptBodySchema = z.object({
   appName: z.string().trim().min(1).max(60),
   description: z.string().trim().min(10).max(600),
   accent: z.string().regex(HEX).optional(),
+  tone: z.enum(TONE_IDS).optional(),
+  audience: z.string().max(60).optional(),
 });
 
 export const RealBodySchema = z.object({
@@ -25,13 +28,33 @@ export const RealBodySchema = z.object({
   appName: z.string().trim().min(1).max(60),
   description: z.string().trim().max(600).optional(),
   accent: z.string().regex(HEX).optional(),
+  tone: z.enum(TONE_IDS).optional(),
+  audience: z.string().max(60).optional(),
   screenshots: z.array(z.object({
     refId: z.string().regex(REF_ID),
     image: z.string().regex(IMAGE_DATA_URL).max(MAX_IMAGE_CHARS),
   })).min(2).max(10),
 });
 
-export const AiPackBodySchema = z.union([RealBodySchema, ConceptBodySchema]);
+/** No accent/screenshots: recaption re-writes captions on an EXISTING pack
+ *  (the studio sends each screen's archetype + current title), it never
+ *  designs new screens — see the recaption branch in route.ts, which is
+ *  gated only by the per-day quota, never the free-generation counter. */
+export const RecaptionBodySchema = z.object({
+  mode: z.literal("recaption"),
+  appName: z.string().trim().min(1).max(60),
+  description: z.string().max(600).optional(),
+  tone: z.enum(TONE_IDS).optional(),
+  audience: z.string().max(60).optional(),
+  screens: z.array(z.object({
+    archetype: z.string().max(40).optional(),
+    currentTitle: z.string().max(120).optional(),
+  })).min(1).max(10),
+});
+
+// recaption first so its own literal "recaption" mode never falls through to
+// the concept arm (whose `mode` is optional and would otherwise swallow it).
+export const AiPackBodySchema = z.union([RecaptionBodySchema, RealBodySchema, ConceptBodySchema]);
 export type AiPackBody = z.infer<typeof AiPackBodySchema>;
 
 /** Route-level guard: the schema allows duplicate refIds structurally (each
