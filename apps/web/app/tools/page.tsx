@@ -28,6 +28,11 @@ const CHAT_SLUGS = new Set([
   "fake-telegram-chat-generator",
   "fake-snapchat-generator",
   "fake-messenger-chat-generator",
+  "fake-discord-chat-generator",
+  "fake-slack-conversation-generator",
+  "fake-signal-chat-generator",
+  "fake-line-chat-generator",
+  "fake-teams-chat-generator",
 ]);
 
 const VIDEO_SLUGS = new Set(["app-promo-video-maker"]);

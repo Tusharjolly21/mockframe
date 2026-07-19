@@ -345,7 +345,158 @@ export const TOOL_PAGES: ToolPage[] = [
     ],
     related: ["fake-instagram-dm-generator", "fake-whatsapp-chat-generator", "fake-telegram-chat-generator"],
   },
+  {
+    slug: "fake-discord-chat-generator",
+    name: "Fake Discord Chat Generator",
+    eyebrow: "Design realistic Discord mockups",
+    description:
+      "Create a realistic Discord chat mockup for server rules, bot demos, tutorials and memes. Write both sides, set usernames, role colours and timestamps, and export inside a photoreal device — free to build, no sign-up.",
+    overview:
+      "Discord screenshots are everywhere — bot documentation, server onboarding guides, community memes, moderation tutorials — and recreating one cleanly beats cropping a real server with strangers' names in it. Compose the conversation with usernames, role colours and timestamps in Discord's exact dark theme, preview it live as you type, and export it inside a photoreal iPhone or as a clean image. Bot developers can stage command-and-response flows without spinning up a test server, and community managers can produce rules or welcome screens that read exactly like the real app. A one-click “fictional” label keeps recreations honest.",
+    editorHref: "/editor?screen=discord",
+    cta: "Make a Discord mockup",
+    image: "/hero/hero-iphone.webp",
+    imageAlt: "A Discord chat mockup shown in a photoreal device",
+    accent: "#5865f2",
+    steps: [
+      ["Write the conversation", "Add messages from any number of users, with usernames and role colours."],
+      ["Match the Discord look", "Dark theme, timestamps and message grouping mirror the real client."],
+      ["Frame and export", "Drop it into a device frame, style the background and export your image."],
+    ],
+    benefits: [
+      ["Server-accurate styling", "Role colours, grouped messages and the dark theme match real Discord."],
+      ["Made for bot demos", "Stage command/response flows for docs without a live test server."],
+      ["Clearly a mockup", "Add the free “fictional” label so recreated chats stay honest."],
+    ],
+    faq: [
+      ["Can I set usernames and role colours?", "Yes — each participant gets a display name and colour, so staged mod/admin/member conversations read correctly."],
+      ["Is it free?", "Building and previewing is free with no sign-up. Exporting Discord screens is part of Pro (WhatsApp and iMessage exports are free)."],
+      ["Can I use it for bot documentation?", "Yes — stage the exact command and reply flow you want to document, without exposing a real server or user accounts."],
+    ],
+    related: ["fake-slack-conversation-generator", "fake-whatsapp-chat-generator", "fake-telegram-chat-generator"],
+  },
+  {
+    slug: "fake-slack-conversation-generator",
+    name: "Fake Slack Conversation Generator",
+    eyebrow: "Design realistic Slack mockups",
+    description:
+      "Mock up a Slack conversation for product demos, onboarding docs and presentations. Set names, avatars colours, threads and reactions, then export inside a device frame — free to build, no sign-up.",
+    overview:
+      "Slack screenshots show up constantly in SaaS marketing, integration docs and internal training — but real workspaces are full of names and messages you can't publish. This generator stages the exact exchange you need: channel or DM style, sender names, timestamps and reactions, in Slack's precise light theme. Product teams use it to demo integrations (“here's what our bot posts”), founders use it for landing-page social proof scenes, and educators use it for communication-skills material. Preview is live as you type, and the finished conversation exports inside a photoreal device or as a clean standalone image.",
+    editorHref: "/editor?screen=slack",
+    cta: "Make a Slack mockup",
+    image: "/hero/lib-macbook.webp",
+    imageAlt: "A Slack conversation mockup in a device frame",
+    accent: "#611f69",
+    steps: [
+      ["Write the messages", "Add each participant's messages with names and timestamps."],
+      ["Match the Slack look", "Channel header, message grouping and reactions mirror the real app."],
+      ["Frame and export", "Present it in a laptop or phone frame and export the finished image."],
+    ],
+    benefits: [
+      ["Workspace-accurate styling", "Message layout, timestamps and reactions match real Slack."],
+      ["Perfect for integration demos", "Show what your bot or app posts without a demo workspace."],
+      ["Safe to publish", "No real names, no real messages — nothing to redact."],
+    ],
+    faq: [
+      ["Can I show a bot or app posting?", "Yes — name a sender after your bot and stage its exact message, the standard way to document Slack integrations."],
+      ["Does it do threads and reactions?", "Reactions yes; conversations render with Slack's real message grouping so exchanges read naturally."],
+      ["Is it free?", "Composing and previewing is free without an account. Exporting Slack screens is part of Pro."],
+    ],
+    related: ["fake-discord-chat-generator", "fake-teams-chat-generator", "fake-whatsapp-chat-generator"],
+  },
+  {
+    slug: "fake-signal-chat-generator",
+    name: "Fake Signal Chat Generator",
+    eyebrow: "Design realistic Signal mockups",
+    description:
+      "Create a Signal chat mockup for privacy-focused product demos, journalism illustrations and tutorials. Compose both sides, set the contact and disappearing-message hints, and export in a photoreal iPhone.",
+    overview:
+      "Signal screenshots appear in journalism, security training and privacy-product marketing — exactly the contexts where screenshotting a real conversation is most inappropriate. This generator stages Signal's clean interface: contact name, delivery states and the app's distinctive minimal bubbles. Security educators can illustrate safe-messaging practices, journalists can recreate exchanges for stories without exposing sources, and privacy products can show Signal-style flows in their onboarding. As with every MockFrame chat screen, the preview renders live and a “fictional” disclosure label is one click away.",
+    editorHref: "/editor?screen=signal",
+    cta: "Make a Signal mockup",
+    image: "/hero/lib-iphone-desert.webp",
+    imageAlt: "A Signal chat mockup shown in an iPhone",
+    accent: "#3a76f0",
+    steps: [
+      ["Write the conversation", "Add messages from both sides with timestamps."],
+      ["Match the Signal look", "Minimal bubbles and delivery states mirror the real app."],
+      ["Frame and export", "Place it in a device, style the scene and export."],
+    ],
+    benefits: [
+      ["True-to-app minimalism", "Signal's clean bubble style and states, faithfully recreated."],
+      ["For sensitive contexts", "Illustrate exchanges for stories and training without real sources."],
+      ["Transparent recreations", "The optional “fictional” label keeps illustrations honest."],
+    ],
+    faq: [
+      ["Why mock up a Signal chat instead of screenshotting?", "Signal conversations are usually private by nature — a staged mockup illustrates the exchange without exposing a real contact or source."],
+      ["Can I set delivery states?", "Yes, sent/delivered/read states render like the real app."],
+      ["Is it free?", "Free to compose and preview; exporting Signal screens is part of Pro."],
+    ],
+    related: ["fake-whatsapp-chat-generator", "fake-telegram-chat-generator", "fake-imessage-generator"],
+  },
+  {
+    slug: "fake-line-chat-generator",
+    name: "Fake LINE Chat Generator",
+    eyebrow: "Design realistic LINE mockups",
+    description:
+      "Build a LINE chat mockup for app marketing, tutorials and content aimed at audiences in Japan, Taiwan and Thailand. Compose the conversation and export it inside a photoreal phone.",
+    overview:
+      "LINE is the everyday messenger for hundreds of millions of people across Japan, Taiwan, Thailand and Indonesia — and content aimed at those markets lands better when it shows the app people actually use. This generator recreates LINE's distinctive look (the green identity, read indicators and sticker-friendly bubbles) so marketers localising app-store material, teachers making language-learning content, and creators writing region-specific stories can stage exactly the conversation they need. Compose both sides, preview live, and export inside an iPhone or Android frame.",
+    editorHref: "/editor?screen=line",
+    cta: "Make a LINE mockup",
+    image: "/hero/hero-iphone.webp",
+    imageAlt: "A LINE chat mockup shown in a phone frame",
+    accent: "#06c755",
+    steps: [
+      ["Write the conversation", "Add both sides of the chat with timestamps."],
+      ["Match the LINE look", "Bubbles, read marks and the header mirror the real app."],
+      ["Frame and export", "Drop it into a device and export for your campaign or lesson."],
+    ],
+    benefits: [
+      ["Region-authentic", "The messenger your Japanese, Taiwanese and Thai audiences actually use."],
+      ["For localised marketing", "Stage app-store and campaign material that feels native to the market."],
+      ["Honest by default", "One click adds the “fictional” disclosure label."],
+    ],
+    faq: [
+      ["Who is a LINE mockup for?", "Anyone making content for markets where LINE is the default messenger — app marketers localising store listings, language teachers, and creators telling region-specific stories."],
+      ["Does it show read indicators?", "Yes, LINE's read marks render like the real app."],
+      ["Is it free?", "Free to build and preview; exporting LINE screens is part of Pro."],
+    ],
+    related: ["fake-whatsapp-chat-generator", "fake-telegram-chat-generator", "fake-messenger-chat-generator"],
+  },
+  {
+    slug: "fake-teams-chat-generator",
+    name: "Fake Microsoft Teams Chat Generator",
+    eyebrow: "Design realistic Teams mockups",
+    description:
+      "Mock up a Microsoft Teams conversation for corporate training, IT documentation and product demos. Stage the exchange, then export inside a laptop or phone frame — free to build.",
+    overview:
+      "Teams is where enterprise conversations happen, which makes it the screenshot corporate trainers, IT departments and B2B products need most — and the one hardest to take safely, because real workspaces are full of colleagues' names and internal information. Stage exactly the exchange you need: security-awareness training (“this is what a phishing message looks like”), help-desk documentation, product announcements from your app's bot, or communication-skills coursework. The layout mirrors the real Teams client, and the finished conversation exports inside a laptop or phone frame ready for slides and docs.",
+    editorHref: "/editor?screen=teams",
+    cta: "Make a Teams mockup",
+    image: "/hero/lib-macbook.webp",
+    imageAlt: "A Microsoft Teams chat mockup in a laptop frame",
+    accent: "#6264a7",
+    steps: [
+      ["Write the exchange", "Add each participant's messages with names and times."],
+      ["Match the Teams look", "Message layout and header mirror the real client."],
+      ["Frame and export", "Present in a laptop frame for slides, or a phone for mobile docs."],
+    ],
+    benefits: [
+      ["Enterprise-accurate", "Reads like a real Teams thread — ideal for corporate material."],
+      ["For training & IT docs", "Stage phishing-awareness examples and help-desk flows safely."],
+      ["Slide-ready output", "Export at presentation sizes inside clean device frames."],
+    ],
+    faq: [
+      ["Can I use this for security training?", "Yes — staged phishing-example messages are a standard training tool, and a mockup means no real colleague names appear in your material."],
+      ["Can my app's bot appear in the chat?", "Yes, name any sender after your bot to demo Teams integrations."],
+      ["Is it free?", "Free to compose and preview; exporting Teams screens is part of Pro."],
+    ],
+    related: ["fake-slack-conversation-generator", "fake-discord-chat-generator", "fake-imessage-generator"],
+  },
 ];
+
 
 export function toolPage(slug: string): ToolPage | undefined {
   return TOOL_PAGES.find((tool) => tool.slug === slug);

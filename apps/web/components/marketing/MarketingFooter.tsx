@@ -36,6 +36,8 @@ const COLS: { title: string; links: [string, string][] }[] = [
       ["/tools/fake-telegram-chat-generator", "Telegram chat"],
       ["/tools/fake-snapchat-generator", "Snapchat"],
       ["/tools/fake-messenger-chat-generator", "Messenger"],
+      ["/tools/fake-discord-chat-generator", "Discord chat"],
+      ["/tools/fake-slack-conversation-generator", "Slack conversation"],
     ],
   },
   {

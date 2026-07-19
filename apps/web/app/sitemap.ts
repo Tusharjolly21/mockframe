@@ -12,7 +12,7 @@ import { SCENE_GROUPS } from "@/lib/sceneGroups";
 // that changed when its content actually changes.
 const UPDATED = {
   site: new Date("2026-07-16"), // marketing shell / homepage
-  tools: new Date("2026-07-17"), // tool pages + FAQ + /tools hub + app promo video maker
+  tools: new Date("2026-07-19"), // + 5 new chat tool pages (discord/slack/signal/line/teams)
   packStudio: new Date("2026-07-16"), // App Store screenshot pack studio landing page + FAQ
   ai: new Date("2026-07-17"), // AI pack generator landing page
   guides: new Date("2026-06-20"),
