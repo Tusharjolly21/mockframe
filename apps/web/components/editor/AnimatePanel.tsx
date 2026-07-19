@@ -139,7 +139,8 @@ const sound = new SoundManager();
 
 
 
-/** Bottom-center "Animate" control: chat-replay preview + WebM video export. */
+/** Bottom-center "Animate" control: chat-replay preview + video export (MP4
+ *  where the browser can mux it, WebM fallback). */
 export function AnimatePanel() {
   const scene = useSceneStore((s) => s.scene);
   const updateLayer = useSceneStore((s) => s.updateLayer);
@@ -371,7 +372,7 @@ export function AnimatePanel() {
     if (!node) return;
     setBusy({ pct: 0, label: "Preparing…" });
     try {
-      await exportSceneVideo({
+      const fmt = await exportSceneVideo({
         node,
         scene,
         plan,
@@ -379,7 +380,7 @@ export function AnimatePanel() {
         restore,
         onProgress: (pct, label) => setBusy({ pct, label }),
       });
-      window.dispatchEvent(new CustomEvent("framekit:toast", { detail: "Saved chat replay video (WebM)" }));
+      window.dispatchEvent(new CustomEvent("framekit:toast", { detail: `Saved chat replay video (${fmt.toUpperCase()})` }));
     } catch (e) {
       restore();
       window.dispatchEvent(
@@ -627,7 +628,7 @@ export function AnimatePanel() {
                         className="h-8 px-4 text-[11px] font-bold rounded-lg bg-white/10 hover:bg-white/15 text-white border border-white/10 cursor-pointer flex items-center gap-1.5 transition-all"
                       >
                         <Video size={11} />
-                        <span>Export MP4 Video</span>
+                        <span>Export Video</span>
                       </button>
                       <button
                         onClick={exportGif}

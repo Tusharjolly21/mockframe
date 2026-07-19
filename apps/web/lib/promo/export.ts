@@ -18,15 +18,41 @@ export type PromoMedia = {
   name?: string;
 };
 
-async function toDataUrl(url: string): Promise<string> {
-  if (url.startsWith("data:")) return url;
-  const blob = await (await fetch(url)).blob();
-  return await new Promise<string>((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = () => resolve(fr.result as string);
-    fr.onerror = () => reject(new Error("Could not read the screenshot"));
-    fr.readAsDataURL(blob);
-  });
+/** Vercel caps request bodies (~4.5MB) and the render only shows screens at
+ *  device-frame size, so full-resolution uploads are pure waste: downscale to a
+ *  1600px long edge and re-encode before inlining. */
+const EXPORT_MAX_LONG_EDGE = 1600;
+const EXPORT_JPEG_QUALITY = 0.85;
+
+async function toDataUrl(url: string, width: number, height: number): Promise<string> {
+  const longEdge = Math.max(width, height);
+  const needsScale = longEdge > EXPORT_MAX_LONG_EDGE;
+  // small data URLs pass through untouched
+  if (url.startsWith("data:") && !needsScale && url.length < 1_500_000) return url;
+  try {
+    const blob = await (await fetch(url)).blob();
+    const bitmap = await createImageBitmap(blob);
+    const scale = needsScale ? EXPORT_MAX_LONG_EDGE / longEdge : 1;
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("no 2d context");
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    // PNG for screenshots with transparency is unnecessary here — screens sit
+    // behind glass; JPEG keeps every screen well under the body cap
+    return canvas.toDataURL("image/jpeg", EXPORT_JPEG_QUALITY);
+  } catch {
+    // decode failure: fall back to raw bytes (may still fit)
+    const blob = await (await fetch(url)).blob();
+    return await new Promise<string>((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result as string);
+      fr.onerror = () => reject(new Error("Could not read the screenshot"));
+      fr.readAsDataURL(blob);
+    });
+  }
 }
 
 /** Videos are too large to inline — upload once to /api/assets (sniffed +
@@ -60,7 +86,16 @@ export async function exportPromoVideo(
     media.map(async (m) =>
       m.kind === "video"
         ? { kind: "video" as const, url: await uploadVideo(m), width: m.width, height: m.height }
-        : { kind: "image" as const, dataUrl: await toDataUrl(m.url), width: m.width, height: m.height },
+        : (() => {
+            const longEdge = Math.max(m.width, m.height);
+            const s = longEdge > EXPORT_MAX_LONG_EDGE ? EXPORT_MAX_LONG_EDGE / longEdge : 1;
+            return toDataUrl(m.url, m.width, m.height).then((dataUrl) => ({
+              kind: "image" as const,
+              dataUrl,
+              width: Math.max(1, Math.round(m.width * s)),
+              height: Math.max(1, Math.round(m.height * s)),
+            }));
+          })(),
     ),
   );
 

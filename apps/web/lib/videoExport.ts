@@ -42,7 +42,7 @@ const settle = () => new Promise<void>((r) => requestAnimationFrame(() => setTim
 const keyOf = (k: number, typing: boolean, phase: number, settled: boolean) =>
   `${k}|${typing ? "t" + phase : settled ? "rs" : "r"}`;
 
-export async function exportSceneVideo(o: VideoExportOpts): Promise<void> {
+export async function exportSceneVideo(o: VideoExportOpts): Promise<"mp4" | "webm"> {
   const { node, scene, plan, renderState, restore, onProgress } = o;
   if (!plan.length) throw new Error("Nothing to animate");
 
@@ -120,9 +120,13 @@ export async function exportSceneVideo(o: VideoExportOpts): Promise<void> {
     }
   }
   
-  const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
-    ? "video/webm;codecs=vp9"
-    : "video/webm";
+  // Prefer REAL MP4 (H.264) — Instagram/TikTok re-encode or reject WebM. Modern
+  // Chrome and Safari can mux MP4 in MediaRecorder; WebM stays as the fallback
+  // and the filename/toast stay honest about which one the user got.
+  const mime =
+    ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4"].find((t) => MediaRecorder.isTypeSupported(t)) ??
+    (MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm");
+  const isMp4 = mime.startsWith("video/mp4");
   const recorder = new MediaRecorder(combinedStream, { mimeType: mime, videoBitsPerSecond: 12_000_000 });
   const chunks: Blob[] = [];
   recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
@@ -202,11 +206,12 @@ export async function exportSceneVideo(o: VideoExportOpts): Promise<void> {
     requestAnimationFrame(tick);
   });
 
-  const blob = new Blob(chunks, { type: "video/webm" });
+  const blob = new Blob(chunks, { type: isMp4 ? "video/mp4" : "video/webm" });
   if (!blob.size) throw new Error("Recording produced no data");
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `mockframe-${W}x${H}.webm`;
+  a.download = `mockframe-${W}x${H}.${isMp4 ? "mp4" : "webm"}`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  return isMp4 ? "mp4" : "webm";
 }
