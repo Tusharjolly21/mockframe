@@ -13,17 +13,33 @@ import {
   AI_DAILY_LIMIT,
   AI_FREE_GENERATIONS,
   AI_REAL_SYSTEM_PROMPT,
+  AI_RECAPTION_SYSTEM_PROMPT,
   AI_SYSTEM_PROMPT,
   AiPackPlanSchema,
   RealPackPlanSchema,
+  RecaptionPlanSchema,
   aiRealUserPrompt,
+  aiRecaptionUserPrompt,
   aiUserPrompt,
   buildPackFromPlan,
   buildRealPackFromPlan,
+  repairRecaption,
 } from "@/lib/ai/plan";
 import { AiPackBodySchema, hasDuplicateRefs } from "@/lib/ai/requestSchemas";
-import type { PackDocument } from "@/lib/pack/schema";
+import type { PackDocument, PackSource } from "@/lib/pack/schema";
 import type { RequestOwner } from "@/lib/server/requestOwner";
+
+/** Only the defined generation inputs, so a recaption call later can restore
+ *  them without the pack carrying a source object full of undefined keys
+ *  (undefined isn't valid JSON — it would just vanish on the wire, but an
+ *  explicit "only defined keys" object is the honest shape to persist). */
+function packSourceFrom(description?: string, tone?: PackSource["tone"], audience?: string): PackSource | undefined {
+  const source: PackSource = {};
+  if (description) source.description = description;
+  if (tone) source.tone = tone;
+  if (audience) source.audience = audience;
+  return Object.keys(source).length > 0 ? source : undefined;
+}
 
 export const runtime = "nodejs";
 export const maxDuration = 120; // adaptive thinking can take a while
@@ -33,6 +49,9 @@ type ClaudeCallSpec = {
   content: string | Array<TextBlockParam | ImageBlockParam>;
   format: NonNullable<MessageCreateParamsNonStreaming["output_config"]>["format"];
   build: (plan: unknown) => PackDocument;
+  /** generation inputs (description/tone/audience) attached to the returned
+   *  pack so a later recaption call can reuse them without re-asking the user. */
+  source?: PackSource;
 };
 
 /**
@@ -63,6 +82,7 @@ async function generateAndAccount(
   if (!plan) return NextResponse.json({ error: "Generation failed — please retry" }, { status: 502 });
 
   const pack = spec.build(plan);
+  if (spec.source) pack.source = spec.source;
 
   // success only: consume a free slot (transactional so parallel requests can't double-spend)
   if (!isPro) {
@@ -101,6 +121,37 @@ export async function POST(req: NextRequest) {
     // anonymous Firebase sessions are guests, not sign-ins (billing-route pattern)
     const signedIn = !!owner.uid && owner.signInProvider !== "anonymous";
     if (!signedIn) return NextResponse.json({ allowed: false, reason: "signin" }, { status: 401 });
+
+    const client = new Anthropic();
+
+    // Recaption rewrites captions on an EXISTING pack — it's cheap (no new
+    // screens, no marketing copy) and must NOT touch the free-generation
+    // counter below (mockframeOwners/*/private/ai-generations): it is gated
+    // solely by the per-day quota, same as Pro's abuse guard. Handling it
+    // here, before that counter is ever read, keeps the two decisions
+    // structurally independent rather than relying on a flag to skip it.
+    if (body.mode === "recaption") {
+      const quota = await consumeDailyQuota(quotaSubject(req, owner), "ai-pack", AI_DAILY_LIMIT);
+      if (!quota.allowed) return NextResponse.json({ error: "Daily AI limit reached — try again tomorrow" }, { status: 429 });
+
+      const response = await client.messages.parse({
+        model: process.env.MOCKFRAME_AI_MODEL ?? "claude-opus-4-8",
+        max_tokens: 16000,
+        thinking: { type: "adaptive" },
+        system: AI_RECAPTION_SYSTEM_PROMPT,
+        output_config: { format: zodOutputFormat(RecaptionPlanSchema) },
+        messages: [{
+          role: "user",
+          content: aiRecaptionUserPrompt(body.appName, body.description, body.tone, body.audience, body.screens),
+        }],
+      });
+      const parsed = response.parsed_output;
+      if (!parsed) return NextResponse.json({ error: "Generation failed — please retry" }, { status: 502 });
+
+      const captions = repairRecaption(parsed.captions, body.screens.length);
+      return attachOwnerCookie(NextResponse.json({ captions }), owner);
+    }
+
     const isPro = isBillingActive(await readBilling(owner.uid!));
 
     const db = firestoreDb();
@@ -114,8 +165,6 @@ export async function POST(req: NextRequest) {
       const quota = await consumeDailyQuota(quotaSubject(req, owner), "ai-pack", AI_DAILY_LIMIT);
       if (!quota.allowed) return NextResponse.json({ error: "Daily AI limit reached — try again tomorrow" }, { status: 429 });
     }
-
-    const client = new Anthropic();
 
     if (body.mode === "real") {
       if (hasDuplicateRefs(body.screenshots)) {
@@ -136,21 +185,26 @@ export async function POST(req: NextRequest) {
         });
         content.push({ type: "text", text: `Screenshot ${i + 1} (ref: ${shot.refId})` });
       }
-      content.push({ type: "text", text: aiRealUserPrompt(body.appName, body.description, body.accent, refIds) });
+      content.push({
+        type: "text",
+        text: aiRealUserPrompt(body.appName, body.description, body.accent, refIds, body.tone, body.audience),
+      });
 
       return await generateAndAccount(client, db, counterRef, signedIn, isPro, prior, owner, {
         system: AI_REAL_SYSTEM_PROMPT,
         content,
         format: zodOutputFormat(RealPackPlanSchema),
         build: (plan) => buildRealPackFromPlan(RealPackPlanSchema.parse(plan), body.appName, refIds),
+        source: packSourceFrom(body.description, body.tone, body.audience),
       });
     }
 
     return await generateAndAccount(client, db, counterRef, signedIn, isPro, prior, owner, {
       system: AI_SYSTEM_PROMPT,
-      content: aiUserPrompt(body.appName, body.description, body.accent),
+      content: aiUserPrompt(body.appName, body.description, body.accent, body.tone, body.audience),
       format: zodOutputFormat(AiPackPlanSchema),
       build: (plan) => buildPackFromPlan(AiPackPlanSchema.parse(plan), body.appName),
+      source: packSourceFrom(body.description, body.tone, body.audience),
     });
   } catch (err) {
     if (err instanceof FirebaseConfigError) {

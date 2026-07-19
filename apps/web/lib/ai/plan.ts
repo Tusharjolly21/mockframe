@@ -110,14 +110,33 @@ All colors are 6-digit lowercase hex like #0ea5e9.
 
 Marketing copy: also write the launch copy for this app in the marketing field. appStoreSubtitle: at most 30 characters, benefit-led, complements the app name (App Store shows it right under the name). appStoreDescription: 2-4 short paragraphs, first line is the hook. keywords: 6-12 single words or short phrases, no duplicates of the app name. productHuntTagline: at most 60 characters, punchy, "what it does in one line". launchTweet: at most 280 characters, first-person founder voice, at most 1 emoji, no hashtag spam.`;
 
-export function aiUserPrompt(appName: string, description: string, accent?: string): string {
-  return `App name: ${appName}\nDescription: ${description}${accent ? `\nBrand accent color (must use): ${accent}` : ""}`;
+export function aiUserPrompt(
+  appName: string,
+  description: string,
+  accent?: string,
+  tone?: string,
+  audience?: string
+): string {
+  let prompt = `App name: ${appName}\nDescription: ${description}`;
+  if (accent) prompt += `\nBrand accent color (must use): ${accent}`;
+  if (tone) prompt += `\nTone: ${tone}`;
+  if (audience) prompt += `\nAudience: ${audience}`;
+  return prompt;
 }
 
-export function aiRealUserPrompt(appName: string, description: string | undefined, accent: string | undefined, refIds: string[]): string {
+export function aiRealUserPrompt(
+  appName: string,
+  description: string | undefined,
+  accent: string | undefined,
+  refIds: string[],
+  tone?: string,
+  audience?: string
+): string {
   let prompt = `App name: ${appName}`;
   if (description) prompt += `\nDescription: ${description}`;
   if (accent) prompt += `\nBrand accent color (must use): ${accent}`;
+  if (tone) prompt += `\nTone: ${tone}`;
+  if (audience) prompt += `\nAudience: ${audience}`;
   prompt += `\n\nAvailable screenshots:`;
   refIds.forEach((ref, i) => {
     prompt += `\nScreenshot ${i + 1} (ref: ${ref})`;
