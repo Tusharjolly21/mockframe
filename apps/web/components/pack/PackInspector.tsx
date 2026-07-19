@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   PACK_LAUNCH_SURFACE_IDS,
   PACK_LAUNCH_SURFACES,
@@ -8,10 +9,11 @@ import {
   PACK_TARGETS,
   packLaunch,
 } from "@/lib/pack/schema";
-import { PACK_STYLES, mixHex } from "@/lib/pack/styles";
-import { setCaption } from "@/lib/pack/ops";
+import { setCaption, applyCaptions } from "@/lib/pack/ops";
 import { usePackStore } from "@/lib/pack/store";
+import { firebaseFetch } from "@/lib/firebaseClient";
 import { LaunchCopyPanel } from "@/components/ai/LaunchCopyPanel";
+import { StyleThumb } from "@/components/pack/StyleThumb";
 
 const FONTS = ["Inter", "Georgia", "system-ui"] as const;
 
@@ -29,35 +31,60 @@ export function PackInspector() {
   const { pack, activeScreenId, update } = usePackStore();
   const screen = pack.screens.find((s) => s.id === activeScreenId) ?? pack.screens[0];
   const cap = screen.captions.en ?? { title: "" };
+  const [recaptionBusy, setRecaptionBusy] = useState(false);
+  const [recaptionError, setRecaptionError] = useState<string | null>(null);
+
+  async function regenerateCaptions() {
+    if (!pack.source || recaptionBusy) return;
+    setRecaptionBusy(true);
+    setRecaptionError(null);
+    try {
+      const res = await firebaseFetch("/api/ai-pack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "recaption",
+          appName: pack.appName,
+          description: pack.source.description,
+          tone: pack.source.tone,
+          audience: pack.source.audience,
+          screens: pack.screens.map((s) => ({ currentTitle: s.captions.en?.title?.slice(0, 120) })),
+        }),
+      });
+      if (res.status === 401) {
+        setRecaptionError("Sign in to regenerate");
+        return;
+      }
+      if (res.status === 429) {
+        setRecaptionError("Daily limit reached");
+        return;
+      }
+      if (!res.ok) {
+        setRecaptionError("Couldn't regenerate — try again");
+        return;
+      }
+      const { captions } = await res.json();
+      update((p) => applyCaptions(p, captions));
+    } catch {
+      setRecaptionError("Couldn't regenerate — try again");
+    } finally {
+      setRecaptionBusy(false);
+    }
+  }
 
   return (
     <aside className="w-72 shrink-0 overflow-y-auto border-l border-white/10 bg-[#101014] text-sm text-white/85">
       <Section title="Style">
         <div className="grid grid-cols-2 gap-2">
-          {PACK_STYLE_IDS.map((id) => {
-            const style = PACK_STYLES[id];
-            const bg = style.background(pack.style.accent);
-            const swatch =
-              bg.type === "solid"
-                ? bg.color
-                : bg.type === "linear-gradient"
-                  ? `linear-gradient(${bg.angle}deg, ${bg.stops.map((s) => `${s.color} ${s.at * 100}%`).join(", ")})`
-                  : bg.type === "radial-gradient"
-                    ? `radial-gradient(circle at ${bg.cx * 100}% ${bg.cy * 100}%, ${bg.stops.map((s) => `${s.color} ${s.at * 100}%`).join(", ")})`
-                    : `linear-gradient(135deg, ${mixHex(pack.style.accent, "#ffffff", 0.3)}, ${mixHex(pack.style.accent, "#000000", 0.5)})`;
-            return (
-              <button
-                key={id}
-                onClick={() => update((p) => ({ ...p, styleId: id }))}
-                className={`rounded-lg border p-1.5 text-left transition ${
-                  pack.styleId === id ? "border-violet-500" : "border-white/10 hover:border-white/25"
-                }`}
-              >
-                <div className="mb-1 h-10 rounded-md" style={{ background: swatch }} />
-                <span className="text-[11px] text-white/70">{style.label}</span>
-              </button>
-            );
-          })}
+          {PACK_STYLE_IDS.map((id) => (
+            <StyleThumb
+              key={id}
+              pack={pack}
+              styleId={id}
+              active={pack.styleId === id}
+              onClick={() => update((p) => ({ ...p, styleId: id }))}
+            />
+          ))}
         </div>
       </Section>
 
@@ -106,6 +133,18 @@ export function PackInspector() {
             Flip tilt
           </label>
         </div>
+        {pack.source && (
+          <div className="mt-3">
+            <button
+              onClick={regenerateCaptions}
+              disabled={recaptionBusy}
+              className="w-full rounded-md border border-white/10 bg-black/30 px-2.5 py-1.5 text-[12px] text-white/70 transition hover:border-white/25 disabled:opacity-50"
+            >
+              {recaptionBusy ? "Regenerating…" : "Regenerate captions"}
+            </button>
+            {recaptionError && <p className="mt-1.5 text-[11px] text-red-400">{recaptionError}</p>}
+          </div>
+        )}
       </Section>
 
       <Section title="Brand">

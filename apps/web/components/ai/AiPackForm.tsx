@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { firebaseFetch } from "@/lib/firebaseClient";
 import { savePack } from "@/lib/pack/persist";
-import { PackDocumentSchema, type PackMarketing } from "@/lib/pack/schema";
+import { PackDocumentSchema, TONE_IDS, type PackMarketing, type ToneId } from "@/lib/pack/schema";
 import { AuthModal } from "@/components/AuthModal";
 import { UpgradeModal } from "@/components/editor/UpgradeModal";
 import { useEntitlementSync } from "@/lib/billing/client";
@@ -20,6 +20,9 @@ const DESCRIPTION_MAX = 600;
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 const MIN_IMAGES = 2;
 const MAX_IMAGES = 10;
+const MAX_IMAGE_DATA_URL_LENGTH = 540_000;
+const RETRY_IMAGE_QUALITY = 0.6;
+const IMAGE_TOO_LARGE_MESSAGE = "One of your images is too detailed to send — crop it or use a smaller one.";
 
 const CONCEPT_LOADING_MESSAGES = ["Designing your narrative…", "Writing captions…", "Painting concept screens…"] as const;
 const REAL_LOADING_MESSAGES = ["Reading your screenshots…", ...CONCEPT_LOADING_MESSAGES] as const;
@@ -55,6 +58,8 @@ export function AiPackForm() {
   const [appName, setAppName] = useState("");
   const [description, setDescription] = useState("");
   const [accent, setAccent] = useState("");
+  const [tone, setTone] = useState<ToneId | "">("");
+  const [audience, setAudience] = useState("");
   const [images, setImages] = useState<PendingImage[]>([]);
   const [imageNotice, setImageNotice] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -213,19 +218,35 @@ export function AiPackForm() {
     let screenshots: { refId: string; image: string }[] = [];
     if (hasImages) {
       try {
-        const dataUrls = await Promise.all(images.map((entry) => downscaleForAi(entry.file)));
+        const dataUrls = await Promise.all(
+          images.map(async (entry) => {
+            let dataUrl = await downscaleForAi(entry.file);
+            if (dataUrl.length > MAX_IMAGE_DATA_URL_LENGTH) {
+              // One re-encode at a lower quality for this image only — most
+              // photos shrink enough here without penalizing the whole batch.
+              dataUrl = await downscaleForAi(entry.file, RETRY_IMAGE_QUALITY);
+            }
+            if (dataUrl.length > MAX_IMAGE_DATA_URL_LENGTH) {
+              throw new Error(IMAGE_TOO_LARGE_MESSAGE);
+            }
+            return dataUrl;
+          })
+        );
         screenshots = await Promise.all(
           images.map(async (entry, i) => {
             const asset = await ingestFile(entry.file);
             return { refId: asset.id, image: dataUrls[i] };
           })
         );
-      } catch {
+      } catch (err) {
         if (rotateRef.current) {
           clearInterval(rotateRef.current);
           rotateRef.current = null;
         }
-        setErrorMessage("One of your images couldn't be read — remove it and try again.");
+        const message = err instanceof Error && err.message === IMAGE_TOO_LARGE_MESSAGE
+          ? IMAGE_TOO_LARGE_MESSAGE
+          : "One of your images couldn't be read — remove it and try again.";
+        setErrorMessage(message);
         setStatus("error");
         return;
       }
@@ -239,11 +260,15 @@ export function AiPackForm() {
             ...(trimmedDescription ? { description: trimmedDescription } : {}),
             ...(accent.trim() ? { accent: accent.trim() } : {}),
             screenshots,
+            tone: tone || undefined,
+            audience: audience.trim() || undefined,
           }
         : {
             appName: trimmedName,
             description: trimmedDescription,
             ...(accent.trim() ? { accent: accent.trim() } : {}),
+            tone: tone || undefined,
+            audience: audience.trim() || undefined,
           };
 
       const res = await firebaseFetch("/api/ai-pack", {
@@ -526,6 +551,44 @@ export function AiPackForm() {
               <span className="text-white/30">
                 {description.length}/{DESCRIPTION_MAX}
               </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <div className="flex-1">
+              <label htmlFor="ai-tone" className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/50">
+                Tone <span className="normal-case text-white/30">(optional)</span>
+              </label>
+              <select
+                id="ai-tone"
+                value={tone}
+                onChange={(e) => setTone(e.target.value as ToneId | "")}
+                disabled={loading}
+                className="mt-2 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-3 text-[14px] text-white outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-400/10 disabled:opacity-50"
+              >
+                <option value="" className="bg-[#101014]">
+                  Auto
+                </option>
+                {TONE_IDS.map((id) => (
+                  <option key={id} value={id} className="bg-[#101014]">
+                    {id.charAt(0).toUpperCase() + id.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <label htmlFor="ai-audience" className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/50">
+                Audience <span className="normal-case text-white/30">(optional)</span>
+              </label>
+              <input
+                id="ai-audience"
+                value={audience}
+                onChange={(e) => setAudience(e.target.value.slice(0, 60))}
+                placeholder="Who's it for? e.g. indie developers"
+                disabled={loading}
+                maxLength={60}
+                className="mt-2 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-3 text-[14px] text-white outline-none placeholder:text-zinc-600 focus:border-violet-400 focus:ring-2 focus:ring-violet-400/10 disabled:opacity-50"
+              />
             </div>
           </div>
 

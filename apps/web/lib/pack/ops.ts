@@ -54,6 +54,34 @@ export function moveScreen(pack: PackDocument, id: string, delta: -1 | 1): PackD
   return { ...pack, screens };
 }
 
+/** Pure recaption apply: writes captions[i] into screens[i].captions.en for
+ *  i up to min(screens.length, captions.length); screens beyond that (either
+ *  side) are left untouched. Mirrors the clamp/blank-subtitle-drop pattern
+ *  used by buildPackFromPlan and setCaption. */
+export function applyCaptions(
+  pack: PackDocument,
+  captions: { title: string; subtitle?: string }[]
+): PackDocument {
+  const n = Math.min(pack.screens.length, captions.length);
+  return {
+    ...pack,
+    screens: pack.screens.map((s, i) => {
+      if (i >= n) return s;
+      const { title, subtitle } = captions[i];
+      return {
+        ...s,
+        captions: {
+          ...s.captions,
+          en: {
+            title: title.slice(0, 120),
+            ...(subtitle && subtitle.trim() ? { subtitle: subtitle.slice(0, 160) } : {}),
+          },
+        },
+      };
+    }),
+  };
+}
+
 export function setCaption(pack: PackDocument, screenId: string, title: string, subtitle: string): PackDocument {
   return {
     ...pack,
