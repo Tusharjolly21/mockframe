@@ -6,7 +6,7 @@ import { FORMAT_DIMENSIONS } from "@/lib/promo/types";
 import { getPromoTemplate } from "@/lib/promo/registry";
 import type { PromoInputProps } from "@/lib/promo/inputProps";
 import { PromoRenderRequestSchema } from "@/lib/promo/renderRequest";
-import { renderPromo } from "@/lib/promo/render.server";
+import { lambdaConfigured, renderPromo, startPromoRenderOnLambda } from "@/lib/promo/render.server";
 
 /**
  * POST /api/v1/promo-render — render a promo video to MP4 (H.264).
@@ -69,6 +69,12 @@ export async function POST(req: NextRequest) {
   };
 
   try {
+    // Cloud path: start the render and return ids — the client polls
+    // /api/v1/promo-render/status. Local dev path stays synchronous.
+    if (lambdaConfigured()) {
+      const { renderId, bucketName } = await startPromoRenderOnLambda({ templateId, inputProps });
+      return NextResponse.json({ renderId, bucketName });
+    }
     const result = await renderPromo({ templateId, inputProps });
     if (result.kind === "url") {
       return NextResponse.json({ url: result.url });

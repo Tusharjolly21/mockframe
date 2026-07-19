@@ -47,8 +47,13 @@ async function uploadVideo(media: PromoMedia): Promise<string> {
   return saved.url;
 }
 
-/** Render the project to MP4 on the server and download the file. */
-export async function exportPromoVideo(project: PromoProject, media: PromoMedia[]): Promise<void> {
+/** Render the project to MP4 on the server and download the file. Cloud
+ *  renders are async: the route returns ids and we poll for progress. */
+export async function exportPromoVideo(
+  project: PromoProject,
+  media: PromoMedia[],
+  onProgress?: (pct: number) => void,
+): Promise<void> {
   if (media.length === 0) throw new Error("Add a screenshot first");
 
   const screenshots = await Promise.all(
@@ -88,8 +93,26 @@ export async function exportPromoVideo(project: PromoProject, media: PromoMedia[
   const filename = `mockframe-promo-${project.format.replace(":", "x")}.mp4`;
   const contentType = res.headers.get("Content-Type") ?? "";
   if (contentType.includes("application/json")) {
-    const { url } = (await res.json()) as { url: string };
-    triggerDownload(url, filename);
+    const body = (await res.json()) as { url?: string; renderId?: string; bucketName?: string };
+    if (body.url) {
+      triggerDownload(body.url, filename);
+      return;
+    }
+    if (!body.renderId || !body.bucketName) throw new Error("Render did not start");
+    // poll the cloud render until done
+    for (;;) {
+      await new Promise((r) => setTimeout(r, 2500));
+      const sr = await fetch(`/api/v1/promo-render/status?renderId=${encodeURIComponent(body.renderId)}&bucket=${encodeURIComponent(body.bucketName)}`);
+      if (!sr.ok) throw new Error((await sr.json().catch(() => null))?.error ?? "Render status failed");
+      const st = (await sr.json()) as { done: boolean; progress: number; outputFile: string | null; error: string | null };
+      if (st.error) throw new Error(st.error);
+      onProgress?.(Math.round((st.progress ?? 0) * 100));
+      if (st.done) {
+        if (!st.outputFile) throw new Error("Render finished without a file");
+        triggerDownload(st.outputFile, filename);
+        return;
+      }
+    }
   } else {
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);

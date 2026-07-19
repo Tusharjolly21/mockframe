@@ -122,7 +122,9 @@ export default function PromoPanel({ onClose }: { onClose: () => void }) {
     if (!isPro) return openUpgrade("Promo video export");
     setStatus({ kind: "rendering", message: "Rendering your video — this takes about a minute…" });
     try {
-      await exportPromoVideo({ ...project, screenshotAssetIds: media.map((m) => m.id) }, media);
+      await exportPromoVideo({ ...project, screenshotAssetIds: media.map((m) => m.id) }, media, (pct) =>
+        setStatus({ kind: "rendering", message: `Rendering in the cloud — ${pct}%` }),
+      );
       setStatus({ kind: "done", message: "Downloaded! Check your files." });
     } catch (err) {
       if (err instanceof PromoExportProError) {
