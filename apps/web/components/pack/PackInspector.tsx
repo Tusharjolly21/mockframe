@@ -48,7 +48,7 @@ export function PackInspector() {
           description: pack.source.description,
           tone: pack.source.tone,
           audience: pack.source.audience,
-          screens: pack.screens.map((s) => ({ currentTitle: s.captions.en?.title })),
+          screens: pack.screens.map((s) => ({ currentTitle: s.captions.en?.title?.slice(0, 120) })),
         }),
       });
       if (res.status === 401) {
