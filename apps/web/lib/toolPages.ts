@@ -8,6 +8,8 @@ export interface ToolPage {
    *  programmatic pages is real per-page value, not word padding. */
   overview: string;
   editorHref: string;
+  /** phone-optimised flow for this tool, offered to small screens */
+  mobileHref?: string;
   cta: string;
   image: string;
   imageAlt: string;
@@ -173,6 +175,7 @@ export const TOOL_PAGES: ToolPage[] = [
     overview:
       "When you're demoing a messaging feature, writing onboarding docs or designing a product walkthrough, a real WhatsApp screenshot exposes a real conversation and rarely says exactly what you need. This generator lets you script both sides of the chat and control the details that make it read as authentic — contact name and status, timestamps, single, double and blue ticks, the wallpaper, and light or dark mode. Export it inside a photoreal iPhone or Android frame at HD or higher. It's free with no sign-up, and a one-click “fictional” label keeps recreated chats clearly marked as mockups.",
     editorHref: "/editor?screen=whatsapp",
+    mobileHref: "/chat",
     cta: "Make a WhatsApp mockup",
     image: "/hero/hero-iphone.webp",
     imageAlt: "A WhatsApp chat mockup shown in a photoreal iPhone",
@@ -204,6 +207,7 @@ export const TOOL_PAGES: ToolPage[] = [
     overview:
       "The blue-and-grey iMessage look is instantly recognisable, which is exactly why it's used in ads, reels and product tutorials — and why you don't want to screenshot a real thread to get it. Write both sides of the conversation, toggle each message between blue iMessage bubbles and green SMS, and add the details that sell it: a date header, the “Delivered / Read” status and a typing indicator. Bubble tails and the status bar match the real Messages app, and you can export a tall 9:16 version for stories and app-store previews.",
     editorHref: "/editor?screen=imessage",
+    mobileHref: "/chat",
     cta: "Make an iMessage mockup",
     image: "/hero/lib-iphone-desert.webp",
     imageAlt: "A fake text message conversation shown in an iPhone",

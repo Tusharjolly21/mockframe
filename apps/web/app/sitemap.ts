@@ -27,6 +27,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/app-store-screenshots`, lastModified: UPDATED.packStudio, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/ai`, lastModified: UPDATED.ai, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/tools`, lastModified: UPDATED.tools, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${SITE_URL}/chat`, lastModified: UPDATED.tools, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/templates`, lastModified: UPDATED.templates, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/pricing`, lastModified: UPDATED.site, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/developers/api`, lastModified: UPDATED.site, changeFrequency: "monthly", priority: 0.7 },

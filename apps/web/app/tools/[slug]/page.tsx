@@ -90,9 +90,14 @@ export default async function ToolPageRoute({ params }: { params: Promise<{ slug
           <h1 className="mt-4 max-w-xl text-[42px] font-medium leading-[1.02] sm:text-[58px]">{tool.name}</h1>
           <p className="mt-5 max-w-xl text-[16px] leading-7 text-zinc-400">{tool.description}</p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Link href={tool.editorHref} className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-[14px] font-semibold text-zinc-900 hover:bg-zinc-200">
+            <Link href={tool.editorHref} className={`${tool.mobileHref ? "hidden sm:inline-flex" : "inline-flex"} items-center gap-2 rounded-lg bg-white px-5 py-3 text-[14px] font-semibold text-zinc-900 hover:bg-zinc-200`}>
               {tool.cta} <ArrowRight size={17} />
             </Link>
+            {tool.mobileHref && (
+              <Link href={tool.mobileHref} className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-[14px] font-semibold text-zinc-900 hover:bg-zinc-200 sm:hidden">
+                {tool.cta} — on your phone <ArrowRight size={17} />
+              </Link>
+            )}
             <span className="inline-flex items-center gap-1.5 text-[13px] text-zinc-500"><Check size={14} /> No sign-up to start</span>
           </div>
         </div>
