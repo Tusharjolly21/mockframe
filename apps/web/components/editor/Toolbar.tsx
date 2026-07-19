@@ -8,6 +8,7 @@ import {
   ArrowUp,
   Box,
   Clapperboard,
+  Palette,
   Copy,
   FolderOpen,
   Image as ImageIcon,
@@ -24,6 +25,7 @@ import {
 } from "lucide-react";
 import { AccountButton } from "@/components/AccountButton";
 import { BrandMark } from "@/components/marketing/BrandMark";
+import { BrandKitPanel } from "./BrandKitPanel";
 import { ingestFile, resolveAsset } from "@/lib/assets";
 import { useDraftsUi } from "@/lib/drafts";
 import { addAppIcon, addText, duplicateLayer, removeLayer, reorderLayer } from "@/lib/sceneOps";
@@ -53,6 +55,8 @@ export function Toolbar() {
   const [draftsOpen, setDraftsOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
   const [renderOpen, setRenderOpen] = useState(false);
+  const [brandOpen, setBrandOpen] = useState(false);
+  const brandRef = useRef<HTMLDivElement>(null);
   const layersRef = useRef<HTMLDivElement>(null);
   const draftsRef = useRef<HTMLDivElement>(null);
   const batchRef = useRef<HTMLDivElement>(null);
@@ -68,15 +72,16 @@ export function Toolbar() {
   }, []);
 
   useEffect(() => {
-    if (!layersOpen && !draftsOpen && !batchOpen) return;
+    if (!layersOpen && !draftsOpen && !batchOpen && !brandOpen) return;
     const onDown = (e: MouseEvent) => {
       if (layersOpen && !layersRef.current?.contains(e.target as Node)) setLayersOpen(false);
       if (draftsOpen && !draftsRef.current?.contains(e.target as Node)) setDraftsOpen(false);
       if (batchOpen && !batchRef.current?.contains(e.target as Node)) setBatchOpen(false);
+      if (brandOpen && !brandRef.current?.contains(e.target as Node)) setBrandOpen(false);
     };
     window.addEventListener("mousedown", onDown);
     return () => window.removeEventListener("mousedown", onDown);
-  }, [layersOpen, draftsOpen, batchOpen]);
+  }, [layersOpen, draftsOpen, batchOpen, brandOpen]);
 
   return (
     <>
@@ -152,6 +157,19 @@ export function Toolbar() {
           {batchOpen && (
             <Popover className="left-1/2 top-[calc(100%+10px)] -ml-44 p-0">
               <ShotBatchPanel onToast={toast} />
+            </Popover>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="relative" ref={brandRef}>
+        <IconButton title="Brand kit — colours & logo everywhere" onClick={() => setBrandOpen((v) => !v)} active={brandOpen}>
+          <Palette size={16} />
+        </IconButton>
+        <AnimatePresence>
+          {brandOpen && (
+            <Popover className="left-1/2 top-[calc(100%+10px)] -ml-32 p-0">
+              <BrandKitPanel onToast={toast} />
             </Popover>
           )}
         </AnimatePresence>

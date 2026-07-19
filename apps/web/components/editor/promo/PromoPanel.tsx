@@ -11,6 +11,7 @@ import { buildPromoInputProps, type PromoScreenshot } from "@/lib/promo/inputPro
 import { getPromoBackground, PROMO_BACKGROUND_IDS } from "@/remotion/promo/kit/backgrounds";
 import { PROMO_COMPONENTS } from "@/remotion/promo/templates";
 import { exportPromoVideo, PromoExportProError, type PromoMedia } from "@/lib/promo/export";
+import { loadBrandKit } from "@/lib/brand";
 
 const PLACEHOLDER: PromoScreenshot = {
   url:
@@ -69,7 +70,11 @@ export default function PromoPanel({ onClose }: { onClose: () => void }) {
   const isPro = useIsPro();
   const [step, setStep] = useState(0);
   const [media, setMedia] = useState<PromoMedia[]>([]);
-  const [project, setProject] = useState<PromoProject>(() => createPromoProject("rise-reveal", []));
+  const [project, setProject] = useState<PromoProject>(() => {
+    const base = createPromoProject("rise-reveal", []);
+    const brand = loadBrandKit();
+    return brand ? { ...base, accent: brand.accent } : base;
+  });
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const fileRef = useRef<HTMLInputElement>(null);
 
