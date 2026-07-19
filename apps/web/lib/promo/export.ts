@@ -1,11 +1,22 @@
 "use client";
 
-import { resolveAsset } from "@/lib/assets";
+import { firebaseFetch } from "@/lib/firebaseClient";
 import type { PromoProject } from "./types";
 
 /** Thrown when the server rejects the render because the caller isn't Pro. The
  *  panel catches this to open the upgrade modal instead of showing an error. */
 export class PromoExportProError extends Error {}
+
+/** What the panel holds per uploaded screen: images resolve from the asset
+ *  store, videos are object URLs probed for dimensions on ingest. */
+export type PromoMedia = {
+  id: string;
+  url: string;
+  width: number;
+  height: number;
+  kind: "image" | "video";
+  name?: string;
+};
 
 async function toDataUrl(url: string): Promise<string> {
   if (url.startsWith("data:")) return url;
@@ -18,26 +29,34 @@ async function toDataUrl(url: string): Promise<string> {
   });
 }
 
-function triggerDownload(url: string, filename: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.rel = "noopener";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+/** Videos are too large to inline — upload once to /api/assets (sniffed +
+ *  size-capped server-side) and send the hosted URL to the renderer. */
+async function uploadVideo(media: PromoMedia): Promise<string> {
+  const blob = await (await fetch(media.url)).blob();
+  const form = new FormData();
+  form.set("file", new File([blob], media.name || "recording.mp4", { type: blob.type || "video/mp4" }));
+  form.set("width", String(media.width));
+  form.set("height", String(media.height));
+  const res = await firebaseFetch("/api/assets", { method: "POST", body: form });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => null))?.error;
+    throw new Error(err ?? "Video upload failed");
+  }
+  const saved = (await res.json()) as { url: string };
+  if (!saved.url?.startsWith("https://")) throw new Error("Video upload did not return a hosted URL");
+  return saved.url;
 }
 
 /** Render the project to MP4 on the server and download the file. */
-export async function exportPromoVideo(project: PromoProject): Promise<void> {
-  if (project.screenshotAssetIds.length === 0) throw new Error("Add a screenshot first");
+export async function exportPromoVideo(project: PromoProject, media: PromoMedia[]): Promise<void> {
+  if (media.length === 0) throw new Error("Add a screenshot first");
 
   const screenshots = await Promise.all(
-    project.screenshotAssetIds.map(async (id) => {
-      const asset = resolveAsset(id);
-      if (!asset?.url) throw new Error("A screenshot could not be loaded");
-      return { dataUrl: await toDataUrl(asset.url), width: asset.width, height: asset.height };
-    }),
+    media.map(async (m) =>
+      m.kind === "video"
+        ? { kind: "video" as const, url: await uploadVideo(m), width: m.width, height: m.height }
+        : { kind: "image" as const, dataUrl: await toDataUrl(m.url), width: m.width, height: m.height },
+    ),
   );
 
   const res = await fetch("/api/v1/promo-render", {
@@ -77,4 +96,14 @@ export async function exportPromoVideo(project: PromoProject): Promise<void> {
     triggerDownload(url, filename);
     setTimeout(() => URL.revokeObjectURL(url), 15000);
   }
+}
+
+function triggerDownload(url: string, filename: string) {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }

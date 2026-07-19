@@ -14,7 +14,7 @@ import { EASE_IN_OUT, EASE_OUT, rgba, screenAt } from "../kit/theme";
 export const ScrollStory: FC<PromoInputProps> = ({ deviceId, screenshots, texts, accent, background, pattern, watermark, musicUrl, width, height }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames: dur } = useVideoConfig();
-  usePreloadScreenshots(screenshots.map((s) => s.url));
+  usePreloadScreenshots(screenshots.map((s) => s.url), screenshots.map((s) => s.kind));
   const [headline = "", subhead = ""] = texts;
 
   const phoneW = Math.min(width * 0.56, (height * 0.58) / 2.03);

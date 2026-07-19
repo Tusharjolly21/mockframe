@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   const dims = FORMAT_DIMENSIONS[format];
   const inputProps: PromoInputProps = {
     deviceId,
-    screenshots: screenshots.map((s) => ({ url: s.dataUrl, width: s.width, height: s.height })),
+    screenshots: screenshots.map((s) => ({ url: (s.dataUrl ?? s.url)!, width: s.width, height: s.height, kind: s.kind })),
     texts,
     accent,
     background,

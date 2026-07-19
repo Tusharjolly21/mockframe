@@ -14,7 +14,7 @@ import { cutsPassed, EASE_CINE, EASE_OUT, punchAt, screenAt, velBlur } from "../
 export const FeaturePop: FC<PromoInputProps> = ({ deviceId, screenshots, texts, accent, background, pattern, watermark, musicUrl, width, height }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames: dur } = useVideoConfig();
-  usePreloadScreenshots(screenshots.map((s) => s.url));
+  usePreloadScreenshots(screenshots.map((s) => s.url), screenshots.map((s) => s.kind));
   const features = [texts[0] ?? "", texts[1] ?? "", texts[2] ?? ""];
 
   const phoneW = Math.min(width * 0.54, (height * 0.56) / 2.03);

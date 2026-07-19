@@ -14,7 +14,7 @@ import { cutsPassed, FONT_STACK, punchAt, rgba, screenAt, velBlur } from "../kit
 export const QuickCut: FC<PromoInputProps> = ({ deviceId, screenshots, texts, accent, background, pattern, watermark, musicUrl, width, height }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames: dur } = useVideoConfig();
-  usePreloadScreenshots(screenshots.map((s) => s.url));
+  usePreloadScreenshots(screenshots.map((s) => s.url), screenshots.map((s) => s.kind));
   const [title = "", feature1 = "", feature2 = "", cta = ""] = texts;
 
   const seg = (start: number, end: number, fadeIn = 6, fadeOut = 6) =>

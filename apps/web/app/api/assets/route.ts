@@ -32,6 +32,20 @@ function sniffRasterType(buf: Buffer): string | null {
   return null;
 }
 
+/** Sniff container magic for the screen-recording formats the promo maker
+ *  accepts. Same trust rule as images: never believe the client MIME. */
+function sniffVideoType(buf: Buffer): string | null {
+  if (buf.length < 12) return null;
+  // ISO BMFF (mp4/mov): ....ftyp
+  if (buf.toString("ascii", 4, 8) === "ftyp") {
+    const brand = buf.toString("ascii", 8, 12);
+    return brand.startsWith("qt") ? "video/quicktime" : "video/mp4";
+  }
+  // WebM/Matroska: EBML header
+  if (buf[0] === 0x1a && buf[1] === 0x45 && buf[2] === 0xdf && buf[3] === 0xa3) return "video/webm";
+  return null;
+}
+
 function configError() {
   return NextResponse.json({ error: "Firebase is not configured", hint: firebaseSetupHint() }, { status: 501 });
 }
@@ -98,7 +112,9 @@ export async function POST(req: NextRequest) {
     const form = await req.formData();
     const file = form.get("file");
     if (!(file instanceof File)) return NextResponse.json({ error: "Missing file" }, { status: 400 });
-    if (!file.type.startsWith("image/")) return NextResponse.json({ error: "Only image uploads are supported" }, { status: 415 });
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+      return NextResponse.json({ error: "Only image or video uploads are supported" }, { status: 415 });
+    }
     if (file.size > maxBytes) {
       return NextResponse.json(
         {
@@ -132,9 +148,9 @@ export async function POST(req: NextRequest) {
     // SVG (which can carry <script> and would execute from the storage origin
     // when opened via a signed URL) and any non-raster payload wearing an
     // image/* label. The stored contentType is pinned to the sniffed type.
-    const sniffedType = sniffRasterType(buffer);
+    const sniffedType = sniffRasterType(buffer) ?? sniffVideoType(buffer);
     if (!sniffedType) {
-      return NextResponse.json({ error: "Only PNG, JPEG, WebP or GIF images are supported" }, { status: 415 });
+      return NextResponse.json({ error: "Only PNG, JPEG, WebP, GIF images or MP4/WebM/MOV videos are supported" }, { status: 415 });
     }
     const sha256 = createHash("sha256").update(buffer).digest("hex");
     const requestedId = String(form.get("id") ?? "");

@@ -14,7 +14,7 @@ import { cutsPassed, EASE_CINE, EASE_OUT, screenAt, velBlur } from "../kit/theme
 export const TiltParallax: FC<PromoInputProps> = ({ deviceId, screenshots, texts, accent, background, pattern, watermark, musicUrl, width, height }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames: dur } = useVideoConfig();
-  usePreloadScreenshots(screenshots.map((s) => s.url));
+  usePreloadScreenshots(screenshots.map((s) => s.url), screenshots.map((s) => s.kind));
   const [headline = "", subhead = ""] = texts;
   const landscape = width > height;
 

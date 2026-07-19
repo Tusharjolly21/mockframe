@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { continueRender, delayRender } from "remotion";
-import { getDevice } from "@framekit/devices";
+import { continueRender, delayRender, getRemotionEnvironment, OffthreadVideo, Video } from "remotion";
+import { getDevice, getVariant } from "@framekit/devices";
 import { MockupLayerView, type ResolvedAsset } from "@framekit/renderer";
 import { DEFAULT_SHADOW, IDENTITY_TRANSFORM, type MockupLayer } from "@framekit/scene";
 import type { PromoScreenshot } from "../../../lib/promo/inputProps";
@@ -10,7 +10,9 @@ import type { PromoScreenshot } from "../../../lib/promo/inputProps";
  * image has decoded. MockupLayerView uses a plain SVG <image>, which (unlike
  * Remotion's <Img>) doesn't participate in delayRender — so we gate here.
  */
-export function usePreloadScreenshots(urls: string[]) {
+export function usePreloadScreenshots(urls: string[], kinds?: ("image" | "video" | undefined)[]) {
+  // videos participate in Remotion delayRender via <OffthreadVideo>/<Video>
+  urls = urls.filter((_, i) => (kinds?.[i] ?? "image") === "image");
   const [handle] = useState(() => delayRender(`promo: load ${urls.length} screenshot(s)`));
   useEffect(() => {
     if (urls.length === 0) {
@@ -83,11 +85,24 @@ export const RealDeviceFrame: React.FC<{
     [device?.id, deviceId, variant, offsetY, zoom],
   );
 
+  const BLACK_PIXEL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+  const isVideoShot = screenshot.kind === "video";
   const resolveAsset = useCallback(
     (id: string): ResolvedAsset | undefined =>
-      id === "shot" ? { url: screenshot.url, width: screenshot.width, height: screenshot.height } : undefined,
-    [screenshot.url, screenshot.width, screenshot.height],
+      id === "shot"
+        ? isVideoShot
+          ? { url: BLACK_PIXEL, width: screenshot.width, height: screenshot.height }
+          : { url: screenshot.url, width: screenshot.width, height: screenshot.height }
+        : undefined,
+    [screenshot.url, screenshot.width, screenshot.height, isVideoShot],
   );
+
+  const isVideo = screenshot.kind === "video";
+  // In video mode the SVG screen shows this black pixel; the recording plays in
+  // an absolutely-positioned layer clipped to the screen rect above it.
+  const videoVariant = device ? getVariant(device, variant) : undefined;
+  const overlayMarkup = isVideo ? videoVariant?.overlay : undefined;
+  const Vid = getRemotionEnvironment().isRendering ? OffthreadVideo : Video;
 
   if (!device) return null;
 
@@ -98,6 +113,31 @@ export const RealDeviceFrame: React.FC<{
           <div style={{ transform: `scale(${s})`, transformOrigin: "0 0", width: frameW }}>
             <MockupLayerView layer={layer} resolveAsset={resolveAsset} />
           </div>
+          {isVideo && (
+            <>
+              {/* the recording, clipped to the screen glass */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: device.frame.screenRect.x * s,
+                  top: device.frame.screenRect.y * s,
+                  width: device.frame.screenRect.width * s,
+                  height: device.frame.screenRect.height * s,
+                  borderRadius: device.screen.cornerRadius * s,
+                  overflow: "hidden",
+                  background: "#000",
+                }}
+              >
+                <Vid src={screenshot.url} muted loop style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
+              {/* re-draw the notch/island above the video */}
+              {overlayMarkup && (
+                <svg viewBox={`0 0 ${frameW} ${frameH}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
+                  <g dangerouslySetInnerHTML={{ __html: overlayMarkup }} />
+                </svg>
+              )}
+            </>
+          )}
           {glare > 0 && (
             <div
               style={{

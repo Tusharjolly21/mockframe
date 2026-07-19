@@ -2,7 +2,7 @@ import { FORMAT_DIMENSIONS, type PromoProject } from "./types";
 
 /** A resolved app screen: the image URL (data URI on render) plus its pixel size
  *  (needed to place it into the device screen at the right aspect). */
-export type PromoScreenshot = { url: string; width: number; height: number };
+export type PromoScreenshot = { url: string; width: number; height: number; kind?: "image" | "video" };
 
 /** The props every promo composition receives. Kept flat and serialisable so it
  *  can be passed to <Player> (preview) and to Remotion Lambda / the local
