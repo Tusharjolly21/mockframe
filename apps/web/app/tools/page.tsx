@@ -95,6 +95,15 @@ export default function ToolsIndexPage() {
         </Reveal>
       </section>
 
+      <div className="mx-auto max-w-6xl px-6 pb-14">
+        <Link href="/launch-kit" className="group relative block overflow-hidden rounded-2xl border border-violet-400/30 bg-gradient-to-br from-violet-600/20 via-fuchsia-600/10 to-transparent p-8 transition-colors hover:border-violet-300/50">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-300">New · Launch Kit Generator</p>
+          <h2 className="mt-2 max-w-xl text-[26px] font-medium leading-tight">Your entire launch day, generated in one click.</h2>
+          <p className="mt-2 max-w-xl text-[14px] leading-6 text-zinc-400">Product Hunt gallery & thumbnail, social cards, GitHub preview, Instagram story, AI-written copy and a hosted press page. First kit free.</p>
+          <span className="mt-4 inline-flex items-center gap-2 text-[13.5px] font-semibold text-white">Build my launch kit <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" /></span>
+        </Link>
+      </div>
+
       <div className="mx-auto max-w-6xl space-y-20 px-6 pb-24">
         {SECTIONS.map((section) => (
           <section key={section.heading}>
