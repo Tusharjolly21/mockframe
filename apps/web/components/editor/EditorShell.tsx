@@ -16,6 +16,7 @@ import { BottomBar } from "./BottomBar";
 import { CanvasStage } from "./CanvasStage";
 import { LeftPanel } from "./LeftPanel";
 import { RightPanel } from "./RightPanel";
+import { StarterModal } from "./StarterModal";
 import { LogoChip, Toolbar } from "./Toolbar";
 
 // Heavy (@remotion/player) + client-only — load it only when the promo flow opens.
@@ -351,6 +352,10 @@ export function EditorShell({
       </AnimatePresence>
 
       {promoOpen && <PromoPanel onClose={() => setPromoOpen(false)} />}
+      <StarterModal
+        embedded={embedded}
+        deepLinked={Boolean(initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad)}
+      />
     </div>
   );
 }

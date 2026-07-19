@@ -212,6 +212,12 @@ export function LogoChip() {
         <BrandMark size={28} />
         <span className="text-[14px] font-bold tracking-tight text-[#17171c]">MockFrame</span>
       </Link>
+      <button
+        onClick={() => window.dispatchEvent(new CustomEvent("framekit:starter-open"))}
+        className="fk-press ml-0.5 rounded-lg px-2.5 py-1.5 text-[12.5px] font-semibold text-[#6b6b76] hover:bg-black/[0.06] hover:text-[#17171c]"
+      >
+        Create
+      </button>
       <Link
         href="/templates"
         className="fk-press ml-0.5 rounded-lg px-2.5 py-1.5 text-[12.5px] font-semibold text-[#6b6b76] hover:bg-black/[0.06] hover:text-[#17171c]"
