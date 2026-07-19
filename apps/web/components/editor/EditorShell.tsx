@@ -29,6 +29,7 @@ export function EditorShell({
   upgradePlan,
   openCaptureOnLoad = false,
   openPromoOnLoad = false,
+  openReplayOnLoad = false,
   embedded = false,
 }: {
   initialDeviceId?: string;
@@ -38,6 +39,7 @@ export function EditorShell({
   upgradePlan?: string;
   openCaptureOnLoad?: boolean;
   openPromoOnLoad?: boolean;
+  openReplayOnLoad?: boolean;
   embedded?: boolean;
 }) {
   const setScene = useSceneStore((s) => s.setScene);
@@ -56,6 +58,12 @@ export function EditorShell({
   useEffect(() => {
     if (openPromoOnLoad) setPromoOpen(true);
   }, [openPromoOnLoad]);
+  useEffect(() => {
+    if (!openReplayOnLoad) return;
+    // wait for the screen scene injected by initialScreenApp to settle first
+    const t = setTimeout(() => window.dispatchEvent(new CustomEvent("framekit:animate-open")), 700);
+    return () => clearTimeout(t);
+  }, [openReplayOnLoad]);
 
   useEffect(() => {
     track("editor_opened", { entry: initialDeviceId ? "device_page" : openCalibrate ? "calibrate" : "direct" });

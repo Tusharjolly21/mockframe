@@ -35,7 +35,7 @@ const CHAT_SLUGS = new Set([
   "fake-teams-chat-generator",
 ]);
 
-const VIDEO_SLUGS = new Set(["app-promo-video-maker"]);
+const VIDEO_SLUGS = new Set(["app-promo-video-maker", "fake-text-video"]);
 
 const SECTIONS: { heading: string; blurb: string; tools: ToolPage[] }[] = [
   {

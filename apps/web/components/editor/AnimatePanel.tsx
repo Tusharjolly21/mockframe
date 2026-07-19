@@ -144,6 +144,14 @@ export function AnimatePanel() {
   const scene = useSceneStore((s) => s.scene);
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const [open, setOpen] = useState(false);
+
+  // Deep-link support: /editor?screen=<app>&replay=1 (fake-text-video landing)
+  // and cross-sell chips open the replay panel via this event.
+  useEffect(() => {
+    const openIt = () => setOpen(true);
+    window.addEventListener("framekit:animate-open", openIt);
+    return () => window.removeEventListener("framekit:animate-open", openIt);
+  }, []);
   const [speed, setSpeed] = useState<"slow" | "normal" | "fast">("normal");
   const [busy, setBusy] = useState<null | { pct: number; label: string }>(null);
   const [plan, setPlan] = useState<AnimShot[]>([]);

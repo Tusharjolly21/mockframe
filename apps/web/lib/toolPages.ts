@@ -495,7 +495,39 @@ export const TOOL_PAGES: ToolPage[] = [
     ],
     related: ["fake-slack-conversation-generator", "fake-discord-chat-generator", "fake-imessage-generator"],
   },
+  {
+    slug: "fake-text-video",
+    name: "Fake Text Message Video Maker",
+    eyebrow: "Animated chat-story videos",
+    description:
+      "Turn a fake text conversation into an animated video — messages appear one by one with typing indicators, sound and music. Export MP4-ready video for TikTok, Reels and Shorts. Free to build, no sign-up.",
+    overview:
+      "Chat-story videos — a text conversation playing out message by message — are one of the fastest-growing formats on TikTok, Reels and Shorts. This maker animates the whole thing for you: write both sides of the conversation in WhatsApp or iMessage (or any of 12+ apps), press play, and watch messages land with typing indicators, keyboard sounds and optional lo-fi music, inside a photoreal iPhone. Scrub the timeline, set the pacing, add a zoom or tilt effect, then export the replay as a video or GIF sized 9:16 for vertical feeds. It's the TextingStory-style workflow, but in the browser with real device frames and no watermark on the story itself.",
+    editorHref: "/editor?screen=imessage&replay=1",
+    cta: "Make a text video",
+    image: "/hero/hero-iphone.webp",
+    imageAlt: "An animated fake text conversation playing in an iPhone frame",
+    accent: "#22d3ee",
+    steps: [
+      ["Write the conversation", "Compose both sides in iMessage, WhatsApp or 12+ other apps."],
+      ["Press play", "Messages animate in one by one with typing indicators, sounds and music."],
+      ["Export the video", "Save the replay as a video or GIF, sized for TikTok, Reels and Shorts."],
+    ],
+    benefits: [
+      ["Real chat-story animation", "Typing dots, message pops and reactions — the format viewers already love."],
+      ["Sound built in", "Keyboard clicks and a lo-fi music bed, no editing app needed."],
+      ["Vertical-ready", "Compose at 9:16 inside a photoreal iPhone for full-bleed vertical video."],
+    ],
+    faq: [
+      ["How is this different from TextingStory?", "It runs in the browser with photoreal device frames, 12+ chat apps beyond plain texts, styled backgrounds, and image exports from the same scene — no app install."],
+      ["What formats can I export?", "Animated video and GIF of the replay (Pro), plus still images of any frame. Compose at 9:16 for TikTok/Reels/Shorts."],
+      ["Is it free?", "Writing and previewing the animated conversation is free with no sign-up. Video and GIF export are part of Pro."],
+      ["Can I control the pacing?", "Yes — set slow/normal/fast playback, scrub the timeline, and tune when each message lands."],
+    ],
+    related: ["fake-imessage-generator", "fake-whatsapp-chat-generator", "app-promo-video-maker"],
+  },
 ];
+
 
 
 export function toolPage(slug: string): ToolPage | undefined {
