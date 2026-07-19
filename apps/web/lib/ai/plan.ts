@@ -174,6 +174,62 @@ export function buildPackFromPlan(plan: AiPackPlan, appName: string): PackDocume
   return pack;
 }
 
+/* Structured-outputs caveat (same as AiScreenDocSchema above): no .min()/.max()
+   on the title/subtitle strings themselves — only the array length is
+   constrained (both supported by the SDK's structured-outputs subset).
+   applyCaptions (pack/ops.ts) clamps title/subtitle at the plan → pack
+   boundary, same pattern as buildPackFromPlan. */
+export const RecaptionPlanSchema = z.object({
+  captions: z
+    .array(z.object({ title: z.string(), subtitle: z.string().optional() }))
+    .min(1)
+    .max(10),
+});
+
+export type RecaptionPlan = z.infer<typeof RecaptionPlanSchema>;
+
+export const AI_RECAPTION_SYSTEM_PROMPT = `You are an expert App Store marketing copywriter for MockFrame. Given an app's name and existing screenshot pack, rewrite the caption for every screen.
+
+Caption rules: titles are benefit-led, at most 6 words, no ending period. Subtitles optional, at most 10 words, only when they add information beyond the title.
+
+Adapt the copy to the app (its name and description), the requested tone (if given), and the target audience (if given) — the same feature should read differently for a "playful" tone aimed at "students" than a "professional" tone aimed at "enterprise teams". Keep captions specific to what each screen actually shows; never generic filler like "Great features" or "Amazing app".
+
+Return exactly one caption per screen, in the same order the screens were given.`;
+
+export function aiRecaptionUserPrompt(
+  appName: string,
+  description: string | undefined,
+  tone: string | undefined,
+  audience: string | undefined,
+  screens: { archetype?: string; currentTitle?: string }[]
+): string {
+  let prompt = `App name: ${appName}`;
+  if (description) prompt += `\nDescription: ${description}`;
+  if (tone) prompt += `\nTone: ${tone}`;
+  if (audience) prompt += `\nAudience: ${audience}`;
+  prompt += `\n\nScreens (rewrite one caption per screen, in order):`;
+  screens.forEach((s, i) => {
+    const parts: string[] = [];
+    if (s.archetype) parts.push(`archetype: ${s.archetype}`);
+    if (s.currentTitle) parts.push(`current title: "${s.currentTitle}"`);
+    prompt += `\nScreen ${i + 1}${parts.length ? ` (${parts.join(", ")})` : ""}`;
+  });
+  return prompt;
+}
+
+/** Structured-outputs returns however many captions the model produced, which
+ *  is not guaranteed to match the pack's screen count — clamp deterministically
+ *  at the plan → applyCaptions boundary, mirroring repairRealPlanScreens. Never
+ *  throws: truncates when too many, pads blank titles when too few. */
+export function repairRecaption(
+  captions: RecaptionPlan["captions"],
+  n: number
+): { title: string; subtitle?: string }[] {
+  const repaired = captions.slice(0, n).map((c) => ({ ...c }));
+  while (repaired.length < n) repaired.push({ title: "" });
+  return repaired;
+}
+
 export function repairRealPlanScreens(screens: RealPackPlan["screens"], refIds: string[]): RealPackPlan["screens"] {
   const refSet = new Set(refIds);
   const seenRefs = new Set<string>();

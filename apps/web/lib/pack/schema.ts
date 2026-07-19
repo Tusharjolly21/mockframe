@@ -151,6 +151,19 @@ export const PACK_LAUNCH_SURFACES: Record<LaunchSurfaceId, LaunchSurface> = {
   },
 };
 
+export const TONE_IDS = ["playful", "professional", "technical", "bold", "minimal"] as const;
+
+export type ToneId = (typeof TONE_IDS)[number];
+
+/** Free-text inputs that seeded an AI-generated pack; kept for re-generation
+ *  (e.g. recaption) so the app's description/tone/audience don't need to be
+ *  re-entered. Optional + additive: legacy packs without it still parse. */
+export const PackSourceSchema = z.object({
+  description: z.string().max(600).optional(),
+  tone: z.enum(TONE_IDS).optional(),
+  audience: z.string().max(60).optional(),
+});
+
 export const CaptionSchema = z.object({
   title: z.string().max(120),
   subtitle: z.string().max(160).optional(),
@@ -209,11 +222,13 @@ export const PackDocumentSchema = z.object({
     })
     .optional(),
   marketing: MarketingSchema.optional(),
+  source: PackSourceSchema.optional(),
 });
 
 export type PackScreen = z.infer<typeof PackScreenSchema>;
 export type PackDocument = z.infer<typeof PackDocumentSchema>;
 export type PackMarketing = z.infer<typeof MarketingSchema>;
+export type PackSource = z.infer<typeof PackSourceSchema>;
 
 export const DEFAULT_LAUNCH = {
   tagline: "",
