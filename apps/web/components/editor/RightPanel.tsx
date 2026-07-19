@@ -116,6 +116,7 @@ export function RightPanel() {
         pro: removeWatermark,
       });
       trackOnce("first_export", { format, pro: removeWatermark });
+      window.dispatchEvent(new CustomEvent("framekit:export-done"));
     } catch (e) {
       toast(e instanceof Error ? e.message : "Export failed");
     } finally {

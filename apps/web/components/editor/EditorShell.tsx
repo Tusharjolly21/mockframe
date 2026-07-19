@@ -16,6 +16,7 @@ import { BottomBar } from "./BottomBar";
 import { CanvasStage } from "./CanvasStage";
 import { LeftPanel } from "./LeftPanel";
 import { RightPanel } from "./RightPanel";
+import { ExportNextSteps } from "./ExportNextSteps";
 import { StarterModal } from "./StarterModal";
 import { LogoChip, Toolbar } from "./Toolbar";
 
@@ -352,6 +353,7 @@ export function EditorShell({
       </AnimatePresence>
 
       {promoOpen && <PromoPanel onClose={() => setPromoOpen(false)} />}
+      <ExportNextSteps />
       <StarterModal
         embedded={embedded}
         deepLinked={Boolean(initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad)}
