@@ -20,6 +20,9 @@ const DESCRIPTION_MAX = 600;
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 const MIN_IMAGES = 2;
 const MAX_IMAGES = 10;
+const MAX_IMAGE_DATA_URL_LENGTH = 540_000;
+const RETRY_IMAGE_QUALITY = 0.6;
+const IMAGE_TOO_LARGE_MESSAGE = "One of your images is too detailed to send — crop it or use a smaller one.";
 
 const CONCEPT_LOADING_MESSAGES = ["Designing your narrative…", "Writing captions…", "Painting concept screens…"] as const;
 const REAL_LOADING_MESSAGES = ["Reading your screenshots…", ...CONCEPT_LOADING_MESSAGES] as const;
@@ -215,19 +218,35 @@ export function AiPackForm() {
     let screenshots: { refId: string; image: string }[] = [];
     if (hasImages) {
       try {
-        const dataUrls = await Promise.all(images.map((entry) => downscaleForAi(entry.file)));
+        const dataUrls = await Promise.all(
+          images.map(async (entry) => {
+            let dataUrl = await downscaleForAi(entry.file);
+            if (dataUrl.length > MAX_IMAGE_DATA_URL_LENGTH) {
+              // One re-encode at a lower quality for this image only — most
+              // photos shrink enough here without penalizing the whole batch.
+              dataUrl = await downscaleForAi(entry.file, RETRY_IMAGE_QUALITY);
+            }
+            if (dataUrl.length > MAX_IMAGE_DATA_URL_LENGTH) {
+              throw new Error(IMAGE_TOO_LARGE_MESSAGE);
+            }
+            return dataUrl;
+          })
+        );
         screenshots = await Promise.all(
           images.map(async (entry, i) => {
             const asset = await ingestFile(entry.file);
             return { refId: asset.id, image: dataUrls[i] };
           })
         );
-      } catch {
+      } catch (err) {
         if (rotateRef.current) {
           clearInterval(rotateRef.current);
           rotateRef.current = null;
         }
-        setErrorMessage("One of your images couldn't be read — remove it and try again.");
+        const message = err instanceof Error && err.message === IMAGE_TOO_LARGE_MESSAGE
+          ? IMAGE_TOO_LARGE_MESSAGE
+          : "One of your images couldn't be read — remove it and try again.";
+        setErrorMessage(message);
         setStatus("error");
         return;
       }

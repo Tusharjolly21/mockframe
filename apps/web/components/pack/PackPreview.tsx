@@ -39,9 +39,21 @@ export function PackPreview() {
     } else if (pack.targets[activeTarget as PackTargetId]) {
       return;
     }
-    const anyEnabled = PACK_TARGET_IDS.some((id) => pack.targets[id]);
-    if (!anyEnabled) return; // nothing enabled — don't loop trying to switch
-    setActiveTarget(PACK_TARGET_IDS.find((id) => pack.targets[id]) ?? "appstore-69");
+    const anyStoreEnabled = PACK_TARGET_IDS.some((id) => pack.targets[id]);
+    if (anyStoreEnabled) {
+      setActiveTarget(PACK_TARGET_IDS.find((id) => pack.targets[id]) ?? "appstore-69");
+      return;
+    }
+    // no store target enabled — don't dwell on a disabled launch surface
+    // either; hop to the first enabled one if any exists.
+    if (activeTarget.startsWith("launch:")) {
+      const firstEnabledLaunch = PACK_LAUNCH_SURFACE_IDS.find((id) => packLaunch(pack).surfaces[id]);
+      if (firstEnabledLaunch && activeTarget !== `launch:${firstEnabledLaunch}`) {
+        setActiveTarget(`launch:${firstEnabledLaunch}`);
+      }
+      return;
+    }
+    // nothing enabled at all — don't loop trying to switch
   }, [pack.targets, pack.launch, activeTarget, setActiveTarget]);
 
   const screenIndex = Math.max(0, pack.screens.findIndex((s) => s.id === activeScreenId));

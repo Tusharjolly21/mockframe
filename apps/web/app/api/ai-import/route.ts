@@ -57,6 +57,7 @@ async function fetchWithGuardedRedirects(startUrl: URL): Promise<{ response: Res
     if (response.status >= 300 && response.status < 400) {
       redirects++;
       if (redirects > MAX_REDIRECT_HOPS) throw new ImportFetchError("too-many-redirects");
+      response.body?.cancel().catch(() => {});
       current = resolveRedirectTarget(response.headers.get("location"), current);
       continue;
     }

@@ -11,7 +11,7 @@ const JPEG_QUALITY = 0.8;
 
 type LoadedImage = { source: CanvasImageSource; width: number; height: number; cleanup: () => void };
 
-export async function downscaleForAi(file: File): Promise<string> {
+export async function downscaleForAi(file: File, quality: number = JPEG_QUALITY): Promise<string> {
   if (!file.type.startsWith("image/")) {
     throw new Error("Only image files are supported");
   }
@@ -30,7 +30,7 @@ export async function downscaleForAi(file: File): Promise<string> {
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas is not supported in this browser");
     ctx.drawImage(source, 0, 0, targetWidth, targetHeight);
-    return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+    return canvas.toDataURL("image/jpeg", quality);
   } finally {
     cleanup();
   }

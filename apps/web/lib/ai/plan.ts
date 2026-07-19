@@ -98,7 +98,7 @@ All colors are 6-digit lowercase hex like #0ea5e9.
 
 Marketing copy: also write the launch copy for this app in the marketing field. appStoreSubtitle: at most 30 characters, benefit-led, complements the app name (App Store shows it right under the name). appStoreDescription: 2-4 short paragraphs, first line is the hook. keywords: 6-12 single words or short phrases, no duplicates of the app name. productHuntTagline: at most 60 characters, punchy, "what it does in one line". launchTweet: at most 280 characters, first-person founder voice, at most 1 emoji, no hashtag spam.`;
 
-export const AI_REAL_SYSTEM_PROMPT = `You are an expert App Store marketing designer for MockFrame. Given an app's name, description, and real screenshots, curate and caption a screenshot pack that tells a conversion story.
+export const AI_REAL_SYSTEM_PROMPT = `You are an expert App Store marketing designer for MockFrame. Given an app's name, description, and real screenshots, caption every screenshot provided (do not omit any) to build a screenshot pack that tells a conversion story.
 
 Narrative structure: screen 1 hooks with the core promise, screens 2-6 show the strongest features, later screens build trust, final screen closes with a call to action. Order screens to guide the user through a natural conversion journey.
 
@@ -141,7 +141,7 @@ export function aiRealUserPrompt(
   refIds.forEach((ref, i) => {
     prompt += `\nScreenshot ${i + 1} (ref: ${ref})`;
   });
-  prompt += `\n\nSelect and caption 2-10 of these screenshots in conversion-story order. Reference each by its ref ID.`;
+  prompt += `\n\nCaption every screenshot listed above, in conversion-story order (do not omit any). Reference each by its ref ID.`;
   return prompt;
 }
 
