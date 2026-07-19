@@ -100,7 +100,7 @@ export function StarterModal({ deepLinked, embedded }: { deepLinked: boolean; em
       text: "A full store-ready screenshot pack — by hand or from AI.",
       onClick: () => {
         dismiss();
-        window.location.href = "/app-store-screenshots";
+        window.open("/app-store-screenshots", "_blank", "noopener");
       },
     },
   ];

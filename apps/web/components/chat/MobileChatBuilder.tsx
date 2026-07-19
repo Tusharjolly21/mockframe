@@ -68,7 +68,7 @@ export function MobileChatBuilder() {
           <BrandMark size={24} />
           <span className="text-[14px] font-semibold">MockFrame</span>
         </Link>
-        <Link href="/editor" className="hidden items-center gap-1.5 text-[12px] text-zinc-400 sm:inline-flex">
+        <Link href="/editor" target="_blank" rel="noopener" className="hidden items-center gap-1.5 text-[12px] text-zinc-400 sm:inline-flex">
           <Monitor size={13} /> Full editor (desktop)
         </Link>
       </header>
@@ -140,7 +140,7 @@ export function MobileChatBuilder() {
 
         <p className="pt-1 text-center text-[11px] leading-5 text-zinc-600">
           Free download, no watermark, no sign-up. Want more apps, video export and devices?{" "}
-          <Link href="/editor" className="text-violet-300">Open the full editor</Link> on desktop.
+          <Link href="/editor" target="_blank" rel="noopener" className="text-violet-300">Open the full editor</Link> on desktop.
         </p>
       </section>
 

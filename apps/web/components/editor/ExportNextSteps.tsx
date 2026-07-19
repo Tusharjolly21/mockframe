@@ -62,6 +62,8 @@ export function ExportNextSteps() {
             </button>
             <a
               href="/app-store-screenshots"
+              target="_blank"
+              rel="noopener"
               className="fk-press inline-flex items-center gap-1.5 rounded-lg border border-black/10 px-3 py-2 text-[12px] font-semibold text-[#17171c] hover:bg-black/5"
             >
               <Sparkles size={13} /> Build your App Store pack <ArrowRight size={12} />

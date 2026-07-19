@@ -226,7 +226,7 @@ export function Toolbar() {
 export function LogoChip() {
   return (
     <div className="fk-card pointer-events-auto flex items-center gap-1 rounded-2xl px-2.5 py-1.5">
-      <Link href="/" aria-label="MockFrame home" className="flex items-center gap-2 pr-1">
+      <Link href="/" target="_blank" rel="noopener" aria-label="MockFrame home (new tab)" className="flex items-center gap-2 pr-1">
         <BrandMark size={28} />
         <span className="text-[14px] font-bold tracking-tight text-[#17171c]">MockFrame</span>
       </Link>
@@ -238,12 +238,16 @@ export function LogoChip() {
       </button>
       <Link
         href="/templates"
+        target="_blank"
+        rel="noopener"
         className="fk-press ml-0.5 rounded-lg px-2.5 py-1.5 text-[12.5px] font-semibold text-[#6b6b76] hover:bg-black/[0.06] hover:text-[#17171c]"
       >
         Templates
       </Link>
       <Link
         href="/dashboard"
+        target="_blank"
+        rel="noopener"
         className="fk-press rounded-lg px-2.5 py-1.5 text-[12.5px] font-semibold text-[#6b6b76] hover:bg-black/[0.06] hover:text-[#17171c]"
       >
         My scenes
