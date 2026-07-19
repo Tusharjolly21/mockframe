@@ -40,7 +40,7 @@ export function RightPanel() {
   const [scale, setScale] = useState(1);
   const [quality, setQuality] = useState<ExportQuality>("balanced");
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [busy, setBusy] = useState<"export" | "copy" | "share" | null>(null);
+  const [busy, setBusy] = useState<"export" | "copy" | "share" | "remix" | null>(null);
   const [copied, setCopied] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -164,6 +164,40 @@ export function RightPanel() {
     }
   };
 
+  const runRemixLink = async () => {
+    // remixable links are FREE by design — every shared scene advertises the
+    // editor. Assets upload first so the link works on any device.
+    setBusy("remix");
+    try {
+      const { collectAssets } = await import("@framekit/renderer");
+      const { resolveAsset: resolve, persistAsset } = await import("@/lib/assets");
+      const { firebaseFetch } = await import("@/lib/firebaseClient");
+      const current = useSceneStore.getState().scene;
+      const uploaded: { id: string; name: string; url: string; width: number; height: number }[] = [];
+      for (const id of collectAssets(current)) {
+        if (id.startsWith("builtin:") || id.startsWith("screen:")) continue; // resolvable everywhere
+        const asset = resolve(id);
+        if (!asset) continue;
+        const hosted = await persistAsset(asset);
+        uploaded.push({ id: hosted.id, name: hosted.name ?? "asset", url: hosted.url, width: hosted.width, height: hosted.height });
+      }
+      const res = await firebaseFetch("/api/scene-share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scene: current, assets: uploaded, name: "Shared mockup" }),
+      });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error ?? "Could not create remix link");
+      const url = `${window.location.origin}/s/${j.id}`;
+      await navigator.clipboard.writeText(url);
+      toast("Remix link copied — anyone can open & edit a copy 🔗");
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Could not create remix link");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const runCopy = async () => {
     // copy-to-clipboard is an export in every sense that matters
     if (!guardProScreens(scene, removeWatermark)) return;
@@ -219,6 +253,14 @@ export function RightPanel() {
           className="fk-press grid h-10 w-10 place-items-center rounded-xl border border-[#e4e4ec] bg-white text-[#5a5a66] hover:border-[#c9c9d4]"
         >
           {busy === "share" ? <Loader2 size={15} className="animate-spin" /> : <Link2 size={15} />}
+        </button>
+        <button
+          title="Copy a remix link — anyone can open & edit a copy (free)"
+          onClick={runRemixLink}
+          disabled={!!busy}
+          className="fk-press grid h-10 w-10 place-items-center rounded-xl border border-[#e4e4ec] bg-white text-[#5a5a66] hover:border-[#c9c9d4]"
+        >
+          {busy === "remix" ? <Loader2 size={15} className="animate-spin" /> : <Share2 size={15} />}
         </button>
         <div className="relative z-60">
           <button

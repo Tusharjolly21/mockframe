@@ -32,6 +32,7 @@ export function EditorShell({
   openCaptureOnLoad = false,
   openPromoOnLoad = false,
   openReplayOnLoad = false,
+  remixId,
   embedded = false,
 }: {
   initialDeviceId?: string;
@@ -42,6 +43,7 @@ export function EditorShell({
   openCaptureOnLoad?: boolean;
   openPromoOnLoad?: boolean;
   openReplayOnLoad?: boolean;
+  remixId?: string;
   embedded?: boolean;
 }) {
   const setScene = useSceneStore((s) => s.setScene);
@@ -60,6 +62,30 @@ export function EditorShell({
   useEffect(() => {
     if (openPromoOnLoad) setPromoOpen(true);
   }, [openPromoOnLoad]);
+  useEffect(() => {
+    if (!remixId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/scene-share/${remixId}`);
+        if (!res.ok) throw new Error("Share link not found");
+        const j = await res.json();
+        if (cancelled) return;
+        const { restoreAssets } = await import("@/lib/assets");
+        restoreAssets(j.assets ?? []);
+        useViewStore.getState().bumpAssets();
+        setScene(() => j.scene);
+        window.dispatchEvent(new CustomEvent("framekit:toast", { detail: "Remixed — make it yours ✨" }));
+      } catch {
+        window.dispatchEvent(new CustomEvent("framekit:toast", { detail: "That share link could not be opened" }));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remixId]);
+
   useEffect(() => {
     if (!openReplayOnLoad) return;
     // wait for the screen scene injected by initialScreenApp to settle first
@@ -356,7 +382,7 @@ export function EditorShell({
       <ExportNextSteps />
       <StarterModal
         embedded={embedded}
-        deepLinked={Boolean(initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad)}
+        deepLinked={Boolean(initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad || remixId)}
       />
     </div>
   );
