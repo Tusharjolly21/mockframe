@@ -35,7 +35,7 @@ export function PackInspector() {
   const [recaptionError, setRecaptionError] = useState<string | null>(null);
 
   async function regenerateCaptions() {
-    if (!pack.source) return;
+    if (!pack.source || recaptionBusy) return;
     setRecaptionBusy(true);
     setRecaptionError(null);
     try {

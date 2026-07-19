@@ -27,7 +27,8 @@ export function StyleThumb({
   onClick: () => void;
 }) {
   const style = PACK_STYLES[styleId];
-  const hasScreenshot = !!pack.screens[0]?.assetId;
+  const hero = pack.screens[0];
+  const hasScreenshot = !!hero?.assetId;
 
   const scene = useMemo(() => {
     if (!hasScreenshot) return null;
@@ -36,9 +37,13 @@ export function StyleThumb({
   }, [
     styleId,
     pack.style.accent,
-    pack.screens[0]?.assetId,
     pack.style.captionPosition,
     pack.style.fontFamily,
+    hero?.assetId,
+    hero?.captions.en?.title,
+    hero?.captions.en?.subtitle,
+    hero?.overrides.hideDevice,
+    hero?.overrides.flipTilt,
   ]);
 
   const bg = style.background(pack.style.accent);
