@@ -11,6 +11,7 @@ import {
 import { PACK_STYLES, mixHex } from "@/lib/pack/styles";
 import { setCaption } from "@/lib/pack/ops";
 import { usePackStore } from "@/lib/pack/store";
+import { LaunchCopyPanel } from "@/components/ai/LaunchCopyPanel";
 
 const FONTS = ["Inter", "Georgia", "system-ui"] as const;
 
@@ -188,6 +189,12 @@ export function PackInspector() {
           </label>
         ))}
       </Section>
+
+      {pack.marketing && (
+        <Section title="Launch copy">
+          <LaunchCopyPanel marketing={pack.marketing} />
+        </Section>
+      )}
     </aside>
   );
 }

@@ -11,6 +11,14 @@ import { AiPackPlanSchema, buildPackFromPlan, type AiPackPlan } from "../plan";
  * is pure data through pure functions.
  */
 
+const TEST_MARKETING = {
+  appStoreSubtitle: "Plan your day",
+  appStoreDescription: "Hook line.\n\nMore detail.",
+  keywords: ["planner", "focus"],
+  productHuntTagline: "The calmest way to plan",
+  launchTweet: "I built this to plan calmly.",
+};
+
 function samplePlan(screens = 9): AiPackPlan {
   return AiPackPlanSchema.parse({
     styleId: "bold-gradient",
@@ -29,6 +37,7 @@ function samplePlan(screens = 9): AiPackPlan {
         tabs: ["Home", "Stats"],
       },
     })),
+    marketing: TEST_MARKETING,
   });
 }
 
