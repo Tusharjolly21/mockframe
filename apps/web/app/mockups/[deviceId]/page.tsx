@@ -211,7 +211,11 @@ export default async function DeviceMockupPage({
           <p className="mt-5 max-w-2xl text-[14px] leading-relaxed text-zinc-500">
             The {name} mockup renders at a native {device.screen.width} × {device.screen.height} display resolution, so
             your screenshot stays razor-sharp with no stretching or blur. Perfect for {base} app screenshots, product
-            pages, pitch decks, and social posts.
+            pages, pitch decks, and social posts. Shipping to the stores? Generate every required size at once with the{" "}
+            <Link href="/app-store-screenshots" className="text-violet-300 underline-offset-2 hover:underline">
+              App Store screenshot generator
+            </Link>
+            .
           </p>
         </section>
 

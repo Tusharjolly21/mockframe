@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AiPackForm } from "@/components/ai/AiPackForm";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "AI App Store Screenshot Generator — describe your app, get the pack",
   description:
-    "Describe your app in a sentence and get a complete App Store & Google Play screenshot pack — narrative, captions and concept screens in every required size. 2 free generations, unlimited with Pro.",
+    "AI app screenshot generator: describe your app in a sentence and get a complete App Store & Google Play screenshot pack — narrative, captions and concept screens in every required size. 2 free generations, unlimited with Pro.",
+  keywords: [
+    "ai app screenshot generator",
+    "ai app store screenshot generator",
+    "generate app screenshots",
+    "app screenshot maker",
+    "app store screenshot creator",
+  ],
   alternates: { canonical: `${SITE_URL}/ai` },
   openGraph: {
     title: "AI App Store Screenshot Generator | MockFrame",
@@ -44,6 +52,10 @@ const FAQ = [
   {
     q: "What do I get out of the generator?",
     a: "A complete pack: 8–10 screens with a conversion narrative, a caption per screen, a matching style and accent color — ready to export as App Store 6.9″ & 6.5″, Google Play phone screenshots and the feature graphic.",
+  },
+  {
+    q: "Can I generate app screenshots without AI?",
+    a: "Yes. If you already know what each screen should say, use the standard app store screenshot generator: upload your screenshots, pick a style and caption each one manually. The AI just gives you a designed starting point instead of a blank canvas.",
   },
 ] as const;
 
@@ -89,6 +101,25 @@ export default function AiPage() {
             </div>
           ))}
         </dl>
+
+        <h2 className="mt-14 text-2xl font-bold text-white">Related generators</h2>
+        <ul className="mt-6 grid gap-2.5 sm:grid-cols-2">
+          {[
+            ["/app-store-screenshots", "App Store screenshot generator"],
+            ["/tools/app-store-screenshot", "App Store image maker"],
+            ["/mockups", "Device mockup generators"],
+            ["/tools/app-promo-video-maker", "App promo video maker"],
+          ].map(([href, label]) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className="block rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-[14px] text-white/80 transition-colors hover:border-white/25 hover:text-white"
+              >
+                {label}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <script
