@@ -185,7 +185,7 @@ export const TOOL_PAGES: ToolPage[] = [
     name: "Fake iMessage Generator",
     eyebrow: "Design realistic iMessage mockups",
     description:
-      "Create a realistic iMessage (blue-bubble) chat mockup for demos, ads and tutorials. Add both sides, toggle iMessage or SMS, show a typing indicator and read receipts, then export inside a photoreal iPhone.",
+      "Create a realistic fake iMessage conversation for demos, ads and tutorials. Add both sides, toggle iMessage or SMS, show a typing indicator and read receipts, then export inside a photoreal iPhone.",
     overview:
       "The blue-and-grey iMessage look is instantly recognisable, which is exactly why it's used in ads, reels and product tutorials — and why you don't want to screenshot a real thread to get it. Write both sides of the conversation, toggle each message between blue iMessage bubbles and green SMS, and add the details that sell it: a date header, the “Delivered / Read” status and a typing indicator. Bubble tails and the status bar match the real Messages app, and you can export a tall 9:16 version for stories and app-store previews.",
     editorHref: "/editor?screen=imessage",
@@ -207,6 +207,7 @@ export const TOOL_PAGES: ToolPage[] = [
     faq: [
       ["Can I mix iMessage and SMS bubbles?", "Yes. Toggle any message between blue iMessage bubbles and green SMS so the thread looks exactly like a real mixed conversation."],
       ["Can I show read receipts and a typing indicator?", "Yes — add a “Delivered” or “Read” status under a message and drop in the three-dot typing indicator."],
+      ["Can I make just one bubble instead of a whole thread?", "Yes — use it as an iMessage bubble generator: add a single blue or grey bubble, frame it tight and export just that bubble for thumbnails, memes and explainers."],
       ["Can I export a tall version for reels?", "Yes, export a 9:16 layout for stories, reels, ads and app-store previews, or any custom ratio."],
     ],
     related: ["fake-whatsapp-chat-generator", "fake-instagram-dm-generator", "fake-snapchat-generator"],
@@ -216,7 +217,7 @@ export const TOOL_PAGES: ToolPage[] = [
     name: "Fake Instagram DM Generator",
     eyebrow: "Design realistic Instagram mockups",
     description:
-      "Mock up an Instagram DM conversation for content, campaigns and UI design. Set the username, presence and “Seen” status, add reactions, and export the chat inside a photoreal iPhone — free.",
+      "Mock up an Instagram direct-message (DM) conversation for content, campaigns and UI design. Set the username, verified symbol, presence and “Seen” status, add reactions, and export the chat inside a photoreal iPhone — free.",
     overview:
       "Instagram DMs show up constantly in meme layouts, brand campaigns and UI concepts — and recreating one cleanly beats cropping a real inbox. Compose the conversation from both sides, set the username, verified badge and “Active now” presence, add emoji reactions to individual bubbles and a “Seen” caption under the last message. The header, presence dot and reaction bubbles mirror the real Instagram inbox, so the result works whether you're exporting for the feed or a story. It's free, and the optional “fictional” label keeps recreated DMs transparent.",
     editorHref: "/editor?screen=instagram",
@@ -235,7 +236,7 @@ export const TOOL_PAGES: ToolPage[] = [
       ["Marked as fictional", "The optional disclosure label keeps recreated DMs transparent."],
     ],
     faq: [
-      ["Can I add a verified badge and “Active now” status?", "Yes. Set the username, toggle the blue verified badge and show an “Active now” or “Active recently” presence in the header."],
+      ["Can I add a verified badge and “Active now” status?", "Yes. Set the username, toggle the blue verified symbol next to it and show an “Active now” or “Active recently” presence in the header."],
       ["Can I put emoji reactions on messages?", "Yes — add a reaction emoji to any individual bubble, exactly like the real Instagram inbox."],
       ["Can I show a “Seen” status?", "Yes, add the “Seen” caption under the last message to complete the look."],
     ],
@@ -276,7 +277,7 @@ export const TOOL_PAGES: ToolPage[] = [
     name: "Fake Snapchat Generator",
     eyebrow: "Design realistic Snapchat mockups",
     description:
-      "Create a Snapchat chat mockup for content and design — set the friend name, streak count and Delivered / Opened / Screenshot status, and export it inside a photoreal iPhone. Free, no account.",
+      "Create fake Snapchat text messages for content and design — set the friend name, streak count and Delivered / Opened / Screenshot status, and export the chat inside a photoreal iPhone. Free, no account.",
     overview:
       "Snapchat's status lines — Delivered, Opened, Received, Screenshot — and the 🔥 streak count are the details that make a Snap screen unmistakable, and the hardest to fake convincingly by hand. This generator sets them for you: write the messages, name the friend, set the streak number and pick the colour-coded status line per message. Export it inside a photoreal iPhone for skits, mockups, tutorials and interface concepts. It's free with no account, and the optional “fictional” label keeps recreated snaps honest.",
     editorHref: "/editor?screen=snapchat",
@@ -298,6 +299,7 @@ export const TOOL_PAGES: ToolPage[] = [
       ["Can I set a 🔥 streak count?", "Yes. Set the friend name and the streak number that sits next to it in the header."],
       ["Which status lines are supported?", "Delivered, Opened, Received and Screenshot — each with the correct Snapchat colour so the status reads correctly per message."],
       ["Is it free?", "Yes, the Snapchat screen is free with no account, and image export is watermark-free."],
+      ["Can I use it as a Snapchat ad mockup generator?", "Yes — export the framed chat at 9:16 (or any custom ratio) to storyboard Snapchat ad creative and campaign concepts before anything goes into Ads Manager."],
     ],
     related: ["fake-instagram-dm-generator", "fake-imessage-generator", "fake-messenger-chat-generator"],
   },
@@ -308,7 +310,7 @@ export const TOOL_PAGES: ToolPage[] = [
     description:
       "Mock up a Facebook Messenger conversation for demos, ads and UI design. Set the contact, presence and reactions, then export the chat inside a photoreal iPhone — free and without sign-up.",
     overview:
-      "Facebook Messenger's rounded bubbles and presence dot are their own recognisable look, useful for support-flow demos, campaign concepts and UI ideas. Write both sides of the conversation, set the contact name and verified badge, show an “Active” presence and add emoji reactions to bubbles, then export the chat inside a photoreal iPhone. Everything mirrors the real Messenger layout so the mockup reads cleanly in an ad or a design review, and it's free with no sign-up.",
+      "Facebook Messenger's rounded bubbles and presence dot are their own recognisable look, useful for support-flow demos, campaign concepts and UI ideas. Whether you need a single fake Facebook message or a whole Messenger thread, write both sides of the conversation, set the contact name and verified badge, show an “Active” presence and add emoji reactions to bubbles, then export the chat inside a photoreal iPhone. Everything mirrors the real Messenger layout so the mockup reads cleanly in an ad or a design review, and it's free with no sign-up.",
     editorHref: "/editor?screen=messenger",
     cta: "Make a Messenger mockup",
     image: "/hero/lib-iphone-desert.webp",
