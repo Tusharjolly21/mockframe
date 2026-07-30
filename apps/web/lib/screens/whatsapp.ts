@@ -39,6 +39,41 @@ const PAD_Y = 7;
 const MARGIN = 16;
 const META_W = 56; // reserved for time + ticks inside the bubble
 
+/* WhatsApp never generates initials avatars — defaults are a gray person
+   silhouette (or group silhouette) on a light disc. */
+function waAvatar(cx: number, cy: number, r: number, group: boolean, url?: string, seed = "wa", id = "waav"): string {
+  if (url) return avatar(seed, cx, cy, r, id, url);
+  const disc = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#dfe5e7"/>`;
+  const person = (px: number, py: number, s: number) =>
+    `<circle cx="${px}" cy="${(py - s * 0.35).toFixed(1)}" r="${(s * 0.32).toFixed(1)}" fill="#9aa9b2"/>` +
+    `<path d="M${(px - s * 0.55).toFixed(1)} ${(py + s * 0.62).toFixed(1)} a ${(s * 0.55).toFixed(1)} ${(s * 0.5).toFixed(1)} 0 0 1 ${(s * 1.1).toFixed(1)} 0 Z" fill="#9aa9b2"/>`;
+  const clip = `<defs><clipPath id="${id}c"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath></defs>`;
+  const body = group
+    ? person(cx - r * 0.32, cy + r * 0.1, r * 0.75) + person(cx + r * 0.38, cy + r * 0.18, r * 0.62)
+    : person(cx, cy + r * 0.05, r);
+  return `${clip}${disc}<g clip-path="url(#${id}c)">${body}</g>`;
+}
+
+/* Sparse tan doodle hints for the default cream wallpaper. */
+function waDoodles(): string {
+  const shapes: string[] = [];
+  const pts: Array<[number, number, number]> = [
+    [40, 180, 9], [150, 240, 7], [300, 200, 8], [360, 320, 6], [80, 380, 7],
+    [220, 430, 9], [340, 520, 7], [60, 560, 8], [180, 620, 6], [310, 680, 8],
+    [120, 760, 7], [260, 800, 6], [30, 700, 6], [370, 430, 7],
+  ];
+  pts.forEach(([x, y, r], i) => {
+    shapes.push(
+      i % 3 === 0
+        ? `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="#e2d9c8" stroke-width="1.6"/>`
+        : i % 3 === 1
+          ? `<path d="M${x - r} ${y} h${r * 2} M${x} ${y - r} v${r * 2}" stroke="#e2d9c8" stroke-width="1.6" stroke-linecap="round"/>`
+          : `<rect x="${x - r * 0.8}" y="${y - r * 0.8}" width="${r * 1.6}" height="${r * 1.6}" rx="3" fill="none" stroke="#e2d9c8" stroke-width="1.6" transform="rotate(18 ${x} ${y})"/>`
+    );
+  });
+  return `<g opacity="0.55">${shapes.join("")}</g>`;
+}
+
 export function renderWhatsApp(
   doc: WhatsAppDoc,
   avatarUrl?: string,
@@ -50,21 +85,28 @@ export function renderWhatsApp(
     baseTextBlock(lines, { font, ...o });
   const dark = !!doc.chrome.dark;
   const c = {
-    wallpaper: dark ? "#0b141a" : "#ece5dd",
+    wallpaper: dark ? "#0b141a" : "#f4f1eb", // current default: cream, not beige
     headerBg: dark ? "#1f2c34" : "#f6f6f6",
     hairline: dark ? "#2c3942" : "#dcdcdc",
     text: dark ? "#e9edef" : "#000000",
     subtle: dark ? "#8696a0" : "#667781",
     incoming: dark ? "#202c33" : "#ffffff",
-    outgoing: dark ? "#005c4b" : "#dcf8c6",
+    // current light design sends SOLID green bubbles with white text —
+    // pale #dcf8c6 with dark text is the 2016-era look
+    outgoing: dark ? "#005c4b" : "#4ca35f",
     bubbleText: dark ? "#e9edef" : "#111b21",
+    mineText: "#ffffff",
+    mineMeta: "rgba(255,255,255,0.78)",
     blueTick: "#53bdeb",
+    mineBlueTick: dark ? "#53bdeb" : "#a8e5ff", // read ticks are pale on the green bubble
     accent: dark ? "#00a884" : "#008069", // WhatsApp green — unified across iOS/Android (never iOS blue)
-    chipBg: dark ? "#1d282f" : "#fdf4c5",
+    chipBg: dark ? "#1d282f" : "#fbf5da",
     chipText: dark ? "#8696a0" : "#54656f",
   };
+  const mineText = dark ? c.bubbleText : c.mineText;
+  const mineMeta = dark ? "rgba(233,237,239,0.7)" : c.mineMeta;
 
-  const parts: string[] = [resolveWallpaper(doc.wallpaper, dark) ?? `<rect width="${SW}" height="${SH}" fill="${c.wallpaper}"/>`];
+  const parts: string[] = [resolveWallpaper(doc.wallpaper, dark) ?? `<rect width="${SW}" height="${SH}" fill="${c.wallpaper}"/>${dark ? "" : waDoodles()}`];
 
   /* header */
   const HEADER_H = 102;
@@ -72,31 +114,47 @@ export function renderWhatsApp(
     `<rect width="${SW}" height="${HEADER_H}" fill="${c.headerBg}"/>`,
     `<rect y="${HEADER_H - 0.5}" width="${SW}" height="0.5" fill="${c.hairline}"/>`,
     statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.text, platform }),
-    `<path d="M24 62 l-10 11 10 11" fill="none" stroke="${c.accent}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`,
-    avatar(doc.contact, 52, 73, 19, "wa", avatarUrl),
-    textBlock([doc.contact], { x: 80, y: 70, size: 16.5, lineHeight: 19, color: c.text, weight: 600 }),
+    // black chevron with the unread count in a floating white circle
+    `<circle cx="24" cy="73" r="15" fill="${dark ? "#243139" : "#ffffff"}" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.1))"/>`,
+    `<path d="M27 65 l-8 8 8 8" fill="none" stroke="${c.text}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`,
+    waAvatar(58, 73, 19, false, avatarUrl, doc.contact, "wa"),
+    textBlock([doc.contact], { x: 86, y: 70, size: 16.5, lineHeight: 19, color: c.text, weight: 600 }),
     doc.verified
-      ? verifiedBadge(80 + textWidth(doc.contact, 16.5) + 5, 70 - 13, c.accent)
+      ? verifiedBadge(86 + textWidth(doc.contact, 16.5) + 5, 70 - 13, c.accent)
       : "",
-    textBlock([doc.chrome._anim?.typing ? "typing…" : doc.presence || "online"], { x: 80, y: 87, size: 12, lineHeight: 14, color: doc.chrome._anim?.typing ? c.accent : c.subtle }),
-    videoIcon(SW - 76, 73, 25, c.text),
-    phoneIcon(SW - 34, 73, 21, c.text)
+    textBlock([doc.chrome._anim?.typing ? "typing…" : doc.presence || "online"], { x: 86, y: 87, size: 12, lineHeight: 14, color: doc.chrome._anim?.typing ? c.accent : c.subtle }),
+    // single rounded pill with an outlined video camera + calls-menu chevron
+    `<rect x="${SW - 92}" y="58" width="78" height="30" rx="15" fill="${dark ? "#243139" : "#ffffff"}" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.1))"/>`,
+    `<rect x="${SW - 82}" y="66" width="18" height="14" rx="4" fill="none" stroke="${c.text}" stroke-width="1.8"/><path d="M${SW - 64} 69.5 l7 -3.5 v14 l-7 -3.5 Z" fill="${c.text}"/>`,
+    `<path d="M${SW - 40} 70 l5 5 5 -5" fill="none" stroke="${c.text}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`
   );
 
   /* message body (scrolls to bottom when taller than the band) */
   const bodyStart = parts.length;
   let y = HEADER_H + 14;
-  const chipText = "Messages and calls are end-to-end encrypted.";
-  const chipW = Math.min(SW - 48, textWidth(chipText, 11) + 34);
+  const chipLines = [
+    "Messages and calls are end-to-end encrypted. Only",
+    "people in this chat can read, listen to, or share them.",
+  ];
+  const chipW = Math.min(SW - 40, Math.max(...chipLines.map((l) => textWidth(l, 10.5))) + 44);
   parts.push(
-    `<rect x="${(SW - chipW) / 2}" y="${y}" width="${chipW.toFixed(1)}" height="34" rx="8" fill="${c.chipBg}"/>`,
-    `<text font-family="${font}" font-size="11" fill="${c.chipText}" text-anchor="middle" x="${SW / 2 + 6}" y="${y + 21}">${esc(chipText)}</text>`,
-    `<text font-size="10" text-anchor="middle" x="${(SW - chipW) / 2 + 15}" y="${y + 21.5}">🔒</text>`
+    `<rect x="${(SW - chipW) / 2}" y="${y}" width="${chipW.toFixed(1)}" height="46" rx="10" fill="${c.chipBg}"/>`,
+    `<text font-size="9.5" x="${(SW - chipW) / 2 + 12}" y="${y + 21}">🔒</text>`,
+    `<text font-family="${font}" font-size="10.5" fill="${c.chipText}" text-anchor="middle" x="${SW / 2 + 8}" y="${y + 19}">${esc(chipLines[0])}</text>`,
+    `<text font-family="${font}" font-size="10.5" fill="${c.chipText}" text-anchor="middle" x="${SW / 2 + 8}" y="${y + 34}">${esc(chipLines[1])}</text>`
   );
-  y += 50;
+  y += 60;
 
   /* messages */
   const time = doc.chrome.time || "9:41";
+  // white "Today" pill above the first message when no explicit date label
+  if (doc.messages.length && !doc.messages[0].dateLabel) {
+    parts.push(
+      `<rect x="${SW / 2 - 28}" y="${y}" width="56" height="24" rx="8" fill="${dark ? "#1d282f" : "#ffffff"}"/>`,
+      `<text font-family="${font}" font-size="11" font-weight="600" fill="${c.subtle}" text-anchor="middle" x="${SW / 2}" y="${y + 16}">Today</text>`
+    );
+    y += 36;
+  }
   for (let i = 0; i < doc.messages.length; i++) {
     const m = doc.messages[i];
     const mine = m.from === "me";
@@ -128,9 +186,9 @@ export function renderWhatsApp(
           ? videoIcon(bx + 32, y + ch / 2, 20, glyphCol)
           : phoneIcon(bx + 32, y + ch / 2, 20, glyphCol),
         `<path d="${arrow}" transform="translate(${bx + 46} ${y + ch / 2 + 8})" fill="none" stroke="${glyphCol}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`,
-        `<text font-family="${font}" font-size="14.5" font-weight="600" fill="${c.bubbleText}" x="${bx + 62}" y="${y + 26}">${esc(label)}</text>`,
-        `<text font-family="${font}" font-size="12" fill="${c.subtle}" x="${bx + 62}" y="${y + 44}">${esc(sub)}</text>`,
-        `<text font-family="${font}" font-size="10.5" fill="${c.subtle}" text-anchor="end" x="${bx + cw - 10}" y="${y + ch - 8}">${esc(time)}</text>`
+        `<text font-family="${font}" font-size="14.5" font-weight="600" fill="${mine ? mineText : c.bubbleText}" x="${bx + 62}" y="${y + 26}">${esc(label)}</text>`,
+        `<text font-family="${font}" font-size="12" fill="${mine ? mineMeta : c.subtle}" x="${bx + 62}" y="${y + 44}">${esc(sub)}</text>`,
+        `<text font-family="${font}" font-size="10.5" fill="${mine ? mineMeta : c.subtle}" text-anchor="end" x="${bx + cw - 10}" y="${y + ch - 8}">${esc(time)}</text>`
       );
       y += ch + 10;
       continue;
@@ -163,8 +221,8 @@ export function renderWhatsApp(
       const cw = 252;
       const bx = mine ? SW - MARGIN - cw : MARGIN;
       const card = m.file
-        ? fileCard({ x: bx, y, w: cw, name: m.file.name, ext: m.file.ext, meta: m.file.meta, cardBg: mine ? c.outgoing : c.incoming, text: c.bubbleText, subtle: c.subtle, font })
-        : linkCard({ x: bx, y, w: cw, title: m.link!.title, domain: m.link!.domain || m.link!.url.replace(/^https?:\/\//, "").split("/")[0], cardBg: mine ? c.outgoing : c.incoming, stripBg: dark ? "#1d282f" : "#cfe8c8", text: c.bubbleText, subtle: c.subtle, accent: c.accent, font });
+        ? fileCard({ x: bx, y, w: cw, name: m.file.name, ext: m.file.ext, meta: m.file.meta, cardBg: mine ? c.outgoing : c.incoming, text: mine ? mineText : c.bubbleText, subtle: mine ? mineMeta : c.subtle, font })
+        : linkCard({ x: bx, y, w: cw, title: m.link!.title, domain: m.link!.domain || m.link!.url.replace(/^https?:\/\//, "").split("/")[0], cardBg: mine ? c.outgoing : c.incoming, stripBg: dark ? "#1d282f" : mine ? "#3d8a4e" : "#e9f3e6", text: mine ? mineText : c.bubbleText, subtle: mine ? mineMeta : c.subtle, accent: mine ? mineText : c.accent, font });
       parts.push(card.svg);
       y += card.h + 8;
       if (!m.text) continue;
@@ -185,14 +243,14 @@ export function renderWhatsApp(
         bars.push(`<rect x="${bxp.toFixed(1)}" y="${(y + 22 - hgt / 2).toFixed(1)}" width="3" height="${hgt.toFixed(1)}" rx="1.5" fill="${b < 9 ? c.accent : c.subtle}" opacity="${b < 9 ? 1 : 0.55}"/>`);
       }
       const laterReplyV = doc.messages.slice(i + 1).some((n) => n.from === "them");
-      const vTicks = mine ? ticks(m.ticks ?? (laterReplyV ? "read" : "delivered"), bx + vw - 9, y + vh - 8, c.subtle, c.blueTick) : "";
+      const vTicks = mine ? ticks(m.ticks ?? (laterReplyV ? "read" : "delivered"), bx + vw - 9, y + vh - 8, mineMeta, c.mineBlueTick) : "";
       parts.push(
         `<rect x="${bx}" y="${y}" width="${vw}" height="${vh}" rx="9" fill="${fill}" style="filter:drop-shadow(0 0.5px 0.5px rgba(0,0,0,0.12))"/>`,
-        `<circle cx="${bx + 30}" cy="${y + 22}" r="15" fill="${dark ? "#2a3942" : "#f0f0f0"}"/>`,
-        `<path d="M${bx + 26} ${y + 15} l 12 7 l -12 7 Z" fill="${c.accent}"/>`,
+        `<circle cx="${bx + 30}" cy="${y + 22}" r="15" fill="${dark ? "#2a3942" : mine ? "rgba(255,255,255,0.25)" : "#f0f0f0"}"/>`,
+        `<path d="M${bx + 26} ${y + 15} l 12 7 l -12 7 Z" fill="${mine && !dark ? "#ffffff" : c.accent}"/>`,
         ...bars,
-        `<text font-family="${font}" font-size="10.5" fill="${c.subtle}" x="${bx + 16}" y="${y + vh - 8}">${dur}</text>`,
-        `<text font-family="${font}" font-size="10.5" fill="${c.subtle}" text-anchor="end" x="${mine ? bx + vw - 27 : bx + vw - 9}" y="${y + vh - 8}">${esc(time)}</text>`,
+        `<text font-family="${font}" font-size="10.5" fill="${mine ? mineMeta : c.subtle}" x="${bx + 16}" y="${y + vh - 8}">${dur}</text>`,
+        `<text font-family="${font}" font-size="10.5" fill="${mine ? mineMeta : c.subtle}" text-anchor="end" x="${mine ? bx + vw - 27 : bx + vw - 9}" y="${y + vh - 8}">${esc(time)}</text>`,
         vTicks
       );
       if (m.reaction) {
@@ -218,16 +276,17 @@ export function renderWhatsApp(
     const h = lines.length * LINE_H + PAD_Y * 2 + (metaInline ? 0 : 13);
     const x = mine ? SW - MARGIN - w : MARGIN;
     const fill = mine ? c.outgoing : c.incoming;
-    const isGroupStart = i === 0 || doc.messages[i - 1].from !== m.from;
+    const isGroupEnd = i === doc.messages.length - 1 || doc.messages[i + 1].from !== m.from;
 
     parts.push(
-      `<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="9" fill="${fill}" style="filter:drop-shadow(0 0.5px 0.5px rgba(0,0,0,0.12))"/>`
+      `<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="12" fill="${fill}" style="filter:drop-shadow(0 0.5px 0.5px rgba(0,0,0,0.12))"/>`
     );
-    if (isGroupStart)
+    // current design: small curved tail at the BOTTOM corner of the last bubble in a group
+    if (isGroupEnd)
       parts.push(
         mine
-          ? `<path d="M${x + w - 4} ${y} h 10 c -3 6 -6 8 -10 9 Z" fill="${fill}"/>`
-          : `<path d="M${x + 4} ${y} h -10 c 3 6 6 8 10 9 Z" fill="${fill}"/>`
+          ? `<path d="M${x + w - 4} ${y + h} h 9 c -3 -5.5 -5.5 -7.5 -9 -8.5 Z" fill="${fill}"/>`
+          : `<path d="M${x + 4} ${y + h} h -9 c 3 -5.5 5.5 -7.5 9 -8.5 Z" fill="${fill}"/>`
       );
     parts.push(
       textBlock(lines, {
@@ -235,17 +294,17 @@ export function renderWhatsApp(
         y: bubbleBaseline(y, h - (metaInline ? 0 : 13), lines.length, LINE_H, FONT_SIZE),
         size: FONT_SIZE,
         lineHeight: LINE_H,
-        color: c.bubbleText,
+        color: mine ? mineText : c.bubbleText,
       })
     );
 
     // meta: time (+ ticks for outgoing) bottom-right inside the bubble
     const metaY = y + h - 7;
     const laterReply = doc.messages.slice(i + 1).some((n) => n.from === "them");
-    const ticksSvg = mine ? ticks(m.ticks ?? (laterReply ? "read" : "delivered"), x + w - 9, metaY, c.subtle, c.blueTick) : "";
+    const ticksSvg = mine ? ticks(m.ticks ?? (laterReply ? "read" : "delivered"), x + w - 9, metaY, mineMeta, c.mineBlueTick) : "";
     const timeX = mine ? x + w - 9 - 18 : x + w - 9;
     parts.push(
-      `<text font-family="${font}" font-size="10.5" fill="${c.subtle}" text-anchor="end" x="${timeX}" y="${metaY}">${esc(time)}</text>`,
+      `<text font-family="${font}" font-size="10.5" fill="${mine ? mineMeta : c.subtle}" text-anchor="end" x="${timeX}" y="${metaY}">${esc(time)}</text>`,
       ticksSvg
     );
 
@@ -286,12 +345,17 @@ export function renderWhatsApp(
 /* ------------------------------- group chat ---------------------------------- */
 /* Same chrome as 1-on-1; incoming bubbles carry a per-sender colored name. */
 
-const SENDER_COLORS = ["#e17076", "#7bc862", "#65aadd", "#a695e7", "#ee7aae", "#d09306"];
+const SENDER_COLORS = ["#e17076", "#65aadd", "#a695e7", "#d09306", "#ee7aae", "#7bc862"];
 
-function senderColor(name: string): string {
-  let h = 0;
-  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  return SENDER_COLORS[h % SENDER_COLORS.length];
+/** Distinct per-participant colors assigned by first appearance — hash-based
+ *  assignment produced duplicate colors in small groups, which reads as off. */
+function senderColorMap(msgs: Array<{ from: string; sender?: string }>): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const m of msgs) {
+    if (m.from !== "them" || !m.sender || map.has(m.sender)) continue;
+    map.set(m.sender, SENDER_COLORS[map.size % SENDER_COLORS.length]);
+  }
+  return map;
 }
 
 export function renderWhatsAppGroup(doc: WhatsAppGroupDoc, avatarUrl?: string): string {
@@ -303,31 +367,37 @@ export function renderWhatsAppGroup(doc: WhatsAppGroupDoc, avatarUrl?: string): 
   // No — sender labels change bubble height, so lay out directly here.
   const dark = !!doc.chrome.dark;
   const c = {
-    wallpaper: dark ? "#0b141a" : "#ece5dd",
+    wallpaper: dark ? "#0b141a" : "#f4f1eb",
     headerBg: dark ? "#1f2c34" : "#f6f6f6",
     hairline: dark ? "#2c3942" : "#dcdcdc",
     text: dark ? "#e9edef" : "#000000",
     subtle: dark ? "#8696a0" : "#667781",
     incoming: dark ? "#202c33" : "#ffffff",
-    outgoing: dark ? "#005c4b" : "#dcf8c6",
+    outgoing: dark ? "#005c4b" : "#4ca35f",
     bubbleText: dark ? "#e9edef" : "#111b21",
     blueTick: "#53bdeb",
+    mineBlueTick: dark ? "#53bdeb" : "#a8e5ff",
     accent: dark ? "#00a884" : "#008069", // WhatsApp green — unified across iOS/Android (never iOS blue)
   };
+  const mineText = dark ? c.bubbleText : "#ffffff";
+  const mineMeta = dark ? "rgba(233,237,239,0.7)" : "rgba(255,255,255,0.78)";
+  const senderColors = senderColorMap(doc.messages);
 
-  const parts: string[] = [resolveWallpaper(doc.wallpaper, dark) ?? `<rect width="${SW}" height="${SH}" fill="${c.wallpaper}"/>`];
+  const parts: string[] = [resolveWallpaper(doc.wallpaper, dark) ?? `<rect width="${SW}" height="${SH}" fill="${c.wallpaper}"/>${dark ? "" : waDoodles()}`];
 
   const HEADER_H = 102;
   parts.push(
     `<rect width="${SW}" height="${HEADER_H}" fill="${c.headerBg}"/>`,
     `<rect y="${HEADER_H - 0.5}" width="${SW}" height="0.5" fill="${c.hairline}"/>`,
     statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.text, platform }),
-    `<path d="M24 62 l-10 11 10 11" fill="none" stroke="${c.accent}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`,
-    avatar(doc.name, 52, 73, 19, "wag", avatarUrl),
-    textBlock([doc.name], { x: 80, y: 70, size: 16.5, lineHeight: 19, color: c.text, weight: 600 }),
-    textBlock([doc.chrome._anim?.typing ? `${doc.messages.filter(m=>m.from==="them").slice(-1)[0]?.sender ?? "Someone"} is typing…` : doc.members], { x: 80, y: 87, size: 12, lineHeight: 14, color: doc.chrome._anim?.typing ? c.accent : c.subtle }),
-    videoIcon(SW - 76, 73, 25, c.text),
-    phoneIcon(SW - 34, 73, 21, c.text)
+    `<circle cx="24" cy="73" r="15" fill="${dark ? "#243139" : "#ffffff"}" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.1))"/>`,
+    `<path d="M27 65 l-8 8 8 8" fill="none" stroke="${c.text}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`,
+    waAvatar(58, 73, 19, true, avatarUrl, doc.name, "wag"),
+    textBlock([doc.name], { x: 86, y: 70, size: 16.5, lineHeight: 19, color: c.text, weight: 600 }),
+    textBlock([doc.chrome._anim?.typing ? `${doc.messages.filter(m=>m.from==="them").slice(-1)[0]?.sender ?? "Someone"} is typing…` : doc.members], { x: 86, y: 87, size: 12, lineHeight: 14, color: doc.chrome._anim?.typing ? c.accent : c.subtle }),
+    `<rect x="${SW - 92}" y="58" width="78" height="30" rx="15" fill="${dark ? "#243139" : "#ffffff"}" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.1))"/>`,
+    `<rect x="${SW - 82}" y="66" width="18" height="14" rx="4" fill="none" stroke="${c.text}" stroke-width="1.8"/><path d="M${SW - 64} 69.5 l7 -3.5 v14 l-7 -3.5 Z" fill="${c.text}"/>`,
+    `<path d="M${SW - 40} 70 l5 5 5 -5" fill="none" stroke="${c.text}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`
   );
 
   const time = doc.chrome.time || "9:41";
@@ -351,7 +421,7 @@ export function renderWhatsAppGroup(doc: WhatsAppGroupDoc, avatarUrl?: string): 
         bars.push(`<rect x="${bxp.toFixed(1)}" y="${(y + 22 - hgt / 2).toFixed(1)}" width="3" height="${hgt.toFixed(1)}" rx="1.5" fill="${b < 9 ? c.accent : c.subtle}" opacity="${b < 9 ? 1 : 0.55}"/>`);
       }
       const laterReplyV = doc.messages.slice(i + 1).some((n) => n.from === "them");
-      const vTicks = mine ? ticks(m.ticks ?? (laterReplyV ? "read" : "delivered"), bx + vw - 9, y + vh - 8, c.subtle, c.blueTick) : "";
+      const vTicks = mine ? ticks(m.ticks ?? (laterReplyV ? "read" : "delivered"), bx + vw - 9, y + vh - 8, mineMeta, c.mineBlueTick) : "";
       parts.push(
         `<rect x="${bx}" y="${y}" width="${vw}" height="${vh}" rx="9" fill="${fill}" style="filter:drop-shadow(0 0.5px 0.5px rgba(0,0,0,0.12))"/>`,
         `<circle cx="${bx + 30}" cy="${y + 22}" r="15" fill="${dark ? "#2a3942" : "#f0f0f0"}"/>`,
@@ -386,23 +456,29 @@ export function renderWhatsAppGroup(doc: WhatsAppGroupDoc, avatarUrl?: string): 
     );
     const senderH = sender ? 18 : 0;
     const h = lines.length * LINE_H + PAD_Y * 2 + senderH + (metaInline ? 0 : 13);
-    const x = mine ? SW - MARGIN - w : MARGIN;
+    // incoming shifts right to make room for the per-sender avatar column
+    const x = mine ? SW - MARGIN - w : MARGIN + 34;
     const fill = mine ? c.outgoing : c.incoming;
     const isGroupStart = i === 0 || doc.messages[i - 1].from !== m.from ||
       (!mine && doc.messages[i - 1].sender !== m.sender);
+    const isGroupEnd = i === doc.messages.length - 1 || doc.messages[i + 1].from !== m.from ||
+      (!mine && doc.messages[i + 1].sender !== m.sender);
+
+    // small circular sender avatar beside the first bubble of an incoming group
+    if (!mine && isGroupStart) parts.push(avatar(sender || "M", MARGIN + 13, y + 14, 13, `wags${i}`));
 
     parts.push(
-      `<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="9" fill="${fill}" style="filter:drop-shadow(0 0.5px 0.5px rgba(0,0,0,0.12))"/>`
+      `<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="12" fill="${fill}" style="filter:drop-shadow(0 0.5px 0.5px rgba(0,0,0,0.12))"/>`
     );
-    if (isGroupStart)
+    if (isGroupEnd)
       parts.push(
         mine
-          ? `<path d="M${x + w - 4} ${y} h 10 c -3 6 -6 8 -10 9 Z" fill="${fill}"/>`
-          : `<path d="M${x + 4} ${y} h -10 c 3 6 6 8 10 9 Z" fill="${fill}"/>`
+          ? `<path d="M${x + w - 4} ${y + h} h 9 c -3 -5.5 -5.5 -7.5 -9 -8.5 Z" fill="${fill}"/>`
+          : `<path d="M${x + 4} ${y + h} h -9 c 3 -5.5 5.5 -7.5 9 -8.5 Z" fill="${fill}"/>`
       );
     if (sender)
       parts.push(
-        textBlock([sender], { x: x + PAD_X, y: y + PAD_Y + 10, size: 12.5, lineHeight: 14, color: senderColor(sender), weight: 700 })
+        textBlock([sender], { x: x + PAD_X, y: y + PAD_Y + 10, size: 12.5, lineHeight: 14, color: senderColors.get(sender) ?? SENDER_COLORS[0], weight: 600 })
       );
     parts.push(
       textBlock(lines, {
@@ -410,14 +486,14 @@ export function renderWhatsAppGroup(doc: WhatsAppGroupDoc, avatarUrl?: string): 
         y: bubbleBaseline(y + senderH, h - senderH - (metaInline ? 0 : 13), lines.length, LINE_H, FONT_SIZE),
         size: FONT_SIZE,
         lineHeight: LINE_H,
-        color: c.bubbleText,
+        color: mine ? mineText : c.bubbleText,
       })
     );
     const metaY = y + h - 7;
     const timeX = mine ? x + w - 9 - 18 : x + w - 9;
     parts.push(
-      `<text font-family="${font}" font-size="10.5" fill="${c.subtle}" text-anchor="end" x="${timeX}" y="${metaY}">${esc(time)}</text>`,
-      mine ? ticks(m.ticks ?? "read", x + w - 9, metaY, c.subtle, c.blueTick) : ""
+      `<text font-family="${font}" font-size="10.5" fill="${mine ? mineMeta : c.subtle}" text-anchor="end" x="${timeX}" y="${metaY}">${esc(time)}</text>`,
+      mine ? ticks(m.ticks ?? "read", x + w - 9, metaY, mineMeta, c.mineBlueTick) : ""
     );
     y += h + (i < doc.messages.length - 1 && doc.messages[i + 1].from === m.from && (mine || doc.messages[i + 1].sender === m.sender) ? 3 : 10);
   }
@@ -472,12 +548,16 @@ function waComposer(o: {
     ];
   }
 
-  // iOS 26 liquid glass floating bar
+  // iOS floating bar: + in a white circle, pill field with the sticker icon
+  // inside its right edge, then bare ₹ (user request) / camera / mic glyphs
   const iy = SH - 68;
   return [
+    `<circle cx="26" cy="${iy + 18}" r="16" fill="${dark ? "#243139" : "#ffffff"}" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.12))"/>`,
     `<path d="M26 ${iy + 11} v14 M19 ${iy + 18} h14" stroke="${subtle}" stroke-width="2" stroke-linecap="round"/>`,
-    glassPill(44, iy, SW - 44 - 116, 36, dark),
-    `<text font-family="${font}" font-size="15" fill="${subtle}" x="60" y="${iy + 23}">Message</text>`,
+    glassPill(50, iy, SW - 50 - 110, 36, dark),
+    `<text font-family="${font}" font-size="15" fill="${subtle}" x="64" y="${iy + 23}">Message</text>`,
+    // sticker icon inside the field's right edge
+    `<rect x="${SW - 130}" y="${iy + 11}" width="14" height="14" rx="4" fill="none" stroke="${subtle}" stroke-width="1.5"/><path d="M${SW - 123} ${iy + 25} a 7 7 0 0 0 7 -7" fill="none" stroke="${subtle}" stroke-width="1.4"/>`,
     `<circle cx="${SW - 96}" cy="${iy + 18}" r="10.5" fill="none" stroke="${subtle}" stroke-width="1.7"/>`,
     `<text font-family="${font}" font-size="12.5" font-weight="600" fill="${subtle}" text-anchor="middle" x="${SW - 96}" y="${iy + 22.4}">₹</text>`,
     `<rect x="${SW - 74}" y="${iy + 10.5}" width="19" height="15" rx="4" fill="none" stroke="${subtle}" stroke-width="1.8"/>`,
@@ -489,9 +569,10 @@ function waComposer(o: {
 
 function ticks(state: WhatsAppTicks, xRight: number, y: number, grey: string, blue: string): string {
   const color = state === "read" ? blue : grey;
+  // thin, timestamp-height checks — oversized bright ticks read as fake
   const tick = (dx: number) =>
-    `<path d="M${xRight - 14 + dx} ${y - 4} l 2.6 2.8 5.4 -6" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
-  return state === "sent" ? tick(3) : tick(0) + tick(4.5);
+    `<path d="M${xRight - 12 + dx} ${y - 3.5} l 2.2 2.4 4.6 -5.2" fill="none" stroke="${color}" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  return state === "sent" ? tick(2.5) : tick(0) + tick(4);
 }
 
 function verifiedBadge(x: number, y: number, color: string): string {

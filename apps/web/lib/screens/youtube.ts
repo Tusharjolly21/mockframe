@@ -161,10 +161,12 @@ export function renderYouTube(
     thumbGlyph(THUMB_DOWN, downCx, chipCy + 2, 18, c.text)
   );
   cx += segW + 8;
+  // real order: Share · Download · Clip · Save (Save far right, Clip present)
   const chips: Array<{ label: string; icon: (x: number, y: number, color: string) => string }> = [
     { label: "Share", icon: shareIcon },
-    { label: "Save", icon: saveIcon },
     { label: "Download", icon: downloadIcon },
+    { label: "Clip", icon: clipIcon },
+    { label: "Save", icon: saveIcon },
   ];
   for (const ch of chips) {
     const lw = textWidth(ch.label, 13.5);
@@ -178,16 +180,24 @@ export function renderYouTube(
     cx += w + 8;
   }
 
-  /* -------------------------- divider + comments head ----------------------- */
-  parts.push(`<rect x="0" y="468" width="${SW}" height="1" fill="${c.divider}"/>`);
+  /* --------------- comments as the modern bottom sheet ---------------------- */
+  // rounded sheet lip + grab handle + bold header + Top/Newest sort chips —
+  // the flat inline list under the actions row is the pre-2021 layout
   parts.push(
-    `<text font-family="${font}" font-size="16" font-weight="700" fill="${c.text}" x="16" y="491">Comments</text>`,
-    `<text font-family="${font}" font-size="14" fill="${c.sub}" x="${(16 + textWidth("Comments", 16) + 10).toFixed(1)}" y="491">${esc(doc.commentCount)}</text>`
+    `<rect x="0" y="464" width="${SW}" height="${SH - 464}" rx="16" fill="${c.bg}" stroke="${c.divider}" stroke-width="1"/>`,
+    `<rect x="${SW / 2 - 18}" y="470" width="36" height="4" rx="2" fill="${c.divider}"/>`,
+    `<text font-family="${font}" font-size="16" font-weight="700" fill="${c.text}" x="16" y="495">Comments</text>`,
+    `<text font-family="${font}" font-size="14" fill="${c.sub}" x="${(16 + textWidth("Comments", 16) + 10).toFixed(1)}" y="495">${esc(doc.commentCount)}</text>`,
+    // sort chips: Top (active, filled) / Newest
+    `<rect x="16" y="506" width="52" height="26" rx="8" fill="${c.text}"/>`,
+    `<text font-family="${font}" font-size="12.5" font-weight="600" fill="${c.bg}" text-anchor="middle" x="42" y="523">Top</text>`,
+    `<rect x="74" y="506" width="68" height="26" rx="8" fill="${c.chip}"/>`,
+    `<text font-family="${font}" font-size="12.5" font-weight="600" fill="${c.text}" text-anchor="middle" x="108" y="523">Newest</text>`
   );
 
   /* ------------------------------ comment list ------------------------------ */
   const BODY_MAX = SW - 52 - 14;
-  let y = 512;
+  let y = 552;
   for (let i = 0; i < doc.comments.length; i++) {
     const cm = doc.comments[i];
     const bodyLines = wrapText(cm.text, 14, BODY_MAX).slice(0, 4);
@@ -257,6 +267,14 @@ export function renderYouTube(
 function thumbGlyph(path: string, cx: number, cy: number, size: number, color: string): string {
   const s = size / 24;
   return `<path d="${path}" fill="${color}" fill-rule="evenodd" transform="translate(${(cx - 12 * s).toFixed(1)} ${(cy - 12 * s).toFixed(1)}) scale(${s.toFixed(3)})"/>`;
+}
+
+function clipIcon(cx: number, cy: number, color: string): string {
+  return (
+    `<circle cx="${cx - 5}" cy="${cy - 4.5}" r="3" fill="none" stroke="${color}" stroke-width="1.6"/>` +
+    `<circle cx="${cx - 5}" cy="${cy + 4.5}" r="3" fill="none" stroke="${color}" stroke-width="1.6"/>` +
+    `<path d="M${cx - 2.5} ${cy - 3} l10 7 M${cx - 2.5} ${cy + 3} l10 -7" stroke="${color}" stroke-width="1.6" stroke-linecap="round"/>`
+  );
 }
 
 function shareIcon(cx: number, cy: number, color: string): string {

@@ -49,8 +49,11 @@ function xpostBody(
   if (doc.badge !== "none") parts.push(verifiedBadge(bx + 54 + nameW + 6, yy - 4, doc.badge === "gold" ? c.gold : c.accent));
   parts.push(
     `<text font-family="${font}" font-size="15" fill="${c.subtle}" x="${bx + 54}" y="${yy + 22}">@${esc(doc.handle)}</text>`,
-    // X logo in the top-right corner (the pika-style signature mark)
-    xLogo(bx + bw - 22, yy - 12, 20, c.text)
+    // in-app post detail shows a kebab top-right; the X logo is an embed-widget
+    // convention, so it stays only on the standalone card
+    includeReplies
+      ? `<g fill="${c.subtle}"><circle cx="${bx + bw - 30}" cy="${yy}" r="1.9"/><circle cx="${bx + bw - 22}" cy="${yy}" r="1.9"/><circle cx="${bx + bw - 14}" cy="${yy}" r="1.9"/></g>`
+      : xLogo(bx + bw - 22, yy - 12, 20, c.text)
   );
   yy += 52;
 
@@ -112,7 +115,26 @@ function xpostBody(
       parts.push(`<text font-family="${font}" font-size="13.5" fill="${c.subtle}" x="${hx}" y="${ry + 3}">@${esc(cm.handle || cm.user.toLowerCase().replace(/\s+/g, ""))} · ${esc(cm.time || "1h")}</text>`);
       const cl = wrapText(cm.text, 15, bw - 46);
       cl.forEach((l, k) => parts.push(`<text font-family="${font}" font-size="15" fill="${c.text}" x="${bx + 46}" y="${ry + 22 + k * 20}">${esc(l)}</text>`));
-      ry = ry + 22 + cl.length * 20 + 24;
+      // real reply cells carry the full action row with small counts
+      {
+        let seed = 0;
+        for (const ch of cm.user) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+        const n = (m: number) => compact(1 + (seed % m));
+        const ry2 = ry + 22 + cl.length * 20 + 14;
+        const cs = [bx + 52, bx + 46 + (bw - 46) * 0.24, bx + 46 + (bw - 46) * 0.47, bx + 46 + (bw - 46) * 0.7, bx + bw - 10];
+        parts.push(
+          `<path d="M${cs[0] - 6} ${ry2 - 6} h8 a3.5 3.5 0 0 1 3.5 3.5 v4 a3.5 3.5 0 0 1 -3.5 3.5 h-4 l-5.5 4 v-4 a3.5 3.5 0 0 1 -2 -3.5 v-4 a3.5 3.5 0 0 1 3.5 -3.5 Z" fill="none" stroke="${c.subtle}" stroke-width="1.4" stroke-linejoin="round"/>`,
+          `<text font-family="${font}" font-size="11.5" fill="${c.subtle}" x="${cs[0] + 10}" y="${ry2 + 4}">${n(40)}</text>`,
+          `<path d="M${cs[1] - 5} ${ry2 + 2} v-5 a3 3 0 0 1 3 -3 h7 m-2.5 -3 l3 3 -3 3 M${cs[1] + 7} ${ry2 - 3} v5 a3 3 0 0 1 -3 3 h-7 m2.5 3 l-3 -3 3 -3" fill="none" stroke="${c.subtle}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>`,
+          `<text font-family="${font}" font-size="11.5" fill="${c.subtle}" x="${cs[1] + 12}" y="${ry2 + 4}">${n(25)}</text>`,
+          `<path d="M${cs[2]} ${ry2 + 5} c -5.5 -3.5 -9 -7 -9 -10.5 a 4.5 4.5 0 0 1 9 -1.4 a 4.5 4.5 0 0 1 9 1.4 c 0 3.5 -3.5 7 -9 10.5 Z" fill="none" stroke="${c.subtle}" stroke-width="1.4" stroke-linejoin="round"/>`,
+          `<text font-family="${font}" font-size="11.5" fill="${c.subtle}" x="${cs[2] + 13}" y="${ry2 + 4}">${n(300)}</text>`,
+          `<path d="M${cs[3] - 6} ${ry2 + 5} v-11 m4 11 v-7 m4 7 v-13" stroke="${c.subtle}" stroke-width="1.4" stroke-linecap="round"/>`,
+          `<text font-family="${font}" font-size="11.5" fill="${c.subtle}" x="${cs[3] + 8}" y="${ry2 + 4}">${compact(200 + (seed % 9000))}</text>`,
+          `<path d="M${cs[4]} ${ry2 + 2} v-9 m-4 -1 l4 -4 4 4 m-11 6 v7 h14 v-7" fill="none" stroke="${c.subtle}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>`
+        );
+      }
+      ry = ry + 22 + cl.length * 20 + 24 + 20;
       if (i < doc.comments!.length - 1) parts.push(`<rect x="${x}" y="${ry - 11}" width="${w}" height="0.5" fill="${c.hairline}"/>`);
     }
     bottom = ry;
@@ -198,14 +220,15 @@ function xLogo(x: number, y: number, size: number, color: string): string {
   return `<g transform="translate(${x} ${y}) scale(${sc})"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="${color}"/></g>`;
 }
 
+/* Sized to font cap height (~1em of the 16.5px name) — oversized seals read fake. */
 function verifiedBadge(x: number, y: number, color: string): string {
-  const cx = x + 8.5, cy = y + 8.5;
+  const cx = x + 7, cy = y + 9;
   const petals = Array.from({ length: 9 }, (_, i) => {
     const a = (i / 9) * Math.PI * 2;
-    return `${(cx + Math.cos(a) * 8.6).toFixed(1)} ${(cy + Math.sin(a) * 8.6).toFixed(1)}`;
+    return `${(cx + Math.cos(a) * 6.6).toFixed(1)} ${(cy + Math.sin(a) * 6.6).toFixed(1)}`;
   });
   return `
-<circle cx="${cx}" cy="${cy}" r="8" fill="${color}"/>
-${petals.map((p) => `<circle cx="${p.split(" ")[0]}" cy="${p.split(" ")[1]}" r="2.6" fill="${color}"/>`).join("")}
-<path d="M${cx - 4} ${cy} l 2.8 3 5.2 -6" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>`;
+<circle cx="${cx}" cy="${cy}" r="6.2" fill="${color}"/>
+${petals.map((p) => `<circle cx="${p.split(" ")[0]}" cy="${p.split(" ")[1]}" r="2" fill="${color}"/>`).join("")}
+<path d="M${cx - 3.1} ${cy} l 2.2 2.4 4 -4.7" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
 }

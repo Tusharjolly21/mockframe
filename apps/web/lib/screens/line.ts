@@ -31,7 +31,9 @@ const PAD_X = 13;
 const PAD_Y = 9;
 const MARGIN = 12;
 const AVA = 15;
-const GREEN = "#06c755";
+// Message bubbles are a lighter yellow-green than the #06c755 brand green
+// (sampled ~#6fde63–#7be362 from real threads), with near-black text.
+const GREEN = "#73de63";
 
 export function renderLine(
   doc: LineDoc,
@@ -44,14 +46,14 @@ export function renderLine(
     baseTextBlock(lines, { font, ...o });
   const dark = !!doc.chrome.dark;
   const c = {
-    bg: dark ? "#1c1c1e" : "#8ca5cc", // LINE's default is a soft blue wallpaper
+    bg: dark ? "#1c1c1e" : "#8399c4", // LINE's default slate-blue wallpaper
     header: dark ? "#101012" : "#ffffff",
     hairline: dark ? "#2a2a2c" : "#e6e6e6",
     headText: dark ? "#f2f2f2" : "#1a1a1a",
     headSub: dark ? "#9a9aa2" : "#8a8a90",
     incoming: dark ? "#2c2c2e" : "#ffffff",
     incomingText: dark ? "#f2f2f2" : "#1a1a1a",
-    outgoingText: "#0a2e14",
+    outgoingText: "#111111",
     meta: dark ? "#c7cdd6" : "#eef2f7",
   };
 
@@ -76,7 +78,13 @@ export function renderLine(
 
   /* messages */
   const time = doc.chrome.time || "9:41";
-  let y = HEADER_H + 16;
+  let y = HEADER_H + 20;
+  // centered translucent date pill, like the real thread ("Today" / 今日)
+  parts.push(
+    `<rect x="${SW / 2 - 32}" y="${y - 12}" width="64" height="21" rx="10.5" fill="rgba(0,0,0,0.18)"/>`,
+    `<text font-family="${font}" font-size="11" fill="#ffffff" text-anchor="middle" x="${SW / 2}" y="${y + 2.5}">Today</text>`
+  );
+  y += 24;
   const msgs = doc.messages;
   for (let i = 0; i < msgs.length; i++) {
     const m = msgs[i];
@@ -133,11 +141,12 @@ export function renderLine(
     `<path d="M${MARGIN + 9} ${iy + 12} v14 M${MARGIN + 2} ${iy + 19} h14" stroke="${c.headSub}" stroke-width="2" stroke-linecap="round"/>`,
     // camera
     `<rect x="${MARGIN + 32}" y="${iy + 11}" width="18" height="14" rx="4" fill="none" stroke="${c.headSub}" stroke-width="1.8"/><circle cx="${MARGIN + 41}" cy="${iy + 18}" r="3.4" fill="none" stroke="${c.headSub}" stroke-width="1.6"/>`,
-    `<rect x="${MARGIN + 60}" y="${iy + 3}" width="${SW - MARGIN * 2 - 60 - 66}" height="32" rx="16" fill="${dark ? "#2c2c2e" : "#f0f0f2"}"/>`,
-    `<text font-family="${font}" font-size="14.5" fill="${c.headSub}" x="${MARGIN + 76}" y="${iy + 24}">Aa</text>`,
-    // emoji + mic
-    `<circle cx="${SW - 54}" cy="${iy + 19}" r="8.5" fill="none" stroke="${c.headSub}" stroke-width="1.6"/><path d="M${SW - 58} ${iy + 21} a5 5 0 0 0 8 0 M${SW - 57} ${iy + 16.5} h0.01 M${SW - 51} ${iy + 16.5} h0.01" stroke="${c.headSub}" stroke-width="1.6" stroke-linecap="round" fill="none"/>`,
-    micIcon(SW - 28, iy + 19, 20, c.headSub),
+    // gallery (real iOS LINE has + / camera / gallery before the field)
+    `<rect x="${MARGIN + 60}" y="${iy + 11}" width="16" height="14" rx="3.5" fill="none" stroke="${c.headSub}" stroke-width="1.7"/><circle cx="${MARGIN + 65}" cy="${iy + 15.5}" r="1.6" fill="${c.headSub}"/><path d="M${MARGIN + 61.5} ${iy + 23} l4 -4 3.5 3 2.5 -2.5 3 2.7" fill="none" stroke="${c.headSub}" stroke-width="1.4"/>`,
+    `<rect x="${MARGIN + 86}" y="${iy + 3}" width="${SW - MARGIN * 2 - 86 - 40}" height="32" rx="16" fill="${dark ? "#2c2c2e" : "#f0f0f2"}"/>`,
+    // smiley INSIDE the field's right edge
+    `<circle cx="${SW - 66}" cy="${iy + 19}" r="8.5" fill="none" stroke="${c.headSub}" stroke-width="1.6"/><path d="M${SW - 70} ${iy + 21} a5 5 0 0 0 8 0 M${SW - 69} ${iy + 16.5} h0.01 M${SW - 63} ${iy + 16.5} h0.01" stroke="${c.headSub}" stroke-width="1.6" stroke-linecap="round" fill="none"/>`,
+    micIcon(SW - 26, iy + 19, 20, c.headSub),
     homeIndicator(c.headText, platform)
   );
 

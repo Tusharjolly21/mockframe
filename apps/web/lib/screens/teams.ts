@@ -76,8 +76,10 @@ export function renderTeams(
         secondary: "#616161",
         incomingBubble: "#F0F0F0",
         incomingText: "#242424",
-        outgoingBubble: "#5B5FC7",
-        outgoingText: "#FFFFFF",
+        // work/school Teams sends pale lavender bubbles with dark text —
+        // saturated purple + white text is the consumer app's look
+        outgoingBubble: "#E8EBFA",
+        outgoingText: "#242424",
         reactionPillBg: "#FFFFFF",
         reactionPillBorder: "#E0E0E0",
         composerPillBg: "#F5F5F5",
@@ -97,8 +99,8 @@ export function renderTeams(
     avatar(doc.contact, 58, 82, 17, "tm", avatarUrl),
     // presence dot with a canvas-colored ring
     `<circle cx="70" cy="92" r="6" fill="${presenceColor}" stroke="${c.canvasBg}" stroke-width="2"/>`,
-    `<text font-family="${font}" font-size="16.5" font-weight="700" fill="${c.textPrimary}" x="86" y="80">${esc(truncate(doc.contact, 16.5, 190))}</text>`,
-    `<text font-family="${font}" font-size="12.5" fill="${c.secondary}" x="86" y="97">${esc(truncate(doc.status, 12.5, 190))}</text>`,
+    // name only — presence is the dot, a status subtitle isn't standard in 1:1 chat
+    `<text font-family="${font}" font-size="16.5" font-weight="700" fill="${c.textPrimary}" x="86" y="88">${esc(truncate(doc.contact, 16.5, 190))}</text>`,
     // right call actions — neutral, not purple
     phoneIcon(296, 82, 22, c.textPrimary),
     videoIcon(338, 82, 22, c.textPrimary),
@@ -136,12 +138,22 @@ export function renderTeams(
       }
     }
 
+    // small gray "Name  9:40 AM" / right-aligned time above the first bubble of a group
+    if (firstOfGroup) {
+      if (mine) {
+        parts.push(`<text font-family="${font}" font-size="11.5" fill="${c.secondary}" text-anchor="end" x="${SW - MARGIN - 4}" y="${y + 4}">${esc(doc.chrome.time || "9:41")} AM</text>`);
+      } else {
+        parts.push(`<text font-family="${font}" font-size="11.5" fill="${c.secondary}" x="52" y="${y + 4}">${esc(truncate(doc.contact, 11.5, 160))}  ${esc(doc.chrome.time || "9:41")} AM</text>`);
+      }
+      y += 14;
+    }
+
     const lines = wrapText(m.text || " ", FONT_SIZE, BUBBLE_MAX - PAD_X * 2);
     const w = Math.min(BUBBLE_MAX, Math.max(...lines.map((l) => textWidth(l, FONT_SIZE))) + PAD_X * 2);
     const h = lines.length * LINE_H + PAD_Y * 2;
     const x = mine ? SW - MARGIN - w : 52;
     parts.push(
-      `<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="14" fill="${mine ? c.outgoingBubble : c.incomingBubble}"/>`,
+      `<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="8" fill="${mine ? c.outgoingBubble : c.incomingBubble}"/>`,
       textBlock(lines, {
         x: x + PAD_X,
         y: bubbleBaseline(y, h, lines.length, LINE_H, FONT_SIZE),
@@ -155,16 +167,16 @@ export function renderTeams(
       parts.push(avatar(doc.contact, 30, y + h - 14, 14, `tmi${i}`, avatarUrl));
     }
 
-    // reaction pill overlapping the bubble's bottom edge
+    // reaction pill pinned to the bubble's TOP-right edge (real Teams placement)
     let extra = 0;
     if (m.reaction) {
       const rw = textWidth(m.reaction, 14) + 14;
-      const rx = mine ? x + 4 : x + w - rw;
+      const rx = x + w - rw - 4;
       parts.push(
-        `<rect x="${rx.toFixed(1)}" y="${y + h - 11}" width="${rw.toFixed(1)}" height="22" rx="11" fill="${c.reactionPillBg}" stroke="${c.reactionPillBorder}" stroke-width="1"/>`,
-        `<text font-size="14" text-anchor="middle" x="${(rx + rw / 2).toFixed(1)}" y="${y + h + 5}">${esc(m.reaction)}</text>`
+        `<rect x="${rx.toFixed(1)}" y="${y - 11}" width="${rw.toFixed(1)}" height="22" rx="11" fill="${c.reactionPillBg}" stroke="${c.reactionPillBorder}" stroke-width="1"/>`,
+        `<text font-size="14" text-anchor="middle" x="${(rx + rw / 2).toFixed(1)}" y="${y + 5}">${esc(m.reaction)}</text>`
       );
-      extra = 10;
+      extra = 2;
     }
 
     if (mine) lastMineBottom = y + h;
@@ -191,12 +203,6 @@ export function renderTeams(
     // input pill
     `<rect x="${pillX}" y="${COMP_CY - 19}" width="${pillW}" height="38" rx="19" fill="${c.composerPillBg}"/>`,
     `<text font-family="${font}" font-size="15" fill="${c.secondary}" x="66" y="${COMP_CY + 5}">Type a message</text>`,
-    // format "A"
-    `<text font-family="${font}" font-size="17" font-weight="700" fill="${c.iconRest}" text-anchor="middle" x="250" y="${COMP_CY + 6}">A</text>`,
-    // emoji
-    `<circle cx="288" cy="${COMP_CY}" r="9" fill="none" stroke="${c.iconRest}" stroke-width="1.6"/>`,
-    `<circle cx="285" cy="${COMP_CY - 2.5}" r="1.1" fill="${c.iconRest}"/><circle cx="291" cy="${COMP_CY - 2.5}" r="1.1" fill="${c.iconRest}"/>`,
-    `<path d="M283.5 ${COMP_CY + 2.5} a 5 5 0 0 0 9 0" fill="none" stroke="${c.iconRest}" stroke-width="1.5" stroke-linecap="round"/>`,
     // camera
     `<path d="M317 ${COMP_CY - 6} l2 -3 h6 l2 3" fill="none" stroke="${c.iconRest}" stroke-width="1.5" stroke-linejoin="round"/>`,
     `<rect x="315" y="${COMP_CY - 6}" width="22" height="15" rx="3.5" fill="none" stroke="${c.iconRest}" stroke-width="1.7"/>`,

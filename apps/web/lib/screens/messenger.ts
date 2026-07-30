@@ -48,11 +48,18 @@ export function renderMessenger(
     hairline: dark ? "#2f3031" : "#eeeff1",
     incoming: dark ? "#303030" : "#f0f0f0",
     incomingText: dark ? "#e4e6eb" : "#050505",
-    blue: "#0084ff", // Messenger's solid blue (real app is not a gradient)
+    blue: "#0084ff",
     green: "#31cc46",
   };
 
-  const parts: string[] = [`<rect width="${SW}" height="${SH}" fill="${c.bg}"/>`];
+  const parts: string[] = [
+    `<rect width="${SW}" height="${SH}" fill="${c.bg}"/>`,
+    // Sent bubbles use Messenger's default theme: a viewport-fixed vertical
+    // gradient (violet at the top of the screen → blue lower down), so each
+    // bubble shows a different slice. Flat #0084ff reads as the old app.
+    `<defs><linearGradient id="fk_msgr_grad" gradientUnits="userSpaceOnUse" x1="0" y1="100" x2="0" y2="${SH}"><stop offset="0" stop-color="#6e52ff"/><stop offset="0.55" stop-color="#2f6bff"/><stop offset="1" stop-color="#0084ff"/></linearGradient></defs>`,
+  ];
+  const sentFill = "url(#fk_msgr_grad)";
 
   /* header */
   const HEADER_H = 104;
@@ -65,7 +72,7 @@ export function renderMessenger(
     textBlock([doc.contact], { x: 86, y: 72, size: 15.5, lineHeight: 18, color: c.text, weight: 600 }),
     doc.verified
       ? verifiedBadge(86 + textWidth(doc.contact, 15.5) + 5, 72 - 13, c.blue)
-      : "",
+      : `<path d="M${86 + textWidth(doc.contact, 15.5) + 7} 62 l4.5 5 -4.5 5" fill="none" stroke="${c.subtle}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`,
     textBlock([doc.presence || "Active now"], { x: 86, y: 89, size: 11.5, lineHeight: 13, color: c.subtle }),
     phoneIcon(SW - 74, 75, 20, c.blue),
     videoIcon(SW - 34, 75, 25, c.blue)
@@ -73,7 +80,15 @@ export function renderMessenger(
 
   /* messages */
   let y = HEADER_H + 20;
+  let lastMineBottom: { x: number; y: number } | null = null;
   const msgs = doc.messages;
+  // centered small-caps time separator, like the real thread
+  if (msgs.length && !msgs[0].dateLabel) {
+    parts.push(
+      `<text font-family="${font}" font-size="11.5" font-weight="600" letter-spacing="0.3" fill="${c.subtle}" text-anchor="middle" x="${SW / 2}" y="${y + 4}">TODAY ${esc((doc.chrome.time || "9:41").toUpperCase())} AM</text>`
+    );
+    y += 26;
+  }
   for (let i = 0; i < msgs.length; i++) {
     const m = msgs[i];
     const mine = m.from === "me";
@@ -102,7 +117,7 @@ export function renderMessenger(
     const h = lines.length * LINE_H + PAD_Y * 2;
     const x = mine ? SW - MARGIN - w : MARGIN + 30;
     parts.push(
-      `<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="${Math.min(19, h / 2)}" fill="${mine ? c.blue : c.incoming}"/>`,
+      `<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="${Math.min(19, h / 2)}" fill="${mine ? sentFill : c.incoming}"/>`,
       textBlock(lines, {
         x: x + PAD_X,
         y: bubbleBaseline(y, h, lines.length, LINE_H, FONT_SIZE),
@@ -123,7 +138,13 @@ export function renderMessenger(
       );
       gap += 14;
     }
+    if (mine) lastMineBottom = { x: SW - MARGIN, y: y + h };
     y += h + (i < msgs.length - 1 && msgs[i + 1].from === m.from ? gap : gap + 7);
+  }
+
+  // seen receipt: a mini avatar thumb under the last sent message
+  if (lastMineBottom && msgs.at(-1)?.from === "me" && !doc.chrome._anim?.typing) {
+    parts.push(avatar(doc.contact, lastMineBottom.x - 7, lastMineBottom.y + 11, 7, "msseen", avatarUrl));
   }
 
   if (doc.chrome._anim?.typing) {
@@ -135,26 +156,32 @@ export function renderMessenger(
     );
   }
 
-  /* composer — filled blue camera / photos / mic, "Aa" pill, blue thumbs-up */
+  /* composer — real left set is FOUR blue glyphs: ⊞ apps grid, camera,
+     gallery, mic — then the "Aa" pill and thumbs-up */
   const iy = SH - 62;
-  const pillX = MARGIN + 84;
+  const pillX = MARGIN + 106;
   const pillW = SW - MARGIN - 34 - pillX;
+  const dotGrid = (gx: number, gy: number) =>
+    [0, 1].flatMap((r) => [0, 1].map((col) => `<circle cx="${gx + col * 8}" cy="${gy + r * 8}" r="2.6" fill="${c.blue}"/>`)).join("");
   parts.push(
-    // camera (filled)
-    `<rect x="${MARGIN}" y="${iy + 10}" width="21" height="18" rx="6" fill="${c.blue}"/>`,
-    `<circle cx="${MARGIN + 10.5}" cy="${iy + 19}" r="4" fill="none" stroke="#fff" stroke-width="1.6"/>`,
-    // photos (filled)
-    `<rect x="${MARGIN + 29}" y="${iy + 10}" width="21" height="18" rx="6" fill="${c.blue}"/>`,
-    `<circle cx="${MARGIN + 35}" cy="${iy + 15.5}" r="1.8" fill="#fff"/><path d="M${MARGIN + 32} ${iy + 25} l4.5 -5 3.5 3.5 3 -3 3.5 3.5 v1 h-14.5 Z" fill="#fff"/>`,
-    // mic (filled)
-    `<rect x="${MARGIN + 60}" y="${iy + 9}" width="8" height="12" rx="4" fill="${c.blue}"/>`,
-    `<path d="M${MARGIN + 57.5} ${iy + 19} a 6.5 6.5 0 0 0 13 0 M${MARGIN + 64} ${iy + 25.5} v3" fill="none" stroke="${c.blue}" stroke-width="1.9" stroke-linecap="round"/>`,
+    // apps grid (4 dots)
+    dotGrid(MARGIN + 4, iy + 15),
+    // camera (outline glyph, blue)
+    `<path d="M${MARGIN + 27} ${iy + 13} l2.5 -3.5 h7 l2.5 3.5" fill="none" stroke="${c.blue}" stroke-width="1.8" stroke-linejoin="round"/>`,
+    `<rect x="${MARGIN + 24}" y="${iy + 13}" width="21" height="15" rx="4" fill="none" stroke="${c.blue}" stroke-width="1.9"/>`,
+    `<circle cx="${MARGIN + 34.5}" cy="${iy + 20.5}" r="4" fill="none" stroke="${c.blue}" stroke-width="1.7"/>`,
+    // gallery (photo glyph, blue)
+    `<rect x="${MARGIN + 54}" y="${iy + 11}" width="19" height="17" rx="4" fill="none" stroke="${c.blue}" stroke-width="1.9"/>`,
+    `<circle cx="${MARGIN + 59.5}" cy="${iy + 16.5}" r="1.8" fill="${c.blue}"/><path d="M${MARGIN + 56} ${iy + 26} l4.5 -5 3.5 3.5 3 -3 3.5 3.5" fill="none" stroke="${c.blue}" stroke-width="1.7" stroke-linejoin="round"/>`,
+    // mic (blue)
+    `<rect x="${MARGIN + 83}" y="${iy + 10}" width="8" height="12" rx="4" fill="none" stroke="${c.blue}" stroke-width="1.9"/>`,
+    `<path d="M${MARGIN + 80} ${iy + 19} a 7 7 0 0 0 14 0 M${MARGIN + 87} ${iy + 26} v3" fill="none" stroke="${c.blue}" stroke-width="1.9" stroke-linecap="round"/>`,
     // input pill with emoji at the right
     `<rect x="${pillX}" y="${iy + 6}" width="${pillW}" height="30" rx="15" fill="${c.incoming}"/>`,
     `<text font-family="${font}" font-size="14.5" fill="${c.subtle}" x="${pillX + 14}" y="${iy + 26}">Aa</text>`,
     `<circle cx="${pillX + pillW - 16}" cy="${iy + 21}" r="8" fill="none" stroke="${c.subtle}" stroke-width="1.6"/><path d="M${pillX + pillW - 20} ${iy + 23} a 5 5 0 0 0 8 0 M${pillX + pillW - 19} ${iy + 18.5} h0.01 M${pillX + pillW - 13} ${iy + 18.5} h0.01" stroke="${c.subtle}" stroke-width="1.6" stroke-linecap="round" fill="none"/>`,
-    // thumbs up (blue)
-    `<path d="M${SW - MARGIN - 22} ${iy + 18} v10 h-5 v-10 Z M${SW - MARGIN - 17} ${iy + 18} l 5.5 -9 c 3 1 4 3 3.2 6 l -1 3 h 6.5 c 2.4 0 3.6 1.6 3 4 l -1.6 6.5 c -0.5 2 -1.8 3 -4 3 h -11.6 Z" fill="${c.blue}"/>`,
+    // thumbs up (clean filled thumb)
+    `<path d="M${SW - MARGIN - 26} ${iy + 17.5} h4 v11 h-4 Z M${SW - MARGIN - 20} ${iy + 28.5} v-10.5 l5 -8.5 c 2.6 0.6 3.7 2.4 3.1 5l-0.9 3.5 h5.8 c 2.2 0 3.4 1.5 2.9 3.6 l-1.3 5.2 c -0.4 1.6 -1.6 2.5 -3.3 2.5 Z" fill="${c.blue}"/>`,
     homeIndicator(c.text, platform)
   );
 

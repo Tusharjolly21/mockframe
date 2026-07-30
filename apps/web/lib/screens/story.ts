@@ -41,17 +41,24 @@ export function renderStory(
     ? { fbTop: "#000000", fbMid: "#000000", fbBot: "#000000" }
     : { fbTop: "#F58529", fbMid: "#DD2A7B", fbBot: "#8134AF" };
 
-  const pageBg = dark ? "#000000" : "#F58529";
-  const parts: string[] = [`<rect width="${SW}" height="${SH}" fill="${pageBg}"/>`];
+  // On notched iPhones the story is a rounded-corner card with black above
+  // (status area) and a black strip below (the reply bar sits on solid black),
+  // not an edge-to-edge gradient.
+  const CARD_TOP = 54, CARD_BOTTOM = SH - 96, CARD_H = CARD_BOTTOM - CARD_TOP;
+  const parts: string[] = [
+    `<rect width="${SW}" height="${SH}" fill="#000000"/>`,
+    `<defs><clipPath id="stcard"><rect x="0" y="${CARD_TOP}" width="${SW}" height="${CARD_H}" rx="14"/></clipPath></defs>`,
+  ];
 
-  /* ---- full-bleed media (uploaded) or gradient / solid fallback ------------- */
+  /* ---- card media (uploaded) or gradient fallback, clipped to the card ----- */
   const bgUrl = doc.background ? lookupUrl?.(doc.background) : undefined;
+  parts.push(`<g clip-path="url(#stcard)">`);
   if (bgUrl) {
-    parts.push(imageBubble(bgUrl, 0, 0, SW, SH, "stbg", { rx: 0 }));
+    parts.push(imageBubble(bgUrl, 0, CARD_TOP, SW, CARD_H, "stbg", { rx: 0 }));
   } else {
     parts.push(
       `<defs><linearGradient id="stfb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.fbTop}"/><stop offset="0.5" stop-color="${c.fbMid}"/><stop offset="1" stop-color="${c.fbBot}"/></linearGradient></defs>`,
-      `<rect width="${SW}" height="${SH}" fill="url(#stfb)"/>`
+      `<rect x="0" y="${CARD_TOP}" width="${SW}" height="${CARD_H}" fill="url(#stfb)"/>`
     );
   }
 
@@ -59,10 +66,9 @@ export function renderStory(
   parts.push(
     `<defs>` +
       `<linearGradient id="sttop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(0,0,0,0.25)"/><stop offset="1" stop-color="rgba(0,0,0,0)"/></linearGradient>` +
-      `<linearGradient id="stbot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(0,0,0,0)"/><stop offset="1" stop-color="rgba(0,0,0,0.30)"/></linearGradient>` +
       `</defs>`,
-    `<rect x="0" y="0" width="${SW}" height="150" fill="url(#sttop)"/>`,
-    `<rect x="0" y="720" width="${SW}" height="${SH - 720}" fill="url(#stbot)"/>`
+    `<rect x="0" y="${CARD_TOP}" width="${SW}" height="130" fill="url(#sttop)"/>`,
+    `</g>`
   );
 
   /* ---- status bar (white glyphs, always) ----------------------------------- */
@@ -76,22 +82,22 @@ export function renderStory(
   const pLeft = 8;
   const pRight = 394;
   const pSegW = (pRight - pLeft - pGap * (count - 1)) / count;
-  const pY = 58.5; // center ~60, height 3
+  const pY = 66; // just inside the card, height 2 (real segments are ~2pt)
   for (let i = 0; i < count; i++) {
     const sx = pLeft + i * (pSegW + pGap);
     if (i < doc.activeIndex) {
       parts.push(
-        `<rect x="${sx.toFixed(1)}" y="${pY}" width="${pSegW.toFixed(1)}" height="3" rx="1.5" fill="#ffffff"/>`
+        `<rect x="${sx.toFixed(1)}" y="${pY}" width="${pSegW.toFixed(1)}" height="2" rx="1" fill="#ffffff"/>`
       );
     } else if (i === doc.activeIndex) {
       const fillW = pSegW * Math.min(1, Math.max(0, doc.activeProgress ?? 0));
       parts.push(
-        `<rect x="${sx.toFixed(1)}" y="${pY}" width="${pSegW.toFixed(1)}" height="3" rx="1.5" fill="rgba(255,255,255,0.35)"/>`,
-        `<rect x="${sx.toFixed(1)}" y="${pY}" width="${fillW.toFixed(1)}" height="3" rx="1.5" fill="#ffffff"/>`
+        `<rect x="${sx.toFixed(1)}" y="${pY}" width="${pSegW.toFixed(1)}" height="2" rx="1" fill="rgba(255,255,255,0.35)"/>`,
+        `<rect x="${sx.toFixed(1)}" y="${pY}" width="${fillW.toFixed(1)}" height="2" rx="1" fill="#ffffff"/>`
       );
     } else {
       parts.push(
-        `<rect x="${sx.toFixed(1)}" y="${pY}" width="${pSegW.toFixed(1)}" height="3" rx="1.5" fill="rgba(255,255,255,0.35)"/>`
+        `<rect x="${sx.toFixed(1)}" y="${pY}" width="${pSegW.toFixed(1)}" height="2" rx="1" fill="rgba(255,255,255,0.35)"/>`
       );
     }
   }
@@ -151,7 +157,7 @@ export function renderStory(
   /* ---- bottom reply bar: pill -> heart -> paper-plane ---------------------- */
   parts.push(
     `<rect x="12" y="795" width="288" height="44" rx="22" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="1.5"/>`,
-    `<text font-family="${font}" font-size="15" fill="rgba(255,255,255,0.9)" x="30" y="822">${esc(doc.replyPlaceholder || "Send message")}</text>`
+    `<text font-family="${font}" font-size="15" fill="rgba(255,255,255,0.9)" x="30" y="822">${esc(doc.replyPlaceholder || "Send message…")}</text>`
   );
   parts.push(heartOutline(330, 815, 7));
   parts.push(paperPlane(372, 817, 11));

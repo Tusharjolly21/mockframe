@@ -57,7 +57,13 @@ export function renderInstagram(
     green: "#12b76a",
   };
 
-  const parts: string[] = [`<rect width="${SW}" height="${SH}" fill="${c.bg}"/>`];
+  const parts: string[] = [
+    `<rect width="${SW}" height="${SH}" fill="${c.bg}"/>`,
+    // Current IG DMs paint sent bubbles with a viewport-fixed violet→blue
+    // gradient (Messenger engine); flat #3797f0 is the pre-2020 look.
+    `<defs><linearGradient id="fk_ig_grad" gradientUnits="userSpaceOnUse" x1="0" y1="100" x2="0" y2="${SH}"><stop offset="0" stop-color="#7c3ff1"/><stop offset="0.6" stop-color="#4f5ef7"/><stop offset="1" stop-color="#3797f0"/></linearGradient></defs>`,
+  ];
+  const sentFill = "url(#fk_ig_grad)";
 
   /* header */
   const HEADER_H = 104;
@@ -80,6 +86,13 @@ export function renderInstagram(
   let y = HEADER_H + 20;
   let lastOutgoingBottom: number | null = null;
   const msgs = doc.messages;
+  // centered gray timestamp above the first group, like the real thread
+  if (msgs.length) {
+    parts.push(
+      `<text font-family="${font}" font-size="11.5" fill="${c.subtle}" text-anchor="middle" x="${SW / 2}" y="${y}">${esc(doc.chrome.time || "9:41")} AM</text>`
+    );
+    y += 22;
+  }
   for (let i = 0; i < msgs.length; i++) {
     const m = msgs[i];
     const mine = m.from === "me";
@@ -101,7 +114,7 @@ export function renderInstagram(
     const h = lines.length * LINE_H + PAD_Y * 2;
     const x = mine ? SW - MARGIN - w : MARGIN + (mine ? 0 : 30);
     parts.push(
-      `<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="${Math.min(19, h / 2)}" fill="${mine ? c.outgoing : c.incoming}"/>`,
+      `<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="${Math.min(19, h / 2)}" fill="${mine ? sentFill : c.incoming}"/>`,
       textBlock(lines, {
         x: x + PAD_X,
         y: bubbleBaseline(y, h, lines.length, LINE_H, FONT_SIZE),
@@ -149,11 +162,13 @@ export function renderInstagram(
     `<rect x="${MARGIN + 14}" y="${iy + 16}" width="14" height="10.5" rx="3" fill="none" stroke="#ffffff" stroke-width="1.7"/>`,
     `<circle cx="${MARGIN + 21}" cy="${iy + 21.2}" r="2.6" fill="none" stroke="#ffffff" stroke-width="1.5"/>`,
     `<text font-family="${font}" font-size="14.5" fill="${c.subtle}" x="${MARGIN + 44}" y="${iy + 26}">Message…</text>`,
-    // mic + image glyphs right
-    micIcon(SW - MARGIN - 52, iy + 21, 19, c.text),
-    `<rect x="${SW - MARGIN - 34}" y="${iy + 13}" width="16" height="14" rx="3.5" fill="none" stroke="${c.text}" stroke-width="1.6"/>`,
-    `<circle cx="${SW - MARGIN - 29}" cy="${iy + 18}" r="1.8" fill="${c.text}"/>`,
-    `<path d="M${SW - MARGIN - 33} ${iy + 24} l4.5 -4 4 3.5 4 -3 3 2.8" fill="none" stroke="${c.text}" stroke-width="1.4"/>`,
+    // mic + gallery + sticker + ⊕ glyphs inside the pill's right edge
+    micIcon(SW - MARGIN - 104, iy + 21, 19, c.text),
+    `<rect x="${SW - MARGIN - 88}" y="${iy + 13}" width="16" height="14" rx="3.5" fill="none" stroke="${c.text}" stroke-width="1.6"/>`,
+    `<circle cx="${SW - MARGIN - 83}" cy="${iy + 18}" r="1.8" fill="${c.text}"/>`,
+    `<path d="M${SW - MARGIN - 87} ${iy + 24} l4.5 -4 4 3.5 4 -3 3 2.8" fill="none" stroke="${c.text}" stroke-width="1.4"/>`,
+    `<rect x="${SW - MARGIN - 62}" y="${iy + 13}" width="14" height="14" rx="4" fill="none" stroke="${c.text}" stroke-width="1.6"/><path d="M${SW - MARGIN - 55} ${iy + 27} a 7 7 0 0 0 7 -7" fill="none" stroke="${c.text}" stroke-width="1.5"/>`,
+    `<circle cx="${SW - MARGIN - 28}" cy="${iy + 20}" r="8" fill="none" stroke="${c.text}" stroke-width="1.6"/><path d="M${SW - MARGIN - 28} ${iy + 16} v8 M${SW - MARGIN - 32} ${iy + 20} h8" stroke="${c.text}" stroke-width="1.6" stroke-linecap="round"/>`,
     homeIndicator(c.text, platform)
   );
 

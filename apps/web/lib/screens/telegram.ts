@@ -57,11 +57,29 @@ export function renderTelegram(
     blue: "#3d9bef",
   };
 
+  // pastel gradient WITH the doodle icon overlay — the plain gradient alone
+  // is the biggest tell vs the real default wallpaper
+  const doodles = (() => {
+    const pts: Array<[number, number]> = [
+      [50, 170], [180, 210], [320, 160], [370, 300], [90, 330], [240, 380],
+      [350, 470], [60, 520], [190, 570], [320, 640], [110, 700], [260, 750],
+      [30, 430], [370, 800],
+    ];
+    const shape = (x: number, y: number, k: number) =>
+      k % 4 === 0
+        ? `<path d="M${x} ${y - 7} l2 4.5 5 .5 -3.7 3.4 1.1 5 -4.4 -2.6 -4.4 2.6 1.1 -5 -3.7 -3.4 5 -.5 Z" fill="#ffffff"/>` // star
+        : k % 4 === 1
+          ? `<circle cx="${x}" cy="${y}" r="6" fill="none" stroke="#ffffff" stroke-width="1.6"/>` // planet
+          : k % 4 === 2
+            ? `<path d="M${x - 7} ${y + 4} q7 -12 14 0 Z" fill="#ffffff"/>` // paper plane-ish
+            : `<path d="M${x - 6} ${y} a6 6 0 1 0 12 0 M${x - 2} ${y - 6} v-3" fill="none" stroke="#ffffff" stroke-width="1.5"/>`; // balloon
+    return `<g opacity="0.16">${pts.map(([x, y], k) => shape(x, y, k)).join("")}</g>`;
+  })();
   const wallpaper = dark
     ? `<rect width="${SW}" height="${SH}" fill="#0e1621"/>`
     : `<defs><linearGradient id="tgw" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stop-color="#d3e0ec"/><stop offset="0.5" stop-color="#c7dcd8"/><stop offset="1" stop-color="#d8e4d3"/>
-      </linearGradient></defs><rect width="${SW}" height="${SH}" fill="url(#tgw)"/>`;
+      </linearGradient></defs><rect width="${SW}" height="${SH}" fill="url(#tgw)"/>${doodles}`;
 
   const parts: string[] = [resolveWallpaper(doc.wallpaper, dark) ?? wallpaper];
 
@@ -82,7 +100,13 @@ export function renderTelegram(
 
   /* messages */
   const time = doc.chrome.time || "9:41";
-  let y = HEADER_H + 16;
+  let y = HEADER_H + 20;
+  // floating translucent date pill
+  parts.push(
+    `<rect x="${SW / 2 - 30}" y="${y - 12}" width="60" height="22" rx="11" fill="${dark ? "rgba(255,255,255,0.08)" : "rgba(93,117,102,0.35)"}"/>`,
+    `<text font-family="${font}" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle" x="${SW / 2}" y="${y + 3}">Today</text>`
+  );
+  y += 26;
   const msgs = doc.messages;
   for (let i = 0; i < msgs.length; i++) {
     const m = msgs[i];
@@ -151,12 +175,12 @@ export function renderTelegram(
     `<rect x="0" y="${iy - 10}" width="${SW}" height="${SH - iy + 10}" fill="${c.headerBg}"/>`,
     // paperclip
     `<path d="M${MARGIN + 12} ${iy + 10} l -7 8 a 6.5 6.5 0 0 0 10 8.5 l 9 -10.5 a 4.2 4.2 0 0 0 -6.4 -5.5 l -8.5 10" fill="none" stroke="${c.subtle}" stroke-width="1.8" stroke-linecap="round"/>`,
-    glassPill(MARGIN + 34, iy + 3, SW - MARGIN * 2 - 34 - 58, 32, dark),
+    glassPill(MARGIN + 34, iy + 3, SW - MARGIN * 2 - 34 - 32, 32, dark),
     `<text font-family="${font}" font-size="15" fill="${c.subtle}" x="${MARGIN + 48}" y="${iy + 24}">Message</text>`,
-    // sticker + mic
-    `<circle cx="${SW - MARGIN - 40}" cy="${iy + 19}" r="9" fill="none" stroke="${c.subtle}" stroke-width="1.7"/>`,
-    `<path d="M${SW - MARGIN - 44} ${iy + 21} a 5.5 5.5 0 0 0 8 0 M${SW - MARGIN - 43.5} ${iy + 16.5} h0.01 M${SW - MARGIN - 36.5} ${iy + 16.5} h0.01" stroke="${c.subtle}" stroke-width="1.7" stroke-linecap="round" fill="none"/>`,
-    micIcon(SW - MARGIN - 12, iy + 18, 21, c.subtle),
+    // sticker toggle sits INSIDE the field's right edge; only mic outside
+    `<circle cx="${SW - MARGIN - 48}" cy="${iy + 19}" r="8.5" fill="none" stroke="${c.subtle}" stroke-width="1.6"/>`,
+    `<path d="M${SW - MARGIN - 52} ${iy + 21} a 5.5 5.5 0 0 0 8 0 M${SW - MARGIN - 51.5} ${iy + 16.5} h0.01 M${SW - MARGIN - 44.5} ${iy + 16.5} h0.01" stroke="${c.subtle}" stroke-width="1.6" stroke-linecap="round" fill="none"/>`,
+    micIcon(SW - MARGIN - 10, iy + 18, 21, c.subtle),
     homeIndicator(c.text, platform)
   );
 

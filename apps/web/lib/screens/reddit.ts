@@ -55,9 +55,11 @@ export function renderReddit(doc: RedditDoc, lookupUrl?: (id: string) => string 
 
   /* post */
   let y = HEADER_H + 26;
+  // real post detail: community avatar + r/name · time, kebab at right (no "+ Follow")
   parts.push(
-    `<text font-family="${font}" font-size="12.5" fill="${c.subtle}" x="${MARGIN}" y="${y}">r/${esc(doc.subreddit)} · ${esc(doc.time)}</text>`,
-    `<text font-family="${font}" font-size="12.5" font-weight="600" fill="${ORANGE}" text-anchor="end" x="${SW - MARGIN}" y="${y}">+ Follow</text>`
+    avatar(doc.subreddit, MARGIN + 9, y - 5, 9, "rsub"),
+    `<text font-family="${font}" font-size="12.5" fill="${c.subtle}" x="${MARGIN + 24}" y="${y}">r/${esc(doc.subreddit)} · ${esc(doc.time)}</text>`,
+    `<g fill="${c.subtle}"><circle cx="${SW - MARGIN - 16}" cy="${y - 4}" r="1.8"/><circle cx="${SW - MARGIN - 9}" cy="${y - 4}" r="1.8"/><circle cx="${SW - MARGIN - 2}" cy="${y - 4}" r="1.8"/></g>`
   );
   y += 22;
   const titleLines = wrapText(doc.title, 20, SW - MARGIN * 2);
@@ -65,7 +67,8 @@ export function renderReddit(doc: RedditDoc, lookupUrl?: (id: string) => string 
   y += titleLines.length * 26 + 8;
   if (doc.body) {
     const bodyLines = wrapText(doc.body, FONT, SW - MARGIN * 2);
-    parts.push(textBlock(bodyLines, { x: MARGIN, y: y + FONT * 0.8, size: FONT, lineHeight: LINE_H, color: c.subtle }));
+    // post body is near-black on the detail page, not gray
+    parts.push(textBlock(bodyLines, { x: MARGIN, y: y + FONT * 0.8, size: FONT, lineHeight: LINE_H, color: c.text }));
     y += bodyLines.length * LINE_H + 12;
   }
 
@@ -79,10 +82,11 @@ export function renderReddit(doc: RedditDoc, lookupUrl?: (id: string) => string 
     `<rect x="${MARGIN + 108}" y="${y}" width="84" height="34" rx="17" fill="${c.chip}"/>`,
     `<path d="M${MARGIN + 124} ${y + 12} h14 a3 3 0 0 1 3 3 v5 a3 3 0 0 1 -3 3 h-8 l-5 4 v-4 a3 3 0 0 1 -1 -3 v-5 a3 3 0 0 1 3 -3 Z" fill="none" stroke="${c.text}" stroke-width="1.6"/>`,
     `<text font-family="${font}" font-size="13.5" font-weight="600" fill="${c.text}" x="${MARGIN + 146}" y="${y + 22}">${esc(doc.commentCount)}</text>`,
-    // share chip
-    `<rect x="${SW - MARGIN - 92}" y="${y}" width="92" height="34" rx="17" fill="${c.chip}"/>`,
-    `<path d="M${SW - MARGIN - 74} ${y + 22} l7 -7 -7 -7 M${SW - MARGIN - 67} ${y + 15} h-7 a5 5 0 0 0 -5 5 v2" fill="none" stroke="${c.text}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`,
-    `<text font-family="${font}" font-size="13.5" font-weight="600" fill="${c.text}" x="${SW - MARGIN - 52}" y="${y + 22}">Share</text>`
+    // icon-only award + share pills at the right (no "Share" label)
+    `<rect x="${SW - MARGIN - 96}" y="${y}" width="44" height="34" rx="17" fill="${c.chip}"/>`,
+    `<circle cx="${SW - MARGIN - 74}" cy="${y + 15}" r="6.5" fill="none" stroke="${c.text}" stroke-width="1.6"/><path d="M${SW - MARGIN - 78} ${y + 20} l-2 6 6 -3 6 3 -2 -6" fill="none" stroke="${c.text}" stroke-width="1.5" stroke-linejoin="round"/>`,
+    `<rect x="${SW - MARGIN - 44}" y="${y}" width="44" height="34" rx="17" fill="${c.chip}"/>`,
+    `<path d="M${SW - MARGIN - 26} ${y + 22} l7 -7 -7 -7 M${SW - MARGIN - 19} ${y + 15} h-7 a5 5 0 0 0 -5 5 v2" fill="none" stroke="${c.text}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`
   );
   y += 34 + 16;
   parts.push(`<rect x="0" y="${y}" width="${SW}" height="6" fill="${dark ? "#05090a" : "#f6f7f8"}"/>`);
@@ -104,13 +108,20 @@ export function renderReddit(doc: RedditDoc, lookupUrl?: (id: string) => string 
     const lines = wrapText(cm.text, 14, SW - indent - 30 - MARGIN);
     lines.forEach((l, k) => parts.push(`<text font-family="${font}" font-size="14" fill="${c.text}" x="${indent + 30}" y="${y + 22 + k * 19}">${esc(l)}</text>`));
     const vy = y + 22 + lines.length * 19 + 6;
-    // vote arrows + reply
-    parts.push(
-      `<path d="M${indent + 30} ${vy} l4 -5 4 5 M${indent + 34} ${vy - 5} v6" fill="none" stroke="${c.subtle}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`,
-      `<text font-family="${font}" font-size="12.5" font-weight="600" fill="${c.subtle}" x="${indent + 46}" y="${vy + 2}">${compact(cm.votes)}</text>`,
-      `<path d="${arrowDown(indent + 46 + textWidth(compact(cm.votes), 12.5) + 12, vy)}" fill="none" stroke="${c.subtle}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`,
-      `<text font-family="${font}" font-size="12.5" font-weight="600" fill="${c.subtle}" x="${indent + 100}" y="${vy + 2}">Reply</text>`
-    );
+    // RIGHT-aligned per-comment actions: kebab · reply arrow · award · ⬆ count ⬇
+    const voteW = textWidth(compact(cm.votes), 12.5);
+    let ax = SW - MARGIN - 8; // rightmost = downvote
+    parts.push(`<path d="${arrowDown(ax, vy)}" fill="none" stroke="${c.subtle}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`);
+    ax -= 12 + voteW;
+    parts.push(`<text font-family="${font}" font-size="12.5" font-weight="600" fill="${c.subtle}" x="${ax}" y="${vy + 2}">${compact(cm.votes)}</text>`);
+    ax -= 18;
+    parts.push(`<path d="M${ax} ${vy} l4.5 -5.5 4.5 5.5 M${ax + 4.5} ${vy - 5.5} v9" fill="none" stroke="${c.subtle}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`);
+    ax -= 30;
+    parts.push(`<circle cx="${ax + 5}" cy="${vy - 2.5}" r="5" fill="none" stroke="${c.subtle}" stroke-width="1.4"/><path d="M${ax + 2} ${vy + 1.5} l-1.5 4.5 4.5 -2.2 4.5 2.2 -1.5 -4.5" fill="none" stroke="${c.subtle}" stroke-width="1.3" stroke-linejoin="round"/>`);
+    ax -= 30;
+    parts.push(`<path d="M${ax + 10} ${vy - 7} a 7.5 7.5 0 1 0 -7.5 7.5 h 7.5 l 4 4 v -4" fill="none" stroke="${c.subtle}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" transform="scale(1)"/>`);
+    ax -= 26;
+    parts.push(`<g fill="${c.subtle}"><circle cx="${ax}" cy="${vy - 2.5}" r="1.7"/><circle cx="${ax + 6}" cy="${vy - 2.5}" r="1.7"/><circle cx="${ax + 12}" cy="${vy - 2.5}" r="1.7"/></g>`);
     y = vy + 24;
   }
 
@@ -119,7 +130,8 @@ export function renderReddit(doc: RedditDoc, lookupUrl?: (id: string) => string 
   parts.push(
     `<rect x="0" y="${iy - 14}" width="${SW}" height="${SH - iy + 14}" fill="${c.bg}"/>`,
     `<rect x="${MARGIN}" y="${iy}" width="${SW - MARGIN * 2}" height="40" rx="20" fill="${c.chip}"/>`,
-    `<text font-family="${font}" font-size="14.5" fill="${c.subtle}" x="${MARGIN + 18}" y="${iy + 25}">Add a comment</text>`,
+    `<text font-family="${font}" font-size="14.5" fill="${c.subtle}" x="${MARGIN + 18}" y="${iy + 25}">Join the conversation</text>`,
+    `<rect x="${SW - MARGIN - 34}" y="${iy + 12}" width="17" height="15" rx="3.5" fill="none" stroke="${c.subtle}" stroke-width="1.6"/><circle cx="${SW - MARGIN - 28.5}" cy="${iy + 17}" r="1.7" fill="${c.subtle}"/><path d="M${SW - MARGIN - 32.5} ${iy + 25} l4.5 -4.5 4 3.5 3 -2.8 3 2.8" fill="none" stroke="${c.subtle}" stroke-width="1.4"/>`,
     homeIndicator(c.text, platform)
   );
 

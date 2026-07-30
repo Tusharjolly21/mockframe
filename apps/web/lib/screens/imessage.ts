@@ -67,7 +67,7 @@ export function renderIMessage(
     `<rect y="${HEADER_H - 0.5}" width="${SW}" height="0.5" fill="${c.hairline}"/>`,
     statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.text, platform }),
     // back chevron
-    `<path d="M28 76 l-10 11 10 11" fill="none" stroke="${c.blue}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`,
+    `<path d="M28 76 l-10 11 10 11" fill="none" stroke="${c.blue}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`,
     avatar(doc.contact, SW / 2, 84, 23, "im", avatarUrl),
     textBlock([doc.contact], { x: SW / 2 - 4, y: 121, size: 11.5, lineHeight: 13, color: c.text, weight: 500, anchor: "middle" }),
     `<path d="M${SW / 2 + textWidth(doc.contact, 11.5) / 2 + 3} 113 l4.5 4.5 -4.5 4.5" fill="none" stroke="${c.subtle}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`,

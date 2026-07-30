@@ -5,11 +5,13 @@ import {
   esc,
   homeIndicator,
   imageBubble,
+  phoneIcon,
   SH,
   statusBar,
   SW,
   textBlock as baseTextBlock,
   textWidth,
+  truncate,
   typingDots,
   wrapText,
 } from "./common";
@@ -35,6 +37,27 @@ function nameColor(name: string): string {
   return NAME_COLORS[h % NAME_COLORS.length];
 }
 
+/* Discord's default-avatar disc colors (no letter initials in the real app). */
+const CLYDE_DISCS = ["#5865f2", "#23a55a", "#f0b232", "#da373c", "#eb459e"];
+/* The Discord mark, drawn white on a solid disc — this is what real default
+   avatars look like; letter-initial gradients instantly read as fake. */
+const CLYDE_PATH =
+  "M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z";
+
+/** Discord default avatar: solid disc + white Clyde mark (or the uploaded photo). */
+function clydeAvatar(seed: string, cx: number, cy: number, r: number, id: string, url?: string): string {
+  if (url) return avatar(seed, cx, cy, r, id, url);
+  let h = 0;
+  for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const disc = CLYDE_DISCS[h % CLYDE_DISCS.length];
+  const s = (r * 1.15) / 127.14;
+  const x0 = cx - 63.57 * s, y0 = cy - 48.18 * s;
+  return (
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${disc}"/>` +
+    `<path d="${CLYDE_PATH}" fill="#ffffff" transform="translate(${x0.toFixed(2)} ${y0.toFixed(2)}) scale(${s.toFixed(4)})"/>`
+  );
+}
+
 export function renderDiscord(
   doc: DiscordDoc,
   lookupUrl?: (id: string) => string | undefined
@@ -47,8 +70,9 @@ export function renderDiscord(
     baseTextBlock(lines, { font, ...o });
   // Discord is dark-first; a light theme exists but the brand read is dark
   const dark = doc.chrome.dark ?? true;
+  // Current MOBILE palette is darker than desktop's #313338 (~#1c1d22 base).
   const c = dark
-    ? { bg: "#313338", header: "#313338", hairline: "#232428", text: "#dbdee1", subtle: "#949ba4", ts: "#818691", composer: "#383a40" }
+    ? { bg: "#1c1d22", header: "#1c1d22", hairline: "#26272d", text: "#dbdee1", subtle: "#949ba4", ts: "#818691", composer: "#2d2d35" }
     : { bg: "#ffffff", header: "#ffffff", hairline: "#e3e5e8", text: "#313338", subtle: "#4e5058", ts: "#5c5e66", composer: "#ebedef" };
 
   const parts: string[] = [`<rect width="${SW}" height="${SH}" fill="${c.bg}"/>`];
@@ -77,11 +101,15 @@ export function renderDiscord(
     const lines = wrapText(m.text || " ", FONT, SW - TEXT_X - MARGIN);
     if (!grouped) {
       y += i === 0 ? 0 : 8;
-      parts.push(avatar(m.sender, MARGIN + AVA, y + AVA - 4, AVA, `dc${i}`, m.avatar ? lookupUrl?.(m.avatar) : undefined));
+      parts.push(
+        clydeAvatar(m.sender, MARGIN + AVA, y + AVA - 4, AVA, `dc${i}`, m.avatar ? lookupUrl?.(m.avatar) : undefined),
+        // green presence dot on the avatar (current mobile app shows these in-chat)
+        `<circle cx="${MARGIN + AVA + AVA * 0.72}" cy="${y + AVA - 4 + AVA * 0.72}" r="6" fill="#23a55a" stroke="${c.bg}" stroke-width="2.5"/>`
+      );
       const col = m.color || nameColor(m.sender);
       parts.push(
         `<text font-family="${font}" font-size="15.5" font-weight="600" fill="${col}" x="${TEXT_X}" y="${y + 6}">${esc(m.sender)}</text>`,
-        `<text font-family="${font}" font-size="11.5" fill="${c.ts}" x="${TEXT_X + textWidth(m.sender, 15.5) + 10}" y="${y + 6}">${esc(m.time)}</text>`
+        `<text font-family="${font}" font-size="11.5" fill="${c.ts}" x="${TEXT_X + textWidth(m.sender, 15.5) + 10}" y="${y + 6}">Today at ${esc(m.time)}</text>`
       );
       y += 16;
     }
@@ -108,15 +136,21 @@ export function renderDiscord(
       `<text font-family="${font}" font-size="12" fill="${c.text}" x="${MARGIN + 30}" y="${iy - 18}"><tspan font-weight="700">${esc(who)}</tspan> is typing…</text>`
     );
   }
+  // current mobile composer: separate circular +, gift, rounded field, circular mic
+  const fieldX = MARGIN + 76;
+  const fieldW = SW - fieldX - MARGIN - 38;
   parts.push(
-    `<rect x="${MARGIN}" y="${iy}" width="${SW - MARGIN * 2}" height="42" rx="21" fill="${c.composer}"/>`,
-    // plus in a circle
-    `<circle cx="${MARGIN + 22}" cy="${iy + 21}" r="12" fill="${c.subtle}"/>`,
-    `<path d="M${MARGIN + 22} ${iy + 15} v12 M${MARGIN + 16} ${iy + 21} h12" stroke="${c.composer}" stroke-width="2.2" stroke-linecap="round"/>`,
-    `<text font-family="${font}" font-size="15" fill="${c.subtle}" x="${MARGIN + 44}" y="${iy + 26}">Message #${esc(doc.channel)}</text>`,
-    // gift + gif + emoji hints
-    `<text font-family="${font}" font-size="13" font-weight="700" fill="${c.subtle}" x="${SW - MARGIN - 30}" y="${iy + 26}">GIF</text>`,
-    `<circle cx="${SW - MARGIN - 58}" cy="${iy + 21}" r="8.5" fill="none" stroke="${c.subtle}" stroke-width="1.7"/><path d="M${SW - MARGIN - 62} ${iy + 23} a5 5 0 0 0 8 0 M${SW - MARGIN - 61} ${iy + 18.5} h0.01 M${SW - MARGIN - 55} ${iy + 18.5} h0.01" stroke="${c.subtle}" stroke-width="1.7" stroke-linecap="round" fill="none"/>`,
+    `<circle cx="${MARGIN + 15}" cy="${iy + 21}" r="15" fill="${c.composer}"/>`,
+    `<path d="M${MARGIN + 15} ${iy + 15} v12 M${MARGIN + 9} ${iy + 21} h12" stroke="${c.text}" stroke-width="2" stroke-linecap="round"/>`,
+    // gift button
+    `<circle cx="${MARGIN + 51}" cy="${iy + 21}" r="15" fill="${c.composer}"/>`,
+    `<rect x="${MARGIN + 44}" y="${iy + 18}" width="14" height="9.5" rx="1.5" fill="none" stroke="${c.text}" stroke-width="1.5"/><path d="M${MARGIN + 44} ${iy + 21} h14 M${MARGIN + 51} ${iy + 16} v11.5 M${MARGIN + 51} ${iy + 16} a2.3 2.3 0 0 0 -2.8 1.8 M${MARGIN + 51} ${iy + 16} a2.3 2.3 0 0 1 2.8 1.8" fill="none" stroke="${c.text}" stroke-width="1.4"/>`,
+    // text field
+    `<rect x="${fieldX}" y="${iy + 2}" width="${fieldW}" height="38" rx="19" fill="${c.composer}"/>`,
+    `<text font-family="${font}" font-size="14.5" fill="${c.subtle}" x="${fieldX + 14}" y="${iy + 26}">${esc(truncate(`Message #${doc.channel}`, 14.5, fieldW - 28))}</text>`,
+    // mic button
+    `<circle cx="${SW - MARGIN - 15}" cy="${iy + 21}" r="15" fill="${c.composer}"/>`,
+    `<rect x="${SW - MARGIN - 18.5}" y="${iy + 12.5}" width="7.5" height="11" rx="3.7" fill="none" stroke="${c.text}" stroke-width="1.7"/><path d="M${SW - MARGIN - 21.5} ${iy + 19.5} a 6.5 6.5 0 0 0 13 0 M${SW - MARGIN - 15} ${iy + 26} v3" fill="none" stroke="${c.text}" stroke-width="1.7" stroke-linecap="round"/>`,
     homeIndicator(c.text, platform)
   );
 
@@ -134,7 +168,6 @@ function renderDiscordDm(doc: DiscordDoc, lookupUrl?: (id: string) => string | u
   const c = dark
     ? { bg: "#313338", hairline: "#232428", text: "#f2f3f5", subtle: "#b5bac1", ts: "#818691", composer: "#383a40", circle: "#404249" }
     : { bg: "#ffffff", hairline: "#e3e5e8", text: "#060607", subtle: "#4e5058", ts: "#5c5e66", composer: "#e3e5e8", circle: "#e3e5e8" };
-  const green = "#248046";
   const name = doc.dmName || "Friend";
   const username = doc.dmUsername || name.toLowerCase();
 
@@ -148,17 +181,18 @@ function renderDiscordDm(doc: DiscordDoc, lookupUrl?: (id: string) => string | u
     // back with a small red unread badge
     `<path d="M28 70 l-10 10 10 10" fill="none" stroke="#5865f2" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`,
     `<circle cx="20" cy="68" r="7" fill="#f23f43"/><text font-family="${font}" font-size="9" font-weight="700" fill="#fff" text-anchor="middle" x="20" y="71">1</text>`,
-    avatar(name, 52, 80, 15, "ddm"),
+    clydeAvatar(name, 52, 80, 15, "ddm"),
     `<circle cx="63" cy="90" r="5" fill="#23a55a" stroke="${c.bg}" stroke-width="2"/>`,
     `<text font-family="${font}" font-size="17" font-weight="700" fill="${c.text}" x="76" y="86">${esc(name)}</text>`,
     `<path d="M${76 + textWidth(name, 17) + 8} 80 l5 5 -5 5" fill="none" stroke="${c.subtle}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
-    `<circle cx="${SW - 66}" cy="80" r="16" fill="${c.circle}"/>${phoneIconDm(SW - 66, 80, c.text)}`,
-    `<circle cx="${SW - 28}" cy="80" r="16" fill="${c.circle}"/><rect x="${SW - 37}" y="75" width="13" height="10" rx="2.5" fill="none" stroke="${c.text}" stroke-width="1.8"/><path d="M${SW - 24} 78 l5 -2.5 v10 l-5 -2.5 Z" fill="${c.text}"/>`
+    // bare call glyphs — the real iOS DM header has no circular chips behind them
+    phoneIcon(SW - 64, 80, 21, c.text),
+    `<rect x="${SW - 38}" y="74" width="14" height="11" rx="2.5" fill="none" stroke="${c.text}" stroke-width="1.8"/><path d="M${SW - 24} 77.5 l6 -3 v12 l-6 -3 Z" fill="${c.text}"/>`
   );
 
   /* profile intro block */
   let y = HEADER_H + 44;
-  parts.push(avatar(name, MARGIN + 40, y + 8, 40, "ddmb"));
+  parts.push(clydeAvatar(name, MARGIN + 40, y + 8, 40, "ddmb"));
   y += 66;
   parts.push(
     `<text font-family="${font}" font-size="28" font-weight="800" fill="${c.text}" x="${MARGIN}" y="${y}">${esc(name)}</text>`,
@@ -175,9 +209,12 @@ function renderDiscordDm(doc: DiscordDoc, lookupUrl?: (id: string) => string | u
     );
     y += 30;
   }
+  // real Discord shows neutral secondary pills side by side, not a green CTA
   parts.push(
-    `<rect x="${MARGIN}" y="${y}" width="180" height="40" rx="8" fill="${green}"/>`,
-    `<text font-family="${font}" font-size="14.5" font-weight="600" fill="#fff" text-anchor="middle" x="${MARGIN + 90}" y="${y + 25}">Send Friend Request</text>`
+    `<rect x="${MARGIN}" y="${y}" width="176" height="40" rx="20" fill="${c.circle}"/>`,
+    `<text font-family="${font}" font-size="14" font-weight="600" fill="${c.text}" text-anchor="middle" x="${MARGIN + 88}" y="${y + 25}">Send Friend Request</text>`,
+    `<rect x="${MARGIN + 188}" y="${y}" width="84" height="40" rx="20" fill="${c.circle}"/>`,
+    `<text font-family="${font}" font-size="14" font-weight="600" fill="${c.text}" text-anchor="middle" x="${MARGIN + 230}" y="${y + 25}">Block</text>`
   );
   y += 62;
 
@@ -196,8 +233,9 @@ function renderDiscordDm(doc: DiscordDoc, lookupUrl?: (id: string) => string | u
     const grouped = i > 0 && msgs[i - 1].sender === m.sender;
     if (!grouped) {
       y += i === 0 ? 0 : 8;
-      parts.push(avatar(m.sender, MARGIN + 20, y + 16, 20, `ddc${i}`, m.avatar ? lookupUrl?.(m.avatar) : undefined));
-      const col = m.color || nameColor(m.sender);
+      parts.push(clydeAvatar(m.sender, MARGIN + 20, y + 16, 20, `ddc${i}`, m.avatar ? lookupUrl?.(m.avatar) : undefined));
+      // DM sender names use the default text color — role colors are a server thing
+      const col = m.color || c.text;
       parts.push(
         `<text font-family="${font}" font-size="15.5" font-weight="600" fill="${col}" x="${MARGIN + 52}" y="${y + 6}">${esc(m.sender)}</text>`,
         `<text font-family="${font}" font-size="11.5" fill="${c.ts}" x="${MARGIN + 52 + textWidth(m.sender, 15.5) + 10}" y="${y + 6}">${esc(m.time)}</text>`
@@ -234,8 +272,4 @@ function renderDiscordDm(doc: DiscordDoc, lookupUrl?: (id: string) => string | u
   );
 
   return parts.join("\n");
-}
-
-function phoneIconDm(cx: number, cy: number, color: string): string {
-  return `<path d="M${cx - 6} ${cy - 6} c 0 0 1 4 4 7 c 3 3 7 4 7 4 l 0 -3 c 0 -1 -1 -1 -2 -1 c -1 0 -2 0 -3 -0.5 l -2 2 c -2 -1 -3.5 -2.5 -4.5 -4.5 l 2 -2 c -0.5 -1 -0.5 -2 -0.5 -3 c 0 -1 0 -2 -1 -2 Z" fill="${color}"/>`;
 }

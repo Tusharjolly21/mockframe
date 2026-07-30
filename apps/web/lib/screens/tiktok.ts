@@ -49,8 +49,8 @@ export function renderTikTok(doc: TikTokDoc, lookupUrl?: (id: string) => string 
     `<rect width="${SW}" height="${SHEET_Y + 30}" fill="url(#ttv)"/>`,
     statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: "#ffffff", platform }),
     `<path d="M0 ${SHEET_Y + 16} a 16 16 0 0 1 16 -16 h ${SW - 32} a 16 16 0 0 1 16 16 v ${SH - SHEET_Y - 16} h -${SW} Z" fill="${c.sheet}"/>`,
-    // header
-    `<text font-family="${font}" font-size="13.5" font-weight="600" fill="${c.text}" text-anchor="middle" x="${SW / 2}" y="${SHEET_Y + 34}">Comments (${esc(doc.count)})</text>`,
+    // header — count-first lowercase, the current iOS format
+    `<text font-family="${font}" font-size="13.5" font-weight="600" fill="${c.text}" text-anchor="middle" x="${SW / 2}" y="${SHEET_Y + 34}">${esc(doc.count)} comments</text>`,
     `<path d="M${SW - 32} ${SHEET_Y + 27} l12 12 m0 -12 l-12 12" stroke="${c.subtle}" stroke-width="1.8" stroke-linecap="round"/>`,
     `<rect x="0" y="${SHEET_Y + 50}" width="${SW}" height="0.5" fill="${c.hairline}"/>`
   ];
@@ -60,16 +60,18 @@ export function renderTikTok(doc: TikTokDoc, lookupUrl?: (id: string) => string 
   for (let i = 0; i < doc.comments.length; i++) {
     const cm = doc.comments[i];
     parts.push(avatar(cm.user, M + 18, y + 2, 18, `tt${i}`, cm.avatar ? lookupUrl?.(cm.avatar) : undefined));
+    // usernames are near-black semibold in the real app, not gray
     parts.push(
-      textBlock([cm.user], { x: TEXT_X, y: y - 2, size: 13, lineHeight: 15, color: c.subtle, weight: 600 })
+      textBlock([cm.user], { x: TEXT_X, y: y - 2, size: 13, lineHeight: 15, color: c.text, weight: 600 })
     );
     const lines = wrapText(cm.text || " ", FONT_SIZE, SW - TEXT_X - M - LIKE_W);
     parts.push(
       textBlock(lines, { x: TEXT_X, y: y + 16, size: FONT_SIZE, lineHeight: LINE_H, color: c.text })
     );
     let metaY = y + 16 + (lines.length - 1) * LINE_H + 20;
+    // date and Reply share the same plain gray weight in the real app
     parts.push(
-      `<text font-family="${font}" font-size="12.5" fill="${c.subtle}" x="${TEXT_X}" y="${metaY}">${esc(cm.time)}   <tspan font-weight="600">Reply</tspan></text>`
+      `<text font-family="${font}" font-size="12.5" fill="${c.subtle}" x="${TEXT_X}" y="${metaY}">${esc(cm.time)}   Reply</text>`
     );
     if (cm.creatorLiked) {
       metaY += 19;
@@ -87,12 +89,16 @@ export function renderTikTok(doc: TikTokDoc, lookupUrl?: (id: string) => string 
     y = metaY + 34;
   }
 
-  /* composer */
+  /* composer: emoji quick-reaction row ABOVE the field, red camera at left */
   const iy = SH - 60;
+  const quick = ["😂", "❤️", "🥺", "😮", "🔥", "🙏"];
   parts.push(
-    `<rect x="0" y="${iy - 12}" width="${SW}" height="${SH - iy + 12}" fill="${c.sheet}"/>`,
-    `<rect x="0" y="${iy - 12}" width="${SW}" height="0.5" fill="${c.hairline}"/>`,
-    avatar("You", M + 16, iy + 16, 16, "ttme"),
+    `<rect x="0" y="${iy - 44}" width="${SW}" height="${SH - iy + 44}" fill="${c.sheet}"/>`,
+    `<rect x="0" y="${iy - 44}" width="${SW}" height="0.5" fill="${c.hairline}"/>`,
+    ...quick.map((e, k) => `<text font-size="20" text-anchor="middle" x="${M + 18 + k * ((SW - M * 2 - 36) / (quick.length - 1))}" y="${iy - 14}">${e}</text>`),
+    // red circular video-reply camera button
+    `<circle cx="${M + 16}" cy="${iy + 16}" r="16" fill="${c.red}"/>`,
+    `<rect x="${M + 7}" y="${iy + 10}" width="12" height="10" rx="2.5" fill="none" stroke="#ffffff" stroke-width="1.6"/><path d="M${M + 19} ${iy + 12.5} l5 -2.5 v10 l-5 -2.5 Z" fill="#ffffff"/>`,
     `<rect x="${M + 42}" y="${iy}" width="${SW - M * 2 - 42}" height="34" rx="17" fill="${dark ? "#2f2f31" : "#f1f1f2"}"/>`,
     `<text font-family="${font}" font-size="14" fill="${c.subtle}" x="${M + 58}" y="${iy + 22}">Add comment…</text>`,
     `<text font-size="13" x="${SW - M - 58}" y="${iy + 23}">@</text>`,
