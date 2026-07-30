@@ -159,7 +159,7 @@ export default function AppScreensComparePage() {
             <ul className="mt-3 list-disc space-y-2 pl-5 text-[14px] text-white/60">
               <li>You ship to Apple and Google and want one zip with every required size, captioned and framed.</li>
               <li>You want AI to draft the whole screenshot narrative before you touch an editor.</li>
-              <li>You'd rather pay under $10 a month — or nothing for your first release.</li>
+              <li>You’d rather pay under $10 a month — or nothing for your first release.</li>
               <li>You also need device mockups, chat screenshots or an app promo video for launch.</li>
             </ul>
           </div>
@@ -175,7 +175,7 @@ export default function AppScreensComparePage() {
 
         <h2 className="mt-14 text-xl font-bold text-white">Switching takes one upload</h2>
         <p className="mt-3 text-white/60">
-          There's nothing to migrate — store screenshots are rebuilt from your raw captures either way. Drop 3–10
+          There’s nothing to migrate — store screenshots are rebuilt from your raw captures either way. Drop 3–10
           plain screenshots into the{" "}
           <Link href="/app-store-screenshots" className="text-violet-300 underline-offset-2 hover:underline">
             pack studio
