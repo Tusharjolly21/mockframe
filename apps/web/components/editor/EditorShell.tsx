@@ -17,6 +17,7 @@ import { CanvasStage } from "./CanvasStage";
 import { LeftPanel } from "./LeftPanel";
 import { RightPanel } from "./RightPanel";
 import { ExportNextSteps } from "./ExportNextSteps";
+import { MobileGate } from "./MobileGate";
 import { StarterModal } from "./StarterModal";
 import { LogoChip, Toolbar } from "./Toolbar";
 
@@ -379,6 +380,7 @@ export function EditorShell({
       </AnimatePresence>
 
       {promoOpen && <PromoPanel onClose={() => setPromoOpen(false)} />}
+      <MobileGate embedded={embedded} />
       <ExportNextSteps />
       <StarterModal
         embedded={embedded}
