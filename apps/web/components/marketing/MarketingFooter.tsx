@@ -21,7 +21,11 @@ const COLS: { title: string; links: [string, string][] }[] = [
   {
     title: "Popular devices",
     links: [
+      ["/mockups/iphone-17-pro", "iPhone 17 Pro"],
       ["/mockups/iphone-16-pro", "iPhone 16 Pro"],
+      ["/mockups/galaxy-s25-ultra", "Galaxy S25 Ultra"],
+      ["/mockups/galaxy-s24-ultra", "Galaxy S24 Ultra"],
+      ["/mockups/pixel-9-pro", "Pixel 9 Pro"],
       ["/mockups/macbook-pro-16", "MacBook Pro 16"],
       ["/mockups/ipad-pro-13", "iPad Pro 13"],
       ["/mockups/apple-watch-ultra-psd-midnight-1", "Apple Watch Ultra"],
