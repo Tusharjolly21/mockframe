@@ -1,0 +1,57 @@
+{
+  "id": "galaxy-s24-ultra",
+  "name": "Galaxy S24 Ultra",
+  "brand": "samsung",
+  "category": "phone",
+  "released": "2024-01",
+  "screen": {
+    "width": 1440,
+    "height": 3120,
+    "cornerRadius": 34
+  },
+  "aliases": [
+    "samsung galaxy s24 ultra",
+    "s24 ultra"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "galaxy s24 ultra mockup",
+      "s24 ultra mockup",
+      "samsung s24 mockup"
+    ]
+  },
+  "wallpaper": [
+    "#6d28d9",
+    "#1e1b4b",
+    "#c4b5fd"
+  ],
+  "frame": {
+    "width": 1524,
+    "height": 3204,
+    "screenRect": {
+      "x": 42,
+      "y": 42,
+      "width": 1440,
+      "height": 3120
+    },
+    "maskPath": "M76 42 H1448 A34 34 0 0 1 1482 76 V3128 A34 34 0 0 1 1448 3162 H76 A34 34 0 0 1 42 3128 V76 A34 34 0 0 1 76 42 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "titanium-black",
+      "label": "Titanium Black",
+      "svg": "frame-titanium-black.svg"
+    },
+    {
+      "id": "titanium-gray",
+      "label": "Titanium Gray",
+      "svg": "frame-titanium-gray.svg"
+    },
+    {
+      "id": "titanium-violet",
+      "label": "Titanium Violet",
+      "svg": "frame-titanium-violet.svg"
+    }
+  ]
+}

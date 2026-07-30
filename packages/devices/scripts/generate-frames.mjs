@@ -660,6 +660,34 @@ const DEVICES = [
   },
   {
     meta: {
+      id: "galaxy-s24-ultra", name: "Galaxy S24 Ultra", brand: "samsung", category: "phone",
+      released: "2024-01",
+      // Same 1440×3120 QHD+ panel as the S25 Ultra, but the S24 Ultra's flat
+      // display has visibly squarer corners — hence the smaller radii.
+      screen: { width: 1440, height: 3120, cornerRadius: 34 },
+      aliases: ["samsung galaxy s24 ultra", "s24 ultra"],
+      seo: { monthlyQueries: ["galaxy s24 ultra mockup", "s24 ultra mockup", "samsung s24 mockup"] },
+      wallpaper: ["#6d28d9", "#1e1b4b", "#c4b5fd"],
+    },
+    gen: (variant, colors) =>
+      phone({
+        id: "galaxy-s24-ultra", variant,
+        screenW: 1440, screenH: 3120, screenR: 34, bezel: 30, bodyR: 70,
+        rail: colors.rail, bodyFill: colors.body,
+        camera: { kind: "punch", r: 38, top: 96 },
+        buttons: [
+          { side: "right", y: 700, len: 200 },
+          { side: "right", y: 950, len: 320 },
+        ],
+      }),
+    variants: [
+      { id: "titanium-black", label: "Titanium Black", colors: { rail: [[0, "#3d3d42"], [0.5, "#1c1c20"], [1, "#313136"]], body: "#08080a" } },
+      { id: "titanium-gray", label: "Titanium Gray", colors: { rail: [[0, "#aeb0b5"], [0.5, "#82848a"], [1, "#a0a2a8"]], body: "#0e0e11" } },
+      { id: "titanium-violet", label: "Titanium Violet", colors: { rail: [[0, "#b6aec7"], [0.5, "#8a819e"], [1, "#a89fba"]], body: "#0f0d14" } },
+    ],
+  },
+  {
+    meta: {
       id: "galaxy-s25-ultra", name: "Galaxy S25 Ultra", brand: "samsung", category: "phone",
       released: "2025-01",
       screen: { width: 1440, height: 3120, cornerRadius: 56 },

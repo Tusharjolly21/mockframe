@@ -18,7 +18,7 @@ const UPDATED = {
   compare: new Date("2026-07-30"), // AppScreens comparison page
   guides: new Date("2026-06-20"),
   templates: new Date("2026-06-01"),
-  devices: new Date("2026-06-01"),
+  devices: new Date("2026-07-30"), // + Galaxy S24 Ultra
 } as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {

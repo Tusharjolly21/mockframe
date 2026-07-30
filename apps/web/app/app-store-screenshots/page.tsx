@@ -157,6 +157,7 @@ export default function AppStoreScreenshotsPage() {
         <ul className="mt-5 grid gap-2.5 sm:grid-cols-2">
           {[
             ["/ai", "AI app screenshot generator"],
+            ["/mockups/galaxy-s24-ultra", "Galaxy S24 Ultra mockup"],
             ["/mockups/galaxy-s25-ultra", "Galaxy S25 Ultra mockup"],
             ["/mockups/iphone-16-pro", "iPhone 16 Pro mockup"],
             ["/mockups", "All device mockups"],
