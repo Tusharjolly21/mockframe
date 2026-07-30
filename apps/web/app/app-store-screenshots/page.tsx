@@ -162,6 +162,7 @@ export default function AppStoreScreenshotsPage() {
             ["/mockups", "All device mockups"],
             ["/tools/app-promo-video-maker", "App promo video maker"],
             ["/guides/design-app-store-screenshots", "Guide: design a screenshot set"],
+            ["/compare/appscreens", "MockFrame vs AppScreens"],
           ].map(([href, label]) => (
             <li key={href}>
               <Link

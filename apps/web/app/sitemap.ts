@@ -15,6 +15,7 @@ const UPDATED = {
   tools: new Date("2026-07-30"), // removed duplicate app-store-screenshot tool page (301 → /app-store-screenshots), refreshed related links
   packStudio: new Date("2026-07-30"), // "Free" in title + related links refresh
   ai: new Date("2026-07-17"), // AI pack generator landing page
+  compare: new Date("2026-07-30"), // AppScreens comparison page
   guides: new Date("2026-06-20"),
   templates: new Date("2026-06-01"),
   devices: new Date("2026-06-01"),
@@ -26,6 +27,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/mockups`, lastModified: UPDATED.devices, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/app-store-screenshots`, lastModified: UPDATED.packStudio, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/ai`, lastModified: UPDATED.ai, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${SITE_URL}/compare/appscreens`, lastModified: UPDATED.compare, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/tools`, lastModified: UPDATED.tools, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/chat`, lastModified: UPDATED.tools, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/templates`, lastModified: UPDATED.templates, changeFrequency: "weekly", priority: 0.7 },
