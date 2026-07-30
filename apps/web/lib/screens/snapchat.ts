@@ -6,6 +6,7 @@ import {
   esc,
   homeIndicator,
   imageBubble,
+  initials,
   micIcon,
   phoneIcon,
   SH,
@@ -160,10 +161,12 @@ export function renderSnapchat(
 }
 
 /**
- * Snapchat sponsored story ad: full-bleed creative (uploaded image or dusk
- * gradient placeholder), white-on-media chrome — brand row with logo disc +
- * "Sponsored", headline in the lower third, swipe-up chevron and the yellow
- * CTA pill. Chrome stays white regardless of theme, like the story viewer.
+ * Snapchat sponsored ad, matched against real ad screenshots (FabFitFun-era
+ * story ads + current single-image spec): full-bleed creative, top-left brand
+ * name over a "Sponsored" label (no logo disc up top), ⋮ menu top-right, and
+ * the modern white attachment card at the bottom — rounded-square brand icon,
+ * bold tagline + gray CTA subline, black CTA pill in caps. Chrome stays white
+ * on media regardless of theme.
  */
 function renderSnapchatAd(
   doc: SnapchatDoc,
@@ -196,27 +199,26 @@ function renderSnapchatAd(
   parts.push(
     `<defs>
 <linearGradient id="fk_scad_top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000000" stop-opacity="0.4"/><stop offset="1" stop-color="#000000" stop-opacity="0"/></linearGradient>
-<linearGradient id="fk_scad_bot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.55"/></linearGradient>
+<linearGradient id="fk_scad_bot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.45"/></linearGradient>
 </defs>`,
     `<rect width="${SW}" height="150" fill="url(#fk_scad_top)"/>`,
-    `<rect y="${SH - 260}" width="${SW}" height="260" fill="url(#fk_scad_bot)"/>`,
+    `<rect y="${SH - 240}" width="${SW}" height="240" fill="url(#fk_scad_bot)"/>`,
     statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: white, platform })
   );
 
-  /* brand row: logo disc + name + Sponsored, ⋮ menu right */
+  /* top-left: brand name + Sponsored label (text only, like the real ads); ⋮ right */
   const brand = doc.brand || "Brand";
   parts.push(
-    avatar(brand, 34, 78, 19, "scab", avatarUrl),
-    `<text font-family="${font}" font-size="15.5" font-weight="700" fill="${white}" x="62" y="76">${esc(truncate(brand, 15.5, SW - 62 - 50))}</text>`,
-    `<text font-family="${font}" font-size="11.5" fill="#ffffff" opacity="0.75" x="62" y="93">Sponsored</text>`,
-    `<g fill="${white}"><circle cx="${SW - 26}" cy="70" r="2.2"/><circle cx="${SW - 26}" cy="78" r="2.2"/><circle cx="${SW - 26}" cy="86" r="2.2"/></g>`
+    `<text font-family="${font}" font-size="14.5" font-weight="700" fill="${white}" x="18" y="72">${esc(truncate(brand, 14.5, SW - 18 - 50))}</text>`,
+    `<text font-family="${font}" font-size="10.5" letter-spacing="0.3" fill="#ffffff" opacity="0.8" x="18" y="88">Sponsored</text>`,
+    `<g fill="${white}"><circle cx="${SW - 24}" cy="66" r="2.1"/><circle cx="${SW - 24}" cy="74" r="2.1"/><circle cx="${SW - 24}" cy="82" r="2.1"/></g>`
   );
 
-  /* headline, centered in the lower third */
+  /* headline overlaid on the creative, above the attachment card */
   const headline = doc.headline || "";
   if (headline) {
-    const lines = wrapText(headline, 26, SW - 72);
-    let hy = SH - 268 - (lines.length - 1) * 32;
+    const lines = wrapText(headline, 26, SW - 60);
+    let hy = SH - 158 - (lines.length - 1) * 32;
     for (const line of lines) {
       parts.push(
         `<text font-family="${font}" font-size="26" font-weight="800" fill="${white}" text-anchor="middle" x="${SW / 2}" y="${hy}">${esc(line)}</text>`
@@ -225,15 +227,33 @@ function renderSnapchatAd(
     }
   }
 
-  /* swipe-up chevron + yellow CTA pill */
+  /* bottom attachment card: icon + tagline/subline + black CTA pill */
   const cta = doc.cta || "Learn More";
-  const ctaW = Math.max(150, textWidth(cta, 15) + 64);
-  const ctaX = (SW - ctaW) / 2;
-  const ctaY = SH - 122;
+  const ctaUp = cta.toUpperCase();
+  const cardX = 12, cardW = SW - 24, cardH = 62, cardY = SH - 34 - cardH;
+  const pillW = Math.min(150, textWidth(ctaUp, 11.5) + 30);
+  const pillX = cardX + cardW - 12 - pillW;
   parts.push(
-    `<path d="M${SW / 2 - 9} ${ctaY - 16} l9 -9 9 9" fill="none" stroke="${white}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`,
-    `<rect x="${ctaX}" y="${ctaY}" width="${ctaW}" height="46" rx="23" fill="#fffc00"/>`,
-    `<text font-family="${font}" font-size="15" font-weight="800" fill="#16191c" text-anchor="middle" x="${SW / 2}" y="${ctaY + 29}">${esc(cta)}</text>`,
+    `<rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="14" fill="#ffffff"/>`
+  );
+  /* rounded-square brand icon: uploaded logo or initials tile */
+  const ICON = 42;
+  const iconX = cardX + 10, iconY = cardY + (cardH - ICON) / 2;
+  if (avatarUrl) {
+    parts.push(imageBubble(avatarUrl, iconX, iconY, ICON, ICON, "scadic", { rx: 10 }));
+  } else {
+    parts.push(
+      `<rect x="${iconX}" y="${iconY}" width="${ICON}" height="${ICON}" rx="10" fill="#16191c"/>`,
+      `<text font-family="${font}" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle" x="${iconX + ICON / 2}" y="${iconY + ICON / 2 + 5.5}">${esc(initials(brand))}</text>`
+    );
+  }
+  const cardTextX = iconX + ICON + 10;
+  const cardTextW = pillX - cardTextX - 10;
+  parts.push(
+    `<text font-family="${font}" font-size="13.5" font-weight="700" fill="#16191c" x="${cardTextX}" y="${cardY + 27}">${esc(truncate(doc.tagline || brand, 13.5, cardTextW))}</text>`,
+    `<text font-family="${font}" font-size="11.5" fill="#8f9498" x="${cardTextX}" y="${cardY + 44}">${esc(truncate(cta, 11.5, cardTextW))}</text>`,
+    `<rect x="${pillX}" y="${cardY + (cardH - 32) / 2}" width="${pillW}" height="32" rx="16" fill="#16191c"/>`,
+    `<text font-family="${font}" font-size="11.5" font-weight="800" letter-spacing="0.4" fill="#ffffff" text-anchor="middle" x="${pillX + pillW / 2}" y="${cardY + cardH / 2 + 4}">${esc(truncate(ctaUp, 11.5, pillW - 16))}</text>`,
     homeIndicator(white, platform)
   );
 

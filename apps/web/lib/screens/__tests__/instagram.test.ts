@@ -25,14 +25,23 @@ describe("renderInstagram", () => {
     expect(svg.length).toBeGreaterThan(500);
   });
 
-  it("renders the requests inbox with title, rows and Delete all", () => {
+  it("renders the requests inbox with title, rows and Delete All", () => {
     const svg = renderInstagram(defaultInstagramRequests());
-    expect(svg).toContain("Message requests");
+    expect(svg).toContain("Message Requests");
     expect(svg).toContain("Hidden Requests");
-    expect(svg).toContain("Delete all");
+    expect(svg).toContain("Delete All");
+    expect(svg).toContain("Edit");
     expect(svg).toContain("fitcoach.dan");
     expect(svg).not.toContain("NaN");
     expect(svg).not.toContain("undefined");
+  });
+
+  it("unread requests get the blue dot; hidden row only when count > 0", () => {
+    const unread = renderInstagram(doc({ mode: "requests", requests: [{ name: "a", preview: "p", unread: true }] }));
+    const read = renderInstagram(doc({ mode: "requests", requests: [{ name: "a", preview: "p" }] }));
+    expect(unread.split('r="4.5"').length).toBeGreaterThan(read.split('r="4.5"').length);
+    expect(read).not.toContain("Hidden Requests"); // no hiddenRequests set
+    expect(renderInstagram(doc({ mode: "requests", requests: [], hiddenRequests: 4 }))).toContain("Hidden Requests");
   });
 
   it("requests mode escapes XML-hostile names and previews", () => {
@@ -45,7 +54,7 @@ describe("renderInstagram", () => {
 
   it("requests mode tolerates an empty request list", () => {
     const svg = renderInstagram(doc({ mode: "requests", requests: [] }));
-    expect(svg).toContain("Message requests");
+    expect(svg).toContain("Message Requests");
     expect(svg).not.toContain("NaN");
   });
 

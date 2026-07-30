@@ -161,10 +161,12 @@ export function renderInstagram(
 }
 
 /**
- * Instagram "Message requests" inbox: centered title, explainer copy,
- * Hidden Requests row, request rows (avatar / bold name / preview · time),
- * red "Delete all" at the bottom. The uploaded DP lands on the first row;
- * the rest get initials discs.
+ * Instagram "Message Requests" inbox, matched against real iOS screenshots:
+ * centered bold title with "Edit" top-right, gray explainer band, request
+ * rows (avatar / bold name / black preview with gray " · time", blue unread
+ * dot right), a "Hidden Requests" row with eye-off disc + count + chevron
+ * BELOW the requests, and a hairline-separated red "Delete All" band. The
+ * uploaded DP lands on the first row; the rest get initials discs.
  */
 function renderInstagramRequests(doc: InstagramDoc, avatarUrl?: string): string {
   const platform = doc.chrome.platform ?? "ios";
@@ -174,68 +176,93 @@ function renderInstagramRequests(doc: InstagramDoc, avatarUrl?: string): string 
   const dark = !!doc.chrome.dark;
   const c = {
     bg: dark ? "#000000" : "#ffffff",
+    band: dark ? "#101010" : "#f8f8f8",
     text: dark ? "#f5f5f5" : "#000000",
     subtle: dark ? "#a8a8a8" : "#8e8e8e",
     hairline: dark ? "#262626" : "#efefef",
+    blue: "#0095f6",
     red: "#ed4956",
   };
 
   const parts: string[] = [`<rect width="${SW}" height="${SH}" fill="${c.bg}"/>`];
 
-  /* header: back chevron + centered title */
+  /* header: back chevron, centered bold title, "Edit" right */
   const HEADER_H = 104;
-  const title = "Message requests";
+  const title = "Message Requests";
   parts.push(
     statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.text, platform }),
-    `<rect y="${HEADER_H - 0.5}" width="${SW}" height="0.5" fill="${c.hairline}"/>`,
     `<path d="M26 64 l-10 11 10 11" fill="none" stroke="${c.text}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`,
-    textBlock([title], { x: SW / 2 - textWidth(title, 16) / 2, y: 80, size: 16, lineHeight: 19, color: c.text, weight: 700 })
+    textBlock([title], { x: SW / 2 - textWidth(title, 16.5) / 2, y: 81, size: 16.5, lineHeight: 20, color: c.text, weight: 700 }),
+    `<text font-family="${font}" font-size="15.5" fill="${c.text}" text-anchor="end" x="${SW - 16}" y="81">Edit</text>`
   );
 
-  /* explainer copy */
-  let y = HEADER_H + 26;
+  /* gray explainer band, centered copy, hairlines top + bottom */
   const explainer = wrapText(
-    "Open a request to see who sent it. They won't know you've seen it until you accept.",
+    "Open a chat to get more info about who's messaging you. They won't know you've seen it until you accept.",
     13,
-    SW - MARGIN * 2 - 8
+    SW - 60
   );
-  parts.push(textBlock(explainer, { x: MARGIN + 2, y, size: 13, lineHeight: 18, color: c.subtle }));
-  y += explainer.length * 18 + 14;
-
-  /* Hidden Requests row */
+  const BAND_H = explainer.length * 18 + 26;
   parts.push(
-    textBlock(["Hidden Requests"], { x: MARGIN + 2, y: y + 10, size: 15, lineHeight: 18, color: c.text, weight: 600 }),
-    `<path d="M${SW - MARGIN - 12} ${y + 2} l7 8 -7 8" fill="none" stroke="${c.subtle}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,
-    `<rect x="${MARGIN}" y="${y + 26}" width="${SW - MARGIN * 2}" height="0.5" fill="${c.hairline}"/>`
+    `<rect y="${HEADER_H}" width="${SW}" height="${BAND_H}" fill="${c.band}"/>`,
+    `<rect y="${HEADER_H - 0.5}" width="${SW}" height="0.5" fill="${c.hairline}"/>`,
+    `<rect y="${(HEADER_H + BAND_H - 0.5).toFixed(1)}" width="${SW}" height="0.5" fill="${c.hairline}"/>`
   );
-  y += 44;
+  let ey = HEADER_H + 24;
+  for (const line of explainer) {
+    parts.push(
+      `<text font-family="${font}" font-size="13" fill="${c.subtle}" text-anchor="middle" x="${SW / 2}" y="${ey}">${esc(line)}</text>`
+    );
+    ey += 18;
+  }
+  let y = HEADER_H + BAND_H + 8;
 
   /* request rows */
-  const ROW_H = 72;
+  const ROW_H = 64;
+  const TEXT_X = 74;
   const rows = doc.requests ?? [];
   for (let i = 0; i < rows.length; i++) {
-    if (y + ROW_H > SH - 80) break; // keep clear of "Delete all"
+    if (y + ROW_H > SH - 160) break; // keep clear of Hidden Requests + Delete All
     const r = rows[i];
     const cy = y + ROW_H / 2;
-    parts.push(avatar(r.name, MARGIN + 28, cy, 26, `igr${i}`, i === 0 ? avatarUrl : undefined));
-    const nameY = cy - 4;
+    parts.push(avatar(r.name, 38, cy, 22, `igr${i}`, i === 0 ? avatarUrl : undefined));
+    const name = truncate(r.name, 15.5, SW - TEXT_X - 60);
     parts.push(
-      textBlock([truncate(r.name, 15, SW - MARGIN * 2 - 100)], { x: MARGIN + 64, y: nameY, size: 15, lineHeight: 18, color: c.text, weight: 600 }),
-      r.verified
-        ? verifiedSeal(MARGIN + 64 + textWidth(truncate(r.name, 15, SW - MARGIN * 2 - 100), 15) + 5, nameY - 12, "#0095f6")
-        : "",
-      textBlock(
-        [truncate(`${r.preview}${r.time ? ` · ${r.time}` : ""}`, 13.5, SW - MARGIN * 2 - 78)],
-        { x: MARGIN + 64, y: cy + 16, size: 13.5, lineHeight: 17, color: c.subtle }
-      )
+      textBlock([name], { x: TEXT_X, y: cy - 5, size: 15.5, lineHeight: 19, color: c.text, weight: 600 }),
+      r.verified ? verifiedSeal(TEXT_X + textWidth(name, 15.5) + 5, cy - 5 - 12, c.blue) : ""
     );
+    /* preview: black when unread (real app), gray otherwise; gray " · time" */
+    const previewColor = r.unread ? c.text : c.subtle;
+    const preview = truncate(r.preview, 15, SW - TEXT_X - (r.time ? 74 : 44));
+    parts.push(
+      `<text font-family="${font}" font-size="15" fill="${previewColor}" x="${TEXT_X}" y="${cy + 17}">${esc(preview)}${
+        r.time ? `<tspan fill="${c.subtle}"> · ${esc(r.time)}</tspan>` : ""
+      }</text>`
+    );
+    if (r.unread) parts.push(`<circle cx="${SW - 22}" cy="${cy}" r="4.5" fill="${c.blue}"/>`);
     y += ROW_H;
   }
 
-  /* bottom action */
-  const label = "Delete all";
+  /* Hidden Requests row: eye-off disc, label, count + chevron right */
+  if ((doc.hiddenRequests ?? 0) > 0) {
+    const cy = y + ROW_H / 2;
+    const ex = 38, eyy = cy; // eye-off disc center
+    parts.push(
+      `<circle cx="${ex}" cy="${eyy}" r="22" fill="none" stroke="${c.hairline}" stroke-width="1.5"/>`,
+      // eye-off glyph: eye outline + pupil + diagonal slash
+      `<path d="M${ex - 10} ${eyy} Q${ex} ${eyy - 9} ${ex + 10} ${eyy} Q${ex} ${eyy + 9} ${ex - 10} ${eyy} Z" fill="none" stroke="${c.text}" stroke-width="1.6" stroke-linejoin="round"/>`,
+      `<circle cx="${ex}" cy="${eyy}" r="3" fill="none" stroke="${c.text}" stroke-width="1.5"/>`,
+      `<path d="M${ex - 9} ${eyy + 10} L${ex + 9} ${eyy - 10}" stroke="${c.text}" stroke-width="1.6" stroke-linecap="round"/>`,
+      textBlock(["Hidden Requests"], { x: TEXT_X, y: cy + 5, size: 15.5, lineHeight: 19, color: c.text, weight: 600 }),
+      `<text font-family="${font}" font-size="15.5" fill="${c.subtle}" text-anchor="end" x="${SW - 36}" y="${cy + 5}">${doc.hiddenRequests}</text>`,
+      `<path d="M${SW - 26} ${cy - 7} l7 7 -7 7" fill="none" stroke="${c.subtle}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`
+    );
+  }
+
+  /* bottom band: hairline + red Delete All */
   parts.push(
-    `<text font-family="${font}" font-size="15" font-weight="600" fill="${c.red}" text-anchor="middle" x="${SW / 2}" y="${SH - 46}">${label}</text>`,
+    `<rect y="${SH - 92}" width="${SW}" height="0.5" fill="${c.hairline}"/>`,
+    `<text font-family="${font}" font-size="16.5" font-weight="600" fill="${c.red}" text-anchor="middle" x="${SW / 2}" y="${SH - 52}">Delete All</text>`,
     homeIndicator(c.text, platform)
   );
 

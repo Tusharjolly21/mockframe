@@ -1195,13 +1195,20 @@ function InstagramFields({ doc, setDoc }: { doc: InstagramDoc; setDoc: (d: Scree
               ...doc,
               mode: v as InstagramDoc["mode"],
               // switching to an empty requests view would render a blank inbox
-              ...(v === "requests" && !doc.requests?.length ? { requests: defaultInstagramRequests().requests } : {}),
+              ...(v === "requests" && !doc.requests?.length
+                ? { requests: defaultInstagramRequests().requests, hiddenRequests: defaultInstagramRequests().hiddenRequests }
+                : {}),
             })
           }
         />
       </div>
       {isRequests ? (
-        <RequestRows requests={doc.requests ?? []} onChange={(requests) => setDoc({ ...doc, requests })} />
+        <>
+          <RequestRows requests={doc.requests ?? []} onChange={(requests) => setDoc({ ...doc, requests })} />
+          <div className="mt-3 w-36">
+            <NumField label="Hidden requests" value={doc.hiddenRequests ?? 0} onChange={(hiddenRequests) => setDoc({ ...doc, hiddenRequests })} />
+          </div>
+        </>
       ) : (
         <>
           <div className="flex gap-2">
@@ -1261,6 +1268,15 @@ function RequestRows({ requests, onChange }: { requests: InstagramRequest[]; onC
               }`}
             >
               ✓
+            </button>
+            <button
+              title="Unread (blue dot, black preview)"
+              onClick={() => patchAt(i, { unread: !r.unread })}
+              className={`fk-press w-8 shrink-0 rounded-md border py-1.5 text-[13px] leading-none ${
+                r.unread ? "border-[#0095f6] text-[#0095f6]" : "border-[#e4e4ec] text-[#b0b0ba]"
+              }`}
+            >
+              ●
             </button>
             <button
               title="Remove request"
@@ -1589,7 +1605,9 @@ function SnapchatFields({ doc, setDoc }: { doc: SnapchatDoc; setDoc: (d: ScreenD
               ...doc,
               variant: v as SnapchatDoc["variant"],
               // switching to an empty ad view would render a bare gradient
-              ...(v === "ad" && !doc.brand ? { brand: defaultSnapchatAd().brand, headline: defaultSnapchatAd().headline, cta: defaultSnapchatAd().cta } : {}),
+              ...(v === "ad" && !doc.brand
+                ? { brand: defaultSnapchatAd().brand, headline: defaultSnapchatAd().headline, cta: defaultSnapchatAd().cta, tagline: defaultSnapchatAd().tagline }
+                : {}),
             })
           }
         />
@@ -1602,6 +1620,9 @@ function SnapchatFields({ doc, setDoc }: { doc: SnapchatDoc; setDoc: (d: ScreenD
           </div>
           <div className="mt-3">
             <Field label="Headline" value={doc.headline ?? ""} onChange={(headline) => setDoc({ ...doc, headline })} placeholder="Summer glow, bottled." />
+          </div>
+          <div className="mt-3">
+            <Field label="Card text" value={doc.tagline ?? ""} onChange={(tagline) => setDoc({ ...doc, tagline })} placeholder="Discover the new summer set" />
           </div>
           <MediaUploadField label="Ad creative" value={doc.adImage} onChange={(adImage) => setDoc({ ...doc, adImage })} hint="full-bleed 9:16" />
           <p className="mt-2 text-[10px] leading-relaxed text-[#b0b0ba]">Upload a creative above — without one, the ad uses a gradient placeholder. The brand logo comes from the profile photo field.</p>

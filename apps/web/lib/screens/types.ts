@@ -296,6 +296,8 @@ export interface InstagramRequest {
   /** relative time right of the preview, e.g. "2h", "3w" */
   time?: string;
   verified?: boolean;
+  /** unread request: black preview text + blue dot on the right */
+  unread?: boolean;
 }
 
 export interface InstagramDoc {
@@ -312,6 +314,8 @@ export interface InstagramDoc {
   mode?: "dm" | "requests";
   /** rows shown in requests mode */
   requests?: InstagramRequest[];
+  /** requests mode: count on the Hidden Requests row (0 hides the row) */
+  hiddenRequests?: number;
   messages: Array<ChatMessage & { reaction?: string }>;
 }
 
@@ -356,12 +360,14 @@ export interface SnapchatDoc {
   statusKind?: "chat" | "snap-noaudio" | "snap-audio";
   /** "chat" (default) = conversation; "ad" = full-screen sponsored story ad */
   variant?: "chat" | "ad";
-  /** ad mode: brand name next to the logo disc */
+  /** ad mode: brand name top-left above the Sponsored label */
   brand?: string;
   /** ad mode: headline overlaid on the creative */
   headline?: string;
-  /** ad mode: CTA pill text, e.g. "Shop Now" */
+  /** ad mode: CTA text — black pill on the attachment card, e.g. "Shop Now" */
   cta?: string;
+  /** ad mode: bold line on the bottom attachment card */
+  tagline?: string;
   /** ad mode: uploaded creative asset id (gradient placeholder when unset) */
   adImage?: string;
   /** each message can carry one emoji reaction chip (Snapchat, May 2024) */
@@ -908,9 +914,10 @@ export function defaultInstagramRequests(): InstagramDoc {
     username: "riley.makes",
     presence: "",
     messages: [],
+    hiddenRequests: 4,
     requests: [
-      { name: "fitcoach.dan", preview: "Loved your last reel — quick collab idea 🙌", time: "2h" },
-      { name: "sofia.travels", preview: "We met at the creator meetup in Lisbon!", time: "1d", verified: true },
+      { name: "fitcoach.dan", preview: "Loved your last reel — quick collab idea 🙌", time: "2h", unread: true },
+      { name: "sofia.travels", preview: "We met at the creator meetup in Lisbon!", time: "1d", verified: true, unread: true },
       { name: "brandpartners.hq", preview: "We'd love to send you our new collection", time: "3d" },
       { name: "mike_edits", preview: "Your transitions are insane, what app do you use?", time: "1w" },
     ],
@@ -928,6 +935,7 @@ export function defaultSnapchatAd(): SnapchatDoc {
     brand: "Glow Skincare",
     headline: "Summer glow, bottled.",
     cta: "Shop Now",
+    tagline: "Discover the new summer set",
     messages: [],
   };
 }
