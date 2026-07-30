@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@framekit/scene", "@framekit/devices", "@framekit/renderer", "firebase-admin"],
   // headless-chromium stack must stay unbundled — it ships platform binaries
   serverExternalPackages: ["puppeteer-core", "@sparticuz/chromium-min", "@remotion/renderer", "@remotion/bundler"],
+  async redirects() {
+    return [
+      // /tools/app-store-screenshot duplicated /app-store-screenshots' target
+      // keyword ("app store screenshot generator") and split ranking signal
+      // across two URLs; the pack studio page is the canonical target.
+      { source: "/tools/app-store-screenshot", destination: "/app-store-screenshots", permanent: true },
+    ];
+  },
   async rewrites() {
     return [
       { source: "/__/auth/:path*", destination: `https://${FIREBASE_APP_DOMAIN}/__/auth/:path*` },

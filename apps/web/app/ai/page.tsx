@@ -106,7 +106,7 @@ export default function AiPage() {
         <ul className="mt-6 grid gap-2.5 sm:grid-cols-2">
           {[
             ["/app-store-screenshots", "App Store screenshot generator"],
-            ["/tools/app-store-screenshot", "App Store image maker"],
+            ["/guides/design-app-store-screenshots", "Guide: design a screenshot set"],
             ["/mockups", "Device mockup generators"],
             ["/tools/app-promo-video-maker", "App promo video maker"],
           ].map(([href, label]) => (

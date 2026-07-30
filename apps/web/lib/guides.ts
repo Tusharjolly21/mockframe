@@ -46,7 +46,7 @@ export const GUIDES: Guide[] = [
     description: "Build several independent shots, reuse a visual system, and export the set together.",
     category: "Bulk workflow",
     readTime: "5 min",
-    editorHref: "/tools/app-store-screenshot",
+    editorHref: "/app-store-screenshots",
     steps: [
       { title: "Create one shot per message", body: "Add every product screenshot as its own shot. Each shot keeps independent devices, transforms, text and media." },
       { title: "Set the first composition", body: "Choose the destination ratio, device count and backdrop. Make the first screen the visual reference for the set." },

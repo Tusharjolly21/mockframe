@@ -42,7 +42,7 @@ export const TOOL_PAGES: ToolPage[] = [
       ["Does it work on pages behind a login?", "No — captures run against public HTTPS URLs only. For a private or authenticated page, take a normal browser screenshot and drop that image into the editor to frame it."],
       ["What sizes can I export at?", "Any social-ready ratio (landscape, square, story) plus custom canvases. 4K and 6K output are available on Pro."],
     ],
-    related: ["app-store-screenshot", "code-screenshot", "tweet-screenshot"],
+    related: ["app-promo-video-maker", "code-screenshot", "tweet-screenshot"],
   },
   {
     slug: "code-screenshot",
@@ -63,7 +63,7 @@ export const TOOL_PAGES: ToolPage[] = [
       ["Can I show a git diff?", "Yes. Diff mode keeps added and removed lines colour-coded so before/after changes are easy to follow."],
       ["Can I reuse the same style across posts?", "Save the composition as a personal template or export its theme JSON, then apply it to future code cards for a consistent look."],
     ],
-    related: ["website-screenshot", "tweet-screenshot", "app-store-screenshot"],
+    related: ["website-screenshot", "tweet-screenshot", "app-promo-video-maker"],
   },
   {
     slug: "tweet-screenshot",
@@ -107,28 +107,10 @@ export const TOOL_PAGES: ToolPage[] = [
     ],
     related: ["tweet-screenshot", "code-screenshot", "website-screenshot"],
   },
-  {
-    slug: "app-store-screenshot",
-    name: "App Store Screenshot Generator",
-    eyebrow: "Build a consistent screenshot set",
-    description: "Create device-framed App Store and Play Store images, reuse one visual system, and export multiple independently edited screenshots together.",
-    overview:
-      "An App Store listing needs a set of screenshots that share a look but each carry a different message — and building that one image at a time is where consistency breaks down. MockFrame treats every shot as its own independently edited scene inside one project: shot one can be a single clean phone, shot two a three-device layout, and they still share the same theme, typography and backdrop. When the sequence is ready you export the whole set together as a ZIP with consistent dimensions, so the release ships as a coherent story rather than a pile of mismatched frames.",
-    editorHref: "/editor",
-    cta: "Build an App Store set",
-    image: "/hero/lib-ipad-flat.webp",
-    imageAlt: "App screenshot shown in an iPad mockup",
-    accent: "#34d399",
-    steps: [["Add your screens", "Upload each product screen as its own shot in the batch."], ["Compose independently", "Use one, two or three devices and different angles on each shot."], ["Export the set", "Download every finished shot together as a ZIP."]],
-    benefits: [["Independent scenes", "One shot can be minimal while another uses multiple devices."], ["Shared visual system", "Apply themes and personal templates across the whole campaign."], ["Bulk export", "Keep filenames and output dimensions consistent across a release."]],
-    faq: [
-      ["Can I export every screenshot at once?", "Yes. The whole set exports together as a ZIP with consistent filenames and output dimensions."],
-      ["Can each screenshot look different?", "Yes — every shot is an independent scene, so one can use a single device and another a multi-device layout while sharing the same theme."],
-      ["Does it match App Store and Play Store sizes?", "Pick the destination ratio before export so the set matches the required App Store or Google Play dimensions."],
-    ],
-    related: ["website-screenshot", "code-screenshot", "fake-whatsapp-chat-generator"],
-  },
-
+  // NOTE: there is deliberately no "app-store-screenshot" tool page — it would
+  // cannibalize /app-store-screenshots (the pack studio), which owns the
+  // "app store screenshot generator" query cluster. The old /tools URL 301s
+  // there (next.config.ts).
   {
     slug: "app-promo-video-maker",
     name: "App Promo Video Maker",
@@ -158,7 +140,7 @@ export const TOOL_PAGES: ToolPage[] = [
       ["Can I change the text and colours?", "Yes. Every template has editable text lines and an accent colour, plus a choice of premium backgrounds and aspect ratios."],
       ["Is it free?", "You can build and preview a promo video for free. Exporting the finished MP4 is a Pro feature."],
     ],
-    related: ["app-store-screenshot", "fake-whatsapp-chat-generator", "website-screenshot"],
+    related: ["code-screenshot", "fake-whatsapp-chat-generator", "website-screenshot"],
   },
 
   /* --- chat / DM screen generators --------------------------------------

@@ -50,7 +50,7 @@ const COLS: { title: string; links: [string, string][] }[] = [
       ["/tools/website-screenshot", "Website screenshots"],
       ["/tools/code-screenshot", "Code screenshots"],
       ["/tools/tweet-screenshot", "X post images"],
-      ["/tools/app-store-screenshot", "App Store images"],
+      ["/app-store-screenshots", "App Store screenshots"],
       ["/guides", "Guides"],
       ["/changelog", "Changelog"],
       ["/developers/automations", "Automations"],

@@ -12,8 +12,8 @@ import { SCENE_GROUPS } from "@/lib/sceneGroups";
 // that changed when its content actually changes.
 const UPDATED = {
   site: new Date("2026-07-16"), // marketing shell / homepage
-  tools: new Date("2026-07-19"), // + 5 new chat tool pages (discord/slack/signal/line/teams)
-  packStudio: new Date("2026-07-16"), // App Store screenshot pack studio landing page + FAQ
+  tools: new Date("2026-07-30"), // removed duplicate app-store-screenshot tool page (301 → /app-store-screenshots), refreshed related links
+  packStudio: new Date("2026-07-30"), // "Free" in title + related links refresh
   ai: new Date("2026-07-17"), // AI pack generator landing page
   guides: new Date("2026-06-20"),
   templates: new Date("2026-06-01"),

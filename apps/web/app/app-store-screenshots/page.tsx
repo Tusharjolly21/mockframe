@@ -4,7 +4,7 @@ import { PackStudio } from "@/components/pack/PackStudio";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "App Store Screenshot Generator — every required size in one zip",
+  title: "Free App Store Screenshot Generator — every required size in one zip",
   description:
     "Free app screenshot generator and maker. Upload your app screenshots once and export App Store 6.9″ & 6.5″, Google Play phone screenshots and the feature graphic — framed, captioned, submission-ready. First pack free.",
   keywords: [
@@ -157,7 +157,7 @@ export default function AppStoreScreenshotsPage() {
         <ul className="mt-5 grid gap-2.5 sm:grid-cols-2">
           {[
             ["/ai", "AI app screenshot generator"],
-            ["/tools/app-store-screenshot", "App Store image maker"],
+            ["/mockups/galaxy-s25-ultra", "Galaxy S25 Ultra mockup"],
             ["/mockups/iphone-16-pro", "iPhone 16 Pro mockup"],
             ["/mockups", "All device mockups"],
             ["/tools/app-promo-video-maker", "App promo video maker"],
