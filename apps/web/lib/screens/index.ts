@@ -201,6 +201,7 @@ function referencedAssetIds(doc: ScreenDoc): string[] {
   if (doc.app === "ios-notification" && doc.appIcon) ids.push(doc.appIcon);
   if (doc.app === "youtube" && doc.thumbnail) ids.push(doc.thumbnail);
   if (doc.app === "story" && doc.background) ids.push(doc.background);
+  if (doc.app === "snapchat" && doc.adImage) ids.push(doc.adImage);
   if (doc.app === "hinge") for (const card of doc.cards) if (card.type === "photo" && card.image) ids.push(card.image);
   if (hasMessages(doc)) for (const m of doc.messages) if ((m as { image?: string }).image) ids.push((m as { image: string }).image);
   // per-person photos (commenter avatars + multi-sender chat avatars)
@@ -241,7 +242,7 @@ export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): {
     case "telegram":
       return flat(renderTelegram(doc, dp, lookupUrl));
     case "snapchat":
-      return flat(renderSnapchat(doc, dp));
+      return flat(renderSnapchat(doc, dp, lookupUrl));
     case "tiktok":
       return flat(renderTikTok(doc, lookupUrl));
     case "ai":

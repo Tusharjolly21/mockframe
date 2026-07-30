@@ -14,6 +14,7 @@ import {
   SW,
   textBlock as baseTextBlock,
   textWidth,
+  truncate,
   typingDots,
   videoIcon,
   wrapText,
@@ -39,6 +40,7 @@ export function renderInstagram(
   avatarUrl?: string,
   lookupUrl?: (id: string) => string | undefined
 ): string {
+  if (doc.mode === "requests") return renderInstagramRequests(doc, avatarUrl);
   const platform = doc.chrome.platform ?? "ios";
   const font = fontFor("instagram", platform);
   const textBlock = (lines: string[], o: Parameters<typeof baseTextBlock>[1]) =>
@@ -152,6 +154,88 @@ export function renderInstagram(
     `<rect x="${SW - MARGIN - 34}" y="${iy + 13}" width="16" height="14" rx="3.5" fill="none" stroke="${c.text}" stroke-width="1.6"/>`,
     `<circle cx="${SW - MARGIN - 29}" cy="${iy + 18}" r="1.8" fill="${c.text}"/>`,
     `<path d="M${SW - MARGIN - 33} ${iy + 24} l4.5 -4 4 3.5 4 -3 3 2.8" fill="none" stroke="${c.text}" stroke-width="1.4"/>`,
+    homeIndicator(c.text, platform)
+  );
+
+  return parts.join("\n");
+}
+
+/**
+ * Instagram "Message requests" inbox: centered title, explainer copy,
+ * Hidden Requests row, request rows (avatar / bold name / preview · time),
+ * red "Delete all" at the bottom. The uploaded DP lands on the first row;
+ * the rest get initials discs.
+ */
+function renderInstagramRequests(doc: InstagramDoc, avatarUrl?: string): string {
+  const platform = doc.chrome.platform ?? "ios";
+  const font = fontFor("instagram", platform);
+  const textBlock = (lines: string[], o: Parameters<typeof baseTextBlock>[1]) =>
+    baseTextBlock(lines, { font, ...o });
+  const dark = !!doc.chrome.dark;
+  const c = {
+    bg: dark ? "#000000" : "#ffffff",
+    text: dark ? "#f5f5f5" : "#000000",
+    subtle: dark ? "#a8a8a8" : "#8e8e8e",
+    hairline: dark ? "#262626" : "#efefef",
+    red: "#ed4956",
+  };
+
+  const parts: string[] = [`<rect width="${SW}" height="${SH}" fill="${c.bg}"/>`];
+
+  /* header: back chevron + centered title */
+  const HEADER_H = 104;
+  const title = "Message requests";
+  parts.push(
+    statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.text, platform }),
+    `<rect y="${HEADER_H - 0.5}" width="${SW}" height="0.5" fill="${c.hairline}"/>`,
+    `<path d="M26 64 l-10 11 10 11" fill="none" stroke="${c.text}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`,
+    textBlock([title], { x: SW / 2 - textWidth(title, 16) / 2, y: 80, size: 16, lineHeight: 19, color: c.text, weight: 700 })
+  );
+
+  /* explainer copy */
+  let y = HEADER_H + 26;
+  const explainer = wrapText(
+    "Open a request to see who sent it. They won't know you've seen it until you accept.",
+    13,
+    SW - MARGIN * 2 - 8
+  );
+  parts.push(textBlock(explainer, { x: MARGIN + 2, y, size: 13, lineHeight: 18, color: c.subtle }));
+  y += explainer.length * 18 + 14;
+
+  /* Hidden Requests row */
+  parts.push(
+    textBlock(["Hidden Requests"], { x: MARGIN + 2, y: y + 10, size: 15, lineHeight: 18, color: c.text, weight: 600 }),
+    `<path d="M${SW - MARGIN - 12} ${y + 2} l7 8 -7 8" fill="none" stroke="${c.subtle}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,
+    `<rect x="${MARGIN}" y="${y + 26}" width="${SW - MARGIN * 2}" height="0.5" fill="${c.hairline}"/>`
+  );
+  y += 44;
+
+  /* request rows */
+  const ROW_H = 72;
+  const rows = doc.requests ?? [];
+  for (let i = 0; i < rows.length; i++) {
+    if (y + ROW_H > SH - 80) break; // keep clear of "Delete all"
+    const r = rows[i];
+    const cy = y + ROW_H / 2;
+    parts.push(avatar(r.name, MARGIN + 28, cy, 26, `igr${i}`, i === 0 ? avatarUrl : undefined));
+    const nameY = cy - 4;
+    parts.push(
+      textBlock([truncate(r.name, 15, SW - MARGIN * 2 - 100)], { x: MARGIN + 64, y: nameY, size: 15, lineHeight: 18, color: c.text, weight: 600 }),
+      r.verified
+        ? verifiedSeal(MARGIN + 64 + textWidth(truncate(r.name, 15, SW - MARGIN * 2 - 100), 15) + 5, nameY - 12, "#0095f6")
+        : "",
+      textBlock(
+        [truncate(`${r.preview}${r.time ? ` · ${r.time}` : ""}`, 13.5, SW - MARGIN * 2 - 78)],
+        { x: MARGIN + 64, y: cy + 16, size: 13.5, lineHeight: 17, color: c.subtle }
+      )
+    );
+    y += ROW_H;
+  }
+
+  /* bottom action */
+  const label = "Delete all";
+  parts.push(
+    `<text font-family="${font}" font-size="15" font-weight="600" fill="${c.red}" text-anchor="middle" x="${SW / 2}" y="${SH - 46}">${label}</text>`,
     homeIndicator(c.text, platform)
   );
 

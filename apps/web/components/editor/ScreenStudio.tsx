@@ -34,7 +34,9 @@ import {
   decodeScreenAsset,
   defaultDatingDoc,
   defaultDiscordDm,
+  defaultInstagramRequests,
   defaultScreenDoc,
+  defaultSnapchatAd,
   effectivePlatform,
   encodeScreenAsset,
   isScreenAsset,
@@ -69,6 +71,7 @@ import {
   type SocialPostDoc,
   type IMessageDoc,
   type InstagramDoc,
+  type InstagramRequest,
   type MessengerDoc,
   type PostComment,
   type RedditDoc,
@@ -137,6 +140,7 @@ const APPS: AppMeta[] = [
   { app: "whatsapp", label: "WhatsApp", icon: SiWhatsapp, tint: "#25d366", cat: "Messaging" },
   { app: "whatsapp-group", label: "WA Group", icon: SiWhatsapp, tint: "#128c7e", cat: "Messaging", kw: "whatsapp group" },
   { app: "instagram", label: "Instagram", icon: InstagramBrandIcon, tint: "#e4405f", cat: "Messaging", kw: "dm insta" },
+  { app: "instagram", label: "IG Requests", icon: InstagramBrandIcon, tint: "#c13584", cat: "Messaging", kw: "instagram message requests inbox dm request", make: () => defaultInstagramRequests() },
   { app: "messenger", label: "Messenger", icon: SiMessenger, tint: "#0a7cff", cat: "Messaging", kw: "facebook" },
   { app: "telegram", label: "Telegram", icon: SiTelegram, tint: "#26a5e4", cat: "Messaging" },
   { app: "snapchat", label: "Snapchat", icon: SiSnapchat, tint: "#d4b800", cat: "Messaging", kw: "snap" },
@@ -156,6 +160,7 @@ const APPS: AppMeta[] = [
   { app: "youtube", label: "YouTube", icon: SiYoutube, tint: "#ff0000", cat: "Social", kw: "video watch comments subscribe channel" },
   { app: "reddit", label: "Reddit", icon: SiReddit, tint: "#ff4500", cat: "Social", kw: "thread post comments upvote subreddit" },
   { app: "story", label: "IG Story", icon: InstagramBrandIcon, tint: "#e4405f", cat: "Social", kw: "instagram story reel status full screen" },
+  { app: "snapchat", label: "Snap Ad", icon: SiSnapchat, tint: "#f5c518", cat: "Social", kw: "snapchat ad sponsored story creative mockup swipe up cta", make: () => defaultSnapchatAd() },
   { app: "dating", label: "Tinder", icon: SiTinder, tint: "#fe3c72", cat: "Dating", kw: "swipe match profile date", make: () => defaultDatingDoc("tinder") },
   { app: "dating", label: "Bumble", icon: Heart, tint: "#ffb800", cat: "Dating", kw: "swipe match profile date bee", make: () => defaultDatingDoc("bumble") },
   { app: "hinge", label: "Hinge", icon: Heart, tint: "#67295f", cat: "Dating", kw: "swipe match profile date prompt" },
@@ -1176,22 +1181,104 @@ function reactionExtra<M extends { reaction?: string }>(m: M, patch: (p: Partial
 }
 
 function InstagramFields({ doc, setDoc }: { doc: InstagramDoc; setDoc: (d: ScreenDoc) => void }) {
+  const isRequests = doc.mode === "requests";
   return (
     <>
-      <div className="flex gap-2">
-        <Field label="Username" value={doc.username} onChange={(username) => setDoc({ ...doc, username })} className="flex-1" />
-        <Field label="Status" value={doc.presence} onChange={(presence) => setDoc({ ...doc, presence })} className="w-28" placeholder="Active now" />
+      <div className="mb-3 w-44">
+        <span className="mb-1 block text-xs text-[#6b6b76]">View</span>
+        <Seg
+          id="ig-mode"
+          options={[{ value: "dm", label: "DM" }, { value: "requests", label: "Requests" }]}
+          value={doc.mode || "dm"}
+          onChange={(v) =>
+            setDoc({
+              ...doc,
+              mode: v as InstagramDoc["mode"],
+              // switching to an empty requests view would render a blank inbox
+              ...(v === "requests" && !doc.requests?.length ? { requests: defaultInstagramRequests().requests } : {}),
+            })
+          }
+        />
       </div>
-      <div className="mt-3 flex gap-1.5">
-        <Toggle label="Seen" on={!!doc.seen} onClick={() => setDoc({ ...doc, seen: !doc.seen })} />
-      </div>
-      <MessageRows
-        messages={doc.messages}
-        onChange={(messages) => setDoc({ ...doc, messages })}
-        makeNew={(from) => ({ from, text: "" })}
-        extra={reactionExtra}
-      />
+      {isRequests ? (
+        <RequestRows requests={doc.requests ?? []} onChange={(requests) => setDoc({ ...doc, requests })} />
+      ) : (
+        <>
+          <div className="flex gap-2">
+            <Field label="Username" value={doc.username} onChange={(username) => setDoc({ ...doc, username })} className="flex-1" />
+            <Field label="Status" value={doc.presence} onChange={(presence) => setDoc({ ...doc, presence })} className="w-28" placeholder="Active now" />
+          </div>
+          <div className="mt-3 flex gap-1.5">
+            <Toggle label="Seen" on={!!doc.seen} onClick={() => setDoc({ ...doc, seen: !doc.seen })} />
+            <Toggle label="Verified" on={!!doc.verified} onClick={() => setDoc({ ...doc, verified: !doc.verified })} />
+          </div>
+          <MessageRows
+            messages={doc.messages}
+            onChange={(messages) => setDoc({ ...doc, messages })}
+            makeNew={(from) => ({ from, text: "" })}
+            extra={reactionExtra}
+          />
+        </>
+      )}
     </>
+  );
+}
+
+function RequestRows({ requests, onChange }: { requests: InstagramRequest[]; onChange: (r: InstagramRequest[]) => void }) {
+  const patchAt = (i: number, p: Partial<InstagramRequest>) =>
+    onChange(requests.map((r, j) => (j === i ? { ...r, ...p } : r)));
+  return (
+    <div className="mt-3">
+      <span className="mb-1.5 block text-xs text-[#6b6b76]">Requests</span>
+      <div className="flex flex-col gap-1.5">
+        {requests.map((r, i) => (
+          <div key={i} className="flex items-center gap-1.5">
+            <input
+              value={r.name}
+              placeholder="username"
+              title="Username"
+              onChange={(e) => patchAt(i, { name: e.target.value })}
+              className="w-24 shrink-0 rounded-lg border border-[#e4e4ec] bg-white px-2 py-2 text-xs text-[#17171c] outline-none focus:border-[#17171c]"
+            />
+            <input
+              value={r.preview}
+              placeholder="Message preview…"
+              onChange={(e) => patchAt(i, { preview: e.target.value })}
+              className="min-w-0 flex-1 rounded-lg border border-[#e4e4ec] bg-white px-2.5 py-2 text-xs text-[#17171c] outline-none focus:border-[#17171c]"
+            />
+            <input
+              value={r.time ?? ""}
+              placeholder="2h"
+              title="Relative time"
+              onChange={(e) => patchAt(i, { time: e.target.value || undefined })}
+              className="w-10 shrink-0 rounded-lg border border-[#e4e4ec] bg-white px-1 py-2 text-center text-[10.5px] text-[#17171c] outline-none focus:border-[#17171c]"
+            />
+            <button
+              title="Verified badge"
+              onClick={() => patchAt(i, { verified: !r.verified })}
+              className={`fk-press w-8 shrink-0 rounded-md border py-1.5 text-[11px] font-bold ${
+                r.verified ? "border-[#0095f6] text-[#0095f6]" : "border-[#e4e4ec] text-[#b0b0ba]"
+              }`}
+            >
+              ✓
+            </button>
+            <button
+              title="Remove request"
+              onClick={() => onChange(requests.filter((_, j) => j !== i))}
+              className="fk-press shrink-0 rounded-md p-1.5 text-[#b0b0ba] hover:bg-black/6 hover:text-[#17171c]"
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={() => onChange([...requests, { name: "", preview: "", time: "1d" }])}
+        className="fk-press mt-2 w-full rounded-lg border border-dashed border-[#c9c9d4] py-2 text-[11px] font-semibold text-[#6b6b76] hover:border-[#17171c] hover:text-[#17171c]"
+      >
+        + Add request
+      </button>
+    </div>
   );
 }
 
@@ -1488,38 +1575,71 @@ function AvatarUploadButton({ value, onChange }: { value?: string; onChange: (id
 const SNAP_STATUS: SnapStatus[] = ["none", "Delivered", "Opened", "Received", "Screenshot!", "Replied"];
 
 function SnapchatFields({ doc, setDoc }: { doc: SnapchatDoc; setDoc: (d: ScreenDoc) => void }) {
+  const isAd = doc.variant === "ad";
   return (
     <>
-      <div className="flex gap-2">
-        <Field label="Friend name" value={doc.contact} onChange={(contact) => setDoc({ ...doc, contact })} className="flex-1" />
-        <NumField label="Streak 🔥" value={doc.streak} onChange={(streak) => setDoc({ ...doc, streak })} />
-      </div>
-      <div className="mt-3 flex gap-2">
-        <Select
-          label="Status line"
-          value={doc.status ?? "none"}
-          options={SNAP_STATUS.map((s) => ({ value: s, label: s === "none" ? "— none —" : s }))}
-          onChange={(status) => setDoc({ ...doc, status })}
-          className="flex-1"
-        />
-        <Select
-          label="Accent"
-          value={doc.statusKind ?? "chat"}
-          options={[
-            { value: "chat", label: "Chat (blue)" },
-            { value: "snap-noaudio", label: "Snap (red)" },
-            { value: "snap-audio", label: "Snap (purple)" },
-          ]}
-          onChange={(statusKind) => setDoc({ ...doc, statusKind })}
-          className="w-32"
+      <div className="mb-3 w-44">
+        <span className="mb-1 block text-xs text-[#6b6b76]">View</span>
+        <Seg
+          id="snap-variant"
+          options={[{ value: "chat", label: "Chat" }, { value: "ad", label: "Ad" }]}
+          value={doc.variant || "chat"}
+          onChange={(v) =>
+            setDoc({
+              ...doc,
+              variant: v as SnapchatDoc["variant"],
+              // switching to an empty ad view would render a bare gradient
+              ...(v === "ad" && !doc.brand ? { brand: defaultSnapchatAd().brand, headline: defaultSnapchatAd().headline, cta: defaultSnapchatAd().cta } : {}),
+            })
+          }
         />
       </div>
-      <MessageRows
-        messages={doc.messages}
-        onChange={(messages) => setDoc({ ...doc, messages })}
-        makeNew={(from) => ({ from, text: "" })}
-        extra={reactionExtra}
-      />
+      {isAd ? (
+        <>
+          <div className="flex gap-2">
+            <Field label="Brand name" value={doc.brand ?? ""} onChange={(brand) => setDoc({ ...doc, brand })} className="flex-1" />
+            <Field label="CTA button" value={doc.cta ?? ""} onChange={(cta) => setDoc({ ...doc, cta })} className="w-28" placeholder="Shop Now" />
+          </div>
+          <div className="mt-3">
+            <Field label="Headline" value={doc.headline ?? ""} onChange={(headline) => setDoc({ ...doc, headline })} placeholder="Summer glow, bottled." />
+          </div>
+          <MediaUploadField label="Ad creative" value={doc.adImage} onChange={(adImage) => setDoc({ ...doc, adImage })} hint="full-bleed 9:16" />
+          <p className="mt-2 text-[10px] leading-relaxed text-[#b0b0ba]">Upload a creative above — without one, the ad uses a gradient placeholder. The brand logo comes from the profile photo field.</p>
+        </>
+      ) : (
+        <>
+          <div className="flex gap-2">
+            <Field label="Friend name" value={doc.contact} onChange={(contact) => setDoc({ ...doc, contact })} className="flex-1" />
+            <NumField label="Streak 🔥" value={doc.streak} onChange={(streak) => setDoc({ ...doc, streak })} />
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Select
+              label="Status line"
+              value={doc.status ?? "none"}
+              options={SNAP_STATUS.map((s) => ({ value: s, label: s === "none" ? "— none —" : s }))}
+              onChange={(status) => setDoc({ ...doc, status })}
+              className="flex-1"
+            />
+            <Select
+              label="Accent"
+              value={doc.statusKind ?? "chat"}
+              options={[
+                { value: "chat", label: "Chat (blue)" },
+                { value: "snap-noaudio", label: "Snap (red)" },
+                { value: "snap-audio", label: "Snap (purple)" },
+              ]}
+              onChange={(statusKind) => setDoc({ ...doc, statusKind })}
+              className="w-32"
+            />
+          </div>
+          <MessageRows
+            messages={doc.messages}
+            onChange={(messages) => setDoc({ ...doc, messages })}
+            makeNew={(from) => ({ from, text: "" })}
+            extra={reactionExtra}
+          />
+        </>
+      )}
     </>
   );
 }

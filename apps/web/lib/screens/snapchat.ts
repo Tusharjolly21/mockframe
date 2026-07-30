@@ -5,6 +5,7 @@ import {
   glassPill,
   esc,
   homeIndicator,
+  imageBubble,
   micIcon,
   phoneIcon,
   SH,
@@ -30,7 +31,12 @@ const LINE_H = 21;
 const MARGIN = 18;
 const RAIL_GAP = 12;
 
-export function renderSnapchat(doc: SnapchatDoc, avatarUrl?: string): string {
+export function renderSnapchat(
+  doc: SnapchatDoc,
+  avatarUrl?: string,
+  lookupUrl?: (id: string) => string | undefined
+): string {
+  if (doc.variant === "ad") return renderSnapchatAd(doc, avatarUrl, lookupUrl);
   const platform = doc.chrome.platform ?? "ios";
   const font = fontFor("snapchat", platform);
   const textBlock = (lines: string[], o: Parameters<typeof baseTextBlock>[1]) =>
@@ -148,6 +154,87 @@ export function renderSnapchat(doc: SnapchatDoc, avatarUrl?: string): string {
     `<circle cx="${SW - MARGIN - 20}" cy="${iy + 19}" r="9.5" fill="none" stroke="${c.text}" stroke-width="1.7"/>`,
     `<path d="M${SW - MARGIN - 24.5} ${iy + 21} a 6 6 0 0 0 9 0 M${SW - MARGIN - 24} ${iy + 16} h0.01 M${SW - MARGIN - 16} ${iy + 16} h0.01" stroke="${c.text}" stroke-width="1.7" stroke-linecap="round" fill="none"/>`,
     homeIndicator(c.text, platform)
+  );
+
+  return parts.join("\n");
+}
+
+/**
+ * Snapchat sponsored story ad: full-bleed creative (uploaded image or dusk
+ * gradient placeholder), white-on-media chrome — brand row with logo disc +
+ * "Sponsored", headline in the lower third, swipe-up chevron and the yellow
+ * CTA pill. Chrome stays white regardless of theme, like the story viewer.
+ */
+function renderSnapchatAd(
+  doc: SnapchatDoc,
+  avatarUrl?: string,
+  lookupUrl?: (id: string) => string | undefined
+): string {
+  const platform = doc.chrome.platform ?? "ios";
+  const font = fontFor("snapchat", platform);
+  const white = "#ffffff";
+  const parts: string[] = [];
+
+  /* full-bleed creative */
+  const bgUrl = doc.adImage ? lookupUrl?.(doc.adImage) : undefined;
+  if (bgUrl) {
+    parts.push(imageBubble(bgUrl, 0, 0, SW, SH, "scad", { rx: 0 }));
+  } else {
+    parts.push(
+      `<defs>
+<linearGradient id="fk_scad_bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f1023"/><stop offset="0.55" stop-color="#4526a3"/><stop offset="1" stop-color="#b86adf"/></linearGradient>
+<radialGradient id="fk_scad_glow" cx="0.72" cy="0.24" r="0.75"><stop offset="0" stop-color="#ff9ecf" stop-opacity="0.35"/><stop offset="1" stop-color="#ff9ecf" stop-opacity="0"/></radialGradient>
+</defs>`,
+      `<rect width="${SW}" height="${SH}" fill="url(#fk_scad_bg)"/>`,
+      `<rect width="${SW}" height="${SH}" fill="url(#fk_scad_glow)"/>`,
+      `<circle cx="86" cy="620" r="120" fill="#ffffff" opacity="0.08"/>`,
+      `<circle cx="330" cy="200" r="90" fill="#ffffff" opacity="0.07"/>`
+    );
+  }
+
+  /* scrims so the white chrome stays legible on any creative */
+  parts.push(
+    `<defs>
+<linearGradient id="fk_scad_top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000000" stop-opacity="0.4"/><stop offset="1" stop-color="#000000" stop-opacity="0"/></linearGradient>
+<linearGradient id="fk_scad_bot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.55"/></linearGradient>
+</defs>`,
+    `<rect width="${SW}" height="150" fill="url(#fk_scad_top)"/>`,
+    `<rect y="${SH - 260}" width="${SW}" height="260" fill="url(#fk_scad_bot)"/>`,
+    statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: white, platform })
+  );
+
+  /* brand row: logo disc + name + Sponsored, ⋮ menu right */
+  const brand = doc.brand || "Brand";
+  parts.push(
+    avatar(brand, 34, 78, 19, "scab", avatarUrl),
+    `<text font-family="${font}" font-size="15.5" font-weight="700" fill="${white}" x="62" y="76">${esc(truncate(brand, 15.5, SW - 62 - 50))}</text>`,
+    `<text font-family="${font}" font-size="11.5" fill="#ffffff" opacity="0.75" x="62" y="93">Sponsored</text>`,
+    `<g fill="${white}"><circle cx="${SW - 26}" cy="70" r="2.2"/><circle cx="${SW - 26}" cy="78" r="2.2"/><circle cx="${SW - 26}" cy="86" r="2.2"/></g>`
+  );
+
+  /* headline, centered in the lower third */
+  const headline = doc.headline || "";
+  if (headline) {
+    const lines = wrapText(headline, 26, SW - 72);
+    let hy = SH - 268 - (lines.length - 1) * 32;
+    for (const line of lines) {
+      parts.push(
+        `<text font-family="${font}" font-size="26" font-weight="800" fill="${white}" text-anchor="middle" x="${SW / 2}" y="${hy}">${esc(line)}</text>`
+      );
+      hy += 32;
+    }
+  }
+
+  /* swipe-up chevron + yellow CTA pill */
+  const cta = doc.cta || "Learn More";
+  const ctaW = Math.max(150, textWidth(cta, 15) + 64);
+  const ctaX = (SW - ctaW) / 2;
+  const ctaY = SH - 122;
+  parts.push(
+    `<path d="M${SW / 2 - 9} ${ctaY - 16} l9 -9 9 9" fill="none" stroke="${white}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`,
+    `<rect x="${ctaX}" y="${ctaY}" width="${ctaW}" height="46" rx="23" fill="#fffc00"/>`,
+    `<text font-family="${font}" font-size="15" font-weight="800" fill="#16191c" text-anchor="middle" x="${SW / 2}" y="${ctaY + 29}">${esc(cta)}</text>`,
+    homeIndicator(white, platform)
   );
 
   return parts.join("\n");

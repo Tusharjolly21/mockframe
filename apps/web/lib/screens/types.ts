@@ -289,6 +289,15 @@ export interface WhatsAppGroupDoc {
   messages: Array<ChatMessage & { ticks?: WhatsAppTicks; sender?: string; senderAvatar?: string; reaction?: string }>;
 }
 
+/** One row in the Instagram message-requests inbox (requests mode). */
+export interface InstagramRequest {
+  name: string;
+  preview: string;
+  /** relative time right of the preview, e.g. "2h", "3w" */
+  time?: string;
+  verified?: boolean;
+}
+
 export interface InstagramDoc {
   app: "instagram";
   chrome: ScreenChrome;
@@ -299,6 +308,10 @@ export interface InstagramDoc {
   verified?: boolean;
   /** "Seen" caption under the last outgoing message */
   seen?: boolean;
+  /** "dm" (default) = conversation thread; "requests" = message-requests inbox */
+  mode?: "dm" | "requests";
+  /** rows shown in requests mode */
+  requests?: InstagramRequest[];
   messages: Array<ChatMessage & { reaction?: string }>;
 }
 
@@ -331,7 +344,7 @@ export type SnapStatus = "none" | "Delivered" | "Opened" | "Received" | "Screens
 export interface SnapchatDoc {
   app: "snapchat";
   chrome: ScreenChrome;
-  /** uploaded photo asset id for the contact / group / author */
+  /** uploaded photo asset id for the contact / group / author (ad mode: brand logo) */
   avatar?: string;
   contact: string;
   verified?: boolean;
@@ -341,6 +354,16 @@ export interface SnapchatDoc {
   status?: SnapStatus;
   /** selects the accent for Screenshot!/Replied (chat=blue, snap=red/purple) */
   statusKind?: "chat" | "snap-noaudio" | "snap-audio";
+  /** "chat" (default) = conversation; "ad" = full-screen sponsored story ad */
+  variant?: "chat" | "ad";
+  /** ad mode: brand name next to the logo disc */
+  brand?: string;
+  /** ad mode: headline overlaid on the creative */
+  headline?: string;
+  /** ad mode: CTA pill text, e.g. "Shop Now" */
+  cta?: string;
+  /** ad mode: uploaded creative asset id (gradient placeholder when unset) */
+  adImage?: string;
   /** each message can carry one emoji reaction chip (Snapchat, May 2024) */
   messages: Array<ChatMessage & { reaction?: string }>;
 }
@@ -873,6 +896,39 @@ export function defaultDiscordDm(): DiscordDoc {
       { sender: "Sam", text: "hey! welcome to the server 🎉", time: "8:41 PM", color: "#f47fff" },
       { sender: "Sam", text: "ping me if you need anything", time: "8:41 PM", color: "#f47fff" },
     ],
+  };
+}
+
+/** Starter Instagram message-requests inbox for the picker's second IG entry. */
+export function defaultInstagramRequests(): InstagramDoc {
+  return {
+    app: "instagram",
+    chrome: { time: "9:41", battery: 100 },
+    mode: "requests",
+    username: "riley.makes",
+    presence: "",
+    messages: [],
+    requests: [
+      { name: "fitcoach.dan", preview: "Loved your last reel — quick collab idea 🙌", time: "2h" },
+      { name: "sofia.travels", preview: "We met at the creator meetup in Lisbon!", time: "1d", verified: true },
+      { name: "brandpartners.hq", preview: "We'd love to send you our new collection", time: "3d" },
+      { name: "mike_edits", preview: "Your transitions are insane, what app do you use?", time: "1w" },
+    ],
+  };
+}
+
+/** Starter Snapchat sponsored story ad for the picker's "Snap Ad" entry. */
+export function defaultSnapchatAd(): SnapchatDoc {
+  return {
+    app: "snapchat",
+    chrome: { time: "9:41", battery: 100 },
+    variant: "ad",
+    contact: "",
+    streak: 0,
+    brand: "Glow Skincare",
+    headline: "Summer glow, bottled.",
+    cta: "Shop Now",
+    messages: [],
   };
 }
 
