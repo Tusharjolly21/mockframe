@@ -14,13 +14,14 @@ export const metadata: Metadata = {
  * The editor. `?device=<id>` deep-links a specific device (from the /mockups
  * pSEO pages' "Open in editor" CTA); EditorShell injects a matching scene.
  * `?calibrate=1` (the /calibrate entry) opens the custom-mockup calibration
- * modal on load.
+ * modal on load. `?upgrade=1` opens the upgrade modal; `?upgrade=success` is
+ * the Dodo Payments checkout return_url (Dodo appends subscription_id/status).
  */
 export default async function EditorPage({
   searchParams,
 }: {
-  searchParams: Promise<{ device?: string; screen?: string; calibrate?: string; upgrade?: string; capture?: string; plan?: string; promo?: string; replay?: string; remix?: string }>;
+  searchParams: Promise<{ device?: string; screen?: string; calibrate?: string; upgrade?: string; capture?: string; plan?: string; promo?: string; replay?: string; remix?: string; subscription_id?: string; status?: string }>;
 }) {
-  const { device, screen, calibrate, upgrade, capture, plan, promo, replay, remix } = await searchParams;
-  return <EditorShell initialDeviceId={device} initialScreenApp={screen} openCalibrate={calibrate === "1"} openUpgradeOnLoad={upgrade === "1"} upgradePlan={plan} openCaptureOnLoad={capture === "1"} openPromoOnLoad={promo === "1"} openReplayOnLoad={replay === "1"} remixId={remix} />;
+  const { device, screen, calibrate, upgrade, capture, plan, promo, replay, remix, subscription_id, status } = await searchParams;
+  return <EditorShell initialDeviceId={device} initialScreenApp={screen} openCalibrate={calibrate === "1"} openUpgradeOnLoad={upgrade === "1"} upgradePlan={plan} checkoutReturn={upgrade === "success" ? { subscriptionId: subscription_id, status } : undefined} openCaptureOnLoad={capture === "1"} openPromoOnLoad={promo === "1"} openReplayOnLoad={replay === "1"} remixId={remix} />;
 }

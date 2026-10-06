@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 const REASSURANCE = [
   "Free plan is the full editor — not a trial",
-  "Annual works out to about ₹250 / month",
+  "Annual works out to $5 / month",
   "Cancel anytime · no lock-in",
 ];
 
@@ -40,7 +40,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "What payment methods do you accept?",
-    a: "Payments are handled securely by Razorpay. In India you can pay by UPI, cards or netbanking; elsewhere you can pay by international card. Prices are shown in ₹ for India and $ otherwise.",
+    a: "Payments are handled securely by Dodo Payments, our merchant of record. You can pay by card and other local payment methods available in your country. Prices are in US dollars; any applicable sales tax or VAT is calculated at checkout.",
   },
   {
     q: "Can I use the mockups commercially?",

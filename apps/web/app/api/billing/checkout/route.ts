@@ -1,60 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FirebaseConfigError, firebaseSetupHint } from "@/lib/server/firebaseAdmin";
 import { getRequestOwner } from "@/lib/server/requestOwner";
-import {
-  ensureRazorpayPlanId,
-  razorpay,
-  razorpayKeyId,
-  RazorpayConfigError,
-} from "@/lib/server/razorpay";
-import { isCurrency, isPlanId, PLANS } from "@/lib/billing/plans";
+import { createCheckoutSession, DodoConfigError, isDodoConfigured } from "@/lib/server/dodo";
+import { isPlanId, PLANS } from "@/lib/billing/plans";
 
 export const runtime = "nodejs";
 
 /**
- * POST { plan, currency } → the payload Razorpay Checkout needs on the client.
- * Both plans are Subscriptions. The uid is attached to notes so webhooks can
- * attribute the payment without a session.
+ * POST { plan, expectedPrice } → { checkoutUrl } for Dodo Payments' hosted
+ * checkout. The client redirects there; Dodo sends the buyer back to
+ * /editor?upgrade=success (with subscription_id/status appended), where the
+ * editor confirms the entitlement via /api/billing/verify. The uid + plan are
+ * attached as metadata so webhooks can attribute the purchase without a session.
  */
 export async function POST(req: NextRequest) {
   try {
+    if (!isDodoConfigured()) throw new DodoConfigError();
+
     const owner = await getRequestOwner(req);
-    // payments require a REAL account (Razorpay verification answer: login
-    // required) — anonymous guest sessions can't attach a recoverable purchase
+    // payments require a REAL account — anonymous guest sessions can't attach
+    // a recoverable purchase
     if (!owner.uid || owner.signInProvider === "anonymous") {
       return NextResponse.json({ error: "Sign in to upgrade" }, { status: 401 });
     }
 
     const body = await req.json().catch(() => ({}));
-    const { plan, currency, expectedPrice } = body ?? {};
-    if (!isPlanId(plan) || !isCurrency(currency)) {
-      return NextResponse.json({ error: "Invalid plan or currency" }, { status: 400 });
+    const { plan, expectedPrice } = body ?? {};
+    if (!isPlanId(plan)) {
+      return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
-    const def = PLANS[plan];
     // the client must state the price it DISPLAYED — a browser running a
     // pre-price-change bundle gets a refresh prompt instead of a surprise charge
-    if (expectedPrice !== def.price[currency]) {
+    if (expectedPrice !== PLANS[plan].price) {
       return NextResponse.json(
         { error: "Prices were updated — refresh the page to see current pricing" },
         { status: 409 }
       );
     }
-    const notes = { uid: owner.uid, plan };
 
-    const planId = await ensureRazorpayPlanId(plan, currency);
-    const sub = await razorpay().subscriptions.create({
-      plan_id: planId,
-      total_count: def.totalCount,
-      notes,
+    const origin = req.nextUrl.origin;
+    const { checkoutUrl } = await createCheckoutSession({
+      plan,
+      uid: owner.uid,
+      email: owner.email,
+      returnUrl: `${origin}/editor?upgrade=success`,
+      cancelUrl: `${origin}/editor?upgrade=1&plan=${plan}`,
     });
-    return NextResponse.json({
-      mode: "subscription",
-      keyId: razorpayKeyId(),
-      subscriptionId: sub.id,
-    });
+    return NextResponse.json({ checkoutUrl });
   } catch (err) {
-    if (err instanceof RazorpayConfigError) {
+    if (err instanceof DodoConfigError) {
       return NextResponse.json({ error: err.message }, { status: 501 });
     }
     if (err instanceof FirebaseConfigError) {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { FirebaseConfigError, firestoreDb } from "@/lib/server/firebaseAdmin";
 import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
-import { isBillingActive, readBilling } from "@/lib/server/razorpay";
+import { isBillingActive, readBilling } from "@/lib/server/billing";
 import { packExportDecision, type PackExportVerdict } from "@/lib/pack/gate";
 
 export const runtime = "nodejs";

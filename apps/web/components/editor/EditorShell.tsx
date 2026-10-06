@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "motion/react";
 import { track, trackOnce } from "@/lib/analytics";
+import { confirmCheckoutReturn } from "@/lib/billing/client";
 import { ingestFile } from "@/lib/assets";
 import { loadCustomDevices, syncCustomDevicesFromServer } from "@/lib/customDevices";
 import { buildDeviceScene, buildScreenScene, isScreenApp } from "@/lib/deviceScene";
@@ -30,6 +31,7 @@ export function EditorShell({
   openCalibrate = false,
   openUpgradeOnLoad = false,
   upgradePlan,
+  checkoutReturn,
   openCaptureOnLoad = false,
   openPromoOnLoad = false,
   openReplayOnLoad = false,
@@ -41,6 +43,8 @@ export function EditorShell({
   openCalibrate?: boolean;
   openUpgradeOnLoad?: boolean;
   upgradePlan?: string;
+  /** set when Dodo's hosted checkout redirected back here */
+  checkoutReturn?: { subscriptionId?: string; status?: string };
   openCaptureOnLoad?: boolean;
   openPromoOnLoad?: boolean;
   openReplayOnLoad?: boolean;
@@ -156,6 +160,39 @@ export function EditorShell({
     }, 450);
     return () => clearTimeout(timer);
   }, [openCaptureOnLoad, openUpgradeOnLoad, upgradePlan]);
+
+  // Back from Dodo Payments' hosted checkout: confirm the subscription (verify
+  // by id, then poll status while the webhook lands) and unlock Pro.
+  const checkoutSubId = checkoutReturn?.subscriptionId;
+  const checkoutStatus = checkoutReturn?.status;
+  const isCheckoutReturn = !!checkoutReturn;
+  useEffect(() => {
+    if (!isCheckoutReturn) return;
+    window.history.replaceState({}, "", "/editor");
+    const say = (detail: string) => window.dispatchEvent(new CustomEvent("framekit:toast", { detail }));
+    if (checkoutStatus === "failed" || checkoutStatus === "cancelled") {
+      const t = setTimeout(() => say("Payment was not completed — you have not been charged"), 0);
+      return () => clearTimeout(t);
+    }
+    let cancelled = false;
+    // deferred so the toast listener (registered further down) is mounted
+    const t = setTimeout(() => {
+      say("Confirming your payment…");
+      confirmCheckoutReturn(checkoutSubId ?? null).then((active) => {
+        if (cancelled) return;
+        if (active) {
+          useViewStore.getState().setRemoveWatermark(true);
+          say("You're Pro - welcome aboard");
+        } else {
+          say("Payment received — Pro unlocks as soon as it's confirmed. Refresh in a minute if it hasn't.");
+        }
+      });
+    }, 0);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [isCheckoutReturn, checkoutSubId, checkoutStatus]);
 
   // The batch is a list of independent scene documents. Keep the active shot
   // current without making the editor shell re-render for every control tweak.

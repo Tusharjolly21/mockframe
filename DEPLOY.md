@@ -39,6 +39,8 @@ Copy these from `apps/web/.env.local`:
 | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | | |
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | | |
 
+Billing (Dodo Payments) has its own env vars — see [§6](#6--billing-dodo-payments).
+
 ⚠️ **`FIREBASE_PRIVATE_KEY`**: paste the whole key incl. `-----BEGIN/END-----`. Keeping the `\n` escapes is fine — the code un-escapes them (`.replace(/\\n/g,"\n")`).
 
 ---
@@ -127,6 +129,30 @@ production:
 > **Music:** promo videos ship **silent** by default. To offer background tracks,
 > drop **cleared/royalty-free** audio into `public/promo-music/` and pass its URL as
 > `musicUrl` — never bundle copyrighted audio (IG/FB will mute or block the upload).
+
+## 6 · Billing (Dodo Payments)
+Pro subscriptions are sold through [Dodo Payments](https://dodopayments.com) hosted checkout. Dodo is the merchant of record, so it handles local payment methods, currency display and sales tax / VAT; our prices are USD only ($9.99 / month, $59.99 / year — `apps/web/lib/billing/plans.ts`).
+
+1. **Products** — Dodo Dashboard → Products → create two **subscription** products in USD: *MockFrame Pro — Monthly* ($9.99, billed every 1 month) and *MockFrame Pro — Annual* ($59.99, billed every 1 year). Keep their prices in sync with `PLANS` in `plans.ts` (the UI shows `PLANS`; Dodo charges the product price).
+2. **API key** — Dashboard → Developer → API Keys.
+3. **Webhook** — Dashboard → Developer → Webhooks → add endpoint `https://mockframe.app/api/billing/webhook` (subscribe to at least all `subscription.*` events and `payment.succeeded`) and copy its signing secret (`whsec_…`).
+4. Set the env vars (Vercel Production + Preview, and `apps/web/.env.local` for local dev):
+
+| Variable | Value |
+|---|---|
+| `DODO_PAYMENTS_API_KEY` | secret API key (test-mode key for Preview / local) |
+| `DODO_PAYMENTS_WEBHOOK_SECRET` | the webhook endpoint's signing secret (`whsec_…`) |
+| `DODO_PAYMENTS_ENVIRONMENT` | `test_mode` (default, `test.dodopayments.com`) or `live_mode` (`live.dodopayments.com`) |
+| `DODO_PRODUCT_PRO_MONTHLY` | product id of the monthly product (`pdt_…`) |
+| `DODO_PRODUCT_PRO_YEARLY` | product id of the annual product (`pdt_…`) |
+
+Test-mode and live-mode have separate keys, products and webhooks — set the matching set per environment.
+
+**How it fits together:** `POST /api/billing/checkout` creates a Dodo checkout session (uid + plan in `metadata`) and the browser is redirected to the hosted checkout. Dodo returns the buyer to `/editor?upgrade=success`; the editor calls `POST /api/billing/verify` (re-fetches the subscription from Dodo, checks `metadata.uid`) and polls `/api/billing/status`. The webhook is the durable source of truth for renewals, cancellations and dunning: it verifies the Standard Webhooks signature, is idempotent on `webhook-id`, drops out-of-order events by timestamp, and writes `users/{uid}.billing` (Pro lasts until `next_billing_date`, plus a 3-day grace for late renewals).
+
+Without `DODO_PAYMENTS_API_KEY` + both product ids, checkout/verify return **501 "Billing is not configured"** (the upgrade modal shows that message); without `DODO_PAYMENTS_WEBHOOK_SECRET` the webhook returns 501. Everything else in the app keeps working on the free tier.
+
+**Local webhook testing:** tunnel `localhost:3000` (e.g. `npx localtunnel --port 3000`) and point a test-mode webhook endpoint at `<tunnel>/api/billing/webhook`, or use the dashboard's "send test event".
 
 ## Before you go public
 - **Firestore + Storage security rules — DEPLOY THESE.** `firestore.rules` and `storage.rules` (repo root, wired via `firebase.json`) deny ALL direct client access, because every read/write goes through server API routes on the Admin SDK (which bypasses rules). This is what stops a signed-in user from writing their own `users/{uid}.billing` entitlement via the Web SDK to self-grant Pro. Deploy with:

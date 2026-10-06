@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FirebaseConfigError } from "@/lib/server/firebaseAdmin";
 import { getRequestOwner } from "@/lib/server/requestOwner";
-import { isBillingActive, readBilling } from "@/lib/server/razorpay";
+import { isBillingActive, readBilling } from "@/lib/server/billing";
 
 export const runtime = "nodejs";
 
