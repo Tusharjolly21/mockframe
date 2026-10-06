@@ -87,15 +87,12 @@ export default function HomePage() {
       <ChatStoriesSection />
 
       {/* ============================ FEATURES (bento) ============================ */}
-      <section className="relative border-t border-white/[0.06] py-28">
+      <section className="relative border-t border-white/[0.06] py-24 sm:py-32">
         <SectionSheen />
         <div className="mx-auto max-w-6xl px-6">
           <Reveal>
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-violet-500" />
-              <span className="text-[13.5px] text-zinc-400">Everything you need</span>
-            </div>
-            <h2 className="mt-4 max-w-2xl text-[30px] font-medium leading-[1.1] tracking-[-0.025em] sm:text-[44px]">
+            <Eyebrow>Everything you need</Eyebrow>
+            <h2 className="mt-4 max-w-2xl text-[32px] font-semibold leading-[1.05] tracking-[-0.04em] sm:text-[48px]">
               Made for people who ship screenshots.
             </h2>
           </Reveal>
@@ -103,7 +100,7 @@ export default function HomePage() {
           {/* bento: two feature panels with real product visuals */}
           <RevealGroup className="mt-12 grid gap-4 lg:grid-cols-5">
             <RevealItem className="lg:col-span-3">
-              <div className="relative h-full overflow-hidden rounded-[24px] border border-white/[0.08] bg-white/[0.02] p-7 transition-colors hover:border-white/15">
+              <div className="relative h-full overflow-hidden rounded-[24px] border border-white/[0.07] bg-gradient-to-b from-white/[0.035] to-white/[0.01] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] p-7 transition-colors hover:border-white/15">
                 <div className="max-w-[58%]">
                   <IconChip name="smartphone-bold-duotone" />
                   <h3 className="mt-5 text-[19px] font-semibold">Photoreal device mockups</h3>
@@ -122,7 +119,7 @@ export default function HomePage() {
             </RevealItem>
 
             <RevealItem className="lg:col-span-2">
-              <div className="relative h-full overflow-hidden rounded-[24px] border border-white/[0.08] bg-white/[0.02] p-7 transition-colors hover:border-white/15">
+              <div className="relative h-full overflow-hidden rounded-[24px] border border-white/[0.07] bg-gradient-to-b from-white/[0.035] to-white/[0.01] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] p-7 transition-colors hover:border-white/15">
                 <IconChip name="chat-round-line-bold-duotone" />
                 <h3 className="mt-5 text-[19px] font-semibold">Fake screen studio</h3>
                 <p className="mt-2 text-[14px] leading-relaxed text-zinc-400">
@@ -147,7 +144,7 @@ export default function HomePage() {
           <RevealGroup className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {FEATURE_TILES.map((f) => (
               <RevealItem key={f.title}>
-                <div className="h-full rounded-[24px] border border-white/[0.08] bg-white/[0.02] p-6 transition-colors hover:border-white/15">
+                <div className="h-full rounded-[24px] border border-white/[0.07] bg-gradient-to-b from-white/[0.035] to-white/[0.01] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] p-6 transition-colors hover:border-white/15">
                   <IconChip name={f.icon} />
                   <h3 className="mt-4 text-[15.5px] font-semibold">{f.title}</h3>
                   <p className="mt-1.5 text-[13.5px] leading-relaxed text-zinc-400">{f.body}</p>
@@ -159,16 +156,13 @@ export default function HomePage() {
       </section>
 
       {/* ============================ DEVICE LIBRARY (photoreal) ============================ */}
-      <section className="relative border-t border-white/[0.06] py-28">
+      <section className="relative border-t border-white/[0.06] py-24 sm:py-32">
         <SectionSheen />
         <div className="mx-auto max-w-6xl px-6">
           <Reveal>
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-cyan-400" />
-              <span className="text-[13.5px] text-zinc-400">The device library</span>
-            </div>
+            <Eyebrow>The device library</Eyebrow>
             <div className="mt-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-              <h2 className="max-w-xl text-[30px] font-medium leading-[1.1] tracking-[-0.025em] sm:text-[44px]">
+              <h2 className="max-w-xl text-[32px] font-semibold leading-[1.05] tracking-[-0.04em] sm:text-[48px]">
                 Every screen your product lives on.
               </h2>
               <Link
@@ -189,7 +183,7 @@ export default function HomePage() {
                 <RevealItem key={item.id}>
                   <Link
                     href={`/mockups/${item.id}`}
-                    className="group flex h-full flex-col overflow-hidden rounded-[20px] border border-white/[0.08] bg-white/[0.02] transition-colors hover:border-white/20"
+                    className="group flex h-full flex-col overflow-hidden rounded-[20px] border border-white/[0.07] bg-gradient-to-b from-white/[0.035] to-white/[0.01] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-colors hover:border-white/20"
                   >
                     <div
                       className="flex h-52 items-center justify-center overflow-hidden p-5"
@@ -222,26 +216,23 @@ export default function HomePage() {
       </section>
 
       {/* ============================ HOW IT WORKS ============================ */}
-      <section className="relative border-t border-white/[0.06] py-28">
+      <section className="relative border-t border-white/[0.06] py-24 sm:py-32">
         <SectionSheen />
         <div className="mx-auto max-w-6xl px-6">
           <Reveal>
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-orange-400" />
-              <span className="text-[13.5px] text-zinc-400">Three steps</span>
-            </div>
-            <h2 className="mt-4 max-w-xl text-[30px] font-medium leading-[1.1] tracking-[-0.025em] sm:text-[44px]">
+            <Eyebrow>Three steps</Eyebrow>
+            <h2 className="mt-4 max-w-xl text-[32px] font-semibold leading-[1.05] tracking-[-0.04em] sm:text-[48px]">
               From screenshot to share-ready in under a minute.
             </h2>
           </Reveal>
           <RevealGroup className="mt-12 grid gap-4 md:grid-cols-3">
             {[
-              { n: "01", icon: "gallery-wide-bold-duotone", t: "Add your screenshot", d: "Upload, paste, or drag it in — it snaps into the device display at native resolution." },
+              { n: "01", icon: "gallery-wide-bold-duotone", t: "Add your screen", d: "Upload, paste, capture a URL or generate a chat. It snaps into the device at native resolution." },
               { n: "02", icon: "magic-stick-3-bold-duotone", t: "Style the scene", d: "Pick a background, add a shadow, tilt the device, arrange your layout." },
-              { n: "03", icon: "download-minimalistic-bold-duotone", t: "Export", d: "Download a high-resolution PNG ready for anywhere you need it." },
+              { n: "03", icon: "download-minimalistic-bold-duotone", t: "Export", d: "Download a crisp PNG, JPG or WebP at up to 3×, or turn it into a video." },
             ].map((s) => (
               <RevealItem key={s.n}>
-                <div className="h-full rounded-[24px] border border-white/[0.08] bg-white/[0.02] p-6">
+                <div className="h-full rounded-[24px] border border-white/[0.07] bg-gradient-to-b from-white/[0.035] to-white/[0.01] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] p-6">
                   <div className="flex items-center justify-between">
                     <IconChip name={s.icon} />
                     <span className="text-[13px] font-semibold text-zinc-600">{s.n}</span>
@@ -263,7 +254,7 @@ export default function HomePage() {
           style={{ background: "radial-gradient(ellipse at center, rgba(124,58,237,0.18), transparent 70%)" }}
         />
         <Reveal className="relative z-10 mx-auto max-w-2xl px-6 text-center">
-          <h2 className="text-[32px] font-medium leading-[1.08] tracking-[-0.025em] sm:text-[46px]">
+          <h2 className="text-[34px] font-semibold leading-[1.04] tracking-[-0.04em] sm:text-[52px]">
             Ready to make your mockup?
           </h2>
           <p className="mx-auto mt-4 max-w-md text-[15.5px] leading-relaxed text-zinc-400">
@@ -271,9 +262,9 @@ export default function HomePage() {
           </p>
           <Link
             href="/editor"
-            className="group mt-8 inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-[15px] font-semibold text-zinc-900 shadow-[0_8px_30px_rgba(255,255,255,0.1)] transition-colors hover:bg-zinc-100"
+            className="group mt-9 inline-flex h-12 items-center gap-2 rounded-full bg-white px-7 text-[15px] font-semibold text-zinc-900 shadow-[0_8px_30px_rgba(255,255,255,0.1)] transition-colors hover:bg-zinc-100"
           >
-            Start creating — free
+            Start creating, it&apos;s free
             <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />
           </Link>
         </Reveal>
@@ -285,6 +276,12 @@ export default function HomePage() {
 }
 
 /* ------------------------------ small helpers ------------------------------ */
+
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-violet-300/90">{children}</span>
+  );
+}
 
 function IconChip({ name }: { name: string }) {
   return (

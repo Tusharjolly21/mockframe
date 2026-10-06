@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { getDevice, previewDataUri } from "@framekit/devices";
 import type { MockupLayer, Shadow, StickerLayer, TextLayer } from "@framekit/scene";
 import { DEFAULT_SHADOW } from "@framekit/scene";
-import { Check, Crop, Download, Globe, ImagePlus, MonitorUp, Palette, Plus, Sparkles, TriangleAlert, X } from "lucide-react";
+import { Crop, Globe, ImagePlus, Plus, Sparkles, TriangleAlert, X } from "lucide-react";
 import { track, trackOnce } from "@/lib/analytics";
 import { ingestFile, resolveAsset } from "@/lib/assets";
 import { renderScreenshotIntoMockup } from "@/lib/mockuuups";
@@ -19,6 +19,7 @@ import { DevicePicker } from "./DevicePicker";
 import { MediaEditor } from "./MediaEditor";
 import { ScreenStudio, isTemplateCard } from "./ScreenStudio";
 import { FrameControls } from "./FramePanel";
+import { ExportStep, StepFooter, StepNav } from "./StepFlow";
 
 const FONTS = [
   "Inter",
@@ -71,7 +72,8 @@ const SHADOW_PRESETS: { id: string; label: string; css: string; value: Shadow | 
 ];
 
 export function LeftPanel() {
-  const [tab, setTab] = useState<"mockup" | "frame">("mockup");
+  const step = useViewStore((s) => s.step);
+  const setStep = useViewStore((s) => s.setStep);
   const scene = useSceneStore((s) => s.scene);
   const selectedIds = useViewStore((s) => s.selectedIds);
   const select = useViewStore((s) => s.select);
@@ -82,20 +84,18 @@ export function LeftPanel() {
       ? selected
       : mockups[0];
 
+  // selecting a text/sticker on the canvas jumps back to Content, where its controls live
+  const selectedKind = selected?.type;
+  useEffect(() => {
+    if (selectedKind === "text" || selectedKind === "sticker") setStep("content");
+  }, [selectedKind, selectedIds, setStep]);
+
   return (
-    <div className="fk-card panel-scroll pointer-events-auto flex max-h-full w-[min(300px,46vw)] flex-col overflow-y-auto pb-4">
+    <div className="fk-card panel-scroll pointer-events-auto flex max-h-full w-[min(300px,46vw)] flex-col overflow-y-auto">
       <div className="px-3 pt-3">
-        <Seg
-          id="left-tabs"
-          options={[
-            { value: "mockup", label: "Mockup" },
-            { value: "frame", label: "Frame" },
-          ]}
-          value={tab}
-          onChange={setTab}
-        />
+        <StepNav />
       </div>
-      {tab === "mockup" ? (
+      {step === "content" ? (
         selected?.type === "text" ? (
           <TextControls layer={selected} />
         ) : selected?.type === "sticker" && "stickerId" in selected ? (
@@ -105,14 +105,18 @@ export function LeftPanel() {
         ) : target ? (
           <>
             <PhoneSlots layers={mockups} activeId={target.id} onSelect={select} />
-            <MockupControls layer={target} onOpenFrame={() => setTab("frame")} />
+            <MockupControls layer={target} />
           </>
         ) : (
           <p className="px-4 py-8 text-center text-xs text-[#9a9aa4]">Add a device to get started.</p>
         )
-      ) : (
+      ) : step === "style" ? (
         <FrameControls />
+      ) : (
+        <ExportStep />
       )}
+      <div className="h-4 shrink-0" />
+      <StepFooter />
     </div>
   );
 }
@@ -176,7 +180,7 @@ function PhoneSlots({
 
 /* ------------------------------ mockup controls ----------------------------- */
 
-function MockupControls({ layer, onOpenFrame }: { layer: MockupLayer; onOpenFrame: () => void }) {
+function MockupControls({ layer }: { layer: MockupLayer }) {
   const scene = useSceneStore((s) => s.scene);
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const setScene = useSceneStore((s) => s.setScene);
@@ -248,22 +252,7 @@ function MockupControls({ layer, onOpenFrame }: { layer: MockupLayer; onOpenFram
             </button>
           </div>
         </section>
-      ) : (
-        <section aria-label="Mockup workflow" className="mx-3 mt-2 grid grid-cols-4 gap-1 rounded-xl bg-[#f2f2f6] p-1">
-          <button title="Screenshot added" className="flex min-w-0 flex-col items-center gap-0.5 rounded-lg bg-white px-1 py-1.5 text-[9px] font-semibold text-emerald-700 shadow-sm">
-            <Check size={12} /> Screen
-          </button>
-          <button onClick={() => document.getElementById("editor-device-step")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="fk-press flex min-w-0 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[9px] font-semibold text-[#555560] hover:bg-white">
-            <MonitorUp size={12} /> Device
-          </button>
-          <button onClick={onOpenFrame} className="fk-press flex min-w-0 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[9px] font-semibold text-[#555560] hover:bg-white">
-            <Palette size={12} /> Style
-          </button>
-          <button onClick={() => document.getElementById("editor-export")?.focus()} className="fk-press flex min-w-0 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[9px] font-semibold text-[#555560] hover:bg-white">
-            <Download size={12} /> Export
-          </button>
-        </section>
-      )}
+      ) : null}
 
       {!isTemplate && (
       <div id="editor-device-step" className="scroll-mt-2 px-3 pt-1">

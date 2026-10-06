@@ -14,7 +14,7 @@ import { LiveChatStory, PhoneShell } from "./LiveChatStory";
  */
 export function ChatStoriesSection() {
   return (
-    <section className="relative overflow-hidden border-t border-white/[0.06] bg-[#0b0b0d] py-28">
+    <section className="relative overflow-hidden border-t border-white/[0.06] bg-[#0b0b0d] py-24 sm:py-32">
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px"
         style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)" }}
@@ -24,7 +24,7 @@ export function ChatStoriesSection() {
           <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> The chat-story format
           </span>
-          <h2 className="mt-5 max-w-2xl text-[30px] font-medium leading-[1.1] tracking-[-0.025em] text-white sm:text-[46px]">
+          <h2 className="mt-5 max-w-2xl text-[32px] font-semibold leading-[1.05] tracking-[-0.04em] text-white sm:text-[48px]">
             Chat stories that keep viewers to the last message
           </h2>
           <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-zinc-400">

@@ -167,3 +167,15 @@ input[type="color"]::-webkit-color-swatch {
 @media (prefers-reduced-motion: reduce) {
   .animate-\[fk-marquee_38s_linear_infinite\] { animation: none; }
 }
+
+/* guided flow: "Next" breathes once the first screen lands */
+@keyframes fk-nudge {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+  50% { box-shadow: 0 0 0 5px rgba(124, 58, 237, 0.22); }
+}
+.fk-nudge {
+  animation: fk-nudge 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fk-nudge { animation: none; }
+}

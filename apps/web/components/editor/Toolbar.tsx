@@ -10,6 +10,7 @@ import {
   Clapperboard,
   Palette,
   Copy,
+  Ellipsis,
   FolderOpen,
   Image as ImageIcon,
   Layers,
@@ -40,26 +41,26 @@ export function toast(msg: string) {
   window.dispatchEvent(new CustomEvent("framekit:toast", { detail: msg }));
 }
 
+type MorePanel = null | "menu" | "drafts" | "brand" | "batch";
+
 export function Toolbar() {
   const scene = useSceneStore((s) => s.scene);
   const setScene = useSceneStore((s) => s.setScene);
   const resetScene = useSceneStore((s) => s.resetScene);
   const select = useViewStore((s) => s.select);
   const setActiveLayout = useViewStore((s) => s.setActiveLayout);
+  const setStep = useViewStore((s) => s.setStep);
   const bumpAssets = useViewStore((s) => s.bumpAssets);
   const threeD = useViewStore((s) => s.threeD);
   const setThreeD = useViewStore((s) => s.setThreeD);
 
   const [hist, setHist] = useState({ canUndo: false, canRedo: false });
   const [layersOpen, setLayersOpen] = useState(false);
-  const [draftsOpen, setDraftsOpen] = useState(false);
-  const [batchOpen, setBatchOpen] = useState(false);
   const [renderOpen, setRenderOpen] = useState(false);
-  const [brandOpen, setBrandOpen] = useState(false);
-  const brandRef = useRef<HTMLDivElement>(null);
+  // secondary tools live behind one "More" button so the bar stays calm
+  const [more, setMore] = useState<MorePanel>(null);
   const layersRef = useRef<HTMLDivElement>(null);
-  const draftsRef = useRef<HTMLDivElement>(null);
-  const batchRef = useRef<HTMLDivElement>(null);
+  const moreRef = useRef<HTMLDivElement>(null);
   const iconRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -72,16 +73,31 @@ export function Toolbar() {
   }, []);
 
   useEffect(() => {
-    if (!layersOpen && !draftsOpen && !batchOpen && !brandOpen) return;
+    if (!layersOpen && !more) return;
     const onDown = (e: MouseEvent) => {
       if (layersOpen && !layersRef.current?.contains(e.target as Node)) setLayersOpen(false);
-      if (draftsOpen && !draftsRef.current?.contains(e.target as Node)) setDraftsOpen(false);
-      if (batchOpen && !batchRef.current?.contains(e.target as Node)) setBatchOpen(false);
-      if (brandOpen && !brandRef.current?.contains(e.target as Node)) setBrandOpen(false);
+      if (more && !moreRef.current?.contains(e.target as Node)) setMore(null);
     };
     window.addEventListener("mousedown", onDown);
     return () => window.removeEventListener("mousedown", onDown);
-  }, [layersOpen, draftsOpen, batchOpen, brandOpen]);
+  }, [layersOpen, more]);
+
+  const startOver = () => {
+    resetScene();
+    select(null);
+    setActiveLayout(null);
+    setStep("content");
+    useDraftsUi.getState().setCurrent(null); // fresh canvas, no longer "is" a draft
+  };
+
+  const MENU: { icon: React.ReactNode; label: string; hint: string; pro?: boolean; run: () => void }[] = [
+    { icon: <FolderOpen size={15} />, label: "Drafts", hint: "Open saved scenes (⌘S saves)", run: () => setMore("drafts") },
+    { icon: <PanelsTopLeft size={15} />, label: "Shot batch", hint: "Style many images, export one ZIP", run: () => setMore("batch") },
+    { icon: <Palette size={15} />, label: "Brand kit", hint: "Your colours and logo everywhere", run: () => setMore("brand") },
+    { icon: <Sparkles size={15} />, label: "Realistic render", hint: "Photo-real device shots", pro: true, run: () => { setMore(null); setRenderOpen(true); } },
+    { icon: <Clapperboard size={15} />, label: "Promo video", hint: "Animated app ad", pro: true, run: () => { setMore(null); window.dispatchEvent(new CustomEvent("framekit:promo-open")); } },
+    { icon: <RotateCcw size={15} />, label: "Start over", hint: "Clear the canvas", run: () => { setMore(null); startOver(); } },
+  ];
 
   return (
     <>
@@ -92,21 +108,6 @@ export function Toolbar() {
       <IconButton title="Redo (⇧⌘Z)" onClick={() => sceneTemporal.getState().redo()} disabled={!hist.canRedo}>
         <Redo2 size={16} />
       </IconButton>
-
-      <div className="mx-1 h-5 w-px bg-[#e4e4ec]" />
-
-      <button
-        onClick={() => {
-          resetScene();
-          select(null);
-          setActiveLayout(null);
-          useDraftsUi.getState().setCurrent(null); // fresh canvas, no longer "is" a draft
-        }}
-        className="fk-press flex items-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-semibold text-[#17171c] hover:bg-[#17171c]/6"
-      >
-        <RotateCcw size={13} />
-        Start Over
-      </button>
 
       <div className="mx-1 h-5 w-px bg-[#e4e4ec]" />
 
@@ -141,53 +142,6 @@ export function Toolbar() {
         }}
       />
 
-      <IconButton title="Realistic photo render (Pro)" onClick={() => setRenderOpen(true)}>
-        <Sparkles size={16} />
-      </IconButton>
-
-      <IconButton title="Promo video — animated app ad (Pro)" onClick={() => window.dispatchEvent(new CustomEvent("framekit:promo-open"))}>
-        <Clapperboard size={16} />
-      </IconButton>
-
-      <div className="relative" ref={batchRef}>
-        <IconButton title="Shot batch — edit many images and export one ZIP" onClick={() => setBatchOpen((v) => !v)} active={batchOpen}>
-          <PanelsTopLeft size={16} />
-        </IconButton>
-        <AnimatePresence>
-          {batchOpen && (
-            <Popover className="left-1/2 top-[calc(100%+10px)] -ml-44 p-0">
-              <ShotBatchPanel onToast={toast} />
-            </Popover>
-          )}
-        </AnimatePresence>
-      </div>
-
-      <div className="relative" ref={brandRef}>
-        <IconButton title="Brand kit — colours & logo everywhere" onClick={() => setBrandOpen((v) => !v)} active={brandOpen}>
-          <Palette size={16} />
-        </IconButton>
-        <AnimatePresence>
-          {brandOpen && (
-            <Popover className="left-1/2 top-[calc(100%+10px)] -ml-32 p-0">
-              <BrandKitPanel onToast={toast} />
-            </Popover>
-          )}
-        </AnimatePresence>
-      </div>
-
-      <div className="relative" ref={draftsRef}>
-        <IconButton title="Drafts (⌘S saves)" onClick={() => setDraftsOpen((v) => !v)} active={draftsOpen}>
-          <FolderOpen size={16} />
-        </IconButton>
-        <AnimatePresence>
-          {draftsOpen && (
-            <Popover className="left-1/2 top-[calc(100%+10px)] -ml-38 p-2">
-              <DraftsPanel onClose={() => setDraftsOpen(false)} onToast={toast} />
-            </Popover>
-          )}
-        </AnimatePresence>
-      </div>
-
       <div className="relative" ref={layersRef}>
         <IconButton title="Layers" onClick={() => setLayersOpen((v) => !v)} active={layersOpen}>
           <Layers size={16} />
@@ -217,6 +171,49 @@ export function Toolbar() {
         <Box size={14} />
         3D
       </button>
+
+      <div className="relative" ref={moreRef}>
+        <IconButton title="More tools" onClick={() => setMore((m) => (m ? null : "menu"))} active={!!more}>
+          <Ellipsis size={16} />
+        </IconButton>
+        <AnimatePresence>
+          {more === "menu" && (
+            <Popover className="right-0 top-[calc(100%+10px)] w-64 p-1.5">
+              {MENU.map((m) => (
+                <button
+                  key={m.label}
+                  onClick={m.run}
+                  className="fk-press flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left hover:bg-[#17171c]/5"
+                >
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#f2f2f6] text-[#3f3f48]">{m.icon}</span>
+                  <span className="min-w-0">
+                    <span className="flex items-center gap-1.5 text-[12.5px] font-semibold text-[#17171c]">
+                      {m.label}
+                      {m.pro && <span className="rounded-full bg-[#ede9fe] px-1.5 py-px text-[9px] font-bold text-[#6d28d9]">Pro</span>}
+                    </span>
+                    <span className="block truncate text-[11px] text-[#8a8a94]">{m.hint}</span>
+                  </span>
+                </button>
+              ))}
+            </Popover>
+          )}
+          {more === "drafts" && (
+            <Popover className="right-0 top-[calc(100%+10px)] p-2">
+              <DraftsPanel onClose={() => setMore(null)} onToast={toast} />
+            </Popover>
+          )}
+          {more === "batch" && (
+            <Popover className="right-0 top-[calc(100%+10px)] p-0">
+              <ShotBatchPanel onToast={toast} />
+            </Popover>
+          )}
+          {more === "brand" && (
+            <Popover className="right-0 top-[calc(100%+10px)] p-0">
+              <BrandKitPanel onToast={toast} />
+            </Popover>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
     {renderOpen && <RealisticRenderPanel onClose={() => setRenderOpen(false)} onToast={toast} />}
     </>
