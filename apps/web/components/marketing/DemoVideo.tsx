@@ -5,9 +5,10 @@ import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
 import { Pause, Play } from "lucide-react";
 
 /**
- * The homepage product demo: a real screen recording of the editor (cursor,
- * auto-zoom, end card) in public/demo. Autoplays muted and loops only while on
- * screen; reduced-motion visitors get the poster and a play button.
+ * The homepage product demo: a real screen recording of the editor in a
+ * browser window (cursor, auto-zoom, exported image reveal) in public/demo.
+ * Autoplays muted and loops only while on screen; reduced-motion visitors get
+ * the poster and a play button.
  */
 export function DemoVideo({ src, poster }: { src: string; poster: string }) {
   const reduce = useReducedMotion();
@@ -69,7 +70,7 @@ export function DemoVideo({ src, poster }: { src: string; poster: string }) {
             loop
             playsInline
             preload="metadata"
-            aria-label="Screen recording of the MockFrame editor: a screenshot is dropped into an iPhone, styled, and exported"
+            aria-label="Screen recording of MockFrame in a browser: three app screenshots are dragged from the desktop into iPhones, given a layout and wallpaper, and exported as a PNG"
             onPlay={() => setPlaying(true)}
             onPause={() => setPlaying(false)}
           />

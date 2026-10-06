@@ -121,7 +121,7 @@ export function HeroSection({ devicesCount }: { devicesCount: number }) {
         transition={{ duration: 1, delay: 0.35, ease: EASE }}
         className="relative z-10 mx-auto mt-16 max-w-6xl scroll-mt-24 px-4 pb-24 sm:px-6"
       >
-        <DemoVideo src="/demo/mockframe-demo.mp4" poster="/demo/mockframe-demo-poster.jpg" />
+        <DemoVideo src="/demo/mockframe-demo-v2.mp4" poster="/demo/mockframe-demo-v2-poster.jpg" />
       </motion.div>
     </section>
   );

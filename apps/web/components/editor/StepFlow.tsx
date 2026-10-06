@@ -44,18 +44,18 @@ export function StepNav() {
                 {active && (
                   <motion.span
                     layoutId="step-pill"
-                    className="absolute inset-0 rounded-xl bg-white shadow-[0_1px_4px_rgba(20,20,40,0.12)]"
+                    className="absolute inset-0 z-0 rounded-xl bg-white shadow-[0_1px_4px_rgba(20,20,40,0.12)]"
                     transition={{ type: "spring", stiffness: 500, damping: 38 }}
                   />
                 )}
                 <span
-                  className={`relative grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full text-[10px] font-bold ${
+                  className={`relative z-10 grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full text-[10px] font-bold ${
                     done ? "bg-emerald-500 text-white" : active ? "bg-[#17171c] text-white" : "bg-[#d9d9e2] text-[#6b6b76]"
                   }`}
                 >
                   {done ? <Check size={11} strokeWidth={3} /> : i + 1}
                 </span>
-                <span className="relative">{s.label}</span>
+                <span className="relative z-10">{s.label}</span>
               </button>
             </li>
           );
