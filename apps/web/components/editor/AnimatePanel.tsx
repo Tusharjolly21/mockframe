@@ -17,6 +17,7 @@ import { exportSceneVideo } from "@/lib/videoExport";
 import { exportSceneGif } from "@/lib/gifExport";
 import { useSceneStore, useViewStore, withTransientHistory } from "@/lib/store";
 import { openUpgrade } from "@/lib/billing/gate";
+import { MotionStudio } from "./MotionStudio";
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -156,6 +157,7 @@ export function AnimatePanel() {
   const [speed, setSpeed] = useState<"slow" | "normal" | "fast">("normal");
   const [busy, setBusy] = useState<null | { pct: number; label: string }>(null);
   const [plan, setPlan] = useState<AnimShot[]>([]);
+  const [tab, setTab] = useState<"motion" | "replay">("motion");
   
   // Scrubber & effects state
   const [currentTime, setCurrentTime] = useState(0);
@@ -213,6 +215,12 @@ export function AnimatePanel() {
   useEffect(() => {
     setPlan(anim ? buildAnimPlan(anim.doc) : []);
   }, [anim]);
+  // a chat on the canvas opens straight into its replay; otherwise motion
+  const hasChat = !!animLive;
+  useEffect(() => {
+    setTab(hasChat ? "replay" : "motion");
+  }, [hasChat]);
+  const showReplay = !!anim && tab === "replay";
 
   const renderState = (s: { k: number; typing: boolean; dotPhase: number; settled: boolean }) => {
     if (!anim) return;
@@ -448,14 +456,25 @@ export function AnimatePanel() {
             <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3.5">
               <div className="flex items-center gap-2.5">
                 <Clapperboard size={15} className="text-violet-400" />
-                <span className="text-[12px] font-bold tracking-wider text-white/90">REMOTION TIMELINE</span>
-                <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-[8.5px] font-semibold text-violet-300 uppercase tracking-wide border border-violet-500/30">
-                  Interactive Live Replay
-                </span>
+                <div className="flex rounded-lg border border-white/5 bg-white/5 p-0.5">
+                  {([["motion", "Motion"], ["replay", "Chat replay"]] as const).map(([id, label]) => (
+                    <button
+                      key={id}
+                      onClick={() => setTab(id)}
+                      disabled={!!busy || (id === "replay" && !anim)}
+                      title={id === "replay" && !anim ? "Add a Screen Studio chat with 2+ messages" : undefined}
+                      className={`rounded-md px-2.5 py-1 text-[10.5px] font-bold transition-all disabled:cursor-not-allowed ${
+                        tab === id ? "bg-white/15 text-white" : "text-white/45 hover:text-white/70 disabled:text-white/20"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Playback Settings */}
-              {anim && !busy && (
+              {showReplay && !busy && (
                 <div className="flex items-center gap-4">
                   {/* Effects / Sounds checkboxes */}
                   <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1 border border-white/5">
@@ -532,10 +551,8 @@ export function AnimatePanel() {
               </button>
             </div>
 
-            {!anim ? (
-              <p className="py-8 text-center text-[12px] leading-relaxed text-white/40">
-                Add a Screen Studio chat with 2+ messages to unlock the interactive Replay Timeline.
-              </p>
+            {!showReplay ? (
+              <MotionStudio />
             ) : (
               <div className="flex-1 flex flex-col justify-between">
                 {/* Horizontal tracks and scrubber ruler */}
