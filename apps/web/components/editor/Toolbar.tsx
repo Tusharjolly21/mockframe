@@ -11,6 +11,7 @@ import {
   Palette,
   Copy,
   Ellipsis,
+  Keyboard,
   FolderOpen,
   Image as ImageIcon,
   Layers,
@@ -96,6 +97,8 @@ export function Toolbar() {
     { icon: <Palette size={15} />, label: "Brand kit", hint: "Your colours and logo everywhere", run: () => setMore("brand") },
     { icon: <Sparkles size={15} />, label: "Realistic render", hint: "Photo-real device shots", pro: true, run: () => { setMore(null); setRenderOpen(true); } },
     { icon: <Clapperboard size={15} />, label: "Promo video", hint: "Animated app ad", pro: true, run: () => { setMore(null); window.dispatchEvent(new CustomEvent("framekit:promo-open")); } },
+    { icon: <Clapperboard size={15} />, label: "Motion presets", hint: "Float, orbit, reveal → MP4 / GIF", run: () => { setMore(null); window.dispatchEvent(new CustomEvent("framekit:animate-open")); } },
+    { icon: <Keyboard size={15} />, label: "Shortcuts", hint: "Align, distribute, copy/paste (?)", run: () => { setMore(null); window.dispatchEvent(new CustomEvent("framekit:shortcuts")); } },
     { icon: <RotateCcw size={15} />, label: "Start over", hint: "Clear the canvas", run: () => { setMore(null); startOver(); } },
   ];
 

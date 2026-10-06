@@ -6,6 +6,8 @@ import { getDevice } from "@framekit/devices";
 import { Box, RotateCw } from "lucide-react";
 import { resolveAsset, ingestFile } from "@/lib/assets";
 import { placeAsset } from "@/lib/sceneOps";
+import { measureLayerBoxes } from "@/lib/arrange";
+import { ArrangeBar } from "./ArrangeBar";
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
 import { useShotBatchStore } from "@/lib/shotBatch";
 
@@ -18,6 +20,10 @@ type Drag =
       starts: Record<string, { x: number; y: number }>; // all selected layers move together
       currentX: number;
       currentY: number;
+      /** smart-guide data: the moving selection's box and the lines it can snap to */
+      snapBox?: { l: number; t: number; r: number; b: number };
+      snapXs?: number[];
+      snapYs?: number[];
     }
   | { kind: "scale"; id: string; centerX: number; centerY: number; startDist: number; scale: number; currentScale: number }
   | { kind: "rotate"; id: string; centerX: number; centerY: number; startAngle: number; rotate: number; currentRotate: number }
@@ -50,7 +56,8 @@ export function CanvasStage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<Drag | null>(null);
   const [overlayBoxes, setOverlayBoxes] = useState<{ id: string; x: number; y: number; w: number; h: number }[]>([]);
-  const [snap, setSnap] = useState<{ x: boolean; y: boolean }>({ x: false, y: false });
+  const [guides, setGuides] = useState<{ xs: number[]; ys: number[] }>({ xs: [], ys: [] });
+  const [dragging, setDragging] = useState(false);
   const [dropHint, setDropHint] = useState(false);
   // ⊕ buttons centered on empty device screens (PostSpark's add-media affordance)
   const [emptyBoxes, setEmptyBoxes] = useState<{ id: string; x: number; y: number }[]>([]);
@@ -202,6 +209,7 @@ export function CanvasStage() {
 
   const beginDrag = (drag: Drag) => {
     dragRef.current = drag;
+    setDragging(true);
     sceneTemporal.getState().pause();
     const onMove = (e: PointerEvent) => {
       const d = dragRef.current;
@@ -209,19 +217,43 @@ export function CanvasStage() {
       if (d.kind === "move") {
         const pt = toCanvasPt(e.clientX, e.clientY);
         const anchor = d.starts[d.id];
-        let nx = anchor.x + (pt.x - d.startCX);
-        let ny = anchor.y + (pt.y - d.startCY);
-        const tol = 8 / zoom;
-        const sx = Math.abs(nx) < tol;
-        const sy = Math.abs(ny) < tol;
-        if (sx) nx = 0;
-        if (sy) ny = 0;
-        const dx = nx - anchor.x;
-        const dy = ny - anchor.y;
+        let dx = pt.x - d.startCX;
+        let dy = pt.y - d.startCY;
+        const tol = 7 / zoom;
+        let gx: number[] = [];
+        let gy: number[] = [];
+        if (d.snapBox && !e.altKey) {
+          // smart guides: snap the selection's edges/center to the canvas and
+          // to every other layer's edges/center (hold ⌥ to move freely)
+          const b = d.snapBox;
+          const snapAxis = (edges: number[], lines: number[]) => {
+            let best: { off: number; at: number } | null = null;
+            for (const e0 of edges)
+              for (const line of lines) {
+                const off = line - e0;
+                if (Math.abs(off) < tol && (!best || Math.abs(off) < Math.abs(best.off))) best = { off, at: line };
+              }
+            return best;
+          };
+          const bx = snapAxis([b.l + dx, (b.l + b.r) / 2 + dx, b.r + dx], d.snapXs ?? []);
+          const by = snapAxis([b.t + dy, (b.t + b.b) / 2 + dy, b.b + dy], d.snapYs ?? []);
+          if (bx) {
+            dx += bx.off;
+            gx = [bx.at];
+          }
+          if (by) {
+            dy += by.off;
+            gy = [by.at];
+          }
+        } else if (!e.altKey) {
+          const tolC = 8 / zoom;
+          if (Math.abs(anchor.x + dx) < tolC) dx = -anchor.x;
+          if (Math.abs(anchor.y + dy) < tolC) dy = -anchor.y;
+        }
         d.currentX = dx;
         d.currentY = dy;
         for (const id of Object.keys(d.starts)) setDragStyle(id, { "--fk-drag-x": `${dx}px`, "--fk-drag-y": `${dy}px` });
-        setSnap((current) => current.x === sx && current.y === sy ? current : { x: sx, y: sy });
+        setGuides((cur) => (cur.xs.join() === gx.join() && cur.ys.join() === gy.join() ? cur : { xs: gx, ys: gy }));
         return;
       }
       if (d.kind === "scale") {
@@ -285,7 +317,8 @@ export function CanvasStage() {
     const onUp = () => {
       const finished = dragRef.current;
       dragRef.current = null;
-      setSnap({ x: false, y: false });
+      setGuides({ xs: [], ys: [] });
+      setDragging(false);
       sceneTemporal.getState().resume();
       if (finished) {
         if (finished.kind === "move") {
@@ -392,7 +425,30 @@ export function CanvasStage() {
       }
       if (!starts[id]) return;
       const pt = toCanvasPt(e.clientX, e.clientY);
-      beginDrag({ kind: "move", id, startCX: pt.x, startCY: pt.y, starts, currentX: 0, currentY: 0 });
+      const W = scene.canvas.width;
+      const H = scene.canvas.height;
+      const moving = measureLayerBoxes(Object.keys(starts), W);
+      const others = measureLayerBoxes(scene.layers.map((l) => l.id).filter((x) => !starts[x]), W);
+      const snapBox = moving.length
+        ? {
+            l: Math.min(...moving.map((b) => b.l)),
+            t: Math.min(...moving.map((b) => b.t)),
+            r: Math.max(...moving.map((b) => b.r)),
+            b: Math.max(...moving.map((b) => b.b)),
+          }
+        : undefined;
+      beginDrag({
+        kind: "move",
+        id,
+        startCX: pt.x,
+        startCY: pt.y,
+        starts,
+        currentX: 0,
+        currentY: 0,
+        snapBox,
+        snapXs: [0, W / 2, W, ...others.flatMap((b) => [b.l, (b.l + b.r) / 2, b.r])],
+        snapYs: [0, H / 2, H, ...others.flatMap((b) => [b.t, (b.t + b.b) / 2, b.b])],
+      });
     } else {
       // empty area: just deselect — the canvas itself never moves
       select(null);
@@ -504,31 +560,19 @@ export function CanvasStage() {
         />
         </div>
 
-        {/* snap guides in canvas space */}
-        {snap.x && (
+        {/* smart guides in canvas space */}
+        {guides.xs.map((x) => (
           <div
-            style={{
-              position: "absolute",
-              left: scene.canvas.width / 2,
-              top: 0,
-              width: 1 / zoom,
-              height: scene.canvas.height,
-              background: "#f43f5e",
-            }}
+            key={`gx${x}`}
+            style={{ position: "absolute", left: x, top: 0, width: 1 / zoom, height: scene.canvas.height, background: "#f43f5e", pointerEvents: "none" }}
           />
-        )}
-        {snap.y && (
+        ))}
+        {guides.ys.map((y) => (
           <div
-            style={{
-              position: "absolute",
-              top: scene.canvas.height / 2,
-              left: 0,
-              height: 1 / zoom,
-              width: scene.canvas.width,
-              background: "#f43f5e",
-            }}
+            key={`gy${y}`}
+            style={{ position: "absolute", top: y, left: 0, height: 1 / zoom, width: scene.canvas.width, background: "#f43f5e", pointerEvents: "none" }}
           />
-        )}
+        ))}
       </div>
 
       {/* selection chrome — app overlay, never inside the renderer */}
@@ -562,6 +606,14 @@ export function CanvasStage() {
           </div>
         </div>
       ))}
+
+      {!dragging && overlayBoxes.length > 0 && (
+        <ArrangeBar
+          boxes={overlayBoxes}
+          hostW={containerRef.current?.clientWidth ?? 1200}
+          hostH={containerRef.current?.clientHeight ?? 800}
+        />
+      )}
 
       {/* ⊕ add media — centred in every empty device SCREEN (PostSpark-style:
           the white grid placeholder says "empty", the ⊕ says "add here"). */}
