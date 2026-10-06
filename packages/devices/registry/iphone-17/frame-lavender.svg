@@ -2,20 +2,67 @@
 <!--BODY-->
 <defs>
 <linearGradient id="fk_iphone-17_lavender_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8d2ea"/><stop offset="0.5" stop-color="#a89fc9"/><stop offset="1" stop-color="#cbc4e0"/></linearGradient>
-<linearGradient id="fk_iphone-17_lavender_btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d8d2ea"/><stop offset="1" stop-color="#cbc4e0"/></linearGradient>
+
+<linearGradient id="fk_iphone-17_lavender_edgeH" x1="0" y1="0" x2="1" y2="0">
+  <stop offset="0" stop-color="#000" stop-opacity="0.55"/>
+  <stop offset="0.004" stop-color="#fff" stop-opacity="0.05"/>
+  <stop offset="0.009" stop-color="#fff" stop-opacity="0.55"/>
+  <stop offset="0.018" stop-color="#fff" stop-opacity="0.06"/>
+  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+  <stop offset="0.982" stop-color="#fff" stop-opacity="0.04"/>
+  <stop offset="0.991" stop-color="#fff" stop-opacity="0.38"/>
+  <stop offset="0.996" stop-color="#000" stop-opacity="0.1"/>
+  <stop offset="1" stop-color="#000" stop-opacity="0.6"/>
+</linearGradient>
+<linearGradient id="fk_iphone-17_lavender_edgeV" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+  <stop offset="0.006" stop-color="#fff" stop-opacity="0.08"/>
+  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+  <stop offset="0.994" stop-color="#000" stop-opacity="0.12"/>
+  <stop offset="1" stop-color="#000" stop-opacity="0.5"/>
+</linearGradient>
+<linearGradient id="fk_iphone-17_lavender_btn_left" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000"/><stop offset="0.25" stop-color="#d8d2ea"/><stop offset="0.6" stop-color="#a89fc9"/><stop offset="1" stop-color="#cbc4e0"/></linearGradient>
+<linearGradient id="fk_iphone-17_lavender_btn_right" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#cbc4e0"/><stop offset="0.4" stop-color="#a89fc9"/><stop offset="0.75" stop-color="#d8d2ea"/><stop offset="1" stop-color="#000"/></linearGradient>
+<linearGradient id="fk_iphone-17_lavender_glass" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.07"/>
+  <stop offset="0.35" stop-color="#ffffff" stop-opacity="0.015"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</linearGradient>
 <radialGradient id="fk_iphone-17_lavender_sheen" cx="0.25" cy="0.05" r="1.4">
   <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
   <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
   <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
 </radialGradient>
 </defs>
-<rect x="2" y="510" width="16" height="97" rx="7" fill="url(#fk_iphone-17_lavender_btn)"/>
-<rect x="2" y="694" width="16" height="181" rx="7" fill="url(#fk_iphone-17_lavender_btn)"/>
-<rect x="2" y="903" width="16" height="181" rx="7" fill="url(#fk_iphone-17_lavender_btn)"/>
-<rect x="1292" y="641" width="16" height="302" rx="7" fill="url(#fk_iphone-17_lavender_btn)"/>
+<rect x="2" y="513" width="16" height="97" rx="7" fill="#000" opacity="0.28"/>
+<rect x="2" y="510" width="16" height="97" rx="7" fill="url(#fk_iphone-17_lavender_btn_left)"/>
+<rect x="5" y="516" width="2" height="85" rx="1" fill="#fff" opacity="0.35"/>
+<rect x="2" y="697" width="16" height="181" rx="7" fill="#000" opacity="0.28"/>
+<rect x="2" y="694" width="16" height="181" rx="7" fill="url(#fk_iphone-17_lavender_btn_left)"/>
+<rect x="5" y="700" width="2" height="169" rx="1" fill="#fff" opacity="0.35"/>
+<rect x="2" y="906" width="16" height="181" rx="7" fill="#000" opacity="0.28"/>
+<rect x="2" y="903" width="16" height="181" rx="7" fill="url(#fk_iphone-17_lavender_btn_left)"/>
+<rect x="5" y="909" width="2" height="169" rx="1" fill="#fff" opacity="0.35"/>
+<rect x="1292" y="644" width="16" height="302" rx="7" fill="#000" opacity="0.28"/>
+<rect x="1292" y="641" width="16" height="302" rx="7" fill="url(#fk_iphone-17_lavender_btn_right)"/>
+<rect x="1303" y="647" width="2" height="290" rx="1" fill="#fff" opacity="0.35"/>
 <path d="M204 12 H1106 A192 192 0 0 1 1298 204 V2522 A192 192 0 0 1 1106 2714 H204 A192 192 0 0 1 12 2522 V204 A192 192 0 0 1 204 12 Z" fill="url(#fk_iphone-17_lavender_rail)"/>
-<path d="M204 19 H1106 A185 185 0 0 1 1291 204 V2522 A185 185 0 0 1 1106 2707 H204 A185 185 0 0 1 19 2522 V204 A185 185 0 0 1 204 19 Z" fill="#100e16"/>
-<path d="M204 19 H1106 A185 185 0 0 1 1291 204 V2522 A185 185 0 0 1 1106 2707 H204 A185 185 0 0 1 19 2522 V204 A185 185 0 0 1 204 19 Z" fill="url(#fk_iphone-17_lavender_sheen)"/>
+<path d="M204 12 H1106 A192 192 0 0 1 1298 204 V2522 A192 192 0 0 1 1106 2714 H204 A192 192 0 0 1 12 2522 V204 A192 192 0 0 1 204 12 Z" fill="url(#fk_iphone-17_lavender_edgeH)"/>
+<path d="M204 12 H1106 A192 192 0 0 1 1298 204 V2522 A192 192 0 0 1 1106 2714 H204 A192 192 0 0 1 12 2522 V204 A192 192 0 0 1 204 12 Z" fill="url(#fk_iphone-17_lavender_edgeV)"/>
+<rect x="12" y="169.44" width="14" height="7" fill="#a89fc9" opacity="0.9"/><rect x="12" y="169.44" width="14" height="7" fill="#000" opacity="0.22"/>
+<rect x="1284" y="169.44" width="14" height="7" fill="#a89fc9" opacity="0.9"/><rect x="1284" y="169.44" width="14" height="7" fill="#000" opacity="0.22"/>
+<rect x="12" y="2556.56" width="14" height="7" fill="#a89fc9" opacity="0.9"/><rect x="12" y="2556.56" width="14" height="7" fill="#000" opacity="0.22"/>
+<rect x="1284" y="2556.56" width="14" height="7" fill="#a89fc9" opacity="0.9"/><rect x="1284" y="2556.56" width="14" height="7" fill="#000" opacity="0.22"/>
+<rect x="1015.08" y="12" width="7" height="14" fill="#a89fc9" opacity="0.9"/><rect x="1015.08" y="12" width="7" height="14" fill="#000" opacity="0.22"/>
+<rect x="294.92" y="2700" width="7" height="14" fill="#a89fc9" opacity="0.9"/><rect x="294.92" y="2700" width="7" height="14" fill="#000" opacity="0.22"/>
+<path d="M204 12.75 H1106 A191.25 191.25 0 0 1 1297.25 204 V2522 A191.25 191.25 0 0 1 1106 2713.25 H204 A191.25 191.25 0 0 1 12.75 2522 V204 A191.25 191.25 0 0 1 204 12.75 Z" fill="none" stroke="#000" stroke-opacity="0.55" stroke-width="1.5"/>
+<path d="M204 15 H1106 A189 189 0 0 1 1295 204 V2522 A189 189 0 0 1 1106 2711 H204 A189 189 0 0 1 15 2522 V204 A189 189 0 0 1 204 15 Z" fill="none" stroke="#fff" stroke-opacity="0.32" stroke-width="1.4"/>
+<path d="M204 24 H1106 A180 180 0 0 1 1286 204 V2522 A180 180 0 0 1 1106 2702 H204 A180 180 0 0 1 24 2522 V204 A180 180 0 0 1 204 24 Z" fill="#000" fill-opacity="0.65"/>
+<path d="M204 26 H1106 A178 178 0 0 1 1284 204 V2522 A178 178 0 0 1 1106 2700 H204 A178 178 0 0 1 26 2522 V204 A178 178 0 0 1 204 26 Z" fill="#100e16"/>
+<path d="M204 26 H1106 A178 178 0 0 1 1284 204 V2522 A178 178 0 0 1 1106 2700 H204 A178 178 0 0 1 26 2522 V204 A178 178 0 0 1 204 26 Z" fill="url(#fk_iphone-17_lavender_glass)"/>
+<path d="M204 26 H1106 A178 178 0 0 1 1284 204 V2522 A178 178 0 0 1 1106 2700 H204 A178 178 0 0 1 26 2522 V204 A178 178 0 0 1 204 26 Z" fill="url(#fk_iphone-17_lavender_sheen)"/>
+<path d="M204 27 H1106 A177 177 0 0 1 1283 204 V2522 A177 177 0 0 1 1106 2699 H204 A177 177 0 0 1 27 2522 V204 A177 177 0 0 1 204 27 Z" fill="none" stroke="#fff" stroke-opacity="0.07" stroke-width="2"/>
+<path d="M210 49 H1100 A161 161 0 0 1 1261 210 V2516 A161 161 0 0 1 1100 2677 H210 A161 161 0 0 1 49 2516 V210 A161 161 0 0 1 210 49 Z" fill="#000"/>
 <!--/BODY-->
 <!--SCREEN--><defs>
 <linearGradient id="fk_scr_iphone-17_lavender_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16a34a"/><stop offset="1" stop-color="#0891b2"/></linearGradient>
@@ -26,8 +73,12 @@
 <path d="M210 52 H1100 A158 158 0 0 1 1258 210 V2516 A158 158 0 0 1 1100 2674 H210 A158 158 0 0 1 52 2516 V210 A158 158 0 0 1 210 52 Z" fill="url(#fk_scr_iphone-17_lavender_b)"/>
 <path d="M210 52 H1100 A158 158 0 0 1 1258 210 V2516 A158 158 0 0 1 1100 2674 H210 A158 158 0 0 1 52 2516 V210 A158 158 0 0 1 210 52 Z" fill="url(#fk_scr_iphone-17_lavender_c)"/><!--/SCREEN-->
 <!--OVERLAY-->
-<rect x="483" y="84" width="344" height="104" rx="52" fill="#020204"/>
-<circle cx="775" cy="136" r="31.2" fill="#08080d"/>
-<circle cx="775" cy="136" r="14.560000000000002" fill="#141824"/>
-<circle cx="765.64" cy="124.56" r="5.2" fill="#2d3550" opacity="0.9"/><!--/OVERLAY-->
+<rect x="483" y="84" width="344" height="104" rx="52" fill="#000"/>
+<rect x="484" y="85" width="342" height="102" rx="51" fill="none" stroke="#1c1c22" stroke-width="1.5"/>
+<circle cx="775" cy="136" r="31.2" fill="#07070b"/>
+<circle cx="775" cy="136" r="22.88" fill="#0d1020" stroke="#1a2036" stroke-width="2"/>
+<circle cx="775" cy="136" r="11.44" fill="#16203a"/>
+<circle cx="766.68" cy="126.64" r="4.68" fill="#5a6ea0" opacity="0.8"/>
+<circle cx="547.48" cy="136" r="12.48" fill="#0a0a10"/>
+<path d="M210 52 H1100 A158 158 0 0 1 1258 210 V2516 A158 158 0 0 1 1100 2674 H210 A158 158 0 0 1 52 2516 V210 A158 158 0 0 1 210 52 Z" fill="none" stroke="#000" stroke-opacity="0.45" stroke-width="4"/><!--/OVERLAY-->
 </svg>

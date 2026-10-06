@@ -1,0 +1,54 @@
+{
+  "id": "pixel-10-pro",
+  "name": "Pixel 10 Pro",
+  "brand": "google",
+  "category": "phone",
+  "released": "2025-08",
+  "screen": {
+    "width": 1280,
+    "height": 2856,
+    "cornerRadius": 120
+  },
+  "aliases": [
+    "google pixel 10 pro"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "pixel 10 pro mockup"
+    ]
+  },
+  "wallpaper": [
+    "#4338ca",
+    "#0f172a",
+    "#a5b4fc"
+  ],
+  "frame": {
+    "width": 1396,
+    "height": 2972,
+    "screenRect": {
+      "x": 58,
+      "y": 58,
+      "width": 1280,
+      "height": 2856
+    },
+    "maskPath": "M178 58 H1218 A120 120 0 0 1 1338 178 V2794 A120 120 0 0 1 1218 2914 H178 A120 120 0 0 1 58 2794 V178 A120 120 0 0 1 178 58 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "obsidian",
+      "label": "Obsidian",
+      "svg": "frame-obsidian.svg"
+    },
+    {
+      "id": "moonstone",
+      "label": "Moonstone",
+      "svg": "frame-moonstone.svg"
+    },
+    {
+      "id": "jade",
+      "label": "Jade",
+      "svg": "frame-jade.svg"
+    }
+  ]
+}

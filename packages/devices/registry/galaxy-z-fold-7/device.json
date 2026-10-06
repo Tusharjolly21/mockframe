@@ -1,0 +1,57 @@
+{
+  "id": "galaxy-z-fold-7",
+  "name": "Galaxy Z Fold7",
+  "brand": "samsung",
+  "category": "phone",
+  "released": "2025-07",
+  "screen": {
+    "width": 1968,
+    "height": 2184,
+    "cornerRadius": 70
+  },
+  "aliases": [
+    "samsung galaxy z fold 7",
+    "z fold 7",
+    "fold7"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "galaxy z fold 7 mockup",
+      "z fold mockup"
+    ]
+  },
+  "wallpaper": [
+    "#1d4ed8",
+    "#0f172a",
+    "#93c5fd"
+  ],
+  "frame": {
+    "width": 2072,
+    "height": 2288,
+    "screenRect": {
+      "x": 52,
+      "y": 52,
+      "width": 1968,
+      "height": 2184
+    },
+    "maskPath": "M122 52 H1950 A70 70 0 0 1 2020 122 V2166 A70 70 0 0 1 1950 2236 H122 A70 70 0 0 1 52 2166 V122 A70 70 0 0 1 122 52 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "blue-shadow",
+      "label": "Blue Shadow",
+      "svg": "frame-blue-shadow.svg"
+    },
+    {
+      "id": "silver-shadow",
+      "label": "Silver Shadow",
+      "svg": "frame-silver-shadow.svg"
+    },
+    {
+      "id": "jetblack",
+      "label": "Jetblack",
+      "svg": "frame-jetblack.svg"
+    }
+  ]
+}

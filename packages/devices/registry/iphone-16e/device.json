@@ -1,0 +1,50 @@
+{
+  "id": "iphone-16e",
+  "name": "iPhone 16e",
+  "brand": "apple",
+  "category": "phone",
+  "released": "2025-02",
+  "screen": {
+    "width": 1170,
+    "height": 2532,
+    "cornerRadius": 150
+  },
+  "aliases": [
+    "apple iphone 16e",
+    "iphone se 4"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "iphone 16e mockup"
+    ]
+  },
+  "wallpaper": [
+    "#334155",
+    "#0f172a",
+    "#cbd5e1"
+  ],
+  "frame": {
+    "width": 1282,
+    "height": 2644,
+    "screenRect": {
+      "x": 56,
+      "y": 56,
+      "width": 1170,
+      "height": 2532
+    },
+    "maskPath": "M206 56 H1076 A150 150 0 0 1 1226 206 V2438 A150 150 0 0 1 1076 2588 H206 A150 150 0 0 1 56 2438 V206 A150 150 0 0 1 206 56 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "black",
+      "label": "Black",
+      "svg": "frame-black.svg"
+    },
+    {
+      "id": "white",
+      "label": "White",
+      "svg": "frame-white.svg"
+    }
+  ]
+}

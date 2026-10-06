@@ -1,0 +1,56 @@
+{
+  "id": "galaxy-s25",
+  "name": "Galaxy S25",
+  "brand": "samsung",
+  "category": "phone",
+  "released": "2025-01",
+  "screen": {
+    "width": 1080,
+    "height": 2340,
+    "cornerRadius": 90
+  },
+  "aliases": [
+    "samsung galaxy s25",
+    "s25"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "galaxy s25 mockup",
+      "samsung s25 mockup"
+    ]
+  },
+  "wallpaper": [
+    "#0e7490",
+    "#1e3a8a",
+    "#a5f3fc"
+  ],
+  "frame": {
+    "width": 1168,
+    "height": 2428,
+    "screenRect": {
+      "x": 44,
+      "y": 44,
+      "width": 1080,
+      "height": 2340
+    },
+    "maskPath": "M134 44 H1034 A90 90 0 0 1 1124 134 V2294 A90 90 0 0 1 1034 2384 H134 A90 90 0 0 1 44 2294 V134 A90 90 0 0 1 134 44 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "navy",
+      "label": "Navy",
+      "svg": "frame-navy.svg"
+    },
+    {
+      "id": "icyblue",
+      "label": "Icyblue",
+      "svg": "frame-icyblue.svg"
+    },
+    {
+      "id": "mint",
+      "label": "Mint",
+      "svg": "frame-mint.svg"
+    }
+  ]
+}

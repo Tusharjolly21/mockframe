@@ -1,0 +1,57 @@
+{
+  "id": "galaxy-z-flip-7",
+  "name": "Galaxy Z Flip7",
+  "brand": "samsung",
+  "category": "phone",
+  "released": "2025-07",
+  "screen": {
+    "width": 1080,
+    "height": 2520,
+    "cornerRadius": 96
+  },
+  "aliases": [
+    "samsung galaxy z flip 7",
+    "z flip 7",
+    "flip7"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "galaxy z flip mockup",
+      "z flip 7 mockup"
+    ]
+  },
+  "wallpaper": [
+    "#be185d",
+    "#1e1b4b",
+    "#f9a8d4"
+  ],
+  "frame": {
+    "width": 1172,
+    "height": 2612,
+    "screenRect": {
+      "x": 46,
+      "y": 46,
+      "width": 1080,
+      "height": 2520
+    },
+    "maskPath": "M142 46 H1030 A96 96 0 0 1 1126 142 V2470 A96 96 0 0 1 1030 2566 H142 A96 96 0 0 1 46 2470 V142 A96 96 0 0 1 142 46 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "coralred",
+      "label": "Coralred",
+      "svg": "frame-coralred.svg"
+    },
+    {
+      "id": "blue-shadow",
+      "label": "Blue Shadow",
+      "svg": "frame-blue-shadow.svg"
+    },
+    {
+      "id": "jetblack",
+      "label": "Jetblack",
+      "svg": "frame-jetblack.svg"
+    }
+  ]
+}

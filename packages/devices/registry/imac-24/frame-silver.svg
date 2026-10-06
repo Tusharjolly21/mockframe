@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4804 4063">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_imac-24_silver_frame" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef0f3"/><stop offset="1" stop-color="#c3c7ce"/></linearGradient>
+<linearGradient id="fk_imac-24_silver_chin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4d8de"/><stop offset="1" stop-color="#aeb3bb"/></linearGradient>
+<linearGradient id="fk_imac-24_silver_stand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef0f3"/><stop offset="1" stop-color="#c3c7ce"/></linearGradient>
+<linearGradient id="fk_imac-24_silver_standSide" x1="0" y1="0" x2="1" y2="0">
+  <stop offset="0" stop-color="#000" stop-opacity="0.35"/><stop offset="0.08" stop-color="#000" stop-opacity="0"/><stop offset="0.92" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+</linearGradient>
+<linearGradient id="fk_imac-24_silver_glass" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#fff" stop-opacity="0.08"/><stop offset="0.4" stop-color="#fff" stop-opacity="0"/>
+</linearGradient>
+</defs>
+<path d="M1833.96 3232 H2970.04 L3047.5 4017 H1756.5 Z" fill="url(#fk_imac-24_silver_stand)"/>
+<path d="M1833.96 3232 H2970.04 L3047.5 4017 H1756.5 Z" fill="url(#fk_imac-24_silver_standSide)"/>
+<rect x="1756.5" y="3242" width="1291" height="14" fill="#000" opacity="0.18"/>
+<path d="M1754.5 4015 H3049.5 A4 4 0 0 1 3053.5 4019 V4035 A14 14 0 0 1 3039.5 4049 H1764.5 A14 14 0 0 1 1750.5 4035 V4019 A4 4 0 0 1 1754.5 4015 Z" fill="url(#fk_imac-24_silver_stand)"/>
+<rect x="1750.5" y="4015" width="1303" height="3" fill="#fff" opacity="0.4"/>
+<path d="M52 12 H4752 A40 40 0 0 1 4792 52 V3202 A40 40 0 0 1 4752 3242 H52 A40 40 0 0 1 12 3202 V52 A40 40 0 0 1 52 12 Z" fill="url(#fk_imac-24_silver_frame)"/>
+<path d="M52.75 12.75 H4751.25 A40 40 0 0 1 4791.25 52.75 V3201.25 A40 40 0 0 1 4751.25 3241.25 H52.75 A40 40 0 0 1 12.75 3201.25 V52.75 A40 40 0 0 1 52.75 12.75 Z" fill="none" stroke="#000" stroke-opacity="0.35" stroke-width="1.5"/>
+<path d="M12 2772 H4792 V3202 A40 40 0 0 1 4752 3242 H52 A40 40 0 0 1 12 3202 V2772 Z" fill="url(#fk_imac-24_silver_chin)"/>
+<path d="M52 42 H4752 A10 10 0 0 1 4762 52 V2792 A10 10 0 0 1 4752 2802 H52 A10 10 0 0 1 42 2792 V52 A10 10 0 0 1 52 42 Z" fill="#f4f4f6"/>
+<path d="M52 42 H4752 A10 10 0 0 1 4762 52 V2792 A10 10 0 0 1 4752 2802 H52 A10 10 0 0 1 42 2792 V52 A10 10 0 0 1 52 42 Z" fill="url(#fk_imac-24_silver_glass)"/>
+<rect x="160" y="160" width="4484" height="2524" fill="#000"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_imac-24_silver_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0ea5e9"/><stop offset="1" stop-color="#1e3a8a"/></linearGradient>
+<radialGradient id="fk_scr_imac-24_silver_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#bae6fd" stop-opacity="0.95"/><stop offset="1" stop-color="#bae6fd" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_imac-24_silver_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M162 162 H4642 V2682 H162 V162 Z" fill="url(#fk_scr_imac-24_silver_a)"/>
+<path d="M162 162 H4642 V2682 H162 V162 Z" fill="url(#fk_scr_imac-24_silver_b)"/>
+<path d="M162 162 H4642 V2682 H162 V162 Z" fill="url(#fk_scr_imac-24_silver_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<circle cx="2402" cy="102" r="7" fill="#1a1d26"/>
+<rect x="162" y="162" width="4480" height="2520" fill="none" stroke="#000" stroke-opacity="0.35" stroke-width="3"/><!--/OVERLAY-->
+</svg>

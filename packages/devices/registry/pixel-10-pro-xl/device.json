@@ -1,0 +1,49 @@
+{
+  "id": "pixel-10-pro-xl",
+  "name": "Pixel 10 Pro XL",
+  "brand": "google",
+  "category": "phone",
+  "released": "2025-08",
+  "screen": {
+    "width": 1344,
+    "height": 2992,
+    "cornerRadius": 126
+  },
+  "aliases": [
+    "google pixel 10 pro xl"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "pixel 10 pro xl mockup"
+    ]
+  },
+  "wallpaper": [
+    "#0f766e",
+    "#0f172a",
+    "#99f6e4"
+  ],
+  "frame": {
+    "width": 1460,
+    "height": 3108,
+    "screenRect": {
+      "x": 58,
+      "y": 58,
+      "width": 1344,
+      "height": 2992
+    },
+    "maskPath": "M184 58 H1276 A126 126 0 0 1 1402 184 V2924 A126 126 0 0 1 1276 3050 H184 A126 126 0 0 1 58 2924 V184 A126 126 0 0 1 184 58 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "obsidian",
+      "label": "Obsidian",
+      "svg": "frame-obsidian.svg"
+    },
+    {
+      "id": "porcelain",
+      "label": "Porcelain",
+      "svg": "frame-porcelain.svg"
+    }
+  ]
+}

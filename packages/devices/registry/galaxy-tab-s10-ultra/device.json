@@ -1,0 +1,51 @@
+{
+  "id": "galaxy-tab-s10-ultra",
+  "name": "Galaxy Tab S10 Ultra",
+  "brand": "samsung",
+  "category": "tablet",
+  "released": "2024-10",
+  "screen": {
+    "width": 2960,
+    "height": 1848,
+    "cornerRadius": 50
+  },
+  "aliases": [
+    "samsung galaxy tab s10 ultra",
+    "android tablet"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "galaxy tab mockup",
+      "android tablet mockup"
+    ]
+  },
+  "wallpaper": [
+    "#334155",
+    "#0f172a",
+    "#cbd5e1"
+  ],
+  "frame": {
+    "width": 3108,
+    "height": 1996,
+    "screenRect": {
+      "x": 74,
+      "y": 74,
+      "width": 2960,
+      "height": 1848
+    },
+    "maskPath": "M124 74 H2984 A50 50 0 0 1 3034 124 V1872 A50 50 0 0 1 2984 1922 H124 A50 50 0 0 1 74 1872 V124 A50 50 0 0 1 124 74 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "moonstone-gray",
+      "label": "Moonstone Gray",
+      "svg": "frame-moonstone-gray.svg"
+    },
+    {
+      "id": "platinum-silver",
+      "label": "Platinum Silver",
+      "svg": "frame-platinum-silver.svg"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "id": "galaxy-s25-edge",
+  "name": "Galaxy S25 Edge",
+  "brand": "samsung",
+  "category": "phone",
+  "released": "2025-05",
+  "screen": {
+    "width": 1440,
+    "height": 3120,
+    "cornerRadius": 110
+  },
+  "aliases": [
+    "samsung galaxy s25 edge",
+    "s25 edge"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "galaxy s25 edge mockup"
+    ]
+  },
+  "wallpaper": [
+    "#475569",
+    "#0f172a",
+    "#e2e8f0"
+  ],
+  "frame": {
+    "width": 1528,
+    "height": 3208,
+    "screenRect": {
+      "x": 44,
+      "y": 44,
+      "width": 1440,
+      "height": 3120
+    },
+    "maskPath": "M154 44 H1374 A110 110 0 0 1 1484 154 V3054 A110 110 0 0 1 1374 3164 H154 A110 110 0 0 1 44 3054 V154 A110 110 0 0 1 154 44 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "titanium-silver",
+      "label": "Titanium Silver",
+      "svg": "frame-titanium-silver.svg"
+    },
+    {
+      "id": "titanium-jetblack",
+      "label": "Titanium Jetblack",
+      "svg": "frame-titanium-jetblack.svg"
+    },
+    {
+      "id": "titanium-icyblue",
+      "label": "Titanium Icyblue",
+      "svg": "frame-titanium-icyblue.svg"
+    }
+  ]
+}

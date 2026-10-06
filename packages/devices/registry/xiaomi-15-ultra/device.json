@@ -1,0 +1,50 @@
+{
+  "id": "xiaomi-15-ultra",
+  "name": "Xiaomi 15 Ultra",
+  "brand": "xiaomi",
+  "category": "phone",
+  "released": "2025-03",
+  "screen": {
+    "width": 1440,
+    "height": 3200,
+    "cornerRadius": 130
+  },
+  "aliases": [
+    "xiaomi 15 ultra"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "xiaomi 15 ultra mockup",
+      "xiaomi mockup"
+    ]
+  },
+  "wallpaper": [
+    "#b45309",
+    "#1c1917",
+    "#fde68a"
+  ],
+  "frame": {
+    "width": 1532,
+    "height": 3292,
+    "screenRect": {
+      "x": 46,
+      "y": 46,
+      "width": 1440,
+      "height": 3200
+    },
+    "maskPath": "M176 46 H1356 A130 130 0 0 1 1486 176 V3116 A130 130 0 0 1 1356 3246 H176 A130 130 0 0 1 46 3116 V176 A130 130 0 0 1 176 46 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "black",
+      "label": "Black",
+      "svg": "frame-black.svg"
+    },
+    {
+      "id": "silver-chrome",
+      "label": "Silver Chrome",
+      "svg": "frame-silver-chrome.svg"
+    }
+  ]
+}

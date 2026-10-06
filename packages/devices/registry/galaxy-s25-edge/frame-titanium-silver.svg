@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1528 3208">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_galaxy-s25-edge_titanium-silver_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eceef1"/><stop offset="0.5" stop-color="#b9bdc4"/><stop offset="1" stop-color="#dfe2e6"/></linearGradient>
+
+<linearGradient id="fk_galaxy-s25-edge_titanium-silver_edgeH" x1="0" y1="0" x2="1" y2="0">
+  <stop offset="0" stop-color="#000" stop-opacity="0.55"/>
+  <stop offset="0.004" stop-color="#fff" stop-opacity="0.05"/>
+  <stop offset="0.009" stop-color="#fff" stop-opacity="0.55"/>
+  <stop offset="0.018" stop-color="#fff" stop-opacity="0.06"/>
+  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+  <stop offset="0.982" stop-color="#fff" stop-opacity="0.04"/>
+  <stop offset="0.991" stop-color="#fff" stop-opacity="0.38"/>
+  <stop offset="0.996" stop-color="#000" stop-opacity="0.1"/>
+  <stop offset="1" stop-color="#000" stop-opacity="0.6"/>
+</linearGradient>
+<linearGradient id="fk_galaxy-s25-edge_titanium-silver_edgeV" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+  <stop offset="0.006" stop-color="#fff" stop-opacity="0.08"/>
+  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+  <stop offset="0.994" stop-color="#000" stop-opacity="0.12"/>
+  <stop offset="1" stop-color="#000" stop-opacity="0.5"/>
+</linearGradient>
+<linearGradient id="fk_galaxy-s25-edge_titanium-silver_btn_left" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000"/><stop offset="0.25" stop-color="#eceef1"/><stop offset="0.6" stop-color="#b9bdc4"/><stop offset="1" stop-color="#dfe2e6"/></linearGradient>
+<linearGradient id="fk_galaxy-s25-edge_titanium-silver_btn_right" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#dfe2e6"/><stop offset="0.4" stop-color="#b9bdc4"/><stop offset="0.75" stop-color="#eceef1"/><stop offset="1" stop-color="#000"/></linearGradient>
+<linearGradient id="fk_galaxy-s25-edge_titanium-silver_glass" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.07"/>
+  <stop offset="0.35" stop-color="#ffffff" stop-opacity="0.015"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</linearGradient>
+<radialGradient id="fk_galaxy-s25-edge_titanium-silver_sheen" cx="0.25" cy="0.05" r="1.4">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect x="1510" y="695" width="16" height="210" rx="7" fill="#000" opacity="0.28"/>
+<rect x="1510" y="692" width="16" height="210" rx="7" fill="url(#fk_galaxy-s25-edge_titanium-silver_btn_right)"/>
+<rect x="1521" y="698" width="2" height="198" rx="1" fill="#fff" opacity="0.35"/>
+<rect x="1510" y="955" width="16" height="300" rx="7" fill="#000" opacity="0.28"/>
+<rect x="1510" y="952" width="16" height="300" rx="7" fill="url(#fk_galaxy-s25-edge_titanium-silver_btn_right)"/>
+<rect x="1521" y="958" width="2" height="288" rx="1" fill="#fff" opacity="0.35"/>
+<path d="M172 12 H1356 A160 160 0 0 1 1516 172 V3036 A160 160 0 0 1 1356 3196 H172 A160 160 0 0 1 12 3036 V172 A160 160 0 0 1 172 12 Z" fill="url(#fk_galaxy-s25-edge_titanium-silver_rail)"/>
+<path d="M172 12 H1356 A160 160 0 0 1 1516 172 V3036 A160 160 0 0 1 1356 3196 H172 A160 160 0 0 1 12 3036 V172 A160 160 0 0 1 172 12 Z" fill="url(#fk_galaxy-s25-edge_titanium-silver_edgeH)"/>
+<path d="M172 12 H1356 A160 160 0 0 1 1516 172 V3036 A160 160 0 0 1 1356 3196 H172 A160 160 0 0 1 12 3036 V172 A160 160 0 0 1 172 12 Z" fill="url(#fk_galaxy-s25-edge_titanium-silver_edgeV)"/>
+<rect x="12" y="143.2" width="12" height="7" fill="#b9bdc4" opacity="0.9"/><rect x="12" y="143.2" width="12" height="7" fill="#000" opacity="0.22"/>
+<rect x="1504" y="143.2" width="12" height="7" fill="#b9bdc4" opacity="0.9"/><rect x="1504" y="143.2" width="12" height="7" fill="#000" opacity="0.22"/>
+<rect x="12" y="3064.8" width="12" height="7" fill="#b9bdc4" opacity="0.9"/><rect x="12" y="3064.8" width="12" height="7" fill="#000" opacity="0.22"/>
+<rect x="1504" y="3064.8" width="12" height="7" fill="#b9bdc4" opacity="0.9"/><rect x="1504" y="3064.8" width="12" height="7" fill="#000" opacity="0.22"/>
+<rect x="1185.1200000000001" y="12" width="7" height="12" fill="#b9bdc4" opacity="0.9"/><rect x="1185.1200000000001" y="12" width="7" height="12" fill="#000" opacity="0.22"/>
+<rect x="342.88" y="3184" width="7" height="12" fill="#b9bdc4" opacity="0.9"/><rect x="342.88" y="3184" width="7" height="12" fill="#000" opacity="0.22"/>
+<path d="M172 12.75 H1356 A159.25 159.25 0 0 1 1515.25 172 V3036 A159.25 159.25 0 0 1 1356 3195.25 H172 A159.25 159.25 0 0 1 12.75 3036 V172 A159.25 159.25 0 0 1 172 12.75 Z" fill="none" stroke="#000" stroke-opacity="0.55" stroke-width="1.5"/>
+<path d="M172 15 H1356 A157 157 0 0 1 1513 172 V3036 A157 157 0 0 1 1356 3193 H172 A157 157 0 0 1 15 3036 V172 A157 157 0 0 1 172 15 Z" fill="none" stroke="#fff" stroke-opacity="0.32" stroke-width="1.4"/>
+<path d="M172 22 H1356 A150 150 0 0 1 1506 172 V3036 A150 150 0 0 1 1356 3186 H172 A150 150 0 0 1 22 3036 V172 A150 150 0 0 1 172 22 Z" fill="#000" fill-opacity="0.65"/>
+<path d="M172 24 H1356 A148 148 0 0 1 1504 172 V3036 A148 148 0 0 1 1356 3184 H172 A148 148 0 0 1 24 3036 V172 A148 148 0 0 1 172 24 Z" fill="#0e0f12"/>
+<path d="M172 24 H1356 A148 148 0 0 1 1504 172 V3036 A148 148 0 0 1 1356 3184 H172 A148 148 0 0 1 24 3036 V172 A148 148 0 0 1 172 24 Z" fill="url(#fk_galaxy-s25-edge_titanium-silver_glass)"/>
+<path d="M172 24 H1356 A148 148 0 0 1 1504 172 V3036 A148 148 0 0 1 1356 3184 H172 A148 148 0 0 1 24 3036 V172 A148 148 0 0 1 172 24 Z" fill="url(#fk_galaxy-s25-edge_titanium-silver_sheen)"/>
+<path d="M172 25 H1356 A147 147 0 0 1 1503 172 V3036 A147 147 0 0 1 1356 3183 H172 A147 147 0 0 1 25 3036 V172 A147 147 0 0 1 172 25 Z" fill="none" stroke="#fff" stroke-opacity="0.07" stroke-width="2"/>
+<path d="M154 41 H1374 A113 113 0 0 1 1487 154 V3054 A113 113 0 0 1 1374 3167 H154 A113 113 0 0 1 41 3054 V154 A113 113 0 0 1 154 41 Z" fill="#000"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_galaxy-s25-edge_titanium-silver_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#475569"/><stop offset="1" stop-color="#0f172a"/></linearGradient>
+<radialGradient id="fk_scr_galaxy-s25-edge_titanium-silver_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#e2e8f0" stop-opacity="0.95"/><stop offset="1" stop-color="#e2e8f0" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_galaxy-s25-edge_titanium-silver_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M154 44 H1374 A110 110 0 0 1 1484 154 V3054 A110 110 0 0 1 1374 3164 H154 A110 110 0 0 1 44 3054 V154 A110 110 0 0 1 154 44 Z" fill="url(#fk_scr_galaxy-s25-edge_titanium-silver_a)"/>
+<path d="M154 44 H1374 A110 110 0 0 1 1484 154 V3054 A110 110 0 0 1 1374 3164 H154 A110 110 0 0 1 44 3054 V154 A110 110 0 0 1 154 44 Z" fill="url(#fk_scr_galaxy-s25-edge_titanium-silver_b)"/>
+<path d="M154 44 H1374 A110 110 0 0 1 1484 154 V3054 A110 110 0 0 1 1374 3164 H154 A110 110 0 0 1 44 3054 V154 A110 110 0 0 1 154 44 Z" fill="url(#fk_scr_galaxy-s25-edge_titanium-silver_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<circle cx="764" cy="136" r="38" fill="#000" opacity="0.5"/>
+<circle cx="764" cy="136" r="36" fill="#020204"/>
+<circle cx="764" cy="136" r="22.32" fill="#0b0e18" stroke="#1b2134" stroke-width="2"/>
+<circle cx="764" cy="136" r="10.799999999999999" fill="#141c30"/>
+<circle cx="756.08" cy="127" r="5.040000000000001" fill="#5a6ea0" opacity="0.75"/>
+<path d="M154 44 H1374 A110 110 0 0 1 1484 154 V3054 A110 110 0 0 1 1374 3164 H154 A110 110 0 0 1 44 3054 V154 A110 110 0 0 1 154 44 Z" fill="none" stroke="#000" stroke-opacity="0.45" stroke-width="4"/><!--/OVERLAY-->
+</svg>

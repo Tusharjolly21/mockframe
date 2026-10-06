@@ -1,0 +1,51 @@
+{
+  "id": "pixel-10-pro-fold",
+  "name": "Pixel 10 Pro Fold",
+  "brand": "google",
+  "category": "phone",
+  "released": "2025-10",
+  "screen": {
+    "width": 2076,
+    "height": 2152,
+    "cornerRadius": 80
+  },
+  "aliases": [
+    "google pixel 10 pro fold",
+    "pixel fold"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "pixel fold mockup",
+      "pixel 10 pro fold mockup"
+    ]
+  },
+  "wallpaper": [
+    "#0f766e",
+    "#0f172a",
+    "#99f6e4"
+  ],
+  "frame": {
+    "width": 2228,
+    "height": 2304,
+    "screenRect": {
+      "x": 76,
+      "y": 76,
+      "width": 2076,
+      "height": 2152
+    },
+    "maskPath": "M156 76 H2072 A80 80 0 0 1 2152 156 V2148 A80 80 0 0 1 2072 2228 H156 A80 80 0 0 1 76 2148 V156 A80 80 0 0 1 156 76 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "moonstone",
+      "label": "Moonstone",
+      "svg": "frame-moonstone.svg"
+    },
+    {
+      "id": "jade",
+      "label": "Jade",
+      "svg": "frame-jade.svg"
+    }
+  ]
+}

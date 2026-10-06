@@ -1,0 +1,50 @@
+{
+  "id": "ipad-pro-13-landscape",
+  "name": "iPad Pro 13″ · Landscape",
+  "brand": "apple",
+  "category": "tablet",
+  "released": "2024-05",
+  "screen": {
+    "width": 2752,
+    "height": 2064,
+    "cornerRadius": 46
+  },
+  "aliases": [
+    "ipad landscape mockup",
+    "ipad pro horizontal"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "ipad landscape mockup"
+    ]
+  },
+  "wallpaper": [
+    "#7c3aed",
+    "#1e3a8a",
+    "#f0abfc"
+  ],
+  "frame": {
+    "width": 2916,
+    "height": 2228,
+    "screenRect": {
+      "x": 82,
+      "y": 82,
+      "width": 2752,
+      "height": 2064
+    },
+    "maskPath": "M128 82 H2788 A46 46 0 0 1 2834 128 V2100 A46 46 0 0 1 2788 2146 H128 A46 46 0 0 1 82 2100 V128 A46 46 0 0 1 128 82 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "space-black",
+      "label": "Space Black",
+      "svg": "frame-space-black.svg"
+    },
+    {
+      "id": "silver",
+      "label": "Silver",
+      "svg": "frame-silver.svg"
+    }
+  ]
+}

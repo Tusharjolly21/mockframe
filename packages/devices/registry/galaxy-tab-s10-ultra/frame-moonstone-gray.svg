@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3108 1996">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_galaxy-tab-s10-ultra_moonstone-gray_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c7f86"/><stop offset="0.5" stop-color="#45474c"/><stop offset="1" stop-color="#6c6f75"/></linearGradient>
+
+<linearGradient id="fk_galaxy-tab-s10-ultra_moonstone-gray_edgeH" x1="0" y1="0" x2="1" y2="0">
+  <stop offset="0" stop-color="#000" stop-opacity="0.55"/>
+  <stop offset="0.004" stop-color="#fff" stop-opacity="0.05"/>
+  <stop offset="0.009" stop-color="#fff" stop-opacity="0.55"/>
+  <stop offset="0.018" stop-color="#fff" stop-opacity="0.06"/>
+  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+  <stop offset="0.982" stop-color="#fff" stop-opacity="0.04"/>
+  <stop offset="0.991" stop-color="#fff" stop-opacity="0.38"/>
+  <stop offset="0.996" stop-color="#000" stop-opacity="0.1"/>
+  <stop offset="1" stop-color="#000" stop-opacity="0.6"/>
+</linearGradient>
+<linearGradient id="fk_galaxy-tab-s10-ultra_moonstone-gray_edgeV" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+  <stop offset="0.006" stop-color="#fff" stop-opacity="0.08"/>
+  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+  <stop offset="0.994" stop-color="#000" stop-opacity="0.12"/>
+  <stop offset="1" stop-color="#000" stop-opacity="0.5"/>
+</linearGradient>
+<linearGradient id="fk_galaxy-tab-s10-ultra_moonstone-gray_btn_left" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000"/><stop offset="0.25" stop-color="#7c7f86"/><stop offset="0.6" stop-color="#45474c"/><stop offset="1" stop-color="#6c6f75"/></linearGradient>
+<linearGradient id="fk_galaxy-tab-s10-ultra_moonstone-gray_btn_right" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6c6f75"/><stop offset="0.4" stop-color="#45474c"/><stop offset="0.75" stop-color="#7c7f86"/><stop offset="1" stop-color="#000"/></linearGradient>
+<linearGradient id="fk_galaxy-tab-s10-ultra_moonstone-gray_glass" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.07"/>
+  <stop offset="0.35" stop-color="#ffffff" stop-opacity="0.015"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</linearGradient>
+<radialGradient id="fk_galaxy-tab-s10-ultra_moonstone-gray_sheen" cx="0.25" cy="0.05" r="1.4">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect x="3090" y="315" width="16" height="160" rx="7" fill="#000" opacity="0.28"/>
+<rect x="3090" y="312" width="16" height="160" rx="7" fill="url(#fk_galaxy-tab-s10-ultra_moonstone-gray_btn_right)"/>
+<rect x="3101" y="318" width="2" height="148" rx="1" fill="#fff" opacity="0.35"/>
+<path d="M108 12 H3000 A96 96 0 0 1 3096 108 V1888 A96 96 0 0 1 3000 1984 H108 A96 96 0 0 1 12 1888 V108 A96 96 0 0 1 108 12 Z" fill="url(#fk_galaxy-tab-s10-ultra_moonstone-gray_rail)"/>
+<path d="M108 12 H3000 A96 96 0 0 1 3096 108 V1888 A96 96 0 0 1 3000 1984 H108 A96 96 0 0 1 12 1888 V108 A96 96 0 0 1 108 12 Z" fill="url(#fk_galaxy-tab-s10-ultra_moonstone-gray_edgeH)"/>
+<path d="M108 12 H3000 A96 96 0 0 1 3096 108 V1888 A96 96 0 0 1 3000 1984 H108 A96 96 0 0 1 12 1888 V108 A96 96 0 0 1 108 12 Z" fill="url(#fk_galaxy-tab-s10-ultra_moonstone-gray_edgeV)"/>
+
+<path d="M108 12.75 H3000 A95.25 95.25 0 0 1 3095.25 108 V1888 A95.25 95.25 0 0 1 3000 1983.25 H108 A95.25 95.25 0 0 1 12.75 1888 V108 A95.25 95.25 0 0 1 108 12.75 Z" fill="none" stroke="#000" stroke-opacity="0.55" stroke-width="1.5"/>
+<path d="M108 15 H3000 A93 93 0 0 1 3093 108 V1888 A93 93 0 0 1 3000 1981 H108 A93 93 0 0 1 15 1888 V108 A93 93 0 0 1 108 15 Z" fill="none" stroke="#fff" stroke-opacity="0.32" stroke-width="1.4"/>
+<path d="M108 28 H3000 A80 80 0 0 1 3080 108 V1888 A80 80 0 0 1 3000 1968 H108 A80 80 0 0 1 28 1888 V108 A80 80 0 0 1 108 28 Z" fill="#000" fill-opacity="0.65"/>
+<path d="M108 30 H3000 A78 78 0 0 1 3078 108 V1888 A78 78 0 0 1 3000 1966 H108 A78 78 0 0 1 30 1888 V108 A78 78 0 0 1 108 30 Z" fill="#0b0b0d"/>
+<path d="M108 30 H3000 A78 78 0 0 1 3078 108 V1888 A78 78 0 0 1 3000 1966 H108 A78 78 0 0 1 30 1888 V108 A78 78 0 0 1 108 30 Z" fill="url(#fk_galaxy-tab-s10-ultra_moonstone-gray_glass)"/>
+<path d="M108 30 H3000 A78 78 0 0 1 3078 108 V1888 A78 78 0 0 1 3000 1966 H108 A78 78 0 0 1 30 1888 V108 A78 78 0 0 1 108 30 Z" fill="url(#fk_galaxy-tab-s10-ultra_moonstone-gray_sheen)"/>
+<path d="M108 31 H3000 A77 77 0 0 1 3077 108 V1888 A77 77 0 0 1 3000 1965 H108 A77 77 0 0 1 31 1888 V108 A77 77 0 0 1 108 31 Z" fill="none" stroke="#fff" stroke-opacity="0.07" stroke-width="2"/>
+<path d="M124 71 H2984 A53 53 0 0 1 3037 124 V1872 A53 53 0 0 1 2984 1925 H124 A53 53 0 0 1 71 1872 V124 A53 53 0 0 1 124 71 Z" fill="#000"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_galaxy-tab-s10-ultra_moonstone-gray_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#334155"/><stop offset="1" stop-color="#0f172a"/></linearGradient>
+<radialGradient id="fk_scr_galaxy-tab-s10-ultra_moonstone-gray_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#cbd5e1" stop-opacity="0.95"/><stop offset="1" stop-color="#cbd5e1" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_galaxy-tab-s10-ultra_moonstone-gray_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M124 74 H2984 A50 50 0 0 1 3034 124 V1872 A50 50 0 0 1 2984 1922 H124 A50 50 0 0 1 74 1872 V124 A50 50 0 0 1 124 74 Z" fill="url(#fk_scr_galaxy-tab-s10-ultra_moonstone-gray_a)"/>
+<path d="M124 74 H2984 A50 50 0 0 1 3034 124 V1872 A50 50 0 0 1 2984 1922 H124 A50 50 0 0 1 74 1872 V124 A50 50 0 0 1 124 74 Z" fill="url(#fk_scr_galaxy-tab-s10-ultra_moonstone-gray_b)"/>
+<path d="M124 74 H2984 A50 50 0 0 1 3034 124 V1872 A50 50 0 0 1 2984 1922 H124 A50 50 0 0 1 74 1872 V124 A50 50 0 0 1 124 74 Z" fill="url(#fk_scr_galaxy-tab-s10-ultra_moonstone-gray_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<circle cx="1554" cy="52" r="14" fill="#020204"/>
+<circle cx="1554" cy="52" r="8" fill="#0e1422" stroke="#1d2436" stroke-width="2"/>
+<circle cx="1551.5" cy="49.5" r="2.2" fill="#5a6ea0" opacity="0.7"/>
+<path d="M124 74 H2984 A50 50 0 0 1 3034 124 V1872 A50 50 0 0 1 2984 1922 H124 A50 50 0 0 1 74 1872 V124 A50 50 0 0 1 124 74 Z" fill="none" stroke="#000" stroke-opacity="0.45" stroke-width="4"/><!--/OVERLAY-->
+</svg>
