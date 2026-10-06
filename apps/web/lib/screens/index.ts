@@ -20,6 +20,8 @@ import { renderYouTube } from "./youtube";
 import { renderIMessage } from "./imessage";
 import { renderReddit } from "./reddit";
 import { renderSignal } from "./signal";
+import { renderGMessages } from "./gmessages";
+import { renderWeChat } from "./wechat";
 import { renderSlack } from "./slack";
 import { renderSocial, renderSocialCard } from "./social";
 import { renderInstagram } from "./instagram";
@@ -255,6 +257,10 @@ export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): {
       return flat(renderSlack(doc, lookupUrl));
     case "signal":
       return flat(renderSignal(doc, dp));
+    case "gmessages":
+      return flat(renderGMessages(doc, dp));
+    case "wechat":
+      return flat(renderWeChat(doc, dp));
     case "reddit":
       return flat(renderReddit(doc, lookupUrl));
     case "line":

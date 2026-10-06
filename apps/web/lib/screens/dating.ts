@@ -68,8 +68,8 @@ export function renderDating(doc: DatingDoc, photoUrl?: string): string {
   const barColor = dark ? "#f2f2f2" : "#111111";
   parts.push(statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: barColor, platform }));
 
-  /* header: brand wordmark + tabs */
-  parts.push(brandHeader(doc.brand, cfg));
+  /* header: brand wordmark + header actions */
+  parts.push(brandHeader(doc.brand, cfg, dark));
 
   /* card */
   const clip = `dcard`;
@@ -159,7 +159,7 @@ export function renderDating(doc: DatingDoc, photoUrl?: string): string {
   parts.push(`<rect x="${CARD_X}" y="${CARD_Y}" width="${CARD_W}" height="${CARD_H}" rx="18" fill="none" stroke="rgba(0,0,0,0.06)" stroke-width="1"/>`);
 
   /* action buttons */
-  const by = CARD_B + 52;
+  const by = CARD_B + 44;
   for (const b of cfg.buttons) {
     parts.push(
       `<circle cx="${b.cx}" cy="${by}" r="${b.r}" fill="${dark ? "#1c1c1e" : "#ffffff"}" style="filter:drop-shadow(0 4px 12px rgba(0,0,0,0.16))"/>`,
@@ -167,25 +167,66 @@ export function renderDating(doc: DatingDoc, photoUrl?: string): string {
     );
   }
 
+  /* bottom tab bar, like the real apps' main navigation */
+  parts.push(tabBar(doc.brand, cfg, dark));
   parts.push(homeIndicator(barColor, platform));
   return parts.join("\n");
 }
 
+/* ------------------------------- tab bar ------------------------------------- */
+
+function tabBar(brand: DatingBrand, cfg: BrandCfg, dark: boolean): string {
+  const y = SH - 58;
+  const idle = dark ? "#6e6e73" : "#b7bcc6";
+  const line = dark ? "#1f1f22" : "#eceef2";
+  const out: string[] = [`<rect y="${y - 26}" width="${SW}" height="0.8" fill="${line}"/>`];
+  const icons =
+    brand === "tinder"
+      ? [
+          (cx: number) => flameIcon(cx - 11, y - 12, "url(#tflame)"),
+          (cx: number) => `<g fill="${idle}"><rect x="${cx - 10}" y="${y - 10}" width="8.5" height="8.5" rx="2"/><rect x="${cx + 1.5}" y="${y - 10}" width="8.5" height="8.5" rx="2"/><rect x="${cx - 10}" y="${y + 1.5}" width="8.5" height="8.5" rx="2"/><rect x="${cx + 1.5}" y="${y + 1.5}" width="8.5" height="8.5" rx="2"/></g>`,
+          (cx: number) => `<path d="M${cx} ${y - 11} l2.6 7.2 7.4 0.6 -5.7 4.7 1.9 7.3 -6.2 -4.2 -6.2 4.2 1.9 -7.3 -5.7 -4.7 7.4 -0.6 Z" fill="${idle}"/>`,
+          (cx: number) => `<path d="M${cx - 11} ${y - 1} a11 10 0 1 1 5 8.4 l-6 2.4 1.6 -5.4 a10 10 0 0 1 -0.6 -5.4 Z" fill="${idle}"/>`,
+          (cx: number) => `<circle cx="${cx}" cy="${y - 5}" r="5.5" fill="${idle}"/><path d="M${cx - 10} ${y + 11} a10 9 0 0 1 20 0 Z" fill="${idle}"/>`,
+        ]
+      : [
+          (cx: number) => `<circle cx="${cx}" cy="${y - 5}" r="5.5" fill="none" stroke="${idle}" stroke-width="2"/><path d="M${cx - 10} ${y + 11} a10 9 0 0 1 20 0" fill="none" stroke="${idle}" stroke-width="2"/>`,
+          (cx: number) => `<path d="M${cx - 9} ${y - 9} h18 M${cx - 9} ${y} h18 M${cx - 9} ${y + 9} h18" stroke="${idle}" stroke-width="2.2" stroke-linecap="round"/>`,
+          (cx: number) => `<path d="M${cx} ${y - 12} l10.4 6 v12 l-10.4 6 -10.4 -6 v-12 Z" fill="${cfg.grad[1]}"/><path d="M${cx - 5} ${y - 2} h10 M${cx - 5} ${y + 3} h10" stroke="#1d1d1f" stroke-width="2" stroke-linecap="round"/>`,
+          (cx: number) => `<path d="M${cx} ${y + 10} s-10 -5.6 -10 -11.6 a5 5 0 0 1 10 -1.4 a5 5 0 0 1 10 1.4 c0 6 -10 11.6 -10 11.6 Z" fill="none" stroke="${idle}" stroke-width="2"/>`,
+          (cx: number) => `<path d="M${cx - 11} ${y - 1} a11 10 0 1 1 5 8.4 l-6 2.4 1.6 -5.4 a10 10 0 0 1 -0.6 -5.4 Z" fill="none" stroke="${idle}" stroke-width="2"/>`,
+        ];
+  const step = SW / icons.length;
+  icons.forEach((draw, i) => out.push(draw(step * (i + 0.5))));
+  return out.join("");
+}
+
 /* ------------------------------- header -------------------------------------- */
 
-function brandHeader(brand: DatingBrand, cfg: BrandCfg): string {
+function brandHeader(brand: DatingBrand, cfg: BrandCfg, dark: boolean): string {
   const y = 78;
+  const ink = dark ? "#d1d1d6" : "#505965";
+  // sliders (filters) + bell, the two header actions both apps show
+  const sliders = (x: number) =>
+    `<g stroke="${ink}" stroke-width="2" stroke-linecap="round"><path d="M${x} ${y - 7} h18 M${x} ${y + 1} h18 M${x} ${y + 9} h18"/></g>` +
+    `<g fill="${dark ? "#0d0d0f" : "#ffffff"}" stroke="${ink}" stroke-width="2"><circle cx="${x + 12}" cy="${y - 7}" r="3"/><circle cx="${x + 5}" cy="${y + 1}" r="3"/><circle cx="${x + 13}" cy="${y + 9}" r="3"/></g>`;
+  const bell = (x: number) =>
+    `<path d="M${x + 9} ${y - 10} a6.5 6.5 0 0 1 6.5 6.5 v5 l2.5 3.5 h-18 l2.5 -3.5 v-5 a6.5 6.5 0 0 1 6.5 -6.5 Z M${x + 6.5} ${y + 8} a2.6 2.6 0 0 0 5 0" fill="none" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/>`;
   if (brand === "tinder") {
     return (
       `<defs><linearGradient id="tflame" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${cfg.grad[0]}"/><stop offset="1" stop-color="${cfg.grad[1]}"/></linearGradient></defs>` +
-      flameIcon(SW / 2 - 44, y - 12, "url(#tflame)") +
-      `<text font-family="'Helvetica Neue',Arial,sans-serif" font-size="24" font-weight="800" fill="url(#tflame)" x="${SW / 2 - 26}" y="${y + 5}">tinder</text>`
+      flameIcon(18, y - 12, "url(#tflame)") +
+      `<text font-family="'Helvetica Neue',Arial,sans-serif" font-size="25" font-weight="800" letter-spacing="-0.6" fill="url(#tflame)" x="40" y="${y + 5}">tinder</text>` +
+      bell(SW - 76) +
+      sliders(SW - 40)
     );
   }
-  // bumble
+  // bumble: profile ring (left), wordmark (center), filters (right)
   return (
+    `<circle cx="30" cy="${y}" r="12" fill="none" stroke="${ink}" stroke-width="2"/><circle cx="30" cy="${y - 3}" r="4" fill="${ink}"/><path d="M22 ${y + 8} a8 6 0 0 1 16 0" fill="${ink}"/>` +
     `<text font-family="'Helvetica Neue',Arial,sans-serif" font-size="24" font-weight="800" fill="#f5b500" text-anchor="middle" x="${SW / 2}" y="${y + 5}">bumble</text>` +
-    `<circle cx="${SW / 2 + 58}" cy="${y - 4}" r="5" fill="#f5b500"/>`
+    `<circle cx="${SW / 2 + 58}" cy="${y - 4}" r="5" fill="#f5b500"/>` +
+    sliders(SW - 40)
   );
 }
 

@@ -17,7 +17,7 @@ import {
   wrapText,
 } from "./common";
 import { fontFor } from "./fonts";
-import { resolveWallpaper } from "./wallpapers";
+import { doodleLayer, resolveWallpaper } from "./wallpapers";
 import type { TelegramDoc, WhatsAppTicks } from "./types";
 
 /**
@@ -57,11 +57,14 @@ export function renderTelegram(
     blue: "#3d9bef",
   };
 
+  // Telegram's default chat background: a soft multi-stop pastel gradient with
+  // the tinted doodle pattern over it (dark: deep navy + faint doodles)
   const wallpaper = dark
-    ? `<rect width="${SW}" height="${SH}" fill="#0e1621"/>`
+    ? `<rect width="${SW}" height="${SH}" fill="#0e1621"/>${doodleLayer("#1c2b3d", 0.9)}`
     : `<defs><linearGradient id="tgw" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#d3e0ec"/><stop offset="0.5" stop-color="#c7dcd8"/><stop offset="1" stop-color="#d8e4d3"/>
-      </linearGradient></defs><rect width="${SW}" height="${SH}" fill="url(#tgw)"/>`;
+        <stop offset="0" stop-color="#cfe3b4"/><stop offset="0.45" stop-color="#a9d4c0"/><stop offset="1" stop-color="#8fc3d8"/>
+      </linearGradient><radialGradient id="tgw2" cx="0.85" cy="0.15" r="0.7"><stop offset="0" stop-color="#f3eeb0" stop-opacity="0.8"/><stop offset="1" stop-color="#f3eeb0" stop-opacity="0"/></radialGradient></defs>
+      <rect width="${SW}" height="${SH}" fill="url(#tgw)"/><rect width="${SW}" height="${SH}" fill="url(#tgw2)"/>${doodleLayer("#3d6b55", 0.16)}`;
 
   const parts: string[] = [resolveWallpaper(doc.wallpaper, dark) ?? wallpaper];
 

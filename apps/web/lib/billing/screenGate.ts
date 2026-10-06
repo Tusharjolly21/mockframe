@@ -28,6 +28,8 @@ export const PRO_CHAT_APPS = new Set<ScreenApp>([
   "telegram",
   "snapchat",
   "signal",
+  "gmessages",
+  "wechat",
   "line",
   "discord",
   "slack",

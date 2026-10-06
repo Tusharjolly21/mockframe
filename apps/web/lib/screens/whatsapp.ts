@@ -22,7 +22,7 @@ import {
   wrapText,
 } from "./common";
 import { fontFor } from "./fonts";
-import { resolveWallpaper } from "./wallpapers";
+import { resolveWallpaper, whatsappDoodle } from "./wallpapers";
 import type { WhatsAppDoc, WhatsAppGroupDoc, WhatsAppTicks } from "./types";
 
 /**
@@ -50,7 +50,6 @@ export function renderWhatsApp(
     baseTextBlock(lines, { font, ...o });
   const dark = !!doc.chrome.dark;
   const c = {
-    wallpaper: dark ? "#0b141a" : "#ece5dd",
     headerBg: dark ? "#1f2c34" : "#f6f6f6",
     hairline: dark ? "#2c3942" : "#dcdcdc",
     text: dark ? "#e9edef" : "#000000",
@@ -64,7 +63,7 @@ export function renderWhatsApp(
     chipText: dark ? "#8696a0" : "#54656f",
   };
 
-  const parts: string[] = [resolveWallpaper(doc.wallpaper, dark) ?? `<rect width="${SW}" height="${SH}" fill="${c.wallpaper}"/>`];
+  const parts: string[] = [resolveWallpaper(doc.wallpaper, dark) ?? whatsappDoodle(dark)];
 
   /* header */
   const HEADER_H = 102;
@@ -303,7 +302,6 @@ export function renderWhatsAppGroup(doc: WhatsAppGroupDoc, avatarUrl?: string): 
   // No — sender labels change bubble height, so lay out directly here.
   const dark = !!doc.chrome.dark;
   const c = {
-    wallpaper: dark ? "#0b141a" : "#ece5dd",
     headerBg: dark ? "#1f2c34" : "#f6f6f6",
     hairline: dark ? "#2c3942" : "#dcdcdc",
     text: dark ? "#e9edef" : "#000000",
@@ -315,7 +313,7 @@ export function renderWhatsAppGroup(doc: WhatsAppGroupDoc, avatarUrl?: string): 
     accent: dark ? "#00a884" : "#008069", // WhatsApp green — unified across iOS/Android (never iOS blue)
   };
 
-  const parts: string[] = [resolveWallpaper(doc.wallpaper, dark) ?? `<rect width="${SW}" height="${SH}" fill="${c.wallpaper}"/>`];
+  const parts: string[] = [resolveWallpaper(doc.wallpaper, dark) ?? whatsappDoodle(dark)];
 
   const HEADER_H = 102;
   parts.push(
