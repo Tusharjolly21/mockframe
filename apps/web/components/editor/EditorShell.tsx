@@ -36,6 +36,7 @@ export function EditorShell({
   openPromoOnLoad = false,
   openReplayOnLoad = false,
   remixId,
+  fromTemplate = false,
   embedded = false,
 }: {
   initialDeviceId?: string;
@@ -49,6 +50,8 @@ export function EditorShell({
   openPromoOnLoad?: boolean;
   openReplayOnLoad?: boolean;
   remixId?: string;
+  /** a template page already loaded a scene, so skip the first-run picker */
+  fromTemplate?: boolean;
   embedded?: boolean;
 }) {
   const setScene = useSceneStore((s) => s.setScene);
@@ -421,7 +424,7 @@ export function EditorShell({
       <ExportNextSteps />
       <StarterModal
         embedded={embedded}
-        deepLinked={Boolean(initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad || remixId)}
+        deepLinked={Boolean(initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad || remixId || fromTemplate)}
       />
     </div>
   );

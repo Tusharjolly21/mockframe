@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowUpRight, Link2 } from "lucide-react";
@@ -15,6 +15,8 @@ import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
 import { SocialBrandIcon } from "@/components/SocialBrandIcon";
+import { APP_SCREEN_TEMPLATES, APP_TEMPLATE_CATEGORIES, type AppTemplateCategory } from "@/lib/appScreenTemplates";
+import { encodeScreenAsset, resolveScreenAsset } from "@/lib/screens";
 
 const TOOL_BACKGROUNDS: Record<string, CSSProperties> = {
   code: {
@@ -62,6 +64,72 @@ const TOOL_BACKGROUNDS: Record<string, CSSProperties> = {
   },
 };
 
+/** "App screenshots": phone + editable app screen templates, filterable by kind. */
+function AppScreenTemplates() {
+  const [cat, setCat] = useState<AppTemplateCategory | "All">("All");
+  // rendered after mount: screen text is measured with the browser's fonts,
+  // so a server render would differ and break hydration
+  const [previews, setPreviews] = useState<Record<string, string | null>>({});
+  useEffect(() => {
+    setPreviews(Object.fromEntries(APP_SCREEN_TEMPLATES.map((t) => [t.slug, resolveScreenAsset(encodeScreenAsset(t.doc()))?.url ?? null])));
+  }, []);
+  const shown = APP_SCREEN_TEMPLATES.filter((t) => cat === "All" || t.category === cat);
+  return (
+    <>
+      <Reveal>
+        <div id="app-screens" className="mt-14 flex flex-col justify-between gap-4 border-b border-white/10 pb-4 sm:flex-row sm:items-end">
+          <div>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-zinc-500">App screenshots</p>
+            <h2 className="mt-1 text-[24px] font-semibold">Realistic app screens in real phones</h2>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {(["All", ...APP_TEMPLATE_CATEGORIES] as const).map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setCat(c)}
+                className={`rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors ${cat === c ? "bg-white text-zinc-950" : "bg-white/[0.06] text-zinc-400 hover:text-white"}`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Reveal>
+      <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        {shown.map((t) => (
+          <Link
+            key={t.slug}
+            href={`/templates/${t.slug}`}
+            className="group block overflow-hidden rounded-lg border border-white/10 bg-[#101116] transition-colors hover:border-white/25"
+          >
+            <div className="relative flex h-72 flex-col items-center overflow-hidden px-4 pt-5" style={{ background: t.cardBg }}>
+              {t.headline ? (
+                <p className="mb-3 text-center text-[13px] font-extrabold tracking-tight" style={{ color: t.ink ?? "#ffffff" }}>{t.headline}</p>
+              ) : null}
+              <div className="w-[52%] shrink-0 rounded-[22px] bg-zinc-900 p-[5px] shadow-[0_18px_30px_rgba(0,0,0,.35)] ring-1 ring-white/20 transition-transform duration-300 group-hover:-translate-y-1">
+                {previews[t.slug] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={previews[t.slug]!} alt={`${t.label} screen`} className="w-full rounded-[18px]" />
+                ) : (
+                  <div className="aspect-[402/874] w-full rounded-[18px] bg-white/10" />
+                )}
+              </div>
+            </div>
+            <div className="border-t border-white/[0.08] p-4">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-[14px] font-semibold">{t.label}</h3>
+                <ArrowUpRight size={15} className="shrink-0 text-zinc-600 transition-colors group-hover:text-white" />
+              </div>
+              <p className="mt-1 text-[12px] leading-5 text-zinc-500">{t.blurb}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </>
+  );
+}
+
 export default function TemplatesPage() {
   const router = useRouter();
   const [postUrl, setPostUrl] = useState("");
@@ -87,7 +155,7 @@ export default function TemplatesPage() {
               <h1 className="mt-2 text-[34px] font-medium leading-tight sm:text-[46px]">Templates</h1>
             </div>
             <p className="max-w-md text-[14px] leading-6 text-zinc-400">
-              Import a public post, build a data card, or choose a real device scene. Everything opens fully editable.
+              Pick a realistic app screen, import a public post, build a data card, or choose a real device scene. Everything opens fully editable.
             </p>
           </div>
         </Reveal>
@@ -150,6 +218,8 @@ export default function TemplatesPage() {
             </div>
           </section>
         </Reveal>
+
+        <AppScreenTemplates />
 
         <Reveal>
           <div className="mt-14 flex items-end justify-between border-b border-white/10 pb-4">
