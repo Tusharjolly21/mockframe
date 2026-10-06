@@ -5,9 +5,9 @@ import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
 import { Pause, Play } from "lucide-react";
 
 /**
- * The homepage product demo: a real screen recording of the editor (auto-zoom,
- * cursor, export) rendered by scripts/demo-video. Autoplays muted and loops
- * only while on screen; reduced-motion visitors get the poster and a play button.
+ * The homepage product demo: a real screen recording of the editor (cursor,
+ * auto-zoom, end card) in public/demo. Autoplays muted and loops only while on
+ * screen; reduced-motion visitors get the poster and a play button.
  */
 export function DemoVideo({ src, poster }: { src: string; poster: string }) {
   const reduce = useReducedMotion();
