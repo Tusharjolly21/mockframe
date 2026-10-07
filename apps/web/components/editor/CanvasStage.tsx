@@ -45,6 +45,7 @@ export function CanvasStage() {
   // ⊕ buttons centered on empty device screens (PostSpark's add-media affordance)
   const [emptyBoxes, setEmptyBoxes] = useState<{ id: string; x: number; y: number }[]>([]);
   const emptyPickRef = useRef<HTMLInputElement>(null);
+  const emptyBtnRefs = useRef(new Map<string, HTMLButtonElement>());
   const emptyTargetRef = useRef<string | null>(null);
 
   /* ------------------------------ fit to view ------------------------------ */
@@ -149,6 +150,34 @@ export function CanvasStage() {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [entrance.nonce, entrance.layerId, measureOverlays]);
+
+  // ⊕ rides on its device: every frame, pin each button to its screen anchor's
+  // live position, so it moves WITH the device during a drag, scale, rotate,
+  // 3D tilt or motion preview instead of catching up after the device settles
+  const emptyKey = emptyBoxes.map((b) => b.id).join();
+  useEffect(() => {
+    if (!emptyKey) return;
+    let raf = 0;
+    const tick = () => {
+      const host = containerRef.current;
+      if (host) {
+        const hr = host.getBoundingClientRect();
+        for (const [id, btn] of emptyBtnRefs.current) {
+          const node = host.querySelector(`[data-layer-id="${id}"]`);
+          const a = (node?.querySelector("[data-screen-anchor]") ?? node) as HTMLElement | null;
+          if (!a) continue;
+          const r = a.getBoundingClientRect();
+          const x = `${r.left - hr.left + r.width / 2}px`;
+          const y = `${r.top - hr.top + r.height / 2}px`;
+          if (btn.style.left !== x) btn.style.left = x;
+          if (btn.style.top !== y) btn.style.top = y;
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [emptyKey]);
 
   /* ------------------------------ coordinates ------------------------------ */
   const toCanvasPt = useCallback(
@@ -548,6 +577,10 @@ export function CanvasStage() {
       {emptyBoxes.map((b) => (
         <button
           key={b.id}
+          ref={(el) => {
+            if (el) emptyBtnRefs.current.set(b.id, el);
+            else emptyBtnRefs.current.delete(b.id);
+          }}
           title="Add screenshot — click, or drag an image in"
           onClick={(e) => {
             e.stopPropagation();
