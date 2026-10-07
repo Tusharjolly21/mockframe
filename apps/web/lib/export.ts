@@ -4,6 +4,7 @@ import { toCanvas } from "html-to-image";
 import type { SceneDocument } from "@framekit/scene";
 import { applyWatermark } from "./watermark";
 import { exportWatermarkOpts } from "./customWatermark";
+import { ensureSceneFonts } from "./fonts";
 
 export type ExportFormat = "png" | "jpeg" | "webp";
 export type ExportQuality = "best" | "balanced" | "compact";
@@ -34,6 +35,10 @@ export async function exportScene(
   if (outW * outH > 33_000_000) {
     throw new Error(`${outW}×${outH} exceeds the browser canvas limit — pick a smaller size`);
   }
+  // a face still downloading would be skipped by the font embedder and the
+  // text would fall back in the file while looking right on the canvas
+  await ensureSceneFonts(scene);
+  await document.fonts.ready;
   const canvas = await toCanvas(node, {
     // canvasWidth/Height alone define the output size — combining them with
     // pixelRatio would multiply the two and double-scale the export

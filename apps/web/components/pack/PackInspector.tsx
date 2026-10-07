@@ -14,8 +14,9 @@ import { usePackStore } from "@/lib/pack/store";
 import { firebaseFetch } from "@/lib/firebaseClient";
 import { LaunchCopyPanel } from "@/components/ai/LaunchCopyPanel";
 import { StyleThumb } from "@/components/pack/StyleThumb";
+import { useCustomFamilies } from "@/components/editor/FontPicker";
+import { FONT_CATALOG, FONT_CATEGORIES, ensureGoogleFont } from "@/lib/fonts";
 
-const FONTS = ["Inter", "Georgia", "system-ui"] as const;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -29,6 +30,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 /** Right rail: style gallery, captions for the active screen, brand + targets. */
 export function PackInspector() {
   const { pack, activeScreenId, update } = usePackStore();
+  const customFonts = useCustomFamilies();
   const screen = pack.screens.find((s) => s.id === activeScreenId) ?? pack.screens[0];
   const cap = screen.captions.en ?? { title: "" };
   const [recaptionBusy, setRecaptionBusy] = useState(false);
@@ -160,11 +162,31 @@ export function PackInspector() {
           </label>
           <select
             value={pack.style.fontFamily}
-            onChange={(e) => update((p) => ({ ...p, style: { ...p.style, fontFamily: e.target.value } }))}
+            onChange={(e) => {
+              const fontFamily = e.target.value;
+              void ensureGoogleFont(fontFamily);
+              update((p) => ({ ...p, style: { ...p.style, fontFamily } }));
+            }}
             className="flex-1 rounded-md border border-white/10 bg-black/30 px-2 py-1.5 text-[12px]"
           >
-            {FONTS.map((f) => (
-              <option key={f} value={f}>{f}</option>
+            {/* packs saved before the catalog may use a family it doesn't list */}
+            {!FONT_CATALOG.some((f) => f.family === pack.style.fontFamily) &&
+              !customFonts.some((c) => c.family === pack.style.fontFamily) && (
+                <option value={pack.style.fontFamily}>{pack.style.fontFamily}</option>
+              )}
+            {customFonts.length > 0 && (
+              <optgroup label="Your fonts">
+                {customFonts.map((c) => (
+                  <option key={c.family} value={c.family}>{c.family}</option>
+                ))}
+              </optgroup>
+            )}
+            {FONT_CATEGORIES.map((cat) => (
+              <optgroup key={cat} label={cat}>
+                {FONT_CATALOG.filter((f) => f.category === cat).map((f) => (
+                  <option key={f.family} value={f.family}>{f.family}</option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </div>

@@ -6,6 +6,7 @@ import type { SceneDocument } from "@framekit/scene";
 import { resolveAsset } from "./assets";
 import { applyWatermark } from "./watermark";
 import { exportWatermarkOpts } from "./customWatermark";
+import { ensureSceneFonts } from "./fonts";
 import { buildZip, type ZipEntry } from "./zip";
 
 /**
@@ -25,6 +26,8 @@ export async function renderSceneToPng(scene: SceneDocument, scale: number, wate
     root.render(<SceneRenderer scene={scene} resolveAsset={resolveAsset} panoramaIdx={panoramaIdx} panoramaTotal={panoramaTotal} />);
     // let React commit + local data-URL images decode
     await new Promise((r) => setTimeout(r, 120));
+    await ensureSceneFonts(scene);
+    await document.fonts.ready;
     const node = holder.firstElementChild as HTMLElement | null;
     if (!node) throw new Error("render failed");
     const { toCanvas } = await import("html-to-image");
