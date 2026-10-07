@@ -59,6 +59,7 @@ const COLS: { title: string; links: [string, string][] }[] = [
       ["/guides", "Guides"],
       ["/changelog", "Changelog"],
       ["/developers/automations", "Automations"],
+      ["/license", "Commercial license"],
       ["/privacy", "Privacy policy"],
     ],
   },

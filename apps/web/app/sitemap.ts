@@ -40,6 +40,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/guides`, lastModified: UPDATED.guides, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/changelog`, lastModified: UPDATED.site, changeFrequency: "weekly", priority: 0.5 },
     { url: `${SITE_URL}/privacy`, lastModified: UPDATED.site, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${SITE_URL}/license`, lastModified: UPDATED.site, changeFrequency: "yearly", priority: 0.4 },
     // NOTE: /editor is intentionally omitted — it's noindex (an app screen).
   ];
 

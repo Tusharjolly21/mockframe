@@ -29,6 +29,7 @@ const SECTIONS: { title: string; body: (string | { list: string[] })[] }[] = [
           "Drafts / My scenes — saving a draft stores the scene and its images under your account until you delete the draft.",
           "Share links — the exported image is stored so the link works, and the link expires automatically after 7 days.",
           "Custom mockup devices — your calibrated device photo is stored under your account until you delete the device.",
+          "Uploaded fonts — font files you add for text are kept in your browser and synced to your account (or guest session) so they follow you, until you delete them from the font menu. Very large font files stay in your browser only.",
           "My templates — saved templates store the composition and its styling assets (never your screenshots) until you delete them.",
           "Realistic renders (Pro) — your screenshot is uploaded so our rendering partner (Mockuuups) can composite it onto a device photo; the partner processes it per their privacy policy.",
           "Product feedback — messages and optional contact details are stored so we can respond and improve the product. Showcase submissions are never published automatically.",
