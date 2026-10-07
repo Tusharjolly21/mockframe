@@ -180,7 +180,8 @@ export const CARD_LOOKS: Record<TemplateApp, CardLook> = {
     css: "linear-gradient(160deg,#eef2ff,#c7d2fe 55%,#a5b4fc)",
   },
   "appstore-promo": {
-    width: 1440, height: 1080, fill: 0.86,
+    // full-bleed: the card is the whole App Store event-card graphic
+    width: 1920, height: 1080, fill: 1,
     background: linBg(160, ["#e9e9f2", "#cfd0e3"]),
     css: "linear-gradient(160deg,#e9e9f2,#cfd0e3)",
   },

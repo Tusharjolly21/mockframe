@@ -77,7 +77,12 @@ export function textWidth(s: string, size: number): number {
   return w * size;
 }
 
-export function wrapText(text: string, size: number, maxW: number): string[] {
+/**
+ * Greedy word wrap. A word wider than the whole line stays on its own line
+ * (shrink-to-fit callers detect that and step the size down) unless
+ * `breakLongWords` is set, which splits it by characters (URLs, CJK runs).
+ */
+export function wrapText(text: string, size: number, maxW: number, breakLongWords = false): string[] {
   const out: string[] = [];
   for (const hard of text.split("\n")) {
     const words = hard.split(/\s+/).filter(Boolean);
@@ -88,8 +93,8 @@ export function wrapText(text: string, size: number, maxW: number): string[] {
     let cur = "";
     for (const word of words) {
       const t = cur ? `${cur} ${word}` : word;
-      if (textWidth(t, size) <= maxW || (!cur && textWidth(word, size) <= maxW)) cur = t;
-      else if (textWidth(word, size) > maxW) {
+      if (textWidth(t, size) <= maxW || (!cur && (!breakLongWords || textWidth(word, size) <= maxW))) cur = t;
+      else if (breakLongWords && textWidth(word, size) > maxW) {
         // a token wider than the whole line (long URL, CJK run): break it by characters
         if (cur) out.push(cur);
         let chunk = "";

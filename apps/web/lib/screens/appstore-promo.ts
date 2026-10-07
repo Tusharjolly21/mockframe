@@ -3,6 +3,7 @@
 import { getDevice, getVariant } from "@framekit/devices";
 import { esc, systemFont, textWidth, truncate, wrapText } from "./common";
 import type { AppStorePromoDoc, PromoWebFrame } from "./types";
+import { renderPromoStage } from "./appstore-promo-stage";
 
 /**
  * App Store promo card: a launch poster in the App Store's own vernacular.
@@ -26,17 +27,17 @@ export function appStorePromoCardSize(doc: AppStorePromoDoc): { width: number; h
 }
 
 /** #rgb / #rrggbb → [r,g,b]; falls back to indigo for anything else */
-function rgb(hex: string): [number, number, number] {
+export function rgb(hex: string): [number, number, number] {
   const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex.trim());
   if (!m) return [99, 102, 241];
   const h = m[1].length === 3 ? [...m[1]].map((c) => c + c).join("") : m[1];
   return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)) as [number, number, number];
 }
 
-const luminance = ([r, g, b]: [number, number, number]) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+export const luminance = ([r, g, b]: [number, number, number]) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
 
 /** one laurel branch: pointed leaves along an arc, curving up around the award text */
-function laurel(cx: number, cy: number, r: number, side: -1 | 1, color: string): string {
+export function laurel(cx: number, cy: number, r: number, side: -1 | 1, color: string): string {
   const pt = (deg: number) => {
     const a = (deg * Math.PI) / 180;
     return { x: cx - side * Math.cos(a) * r * 0.62, y: cy + Math.sin(a) * r };
@@ -66,7 +67,7 @@ function laurel(cx: number, cy: number, r: number, side: -1 | 1, color: string):
   return `<g fill="${color}"><polyline points="${stem.join(" ")}" fill="none" stroke="${color}" stroke-width="${(r * 0.045).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>${leaves.join("")}</g>`;
 }
 
-function stars(x: number, y: number, size: number, value: number, on: string, off: string): string {
+export function stars(x: number, y: number, size: number, value: number, on: string, off: string): string {
   const pts = (cx: number, cy: number, R: number) => {
     const out: string[] = [];
     for (let i = 0; i < 10; i++) {
@@ -84,11 +85,11 @@ function stars(x: number, y: number, size: number, value: number, on: string, of
 }
 
 /** "https://www.example.com/path" → "example.com" */
-function domainOf(url: string): string {
+export function domainOf(url: string): string {
   return url.trim().replace(/^[a-z]+:\/\//i, "").replace(/^www\./i, "").replace(/\/.*$/, "");
 }
 
-interface BrowserOpts {
+export interface BrowserOpts {
   x: number;
   y: number;
   w: number;
@@ -102,7 +103,7 @@ interface BrowserOpts {
 }
 
 /** a desktop browser window: Safari, Chrome or minimal chrome around a page */
-function browserWindow(o: BrowserOpts): string {
+export function browserWindow(o: BrowserOpts): string {
   const { x, y, w, h, style, dark, domain, font } = o;
   const u = w / 1000; // chrome scales with the window
   const r = 16 * u;
@@ -163,6 +164,7 @@ function browserWindow(o: BrowserOpts): string {
 }
 
 export function renderAppStorePromo(doc: AppStorePromoDoc, avatarUrl?: string, screenshotUrl?: string, webShotUrl?: string): string {
+  if ((doc.layout ?? "stage") === "stage") return renderPromoStage(doc, avatarUrl, screenshotUrl, webShotUrl);
   const { width: W, height: H } = appStorePromoCardSize(doc);
   const k = Math.min(W / 1200, H / 900);
   // the Light/Dark switch writes chrome.dark; older docs carry `dark`

@@ -141,7 +141,7 @@ export function renderSocialCard(doc: SocialPostDoc, avatarUrl?: string, lookupU
       cy += 76;
 
       // body text
-      const lines = wrapText(doc.text, size, contentW);
+      const lines = wrapText(doc.text, size, contentW, true);
       lines.forEach((line, i) => {
         if (line) parts.push(tintedLine(line, { font, x: inX, y: cy + i * lineH + size, size, color: c.text, accent }));
       });
@@ -250,7 +250,7 @@ export function renderSocial(doc: SocialPostDoc, avatarUrl?: string, lookupUrl?:
   cy = nameY + (net === "linkedin" ? 44 : 30) + GAP;
 
   /* body text */
-  const lines = wrapText(doc.text, FONT, cardW - M * 2);
+  const lines = wrapText(doc.text, FONT, cardW - M * 2, true);
   parts.push(textBlock(lines, { x: inX, y: cy, size: FONT, lineHeight: LINE_H, color: c.text }));
   cy += lines.length * LINE_H + GAP;
 
@@ -310,7 +310,7 @@ export function renderSocial(doc: SocialPostDoc, avatarUrl?: string, lookupUrl?:
     const cm = comments[i];
     const cx = inX;
     parts.push(avatar(cm.user, cx + 16, cy + 4, 16, `soc${i}`, cm.avatar ? lookupUrl?.(cm.avatar) : undefined));
-    const lines = wrapText(cm.text, 14.5, cardW - 44 - M);
+    const lines = wrapText(cm.text, 14.5, cardW - 44 - M, true);
     if (net === "threads") {
       // flat: name + @ then text
       let hx = cx + 42 + textWidth(cm.user, 13.5) + 5;

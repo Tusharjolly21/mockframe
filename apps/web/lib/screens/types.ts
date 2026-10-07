@@ -241,6 +241,14 @@ export interface AppStorePromoDoc {
   webScreenshot?: string;
   /** address shown in the browser's URL bar */
   webUrl?: string;
+  /** "stage": full-bleed launch poster (default); "classic": paper card with an accent field */
+  layout?: "stage" | "classic";
+  /** store category shown under the app name on the stage layout */
+  category?: string;
+  /** supporting line under the stage headline */
+  tagline?: string;
+  /** the promo format preset the card size came from (see PROMO_FORMATS) */
+  format?: string;
 }
 
 export type PromoWebFrame = "safari" | "chrome" | "minimal";
@@ -1589,15 +1597,19 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
         chrome,
         badgeText: "App of the Day",
         title: "MockFrame",
-        subtitle: "Create premium screenshot mockups in seconds",
+        subtitle: "Mockups that sell your app.",
+        category: "Graphics & Design",
+        tagline: "Real devices, studio backgrounds and 4K exports — in seconds.",
+        layout: "stage",
+        format: "event",
         ratingValue: 4.9,
         reviewsCountText: "12.4K ratings",
         accentColor: "#6366f1",
         buttonText: "GET",
         dark: false,
         standalone: true,
-        cardWidth: 1200,
-        cardHeight: 900,
+        cardWidth: 1920,
+        cardHeight: 1080,
       };
     case "googleplay":
       return {
