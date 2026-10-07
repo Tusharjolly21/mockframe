@@ -21,22 +21,20 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { FormatsRow } from "@/components/marketing/home/FormatsRow";
 import { GalleryWall } from "@/components/marketing/home/GalleryWall";
 import { StyleSwitcher } from "@/components/marketing/home/StyleSwitcher";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_NAME, SITE_URL, socialMeta } from "@/lib/site";
 
 const DEVICE_COUNT = listDevices().length;
 
 export const metadata: Metadata = {
   title: { absolute: "MockFrame — Free Screenshot Mockup Studio" },
   description:
-    "Drop your screenshot into a photoreal iPhone, MacBook, iPad or Apple Watch, style the scene, and export a production-ready image. Start free, online, with no sign-up wall.",
+    "Drop your screenshot into a photoreal iPhone, MacBook, iPad or Apple Watch, style the scene and export a production-ready image. Free, online, no sign-up.",
   alternates: { canonical: "/" },
-  openGraph: {
+  ...socialMeta({
+    path: "/",
     title: "MockFrame — Free Screenshot Mockup Studio",
     description: `Turn any screenshot into a stunning device mockup in seconds. ${DEVICE_COUNT} pixel-accurate frames, photoreal scenes, one-click export.`,
-    url: "/",
-    type: "website",
-    siteName: SITE_NAME,
-  },
+  }),
 };
 
 /** Photoreal devices on the homepage shelf, each linking to its mockup page. */

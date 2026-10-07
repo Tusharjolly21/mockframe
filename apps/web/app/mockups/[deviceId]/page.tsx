@@ -5,18 +5,7 @@ import { ArrowRight, ArrowUpRight, Sparkles } from "lucide-react";
 import { getDevice, listDevices, previewDataUri, type Device } from "@framekit/devices";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
-import {
-  SITE_NAME,
-  SITE_URL,
-  baseDeviceName,
-  categoryLabel,
-  cleanDeviceName,
-  deviceDescription,
-  deviceKeywords,
-  deviceOgImage,
-  deviceSpecs,
-  deviceTitle,
-} from "@/lib/site";
+import { SITE_NAME, SITE_URL, baseDeviceName, categoryLabel, cleanDeviceName, deviceDescription, deviceKeywords, deviceOgImage, deviceSpecs, deviceTitle, socialMeta } from "@/lib/site";
 
 /** Statically generate one page per device in the registry. */
 export function generateStaticParams() {
@@ -30,7 +19,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { deviceId } = await params;
   const device = getDevice(deviceId);
-  if (!device) return { title: `Mockup not found — ${SITE_NAME}` };
+  if (!device) return { title: "Mockup not found", robots: { index: false } };
   const title = deviceTitle(device);
   const description = deviceDescription(device);
   const canonical = `/mockups/${device.id}`;
@@ -40,20 +29,8 @@ export async function generateMetadata({
     description,
     keywords: deviceKeywords(device),
     alternates: { canonical },
-    openGraph: {
-      title,
-      description,
-      url: canonical,
-      type: "website",
-      siteName: SITE_NAME,
-      images: og ? [{ url: og }] : undefined,
-    },
-    twitter: {
-      card: og ? "summary_large_image" : "summary",
-      title,
-      description,
-      images: og ? [og] : undefined,
-    },
+    // photo devices share their plate; drawn frames fall back to the site card
+    ...socialMeta({ path: canonical, title: `${title} — ${SITE_NAME}`, description, image: og }),
   };
 }
 

@@ -6,7 +6,7 @@ import { GuideShot } from "@/components/marketing/GuideShot";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { getGuide, GUIDES } from "@/lib/guides";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { metaDescription, SITE_NAME, SITE_URL, socialMeta } from "@/lib/site";
 
 export function generateStaticParams() {
   return GUIDES.map(({ slug }) => ({ slug }));
@@ -17,15 +17,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!guide) return {};
   return {
     title: guide.title,
-    description: guide.description,
+    description: metaDescription(guide.description),
     alternates: { canonical: `/guides/${guide.slug}` },
-    openGraph: {
-      title: `${guide.title} — ${SITE_NAME}`,
-      description: guide.description,
-      url: `/guides/${guide.slug}`,
-      type: "article",
-      ...(guide.og ?? guide.hero ? { images: [guide.og ?? guide.hero!] } : {}),
-    },
+    ...socialMeta({ path: `/guides/${guide.slug}`, title: `${guide.title} — ${SITE_NAME}`, description: metaDescription(guide.description), image: guide.og ?? guide.hero ?? null, type: "article" }),
   };
 }
 

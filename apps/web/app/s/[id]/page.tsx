@@ -53,7 +53,7 @@ export default async function SharedScenePage({ params }: { params: Promise<{ id
       </div>
 
       <footer className="flex flex-col items-center gap-2 px-6 pb-8 text-center">
-        <p className="text-[15px] font-medium">{String(data.name ?? "Shared mockup")}</p>
+        <h1 className="text-[15px] font-medium">{String(data.name ?? "Shared mockup")}</h1>
         <p className="text-[12.5px] text-zinc-500">
           Made with MockFrame — free device mockups, chat screens & promo videos.
         </p>

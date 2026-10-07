@@ -102,9 +102,9 @@ export function UpgradeModal({
               <h2 className="text-[22px] font-medium tracking-[-0.03em]">Go Pro</h2>
                 </div>
               </div>
-              <h1 className="mt-12 max-w-[320px] text-[34px] font-medium leading-[1.05] tracking-[-0.04em]">
+              <h2 className="mt-12 max-w-[320px] text-[34px] font-medium leading-[1.05] tracking-[-0.04em]">
                 {reason ? `${reason} are part of Pro.` : "Make every mockup look ready to ship."}
-              </h1>
+              </h2>
               <p className="mt-4 max-w-[320px] text-[14px] leading-6 text-zinc-400">
                 {reason
                   ? "Your scene is saved exactly as you left it — upgrade and the export picks up right where you were."

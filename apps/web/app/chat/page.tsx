@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   description:
     "Make a fake WhatsApp or iMessage conversation right from your phone: type the messages, watch the live preview, download the image. Free, no sign-up.",
   alternates: { canonical: "/chat" },
+  // a thin mobile app screen that duplicates the WhatsApp / iMessage tool pages:
+  // keep it reachable but out of the index (and out of the sitemap)
+  robots: { index: false, follow: true },
 };
 
 /** Mobile-first, single-purpose chat maker. The full editor is desktop-only;
