@@ -3,6 +3,7 @@ import { memo, type CSSProperties, type ReactNode } from "react";
 import { backgroundToCss } from "./background";
 import { backdropFilterCss, overlayStyle, patternStyle, portraitBlur, stageStyle } from "./backdrop";
 import { MockupLayerViewMemo } from "./MockupLayerView";
+import { AnnotationGraphic } from "./annotations";
 import type { ResolveAsset } from "./types";
 import { blockAnimStyle, pieceAnimStyle, splitPieces, textAnimProgress, typewriterCount } from "./textAnim";
 
@@ -499,7 +500,7 @@ const LayerView = memo(function LayerView({
   if (layer.type === "sticker" && "stickerId" in layer) {
     return (
       <div data-layer-id={layer.id} style={wrapper}>
-      <BuiltinSticker id={layer.stickerId} tint={layer.tint ?? "#7c3aed"} size={layer.size} />
+      <AnnotationGraphic id={layer.stickerId} tint={layer.tint ?? "#7c3aed"} size={layer.size} />
       </div>
     );
   }
@@ -508,173 +509,3 @@ const LayerView = memo(function LayerView({
 });
 
 export const SceneRenderer = memo(SceneRendererImpl);
-
-function BuiltinSticker({ id, tint, size }: { id: string; tint: string; size?: { width: number; height: number } }) {
-  if (id === "annot-arrow") {
-    // contrast casing under the stroke so the arrow stays visible on ANY
-    // background (user report: arrows disappearing on same-tone backdrops)
-    const casing = tintLuma(tint) > 0.55 ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.85)";
-    return (
-      <svg width="330" height="150" viewBox="0 0 330 150" fill="none" style={{ display: "block", overflow: "visible" }}>
-        <path d="M24 112 C94 42 172 35 285 41" stroke={casing} strokeWidth="24" strokeLinecap="round" />
-        <path d="M278 21 L321 43 L278 63 Z" fill={casing} stroke={casing} strokeWidth="6" strokeLinejoin="round" />
-        <path
-          d="M24 112 C94 42 172 35 285 41"
-          stroke={tint}
-          strokeWidth="18"
-          strokeLinecap="round"
-          style={{ filter: "drop-shadow(0 7px 7px rgba(0,0,0,0.26))" }}
-        />
-        <path d="M278 21 L321 43 L278 63 Z" fill={tint} style={{ filter: "drop-shadow(0 7px 7px rgba(0,0,0,0.24))" }} />
-        <path d="M25 112 C95 42 173 35 286 41" stroke="rgba(255,255,255,0.56)" strokeWidth="5" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  if (id === "annot-highlight") {
-    return (
-      <div
-        style={{
-          width: 360,
-          height: 106,
-          borderRadius: 24,
-          background: tint,
-          opacity: 0.54,
-          boxShadow: `0 12px 34px ${hexToRgba(tint, 0.22)}`,
-          mixBlendMode: "multiply",
-        }}
-      />
-    );
-  }
-
-  if (id === "annot-redact") {
-    return (
-      <div
-        style={{
-          width: 360,
-          height: 96,
-          borderRadius: 18,
-          background: tint,
-          boxShadow: "0 10px 26px rgba(0,0,0,0.22)",
-        }}
-      />
-    );
-  }
-
-  if (id === "annot-blur") {
-    return (
-      <div
-        style={{
-          width: size?.width ?? 360,
-          height: size?.height ?? 118,
-          borderRadius: 22,
-          background: hexToRgba(tint, 0.18),
-          border: `1px solid ${hexToRgba(tint, 0.46)}`,
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45), 0 10px 28px rgba(20,20,40,0.16)",
-          backdropFilter: "blur(14px) saturate(1.25)",
-          WebkitBackdropFilter: "blur(14px) saturate(1.25)",
-        }}
-      />
-    );
-  }
-
-  if (id.startsWith("annot-kbd-")) {
-    // shortcut hint in a speech bubble — keys split on "+" render as kbd chips
-    const combo = id.slice("annot-kbd-".length) || "⌘+K";
-    const keys = combo.split("+").map((k) => k.trim()).filter(Boolean);
-    return (
-      <div
-        style={{
-          position: "relative",
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          padding: "18px 22px",
-          background: "#ffffff",
-          borderRadius: 20,
-          border: "1px solid rgba(0,0,0,0.06)",
-          boxShadow: "0 12px 30px rgba(20,20,40,0.25)",
-        }}
-      >
-        {keys.map((k, i) => (
-          <span
-            key={i}
-            style={{
-              display: "grid",
-              placeItems: "center",
-              minWidth: 44,
-              height: 46,
-              padding: "0 12px",
-              borderRadius: 10,
-              background: "#f4f4f8",
-              border: "1px solid #d9d9e3",
-              borderBottom: "3px solid #c6c6d4",
-              fontFamily: "Inter, system-ui, sans-serif",
-              fontSize: 24,
-              fontWeight: 700,
-              color: tint,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {k}
-          </span>
-        ))}
-        <span
-          style={{
-            position: "absolute",
-            left: 26,
-            bottom: -9,
-            width: 20,
-            height: 20,
-            background: "#ffffff",
-            borderRight: "1px solid rgba(0,0,0,0.06)",
-            borderBottom: "1px solid rgba(0,0,0,0.06)",
-            borderRadius: 4,
-            transform: "rotate(45deg)",
-          }}
-        />
-      </div>
-    );
-  }
-
-  if (id.startsWith("annot-step-")) {
-    const n = id.slice("annot-step-".length);
-    return (
-      <svg width="128" height="128" viewBox="0 0 128 128" style={{ display: "block", overflow: "visible" }}>
-        <circle cx="64" cy="64" r="47" fill={tint} />
-        <circle cx="64" cy="64" r="52" fill="none" stroke="rgba(255,255,255,0.95)" strokeWidth="9" />
-        <circle cx="64" cy="64" r="55" fill="none" stroke="rgba(0,0,0,0.14)" strokeWidth="2" />
-        <text
-          x="64"
-          y={n.length > 1 ? 74 : 78}
-          textAnchor="middle"
-          fontFamily="Inter, system-ui, sans-serif"
-          fontSize={n.length > 1 ? 40 : 50}
-          fontWeight="850"
-          fill="#ffffff"
-        >
-          {n}
-        </text>
-      </svg>
-    );
-  }
-
-  return (
-    <svg width="160" height="160" viewBox="0 0 160 160" style={{ display: "block" }}>
-      <rect x="14" y="14" width="132" height="132" rx="28" fill={tint} />
-    </svg>
-  );
-}
-
-/** relative luminance 0..1 of a #rrggbb tint (non-hex → treat as mid) */
-function tintLuma(hex: string): number {
-  if (!/^#[0-9a-f]{6}$/i.test(hex)) return 0.5;
-  const n = parseInt(hex.slice(1), 16);
-  return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
-}
-
-function hexToRgba(hex: string, alpha: number) {
-  if (!/^#[0-9a-f]{6}$/i.test(hex)) return `rgba(255,255,255,${alpha})`;
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
-}

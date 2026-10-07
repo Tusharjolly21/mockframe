@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "motion/react";
-import { ArrowUpRight, Baseline, Box, EyeOff, Highlighter, Keyboard, ListOrdered, Move, Palette, RotateCcw, ScanEye, Search, SlidersHorizontal, SmilePlus } from "lucide-react";
+import { Baseline, Box, Move, Palette, RotateCcw, Search, SlidersHorizontal, SmilePlus } from "lucide-react";
 import { getDevice } from "@framekit/devices";
 import type { MockupLayer } from "@framekit/scene";
 import { ingestGenerated, resolveAsset } from "@/lib/assets";
@@ -14,6 +14,7 @@ import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
 import { useDraftsUi } from "@/lib/drafts";
 import { IconButton, Popover, SliderRow } from "./ui";
 import { toast } from "./Toolbar";
+import { AnnotatePopover } from "./AnnotatePopover";
 
 /**
  * Bottom contextual toolbar (PostSpark's down navbar): Reset · Fill mode ·
@@ -25,23 +26,8 @@ const EMOJI = ["🔥", "🚀", "✨", "⭐", "❤️", "😂", "👀", "🎉", "
 type Pop = "fill" | "pos" | "threed" | "emoji" | "themes" | null;
 type ExtendedPop = Pop | "annotate";
 
-const ANNOTATIONS: {
-  id: AnnotationStickerId;
-  label: string;
-  icon: typeof ArrowUpRight;
-  tint: string;
-}[] = [
-  { id: "annot-arrow", label: "Arrow", icon: ArrowUpRight, tint: "#ff3b30" },
-  { id: "annot-step-1", label: "Step", icon: ListOrdered, tint: "#7c3aed" },
-  { id: "annot-highlight", label: "Highlight", icon: Highlighter, tint: "#ffe066" },
-  { id: "annot-redact", label: "Redact", icon: EyeOff, tint: "#111111" },
-  { id: "annot-blur", label: "Blur", icon: ScanEye, tint: "#ffffff" },
-  { id: "annot-kbd", label: "Shortcut", icon: Keyboard, tint: "#17171c" },
-];
-
 export function BottomBar() {
   const scene = useSceneStore((s) => s.scene);
-  const setScene = useSceneStore((s) => s.setScene);
   const resetScene = useSceneStore((s) => s.resetScene);
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const { selectedIds, select, setActiveLayout } = useViewStore();
@@ -256,37 +242,7 @@ export function BottomBar() {
         {openPop === "emoji" && <StickerLibrary onClose={() => setOpenPop(null)} />}
 
         {/* ----------------------------- annotations ---------------------------- */}
-        {openPop === "annotate" && (
-          <Popover className="bottom-[calc(100%+10px)] left-1/2 w-64 -translate-x-1/2 p-3">
-            <p className="mb-2 text-center text-[12px] font-bold text-[#17171c]">Annotate</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {ANNOTATIONS.map((a) => {
-                const Icon = a.icon;
-                return (
-                  <button
-                    key={a.id}
-                    onClick={() => {
-                      const r = addAnnotation(useSceneStore.getState().scene, a.id);
-                      setScene(() => r.scene);
-                      select(r.layerId);
-                      setOpenPop(null);
-                    }}
-                    className="fk-press flex items-center gap-2 rounded-xl border border-[#ececf2] bg-white px-2.5 py-2 text-left hover:border-[#c9c9d4]"
-                  >
-                    <span
-                      className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-black/10"
-                      style={{ background: a.id === "annot-blur" ? "#f8fafc" : a.tint, color: a.id === "annot-highlight" || a.id === "annot-blur" ? "#17171c" : "#ffffff" }}
-                    >
-                      <Icon size={14} />
-                    </span>
-                    <span className="text-[12px] font-semibold text-[#17171c]">{a.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-2 text-center text-[10.5px] text-[#9a9aa4]">Drag, scale, rotate, then adjust color in the inspector.</p>
-          </Popover>
-        )}
+        {openPop === "annotate" && <AnnotatePopover onClose={() => setOpenPop(null)} />}
 
         {/* ------------------------------- themes -------------------------------- */}
         {openPop === "themes" && <ThemesPopover onClose={() => setOpenPop(null)} />}

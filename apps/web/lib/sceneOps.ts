@@ -194,19 +194,38 @@ export function addAppIcon(
 
 export type AnnotationStickerId =
   | "annot-arrow"
+  | "annot-arrow-straight"
+  | "annot-arrow-loop"
+  | "annot-callout"
+  | "annot-box"
+  | "annot-circle"
   | "annot-highlight"
   | "annot-redact"
   | "annot-blur"
   | "annot-kbd"
   | `annot-step-${number}`;
 
-const ANNOTATION_DEFAULTS: Record<string, { tint: string; scale: number; x: number; y: number; rotate?: number }> = {
-  "annot-arrow": { tint: "#ff3b30", scale: 1.1, x: 0.18, y: -0.12, rotate: -8 },
+const ANNOTATION_DEFAULTS: Record<string, { tint: string; scale: number; x: number; y: number; rotate?: number; accent?: boolean }> = {
+  "annot-arrow": { tint: "#ff3b30", scale: 1.1, x: 0.18, y: -0.12, rotate: -8, accent: true },
+  "annot-arrow-straight": { tint: "#ff3b30", scale: 1.1, x: 0.18, y: -0.1, rotate: 0, accent: true },
+  "annot-arrow-loop": { tint: "#ff3b30", scale: 1.05, x: 0.18, y: -0.12, rotate: 0, accent: true },
+  "annot-callout": { tint: "#7c3aed", scale: 1, x: 0.16, y: -0.2, accent: true },
+  "annot-box": { tint: "#ff3b30", scale: 1, x: 0, y: 0.04, accent: true },
+  "annot-circle": { tint: "#ff3b30", scale: 1, x: 0, y: 0.04, accent: true },
   "annot-highlight": { tint: "#ffe066", scale: 1.05, x: 0, y: 0.16 },
-  "annot-redact": { tint: "#111111", scale: 1.05, x: 0, y: 0.08 },
+  "annot-redact": { tint: "#111114", scale: 1.05, x: 0, y: 0.08 },
   "annot-blur": { tint: "#ffffff", scale: 1.05, x: 0, y: 0.08 },
   "annot-kbd": { tint: "#17171c", scale: 1, x: 0.14, y: -0.16 },
-  "annot-step": { tint: "#7c3aed", scale: 1, x: -0.18, y: -0.18 },
+  "annot-step": { tint: "#7c3aed", scale: 1, x: -0.18, y: -0.18, accent: true },
+};
+
+/** Sized annotations start with an explicit footprint the inspector can edit. */
+const ANNOTATION_SIZES: Record<string, { width: number; height: number }> = {
+  "annot-box": { width: 440, height: 260 },
+  "annot-circle": { width: 360, height: 220 },
+  "annot-highlight": { width: 380, height: 84 },
+  "annot-redact": { width: 360, height: 88 },
+  "annot-blur": { width: 360, height: 118 },
 };
 
 /** Highest step number already on the canvas (0 when there are none). */
@@ -219,7 +238,11 @@ export function maxStepNumber(scene: SceneDocument): number {
 }
 
 /** Built-in annotation stickers: arrows, steps, highlights, redaction, blur, shortcut bubbles. */
-export function addAnnotation(scene: SceneDocument, stickerId: AnnotationStickerId): { scene: SceneDocument; layerId: string } {
+export function addAnnotation(
+  scene: SceneDocument,
+  stickerId: AnnotationStickerId,
+  accent?: string
+): { scene: SceneDocument; layerId: string } {
   const id = createId();
   let finalId: string = stickerId;
   let cascade = 0;
@@ -231,12 +254,17 @@ export function addAnnotation(scene: SceneDocument, stickerId: AnnotationSticker
     cascade = (next - 1) % 5;
   }
   if (stickerId === "annot-kbd") finalId = "annot-kbd-⌘+K"; // editable in the inspector
+  if (stickerId === "annot-callout") finalId = "annot-callout-New"; // editable in the inspector
   const d = ANNOTATION_DEFAULTS[stickerId.startsWith("annot-step-") ? "annot-step" : stickerId] ?? ANNOTATION_DEFAULTS["annot-step"];
+  const size = ANNOTATION_SIZES[stickerId];
   const layer: StickerLayer = {
     type: "sticker",
     id,
     stickerId: finalId,
-    tint: d.tint,
+    // the picker's accent colour applies to pointers and frames; redaction,
+    // blur, highlight and keycaps keep their purpose-built colours
+    tint: accent && d.accent ? accent : d.tint,
+    ...(size ? { size: { ...size } } : {}),
     transform: {
       x: Math.round(scene.canvas.width * (d.x + cascade * 0.07)),
       y: Math.round(scene.canvas.height * (d.y + cascade * 0.07)),

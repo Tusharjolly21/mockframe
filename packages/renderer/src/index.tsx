@@ -3,6 +3,7 @@ export { MockupLayerView, mediaPlacement, mediaCrop, uncroppedBox, plateWarp } f
 export { backgroundToCss, meshGradientCss, mulberry32 } from "./background";
 export { patternStyle, overlayStyle, stageStyle, portraitBlur, waveTile } from "./backdrop";
 export { shadowToFilter } from "./shadow";
+export { AnnotationGraphic, ANNOTATION_DEFAULT_SIZE, isSizedAnnotation } from "./annotations";
 export { plateToBoxDelta, rectToQuad, quadMatrix3d, quadHomography, quadSize, type Quad } from "./quad";
 export type { ResolveAsset, ResolvedAsset } from "./types";
 
