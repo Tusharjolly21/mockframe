@@ -15,7 +15,7 @@ const COLS: { title: string; links: [string, string][] }[] = [
       ["/figma-plugin", "Figma Plugin"],
       ["/templates", "Templates"],
       ["/pricing", "Pricing"],
-      ["/developers/api", "Render API alpha"],
+      ["/developers/api", "Mockup API + MCP"],
       ["/developers/embed", "Embed editor alpha"],
       ["/extensions", "Extensions alpha"],
     ],

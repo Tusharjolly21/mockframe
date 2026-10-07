@@ -40,6 +40,7 @@ const PRO_FEATURES = [
   "Store screenshots in 39 languages, AI-translated",
   "Screen recordings with auto zoom, up to 4K",
   "Saved templates & a shared team library",
+  "Render API + MCP server for Claude & Cursor",
 ];
 
 type Billing = "monthly" | "yearly";

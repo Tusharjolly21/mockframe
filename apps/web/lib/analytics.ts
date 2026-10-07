@@ -20,6 +20,7 @@
  *   checkout_finished {plan}            the overlay is sending them back to the editor
  *   purchase_confirmed / purchase_pending   Pro unlocked (or still waiting on the webhook)
  *   purchase_cancelled                  came back from checkout without paying
+ *   api_key_created                     made an API key for the render API / MCP server
  */
 
 type EventParams = Record<string, string | number | boolean | undefined>;

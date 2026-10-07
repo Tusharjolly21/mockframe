@@ -48,6 +48,7 @@ const GROUPS: { title: string; rows: [label: string, free: Cell, pro: Cell][] }[
       ["License", "Personal use", "Commercial use"],
       ["Autosave, drafts and cloud sync", true, true],
       ["Saved templates and a shared team library", false, true],
+      ["Render API and MCP server for Claude and Cursor", false, "500 requests a day"],
     ],
   },
 ];

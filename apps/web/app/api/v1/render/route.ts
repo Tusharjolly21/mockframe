@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authorizeApiRequest, keyFromRequest } from "@/lib/server/apiKeys";
+import { consumeDailyQuota, quotaSubject } from "@/lib/server/quota";
+import { getRequestOwner } from "@/lib/server/requestOwner";
 
 export const runtime = "nodejs";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -24,12 +27,26 @@ export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: cors });
 }
 
+/** without a key: enough to try it, not enough to build on */
+const KEYLESS_PER_DAY = 50;
+
 /**
- * Public alpha: deterministic screenshot-card generation without a browser.
+ * Deterministic screenshot-card generation without a browser (the original
+ * alpha endpoint). With a Pro API key it counts against the account's daily
+ * API limit; without one, a small per-caller daily allowance.
  * The screenshot stays embedded in the returned SVG, making the result usable
  * from CI, scripts and no-code HTTP steps while the raster worker is built.
  */
 export async function POST(req: NextRequest) {
+  if (keyFromRequest(req)) {
+    const auth = await authorizeApiRequest(req);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status, headers: cors });
+  } else {
+    const quota = await consumeDailyQuota(quotaSubject(req, await getRequestOwner(req)), "render-keyless", KEYLESS_PER_DAY);
+    if (!quota.allowed) {
+      return NextResponse.json({ error: `That's ${KEYLESS_PER_DAY} renders without a key today. Add a Pro API key for more: https://mockframe.app/developers/api` }, { status: 429, headers: cors });
+    }
+  }
   const raw = await req.text();
   if (raw.length > 3_500_000) return NextResponse.json({ error: "Request exceeds the 3.5 MB alpha limit." }, { status: 413, headers: cors });
 
