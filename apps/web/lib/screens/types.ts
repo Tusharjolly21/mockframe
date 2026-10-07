@@ -1573,7 +1573,7 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
       return {
         app,
         chrome,
-        badgeText: "APP OF THE DAY",
+        badgeText: "App of the Day",
         title: "MockFrame",
         subtitle: "Create premium screenshot mockups in seconds",
         ratingValue: 4.9,

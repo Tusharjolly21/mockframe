@@ -41,6 +41,7 @@ import {
   defaultSnapchatAd,
   effectivePlatform,
   encodeScreenAsset,
+  fitCardScale,
   isScreenAsset,
   defaultSocialDoc,
   DATING_LABELS,
@@ -275,11 +276,17 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
     updateLayer(layer.id, (l) => {
       if (l.type !== "mockup") return l;
       const d = defaultTemplateDoc(app);
+      const assetId = encodeScreenAsset({ ...d, chrome: { ...d.chrome, platform: effectivePlatform(d.app, devPlatform) } });
+      const { width, height } = useSceneStore.getState().scene.canvas;
+      // fit the whole card inside the canvas (wide cards would otherwise spill
+      // past the edges and get cropped) and center it
+      const scale = fitCardScale(assetId, width, height) ?? l.transform.scale;
       return {
         ...l,
         deviceId: null,
+        transform: { ...l.transform, scale, x: 0, y: 0, rotate: 0, tiltX: 0, tiltY: 0 },
         media: {
-          assetId: encodeScreenAsset({ ...d, chrome: { ...d.chrome, platform: effectivePlatform(d.app, devPlatform) } }),
+          assetId,
           kind: "image" as const,
           fit: "cover" as const,
           offsetX: 0,
@@ -423,7 +430,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
 
       {/* device frame on/off — "None" exports just the screen/card, no phone.
           The code template is always a card, so it skips this toggle. */}
-      {doc.app !== "code" && doc.app !== "testimonial" && (
+      {doc.app !== "code" && doc.app !== "testimonial" && doc.app !== "appstore-promo" && (
         <div className="mt-3">
           <span className="mb-1 block text-xs text-[#6b6b76]">Frame</span>
           <Seg
@@ -3363,7 +3370,7 @@ function AppStorePromoFields({ doc, setDoc }: { doc: AppStorePromoDoc; setDoc: (
         <Field label="Subtitle" value={doc.subtitle} onChange={(subtitle) => setDoc({ ...doc, subtitle })} className="flex-1" placeholder="Screenshot Studio" />
       </div>
       <div className="mt-2 flex gap-2">
-        <Field label="Badge Text" value={doc.badgeText} onChange={(badgeText) => setDoc({ ...doc, badgeText })} className="flex-1" placeholder="APP OF THE DAY" />
+        <Field label="Badge Text" value={doc.badgeText} onChange={(badgeText) => setDoc({ ...doc, badgeText })} className="flex-1" placeholder="App of the Day" />
         <Field label="Reviews Count" value={doc.reviewsCountText} onChange={(reviewsCountText) => setDoc({ ...doc, reviewsCountText })} className="flex-1" placeholder="12.4K ratings" />
       </div>
       <div className="mt-2 flex gap-2">
@@ -3377,7 +3384,7 @@ function AppStorePromoFields({ doc, setDoc }: { doc: AppStorePromoDoc; setDoc: (
       <div className="mt-2">
         <label className="block text-xs font-semibold text-[#6b6b76] mb-1">Mockup Device</label>
         <select
-          value={doc.deviceId || "iphone-16-pro"}
+          value={doc.deviceId || "iphone-17-pro"}
           onChange={(e) => setDoc({ ...doc, deviceId: e.target.value })}
           className="w-full bg-white border border-[#e4e4ec] rounded-lg px-2.5 py-1.5 text-xs text-[#17171c] focus:outline-none focus:ring-1 focus:ring-indigo-500"
         >
@@ -3390,10 +3397,6 @@ function AppStorePromoFields({ doc, setDoc }: { doc: AppStorePromoDoc; setDoc: (
       </div>
       <div className="mt-4">
         <AvatarField label="App Screenshot" value={doc.screenshot} onChange={(screenshot) => setDoc({ ...doc, screenshot })} />
-      </div>
-      <div className="mt-2 flex items-center gap-2">
-        <input type="checkbox" id="promo-dark" checked={!!doc.dark} onChange={(e) => setDoc({ ...doc, dark: e.target.checked })} className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-        <label htmlFor="promo-dark" className="text-xs text-[#6b6b76]">Dark Mode</label>
       </div>
     </>
   );

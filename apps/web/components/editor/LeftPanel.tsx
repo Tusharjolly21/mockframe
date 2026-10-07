@@ -10,7 +10,7 @@ import { track, trackOnce } from "@/lib/analytics";
 import { ingestFile, resolveAsset } from "@/lib/assets";
 import { renderScreenshotIntoMockup } from "@/lib/mockuuups";
 import { presentationForDevice } from "@/lib/deviceScene";
-import { decodeScreenAsset, isScreenAsset } from "@/lib/screens";
+import { decodeScreenAsset, isScreenAsset, SCREEN_APP_LABELS } from "@/lib/screens";
 import { useSceneStore, useViewStore } from "@/lib/store";
 import { openUpgrade } from "@/lib/billing/gate";
 import { ColorRow, Section, Seg, SliderRow } from "./ui";
@@ -201,7 +201,16 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
   // upload) or a DEVICE MOCKUP (a screenshot inside a phone/browser/etc.).
   const screenDoc = layer.media && isScreenAsset(layer.media.assetId) ? decodeScreenAsset(layer.media.assetId) : undefined;
   const isTemplate = screenDoc ? isTemplateCard(screenDoc) : false;
-  const templateLabel = screenDoc?.app === "code" ? "Code" : screenDoc?.app === "bluesky" ? "Bluesky post" : "X post";
+  const templateLabel =
+    screenDoc?.app === "code"
+      ? "Code"
+      : screenDoc?.app === "bluesky"
+        ? "Bluesky post"
+        : screenDoc?.app === "xpost"
+          ? "X post"
+          : screenDoc
+            ? SCREEN_APP_LABELS[screenDoc.app]
+            : "Card";
   // an uploaded photo / realistic-render composite — not a generated screen, so
   // Screen Studio (which generates screens/cards) doesn't belong under it.
   const hasPhotoMedia = !!layer.media && !isScreenAsset(layer.media.assetId);

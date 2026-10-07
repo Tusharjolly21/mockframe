@@ -332,6 +332,17 @@ export function renderScreen(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): string
 const cache = new Map<string, ResolvedAsset & { id: string; name: string }>();
 const CACHE_MAX = 128;
 
+/**
+ * Scale a frameless card layer so the whole card sits inside the canvas with a
+ * margin (cards resolve at 3x logical px, so a wide card at a phone-sized
+ * scale would spill past the canvas edges and get cropped).
+ */
+export function fitCardScale(assetId: string, canvasW: number, canvasH: number, fill = 0.86): number | undefined {
+  const a = resolveScreenAsset(assetId);
+  if (!a?.width || !a?.height) return undefined;
+  return Math.round(Math.min((canvasW * fill) / a.width, (canvasH * fill) / a.height) * 1000) / 1000;
+}
+
 export function resolveScreenAsset(
   assetId: string,
   lookupUrl?: AssetUrlLookup
