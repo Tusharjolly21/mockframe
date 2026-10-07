@@ -233,7 +233,17 @@ export interface AppStorePromoDoc {
   cardWidth?: number;
   cardHeight?: number;
   deviceId?: string;
+  /** what the card shows: the app on a phone, the website in a browser, or both */
+  showcase?: "app" | "web" | "both";
+  /** browser window style for the web version */
+  webFrame?: PromoWebFrame;
+  /** website screenshot (asset id) shown inside the browser window */
+  webScreenshot?: string;
+  /** address shown in the browser's URL bar */
+  webUrl?: string;
 }
+
+export type PromoWebFrame = "safari" | "chrome" | "minimal";
 
 export interface AppStoreDoc {
   app: "appstore";

@@ -2,15 +2,17 @@
 
 import { getDevice, getVariant } from "@framekit/devices";
 import { esc, systemFont, textWidth, truncate, wrapText } from "./common";
-import type { AppStorePromoDoc } from "./types";
+import type { AppStorePromoDoc, PromoWebFrame } from "./types";
 
 /**
  * App Store promo card: a launch poster in the App Store's own vernacular.
  *
  * Left, on paper: the app icon, a large title, the subtitle, then the store's
  * info strip (rating with stars, the laurel award) and the GET pill. Right: a
- * solid accent field with the phone rising out of the bottom edge, showing the
- * user's screenshot or, without one, the app's launch screen.
+ * solid accent field showing the product: the phone rising out of the bottom
+ * edge (app), a browser window running off the right edge (web), or both
+ * together. Without screenshots the phone shows the app's launch screen and
+ * the browser a simple landing page, so an export still looks real.
  *
  * Everything is laid out from the card size, so custom card sizes keep their
  * proportions, and long titles step down in size instead of overflowing.
@@ -81,7 +83,86 @@ function stars(x: number, y: number, size: number, value: number, on: string, of
   return `<g>${row(off)}<clipPath id="asp-star-clip"><rect x="${x}" y="${y - 2}" width="${clipW.toFixed(1)}" height="${size + 4}"/></clipPath><g clip-path="url(#asp-star-clip)">${row(on)}</g></g>`;
 }
 
-export function renderAppStorePromo(doc: AppStorePromoDoc, avatarUrl?: string, screenshotUrl?: string): string {
+/** "https://www.example.com/path" → "example.com" */
+function domainOf(url: string): string {
+  return url.trim().replace(/^[a-z]+:\/\//i, "").replace(/^www\./i, "").replace(/\/.*$/, "");
+}
+
+interface BrowserOpts {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  style: PromoWebFrame;
+  dark: boolean;
+  domain: string;
+  font: string;
+  /** draws the page into (x, y, w, h) */
+  content: (x: number, y: number, w: number, h: number) => string;
+}
+
+/** a desktop browser window: Safari, Chrome or minimal chrome around a page */
+function browserWindow(o: BrowserOpts): string {
+  const { x, y, w, h, style, dark, domain, font } = o;
+  const u = w / 1000; // chrome scales with the window
+  const r = 16 * u;
+  const bar = dark ? "#2b2b2e" : "#ececef";
+  const field = dark ? "#1c1c1e" : "#ffffff";
+  const ink = dark ? "#e5e5ea" : "#3c3c43";
+  const faint = dark ? "#8e8e93" : "#8e8e93";
+  const barH = style === "chrome" ? 92 * u : style === "safari" ? 58 * u : 34 * u;
+  const dots = (cx: number, cy: number) =>
+    ["#ff5f57", "#febc2e", "#28c840"].map((f, i) => `<circle cx="${(cx + i * 20 * u).toFixed(1)}" cy="${cy.toFixed(1)}" r="${(6.5 * u).toFixed(1)}" fill="${f}"/>`).join("");
+  const lock = (lx: number, ly: number, col: string) =>
+    `<g fill="none" stroke="${col}" stroke-width="${(1.8 * u).toFixed(2)}"><rect x="${lx.toFixed(1)}" y="${(ly - 3 * u).toFixed(1)}" width="${(10 * u).toFixed(1)}" height="${(8 * u).toFixed(1)}" rx="${(1.5 * u).toFixed(1)}" fill="${col}"/><path d="M${(lx + 2.2 * u).toFixed(1)} ${(ly - 3 * u).toFixed(1)} v${(-3 * u).toFixed(1)} a${(2.8 * u).toFixed(1)} ${(2.8 * u).toFixed(1)} 0 0 1 ${(5.6 * u).toFixed(1)} 0 v${(3 * u).toFixed(1)}"/></g>`;
+
+  let chrome = "";
+  if (style === "safari") {
+    const pw = w * 0.44;
+    const px = x + (w - pw) / 2;
+    const cy = y + barH / 2;
+    const ds = Math.round(15 * u);
+    const tw = textWidth(domain, ds);
+    chrome = `${dots(x + 22 * u, cy)}
+      <rect x="${px.toFixed(1)}" y="${(cy - 17 * u).toFixed(1)}" width="${pw.toFixed(1)}" height="${(34 * u).toFixed(1)}" rx="${(9 * u).toFixed(1)}" fill="${field}"/>
+      ${lock(x + w / 2 - tw / 2 - 18 * u, cy + 3 * u, faint)}
+      <text x="${(x + w / 2 + 6 * u).toFixed(1)}" y="${(cy + ds * 0.36).toFixed(1)}" font-family="${font}" font-size="${ds}" font-weight="500" fill="${ink}" text-anchor="middle">${esc(domain)}</text>`;
+  } else if (style === "chrome") {
+    const tabY = y + 10 * u;
+    const tabH = 36 * u;
+    const tabW = Math.min(250 * u, w * 0.3);
+    const tx = x + 92 * u;
+    const ds = Math.round(14 * u);
+    const omniY = y + 50 * u;
+    chrome = `${dots(x + 22 * u, y + 27 * u)}
+      <path d="M${tx.toFixed(1)} ${(tabY + tabH).toFixed(1)} v${(-tabH + 9 * u).toFixed(1)} q0 ${(-9 * u).toFixed(1)} ${(9 * u).toFixed(1)} ${(-9 * u).toFixed(1)} h${(tabW - 18 * u).toFixed(1)} q${(9 * u).toFixed(1)} 0 ${(9 * u).toFixed(1)} ${(9 * u).toFixed(1)} v${(tabH - 9 * u).toFixed(1)} Z" fill="${field}"/>
+      <circle cx="${(tx + 20 * u).toFixed(1)}" cy="${(tabY + tabH / 2 + 1 * u).toFixed(1)}" r="${(7 * u).toFixed(1)}" fill="${faint}" fill-opacity="0.5"/>
+      <text x="${(tx + 36 * u).toFixed(1)}" y="${(tabY + tabH / 2 + ds * 0.4).toFixed(1)}" font-family="${font}" font-size="${ds}" font-weight="500" fill="${ink}">${esc(truncate(domain, ds, tabW - 56 * u))}</text>
+      <rect x="${x}" y="${(y + 46 * u).toFixed(1)}" width="${w}" height="${(barH - 46 * u).toFixed(1)}" fill="${field}"/>
+      <g fill="none" stroke="${faint}" stroke-width="${(2 * u).toFixed(2)}" stroke-linecap="round"><path d="M${(x + 26 * u).toFixed(1)} ${(omniY + 19 * u).toFixed(1)} l${(-6 * u).toFixed(1)} ${(-6 * u).toFixed(1)} ${(6 * u).toFixed(1)} ${(-6 * u).toFixed(1)}"/><path d="M${(x + 50 * u).toFixed(1)} ${(omniY + 7 * u).toFixed(1)} l${(6 * u).toFixed(1)} ${(6 * u).toFixed(1)} ${(-6 * u).toFixed(1)} ${(6 * u).toFixed(1)}"/></g>
+      <rect x="${(x + 80 * u).toFixed(1)}" y="${(omniY - 1 * u).toFixed(1)}" width="${(w - 104 * u).toFixed(1)}" height="${(28 * u).toFixed(1)}" rx="${(14 * u).toFixed(1)}" fill="${bar}"/>
+      ${lock(x + 98 * u, omniY + 17 * u, faint)}
+      <text x="${(x + 118 * u).toFixed(1)}" y="${(omniY + 13 * u + ds * 0.36).toFixed(1)}" font-family="${font}" font-size="${ds}" font-weight="400" fill="${ink}">${esc(domain)}</text>`;
+  } else {
+    chrome = dots(x + 20 * u, y + barH / 2);
+  }
+
+  const cx = x;
+  const cy = y + barH;
+  const ch = h - barH;
+  return `<g filter="url(#asp-window-shadow)"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r.toFixed(1)}" fill="${bar}"/></g>
+    <clipPath id="asp-window-clip"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r.toFixed(1)}"/></clipPath>
+    <g clip-path="url(#asp-window-clip)">
+      <rect x="${x}" y="${y}" width="${w}" height="${barH.toFixed(1)}" fill="${bar}"/>
+      ${chrome}
+      <rect x="${cx}" y="${cy.toFixed(1)}" width="${w}" height="${ch.toFixed(1)}" fill="${dark ? "#161618" : "#ffffff"}"/>
+      ${o.content(cx, cy, w, ch)}
+      <rect x="${cx}" y="${(cy - 0.5).toFixed(1)}" width="${w}" height="1" fill="#000" fill-opacity="${dark ? 0.5 : 0.1}"/>
+    </g>
+    <rect x="${x + 0.5}" y="${y + 0.5}" width="${w - 1}" height="${h - 1}" rx="${r.toFixed(1)}" fill="none" stroke="#000" stroke-opacity="${dark ? 0.6 : 0.12}"/>`;
+}
+
+export function renderAppStorePromo(doc: AppStorePromoDoc, avatarUrl?: string, screenshotUrl?: string, webShotUrl?: string): string {
   const { width: W, height: H } = appStorePromoCardSize(doc);
   const k = Math.min(W / 1200, H / 900);
   // the Light/Dark switch writes chrome.dark; older docs carry `dark`
@@ -97,8 +178,10 @@ export function renderAppStorePromo(doc: AppStorePromoDoc, avatarUrl?: string, s
   // the GET pill and award read in the accent unless it would vanish on paper
   const accentInk = !dark && accentIsLight ? c.ink : accent;
 
+  const showcase = doc.showcase ?? "app";
   const P = Math.round(84 * k);
-  const fieldW = Math.round(W * 0.42);
+  // the web window needs a wider stage than a phone alone
+  const fieldW = Math.round(W * (showcase === "app" ? 0.42 : showcase === "web" ? 0.54 : 0.58));
   const fieldX = W - fieldW;
   const colW = fieldX - P - Math.round(64 * k); // text column width
 
@@ -116,6 +199,9 @@ export function renderAppStorePromo(doc: AppStorePromoDoc, avatarUrl?: string, s
         <stop offset="0" stop-color="#fff" stop-opacity="0.22"/>
         <stop offset="1" stop-color="#fff" stop-opacity="0"/>
       </radialGradient>
+      <filter id="asp-window-shadow" x="-20%" y="-20%" width="140%" height="150%">
+        <feDropShadow dx="0" dy="${Math.round(24 * k)}" stdDeviation="${Math.round(30 * k)}" flood-color="#000" flood-opacity="0.28"/>
+      </filter>
       <filter id="asp-phone-shadow" x="-30%" y="-10%" width="160%" height="130%">
         <feDropShadow dx="0" dy="${Math.round(30 * k)}" stdDeviation="${Math.round(34 * k)}" flood-color="#000" flood-opacity="0.32"/>
       </filter>
@@ -139,10 +225,13 @@ export function renderAppStorePromo(doc: AppStorePromoDoc, avatarUrl?: string, s
   /* --------------------------- title + subtitle ---------------------------- */
   // step the title down until it fits in two lines
   let titleSize = Math.round(92 * k);
-  let titleLines = wrapText(doc.title || "", titleSize, colW);
-  while (titleLines.length > 2 && titleSize > 44 * k) {
-    titleSize = Math.round(titleSize * 0.88);
-    titleLines = wrapText(doc.title || "", titleSize, colW);
+  // heavy display weights run ~10% wider than the regular-weight estimate
+  const titleW = (l: string, size: number) => textWidth(l, size) * 1.1;
+  const fitTitle = (size: number) => wrapText(doc.title || "", size * 1.1, colW);
+  let titleLines = fitTitle(titleSize);
+  while ((titleLines.length > 2 || Math.max(...titleLines.map((l) => titleW(l, titleSize))) > colW) && titleSize > 40 * k) {
+    titleSize = Math.round(titleSize * 0.9);
+    titleLines = fitTitle(titleSize);
   }
   if (titleLines.length > 2) titleLines = [titleLines[0], truncate(titleLines.slice(1).join(" "), titleSize, colW)];
   const titleLH = Math.round(titleSize * 1.04);
@@ -226,18 +315,83 @@ export function renderAppStorePromo(doc: AppStorePromoDoc, avatarUrl?: string, s
     `<text x="${P + pillW + Math.round(18 * k)}" y="${pillY + pillH / 2 + Math.round(15 * k)}" font-family="${font}" font-size="${Math.round(14 * k)}" font-weight="500" fill="${c.secondary}">Purchases</text>`
   );
 
-  /* ------------------ phone rising out of the accent field ------------------ */
-  const device = getDevice(doc.deviceId || "iphone-17-pro") ?? getDevice("iphone-16-pro");
+  /* ------------- the product: browser window and/or phone ------------- */
+  if (showcase !== "app") {
+    const ww = showcase === "web" ? fieldW * 1.02 : fieldW * 0.96;
+    const wh = ww * 0.68;
+    const wx = fieldX + (showcase === "web" ? fieldW * 0.1 : fieldW * 0.2);
+    const wy = showcase === "web" ? (H - wh) / 2 : H * 0.11;
+    const domain = domainOf(doc.webUrl || "") || `${(doc.title || "app").toLowerCase().replace(/[^a-z0-9]+/g, "") || "app"}.com`;
+    parts.push(
+      browserWindow({
+        x: wx,
+        y: wy,
+        w: ww,
+        h: wh,
+        style: doc.webFrame ?? "safari",
+        dark,
+        domain,
+        font,
+        content: (x, y, w, h) =>
+          webShotUrl
+            ? `<image href="${webShotUrl}" x="${x}" y="${y.toFixed(1)}" width="${w}" height="${h.toFixed(1)}" preserveAspectRatio="xMidYMin slice"/>`
+            : landingPage(x, y, w, h),
+      })
+    );
+  }
+
+  // no website screenshot yet: a simple landing page built from the app's copy
+  function landingPage(x: number, y: number, w: number, h: number): string {
+    const u = w / 1000;
+    const out: string[] = [`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${accent}" fill-opacity="${dark ? 0.08 : 0.04}"/>`];
+    const ny = y + 44 * u;
+    out.push(
+      `<rect x="${x + 48 * u}" y="${ny - 16 * u}" width="${32 * u}" height="${32 * u}" rx="${8 * u}" fill="${accent}"/>`,
+      `<text x="${x + 92 * u}" y="${ny + 7 * u}" font-family="${font}" font-size="${Math.round(20 * u)}" font-weight="700" fill="${c.ink}">${esc(truncate(doc.title || "", Math.round(20 * u), 260 * u))}</text>`,
+      ...[0, 1, 2].map((i) => `<rect x="${x + w - 380 * u + i * 86 * u}" y="${ny - 5 * u}" width="${58 * u}" height="${10 * u}" rx="${5 * u}" fill="${c.secondary}" fill-opacity="0.35"/>`),
+      `<rect x="${x + w - 128 * u}" y="${ny - 18 * u}" width="${84 * u}" height="${36 * u}" rx="${18 * u}" fill="${accent}"/>`
+    );
+    const hs = Math.round(54 * u);
+    const heroLines = wrapText(doc.title || "", hs, w * 0.7).slice(0, 2);
+    let hy = y + 170 * u;
+    for (const l of heroLines) {
+      out.push(`<text x="${x + w / 2}" y="${hy}" font-family="${font}" font-size="${hs}" font-weight="800" fill="${c.ink}" text-anchor="middle" letter-spacing="${(-hs * 0.025).toFixed(2)}">${esc(l)}</text>`);
+      hy += hs * 1.08;
+    }
+    const ss = Math.round(21 * u);
+    const subLines = wrapText(doc.subtitle || "", ss, w * 0.56).slice(0, 2);
+    hy += 6 * u;
+    for (const l of subLines) {
+      out.push(`<text x="${x + w / 2}" y="${hy}" font-family="${font}" font-size="${ss}" font-weight="500" fill="${c.secondary}" text-anchor="middle">${esc(l)}</text>`);
+      hy += ss * 1.4;
+    }
+    hy += 18 * u;
+    out.push(
+      `<rect x="${x + w / 2 - 92 * u}" y="${hy}" width="${184 * u}" height="${48 * u}" rx="${24 * u}" fill="${accent}"/>`,
+      `<text x="${x + w / 2}" y="${hy + 24 * u + 7 * u}" font-family="${font}" font-size="${Math.round(18 * u)}" font-weight="700" fill="${accentIsLight ? "#1d1d1f" : "#fff"}" text-anchor="middle">Get started</text>`,
+      `<rect x="${x + w * 0.12}" y="${hy + 86 * u}" width="${w * 0.76}" height="${h}" rx="${18 * u}" fill="${accent}" fill-opacity="${dark ? 0.22 : 0.14}"/>`
+    );
+    return out.join("");
+  }
+
+  const device = showcase === "web" ? undefined : getDevice(doc.deviceId || "iphone-17-pro") ?? getDevice("iphone-16-pro");
   if (device) {
     const variant = getVariant(device, dark ? "dark" : "light");
     const { frame } = device;
     const rect = frame.screenRect;
-    // tall enough to run off the bottom edge, never wider than the field
-    const s = Math.min((H * 1.0) / frame.height, (fieldW * 0.86) / frame.width);
+    // app: tall enough to run off the bottom edge, never wider than the field;
+    // both: smaller, in front of the browser at the field's left
+    const s =
+      showcase === "both"
+        ? Math.min((H * 0.78) / frame.height, (fieldW * 0.4) / frame.width)
+        : Math.min((H * 1.0) / frame.height, (fieldW * 0.86) / frame.width);
     const dw = frame.width * s;
-    const dx = fieldX + (fieldW - dw) / 2;
-    // top ~12% down; the rest runs off the bottom edge
-    const dy = Math.round(Math.max(H * 0.12, H - frame.height * s * 0.86));
+    const dx = showcase === "both" ? fieldX + fieldW * 0.06 : fieldX + (fieldW - dw) / 2;
+    // top ~12% down (app) / ~30% (both); the rest runs off the bottom edge
+    const dy =
+      showcase === "both"
+        ? Math.round(Math.max(H * 0.3, H - frame.height * s * 0.88))
+        : Math.round(Math.max(H * 0.12, H - frame.height * s * 0.86));
 
     const sx = rect.x;
     const sy = rect.y;

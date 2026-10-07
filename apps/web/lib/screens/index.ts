@@ -219,6 +219,7 @@ function referencedAssetIds(doc: ScreenDoc): string[] {
   if (doc.app === "slack" || doc.app === "discord") for (const m of doc.messages) if (m.avatar) ids.push(m.avatar);
   if (doc.app === "appstore-promo") {
     if (doc.screenshot) ids.push(doc.screenshot);
+    if (doc.webScreenshot) ids.push(doc.webScreenshot);
   }
   return ids;
 }
@@ -283,7 +284,8 @@ export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): {
       return flat(renderAppStore(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
     case "appstore-promo": {
       const screenshotUrl = doc.screenshot ? lookupUrl?.(doc.screenshot) : undefined;
-      return flat(renderAppStorePromo(doc, dp, screenshotUrl), screenLogicalHeight(doc), screenLogicalWidth(doc));
+      const webShotUrl = doc.webScreenshot ? lookupUrl?.(doc.webScreenshot) : undefined;
+      return flat(renderAppStorePromo(doc, dp, screenshotUrl, webShotUrl), screenLogicalHeight(doc), screenLogicalWidth(doc));
     }
     case "googlemaps":
       return flat(renderGoogleMaps(doc), screenLogicalHeight(doc), screenLogicalWidth(doc));
