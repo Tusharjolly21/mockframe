@@ -11,6 +11,7 @@ const COLS: { title: string; links: [string, string][] }[] = [
       ["/mockups", "Device mockups"],
       ["/app-store-screenshots", "App Store Screenshots"],
       ["/ai", "AI Generator"],
+      ["/screen-recorder", "Screen Recorder"],
       ["/templates", "Templates"],
       ["/pricing", "Pricing"],
       ["/developers/api", "Render API alpha"],

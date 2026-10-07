@@ -35,6 +35,7 @@ const GROUPS: { title: string; rows: [label: string, free: Cell, pro: Cell][] }[
     rows: [
       ["Video and GIF export", false, "60 fps, up to 4K"],
       ["Animated app promo videos", false, true],
+      ["Screen recordings with auto zoom", "Record and preview", "Export up to 4K"],
       ["Text animations", false, true],
     ],
   },

@@ -19,6 +19,7 @@ const UPDATED = {
   guides: new Date("2026-06-20"),
   templates: new Date("2026-06-01"),
   devices: new Date("2026-07-30"), // + Galaxy S24 Ultra
+  recorder: new Date("2026-10-07"), // auto-zoom screen recorder launch
 } as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -27,6 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/mockups`, lastModified: UPDATED.devices, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/app-store-screenshots`, lastModified: UPDATED.packStudio, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/ai`, lastModified: UPDATED.ai, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${SITE_URL}/screen-recorder`, lastModified: UPDATED.recorder, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/compare/appscreens`, lastModified: UPDATED.compare, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/tools`, lastModified: UPDATED.tools, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/launch-kit`, lastModified: UPDATED.tools, changeFrequency: "weekly", priority: 0.9 },
