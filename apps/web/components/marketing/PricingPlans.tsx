@@ -12,7 +12,7 @@ import { formatPrice, perMonthPrice, yearlySavingsPct } from "@/lib/billing/plan
 // worth more than hiding it as a Pro bullet.
 const FREE_FEATURES = [
   "Watermark-free exports — always",
-  "Commercial license on every export",
+  "Personal & non-commercial use",
   "Every device frame + the full editor",
   "WhatsApp & iMessage chat screens",
   "Website capture & app screen templates",
@@ -25,6 +25,7 @@ const FREE_FEATURES = [
 // isn't gated in /api/custom-devices, so it isn't Pro — it sits in the free
 // list where the code actually puts it.)
 const PRO_FEATURES = [
+  "Commercial license for every export",
   "12 more chat & DM screens",
   "Animated app promo videos (MP4)",
   "Photoreal device renders",

@@ -44,7 +44,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Can I use the mockups commercially?",
-    a: "Yes. Your finished mockups are yours to use anywhere — marketing sites, App Store listings, social posts and client work included.",
+    a: "Yes, with Pro. Everything you export while you're on Pro comes with a commercial license — App Store and Google Play listings, marketing sites, ads, social posts and client work included — and it stays licensed even if you cancel later. Free exports are for personal and non-commercial use. See the commercial license page for the details.",
   },
 ];
 

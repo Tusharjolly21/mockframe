@@ -422,6 +422,14 @@ export function RightPanel() {
             <Sparkles size={12} /> Pro — stamp your own brand
           </button>
         )}
+        {!removeWatermark && (
+          <p className="mt-1.5 text-center text-[10px] leading-snug text-[#9a9aa4]">
+            Free exports are for personal use ·{" "}
+            <a href="/license" target="_blank" rel="noopener" className="font-semibold text-[#6b6b76] underline underline-offset-2 hover:text-[#17171c]">
+              commercial license with Pro
+            </a>
+          </p>
+        )}
       </div>
       {upgradeOpen && <UpgradeModal initialPlan={upgradePlan} reason={upgradeReason} onClose={() => setUpgradeOpen(false)} />}
       {watermarkOpen && (

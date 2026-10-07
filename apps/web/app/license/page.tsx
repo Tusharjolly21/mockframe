@@ -6,7 +6,7 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 export const metadata: Metadata = {
   title: "Commercial License",
   description:
-    "Everything you export from MockFrame is yours to use commercially on every plan — App Store and Google Play listings, ads, websites and client work. No attribution, no royalties.",
+    "MockFrame Pro includes a commercial license for everything you export — App Store and Google Play listings, ads, websites and client work. No attribution, no royalties.",
   alternates: { canonical: "/license" },
 };
 
@@ -15,21 +15,22 @@ export const metadata: Metadata = {
    update this page in the same PR. */
 
 const HIGHLIGHTS = [
-  { title: "Every plan", body: "Free and Pro exports carry the same commercial rights." },
+  { title: "Included with Pro", body: "Every export made on Pro carries full commercial rights." },
   { title: "No attribution", body: "No credit line, link or watermark required." },
   { title: "No royalties", body: "Use an export as often as you like, anywhere." },
-  { title: "Never expires", body: "What you exported stays licensed if you cancel Pro." },
+  { title: "Never expires", body: "What you exported on Pro stays licensed if you cancel." },
 ];
 
 const SECTIONS: { title: string; body: (string | { list: string[] })[] }[] = [
   {
     title: "The short version",
     body: [
-      "Images, videos and GIFs you export from MockFrame are yours to use for personal and commercial purposes, on every plan, worldwide, with no attribution and no royalties. Cancelling a subscription never takes back rights to anything you already exported.",
+      "Images, videos and GIFs you export while you're on MockFrame Pro are yours to use for personal and commercial purposes, worldwide, with no attribution and no royalties. Cancelling Pro never takes back rights to anything you exported while subscribed.",
+      "Exports made on the Free plan are licensed for personal and non-commercial use only.",
     ],
   },
   {
-    title: "What you can do with your exports",
+    title: "What Pro exports can be used for",
     body: [
       {
         list: [
@@ -41,6 +42,13 @@ const SECTIONS: { title: string; body: (string | { list: string[] })[] }[] = [
           "Client and agency work: create exports for a client and hand them over — your client may use them in all the same ways.",
         ],
       },
+    ],
+  },
+  {
+    title: "The Free plan",
+    body: [
+      "Free exports are watermark-free and yours to use for personal and non-commercial purposes: exploring ideas, school and learning projects, and sharing hobby work that doesn't earn money. Anything that promotes or sells a product or service — a store listing, an ad, a company website, client work — needs a Pro license.",
+      "Made something on Free that you now want to use commercially? Upgrade and export it again: exports made while you're on Pro are covered.",
     ],
   },
   {
