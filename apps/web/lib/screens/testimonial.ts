@@ -34,18 +34,22 @@ export function renderTestimonial(doc: TestimonialDoc, avatarUrl?: string): stri
   const card = doc.cardColor || "#ffffff";
   const align = doc.align === "center" ? "middle" : "start";
   const anchorX = doc.align === "center" ? width / 2 : contentX;
-  const authorBlockH = 82;
-  const quoteTop = cardY + padding + (doc.eyebrow ? 50 : 18);
-  const quoteBottom = cardY + cardH - padding - authorBlockH - 20;
-  const maxQuoteH = Math.max(100, quoteBottom - quoteTop);
+  const authorY = cardY + cardH - padding - 27;
+  const quoteTop = cardY + padding + (doc.eyebrow ? 46 : 8);
+  // the quote ends above the stars (or the author row) with breathing room
+  const quoteBottom = authorY - (doc.showRating ? 92 : 64);
+  const markH = doc.quoteStyle === "mark" ? 40 : 0;
+  const lineInset = doc.quoteStyle === "line" ? 22 : 0;
   let quoteSize = Math.max(18, Math.min(58, doc.fontSize ?? 35));
   let lineH = Math.round(quoteSize * 1.32);
-  let lines = wrapText(doc.quote, quoteSize, contentW - (doc.quoteStyle === "line" ? 22 : 0));
-  while (quoteSize > 18 && lines.length * lineH > maxQuoteH) {
+  let lines = wrapText(doc.quote, quoteSize, contentW - lineInset);
+  const fits = () => markH + quoteSize * 0.8 + (lines.length - 1) * lineH + quoteSize * 0.28 <= quoteBottom - quoteTop;
+  while (quoteSize > 18 && !fits()) {
     quoteSize -= 1;
     lineH = Math.round(quoteSize * 1.32);
-    lines = wrapText(doc.quote, quoteSize, contentW - (doc.quoteStyle === "line" ? 22 : 0));
+    lines = wrapText(doc.quote, quoteSize, contentW - lineInset);
   }
+  const maxQuoteH = quoteBottom - quoteTop;
 
   const shadowStrength = Math.max(0, Math.min(2, doc.cardShadow ?? 1.15));
   const shadowOpacity = (0.19 * shadowStrength).toFixed(3);
@@ -54,7 +58,9 @@ export function renderTestimonial(doc: TestimonialDoc, avatarUrl?: string): stri
   const parts: string[] = [
     `<defs><filter id="testimonial-shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="${shadowY}" stdDeviation="${shadowBlur}" flood-color="#111827" flood-opacity="${shadowOpacity}"/></filter></defs>`,
     `<rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="${radius}" fill="${card}" filter="url(#testimonial-shadow)"/>`,
-    `<rect x="${cardX}" y="${cardY}" width="5" height="${cardH}" rx="2.5" fill="${accent}"/>`,
+    // a soft wash of the accent from the top-right corner, kept inside the card
+    `<defs><clipPath id="testimonial-clip"><rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="${radius}"/></clipPath><radialGradient id="testimonial-wash" cx="1" cy="0" r="0.75"><stop offset="0" stop-color="${accent}" stop-opacity="0.14"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient></defs>`,
+    `<rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" fill="url(#testimonial-wash)" clip-path="url(#testimonial-clip)"/>`,
     `<rect x="${cardX + 1}" y="${cardY + 1}" width="${cardW - 2}" height="${cardH - 2}" rx="${Math.max(0, radius - 1)}" fill="none" stroke="${text}" stroke-opacity="0.07"/>`,
   ];
 
@@ -66,7 +72,7 @@ export function renderTestimonial(doc: TestimonialDoc, avatarUrl?: string): stri
   }
 
   if (doc.quoteStyle === "mark") {
-    parts.push(`<text x="${doc.align === "center" ? width / 2 : contentX - 7}" y="${quoteTop + 20}" text-anchor="${align}" font-family="Georgia,serif" font-size="92" font-weight="700" fill="${accent}" opacity="0.2">“</text>`);
+    parts.push(`<text x="${doc.align === "center" ? width / 2 : contentX - 4}" y="${quoteTop + 58}" text-anchor="${align}" font-family="Georgia,serif" font-size="84" font-weight="700" fill="${accent}" opacity="0.28">“</text>`);
   } else if (doc.quoteStyle === "line") {
     parts.push(`<rect x="${contentX}" y="${quoteTop - 4}" width="4" height="${Math.min(maxQuoteH, lines.length * lineH + 10)}" rx="2" fill="${accent}"/>`);
   }
@@ -80,7 +86,7 @@ export function renderTestimonial(doc: TestimonialDoc, avatarUrl?: string): stri
   parts.push(textBlock(renderedLines, {
     font,
     x: quoteX,
-    y: quoteTop + (doc.quoteStyle === "mark" ? 42 : 4),
+    y: Math.round(quoteTop + markH + quoteSize * 0.8),
     size: quoteSize,
     lineHeight: lineH,
     color: text,
@@ -88,10 +94,9 @@ export function renderTestimonial(doc: TestimonialDoc, avatarUrl?: string): stri
     anchor: align,
   }));
 
-  const authorY = cardY + cardH - padding - 27;
   if (doc.showRating) {
     const count = Math.max(1, Math.min(5, Math.round(doc.rating || 5)));
-    parts.push(drawStars(quoteX, authorY - 60, count, accent));
+    parts.push(drawStars(quoteX, authorY - 62, count, accent));
   }
 
   if (doc.align === "center") {

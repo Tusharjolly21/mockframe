@@ -1,16 +1,86 @@
 "use client";
 
-import { esc, systemFont } from "./common";
+import { esc, storeShotTile, systemFont, textBlock, truncate, wrapText } from "./common";
 import type { GooglePlayDoc } from "./types";
 
-export function googlePlayCardSize(doc: GooglePlayDoc): { width: number; height: number } {
-  return {
-    width: 402,
-    height: 270,
+/* ------------------------------ standalone card ------------------------------
+   The top of a Google Play listing in Material 3: icon, name, developer, the
+   stats row, Install, and the first screenshots. */
+
+const CARD_X = 14;
+const CARD_W = 402 - CARD_X * 2;
+const CARD_H = 480;
+
+function renderGooglePlayCard(doc: GooglePlayDoc, avatarUrl?: string): string {
+  const dark = !!doc.dark;
+  const font = systemFont("android");
+  const x = CARD_X;
+  const y = 14;
+  const ink = dark ? "#e3e3e3" : "#1f1f1f";
+  const sub = dark ? "#c4c7c5" : "#444746";
+  const line = dark ? "#444746" : "#e1e3e1";
+  const green = dark ? "#6dd58c" : "#01875f";
+  const ic = 80;
+  const ix = x + 22;
+  const iy = y + 24;
+  const tx = ix + ic + 16;
+  const maxT = CARD_W - (tx - x) - 18;
+  const titleLines = wrapText(doc.title, 21, maxT).slice(0, 2);
+  const initial = esc([...doc.title.trim()][0]?.toUpperCase() ?? "A");
+  const statY = iy + ic + 34;
+  const colW = (CARD_W - 28) / 3;
+  const stat = (i: number, top: string, bottom: string, extra = "") => {
+    const cx = x + 14 + colW * i + colW / 2;
+    return (
+      (i > 0 ? `<rect x="${x + 14 + colW * i}" y="${statY - 10}" width="1" height="26" fill="${line}"/>` : "") +
+      `<text x="${cx}" y="${statY}" font-family="${font}" font-size="14.5" font-weight="600" fill="${ink}" text-anchor="middle">${top}</text>` +
+      extra +
+      `<text x="${cx}" y="${statY + 19}" font-family="${font}" font-size="12" fill="${sub}" text-anchor="middle">${esc(bottom)}</text>`
+    );
   };
+  const rating = Math.min(5, Math.max(0, doc.ratingValue)).toFixed(1);
+  const age = (doc.contentRating.match(/\d+\+?/)?.[0] ?? "3+").replace(/^(\d+)$/, "$1+");
+  const btnY = statY + 42;
+  const shotY = btnY + 66;
+  const shotW = 104;
+  const tiles: Array<[[string, string], [string, string]]> = [
+    [["#2dd4bf", "#0f766e"], ["Train your", "eyes daily"]],
+    [["#60a5fa", "#1d4ed8"], ["Track your", "progress"]],
+    [["#fbbf24", "#d97706"], ["Gentle", "reminders"]],
+    [["#f472b6", "#be185d"], ["Plans for", "every day"]],
+  ];
+  const shots = tiles.map(([c, cap], i) => storeShotTile(`gp-shot${i}`, x + 22 + i * (shotW + 10), shotY, shotW, 210, c, cap, font)).join("");
+  return `
+<defs>
+  <filter id="gp-card-sh" x="-15%" y="-10%" width="130%" height="130%"><feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#06281b" flood-opacity="${dark ? 0.5 : 0.16}"/></filter>
+  <linearGradient id="gp-icon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#047857"/></linearGradient>
+  <clipPath id="gp-icon-clip"><rect x="${ix}" y="${iy}" width="${ic}" height="${ic}" rx="20"/></clipPath>
+  <clipPath id="gp-card-clip"><rect x="${x}" y="${y}" width="${CARD_W}" height="${CARD_H}" rx="28"/></clipPath>
+</defs>
+<rect x="${x}" y="${y}" width="${CARD_W}" height="${CARD_H}" rx="28" fill="${dark ? "#1f1f1f" : "#ffffff"}" filter="url(#gp-card-sh)"/>
+${avatarUrl
+    ? `<image href="${avatarUrl}" x="${ix}" y="${iy}" width="${ic}" height="${ic}" preserveAspectRatio="xMidYMid slice" clip-path="url(#gp-icon-clip)"/>`
+    : `<rect x="${ix}" y="${iy}" width="${ic}" height="${ic}" rx="20" fill="url(#gp-icon)"/>` +
+      `<circle cx="${ix + ic * 0.7}" cy="${iy + ic * 0.28}" r="${ic * 0.32}" fill="#ffffff" opacity="0.15"/>` +
+      `<text x="${ix + ic / 2}" y="${iy + ic / 2 + 13}" font-family="${font}" font-size="36" font-weight="700" fill="#ffffff" text-anchor="middle">${initial}</text>`}
+<rect x="${ix}" y="${iy}" width="${ic}" height="${ic}" rx="20" fill="none" stroke="${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}"/>
+${textBlock(titleLines, { font, x: tx, y: iy + 20, size: 21, lineHeight: 25, color: ink, weight: 600 })}
+<text x="${tx}" y="${iy + 20 + titleLines.length * 25}" font-family="${font}" font-size="14" font-weight="600" fill="${green}">${esc(truncate(doc.developer, 14, maxT))}</text>
+<text x="${tx}" y="${iy + 38 + titleLines.length * 25}" font-family="${font}" font-size="11.5" fill="${sub}">Contains ads · In-app purchases</text>
+${stat(0, `${rating} ★`, doc.ratingCount)}
+${stat(1, "", doc.appSize, `<g transform="translate(${x + 14 + colW * 1.5 - 9} ${statY - 15})" fill="none" stroke="${ink}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v10M5 8l4 4 4-4M3 16h12"/></g>`)}
+${stat(2, "", doc.contentRating, `<rect x="${x + 14 + colW * 2.5 - 11}" y="${statY - 15}" width="22" height="18" rx="3" fill="none" stroke="${ink}" stroke-width="1.5"/><text x="${x + 14 + colW * 2.5}" y="${statY - 1.5}" font-family="${font}" font-size="10" font-weight="700" fill="${ink}" text-anchor="middle">${esc(age)}</text>`)}
+<rect x="${x + 22}" y="${btnY}" width="${CARD_W - 44}" height="42" rx="21" fill="${green}"/>
+<text x="${x + CARD_W / 2}" y="${btnY + 26.5}" font-family="${font}" font-size="15" font-weight="600" fill="${dark ? "#00391c" : "#ffffff"}" text-anchor="middle">Install</text>
+<g clip-path="url(#gp-card-clip)">${shots}</g>`;
+}
+
+export function googlePlayCardSize(doc: GooglePlayDoc): { width: number; height: number } {
+  return { width: 402, height: CARD_H + 28 };
 }
 
 export function renderGooglePlay(doc: GooglePlayDoc, avatarUrl?: string): string {
+  if (doc.standalone) return renderGooglePlayCard(doc, avatarUrl);
   const isDark = !!doc.dark;
   const width = 402;
   const height = doc.standalone ? googlePlayCardSize(doc).height : 874;
@@ -30,7 +100,7 @@ export function renderGooglePlay(doc: GooglePlayDoc, avatarUrl?: string): string
   const dividerColor = isDark ? "#303134" : "#e8eaed";
   
   const iconSize = doc.standalone ? 64 : 72;
-  const iconClipId = "gp-clip-" + Math.floor(Math.random() * 10000000);
+  const iconClipId = "gp-clip";
   
   const getIconDrawing = (ix: number, iy: number) => avatarUrl
     ? `

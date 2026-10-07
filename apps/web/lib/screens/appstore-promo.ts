@@ -315,6 +315,42 @@ export function renderAppStorePromo(doc: AppStorePromoDoc, avatarUrl?: string, s
     `<text x="${P + pillW + Math.round(18 * k)}" y="${pillY + pillH / 2 + Math.round(15 * k)}" font-family="${font}" font-size="${Math.round(14 * k)}" font-weight="500" fill="${c.secondary}">Purchases</text>`
   );
 
+  // a believable app home screen built from the card's copy and accent
+  function sampleHome(x: number, y: number, w: number, h: number): string {
+    const u = w / 400;
+    const pad = 22 * u;
+    const ink = c.ink;
+    const sub = c.secondary;
+    const card = dark ? "#232326" : "#ffffff";
+    const name = esc(truncate(doc.title || "App", 30 * u, w - pad * 2 - 60 * u));
+    const bars = [0.42, 0.66, 0.5, 0.82, 0.6, 0.94, 0.74]
+      .map((v, i) => `<rect x="${(x + pad + 20 * u + i * 42 * u).toFixed(1)}" y="${(y + 330 * u - v * 110 * u).toFixed(1)}" width="${(26 * u).toFixed(1)}" height="${(v * 110 * u).toFixed(1)}" rx="${(8 * u).toFixed(1)}" fill="#fff" fill-opacity="${i === 5 ? 1 : 0.42}"/>`)
+      .join("");
+    const rows = [0, 1, 2]
+      .map((i) => {
+        const ry = y + 410 * u + i * 86 * u;
+        return (
+          `<rect x="${x + pad}" y="${ry}" width="${w - pad * 2}" height="${74 * u}" rx="${20 * u}" fill="${card}"/>` +
+          `<rect x="${x + pad + 14 * u}" y="${ry + 15 * u}" width="${44 * u}" height="${44 * u}" rx="${14 * u}" fill="${accent}" fill-opacity="${0.16 + i * 0.1}"/>` +
+          `<rect x="${x + pad + 72 * u}" y="${ry + 22 * u}" width="${(150 - i * 24) * u}" height="${12 * u}" rx="${6 * u}" fill="${ink}" fill-opacity="0.82"/>` +
+          `<rect x="${x + pad + 72 * u}" y="${ry + 44 * u}" width="${(100 + i * 16) * u}" height="${10 * u}" rx="${5 * u}" fill="${sub}" fill-opacity="0.45"/>` +
+          `<rect x="${x + w - pad - 58 * u}" y="${ry + 26 * u}" width="${44 * u}" height="${22 * u}" rx="${11 * u}" fill="${accent}" fill-opacity="0.9"/>`
+        );
+      })
+      .join("");
+    return (
+      `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${dark ? "#0f0f11" : "#f2f2f7"}"/>` +
+      `<text x="${x + pad}" y="${y + 104 * u}" font-family="${font}" font-size="${(15 * u).toFixed(1)}" font-weight="600" fill="${sub}">Good morning</text>` +
+      `<text x="${x + pad}" y="${y + 138 * u}" font-family="${font}" font-size="${(30 * u).toFixed(1)}" font-weight="800" fill="${ink}" letter-spacing="${(-0.6 * u).toFixed(2)}">${name}</text>` +
+      `<circle cx="${x + w - pad - 20 * u}" cy="${y + 124 * u}" r="${20 * u}" fill="${accent}" fill-opacity="0.2"/>` +
+      `<linearGradient id="asp-hero" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${accent}"/><stop offset="1" stop-color="${accent}" stop-opacity="0.72"/></linearGradient>` +
+      `<rect x="${x + pad}" y="${y + 166 * u}" width="${w - pad * 2}" height="${196 * u}" rx="${26 * u}" fill="url(#asp-hero)"/>` +
+      `<text x="${x + pad + 20 * u}" y="${y + 200 * u}" font-family="${font}" font-size="${(14 * u).toFixed(1)}" font-weight="600" fill="#fff" fill-opacity="0.85">This week</text>` +
+      bars +
+      rows
+    );
+  }
+
   /* ------------- the product: browser window and/or phone ------------- */
   if (showcase !== "app") {
     const ww = showcase === "web" ? fieldW * 1.02 : fieldW * 0.96;
@@ -399,11 +435,8 @@ export function renderAppStorePromo(doc: AppStorePromoDoc, avatarUrl?: string, s
     const sh = rect.height;
     const screen = screenshotUrl
       ? `<image href="${screenshotUrl}" x="${sx}" y="${sy}" width="${sw}" height="${sh}" preserveAspectRatio="xMidYMin slice"/>`
-      : // no screenshot yet: the app's launch screen, so an export still looks real
-        `<rect x="${sx}" y="${sy}" width="${sw}" height="${sh}" fill="${c.paper}"/>
-         <rect x="${sx}" y="${sy}" width="${sw}" height="${sh}" fill="${accent}" fill-opacity="${dark ? 0.1 : 0.06}"/>
-         ${iconAt(sx + sw / 2 - sw * 0.14, sy + sh * 0.38, Math.round(sw * 0.28), Math.round(sw * 0.28 * 0.225), "asp-splash-icon")}
-         <text x="${sx + sw / 2}" y="${sy + sh * 0.38 + sw * 0.28 + sw * 0.12}" font-family="${font}" font-size="${Math.round(sw * 0.07)}" font-weight="700" fill="${c.ink}" text-anchor="middle" letter-spacing="${(-sw * 0.0015).toFixed(2)}">${esc(truncate(doc.title || "", Math.round(sw * 0.07), sw * 0.8))}</text>`;
+      : // no screenshot yet: a sample home screen in the app's accent, so an export still looks real
+        sampleHome(sx, sy, sw, sh);
 
     parts.push(
       `<g transform="translate(${dx.toFixed(1)} ${dy}) scale(${s.toFixed(5)})">

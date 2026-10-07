@@ -439,3 +439,22 @@ export function svgDataUri(inner: string, logicalH: number = SH, logicalW: numbe
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${logicalW} ${logicalH}" width="${w3}" height="${h3}">${inner}</svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
+
+/** A store screenshot thumbnail: a caption over a mini phone showing an app screen. */
+export function storeShotTile(id: string, x: number, y: number, w: number, h: number, colors: [string, string], caption: [string, string], font: string): string {
+  const px = x + w * 0.16;
+  const pw = w * 0.68;
+  const py = y + 50;
+  return (
+    `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${colors[0]}"/><stop offset="1" stop-color="${colors[1]}"/></linearGradient></defs>` +
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="14" fill="url(#${id})"/>` +
+    `<text x="${x + w / 2}" y="${y + 21}" font-family="${font}" font-size="10.5" font-weight="800" fill="#ffffff" text-anchor="middle">${caption[0]}</text>` +
+    `<text x="${x + w / 2}" y="${y + 34}" font-family="${font}" font-size="10.5" font-weight="800" fill="#ffffff" text-anchor="middle">${caption[1]}</text>` +
+    `<rect x="${px}" y="${py}" width="${pw}" height="${h}" rx="11" fill="#111114"/>` +
+    `<rect x="${px + 3}" y="${py + 3}" width="${pw - 6}" height="${h}" rx="8.5" fill="#ffffff"/>` +
+    `<rect x="${px + pw / 2 - 10}" y="${py + 7}" width="20" height="5" rx="2.5" fill="#111114"/>` +
+    `<rect x="${px + 9}" y="${py + 20}" width="${pw * 0.5}" height="6" rx="3" fill="#1f1f24"/>` +
+    `<rect x="${px + 9}" y="${py + 32}" width="${pw - 18}" height="34" rx="7" fill="${colors[0]}" opacity="0.55"/>` +
+    [0, 1, 2].map((k) => `<circle cx="${px + 15}" cy="${py + 80 + k * 17}" r="5" fill="${colors[1]}" opacity="0.7"/><rect x="${px + 24}" y="${py + 77 + k * 17}" width="${pw - 36 - k * 6}" height="6" rx="3" fill="#d4d4dc"/>`).join("")
+  );
+}

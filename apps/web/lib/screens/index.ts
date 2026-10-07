@@ -277,7 +277,7 @@ export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): {
     case "story":
       return flat(renderStory(doc, dp, lookupUrl));
     case "ios-notification":
-      return flat(renderIosNotification(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
+      return flat(renderIosNotification(doc, dp, doc.appIcon ? lookupUrl?.(doc.appIcon) : undefined), screenLogicalHeight(doc), screenLogicalWidth(doc));
     case "spotify":
       return flat(renderSpotify(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
     case "appstore":

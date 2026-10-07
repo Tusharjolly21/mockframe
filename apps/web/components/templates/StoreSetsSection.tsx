@@ -16,11 +16,12 @@ export function StoreSetsSection() {
   const thumbH = Math.round((thumbW * spec.height) / spec.width);
 
   return (
-    <section id="store-sets" className="mt-12 scroll-mt-24" aria-labelledby="store-sets-title">
+    <section id="store-sets" className="mt-16 scroll-mt-24" aria-labelledby="store-sets-title">
       <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
         <div className="max-w-2xl">
-          <h2 id="store-sets-title" className="text-[28px] font-semibold leading-tight tracking-[-0.03em] sm:text-[36px]">
-            Store listing sets
+          <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Store listing sets · New</p>
+          <h2 id="store-sets-title" className="mt-1 text-[28px] font-semibold leading-tight tracking-[-0.03em] sm:text-[34px]">
+            Eight shots, ready for the store
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">
             Eight screenshots designed as one listing, at the sizes the App Store and Google Play ask for. Open a set,

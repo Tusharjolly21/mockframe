@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ArrowUpRight, Link2 } from "lucide-react";
+import { ArrowRight, ArrowUpRight, LayoutGrid, Link2, MonitorSmartphone, Smartphone, Sparkles, Store } from "lucide-react";
 import {
+  CARD_LOOKS,
   TEMPLATES,
   templatePreviewUrl,
   activeSceneGroups,
@@ -16,54 +17,9 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
 import { SocialBrandIcon } from "@/components/SocialBrandIcon";
 import { StoreSetsSection } from "@/components/templates/StoreSetsSection";
+import { STORE_SETS } from "@/lib/storeSets";
 import { APP_SCREEN_TEMPLATES, APP_TEMPLATE_CATEGORIES, type AppTemplateCategory } from "@/lib/appScreenTemplates";
 import { encodeScreenAsset, resolveScreenAsset } from "@/lib/screens";
-
-const TOOL_BACKGROUNDS: Record<string, CSSProperties> = {
-  code: {
-    backgroundColor: "#141a23",
-    backgroundImage: "linear-gradient(rgba(148,163,184,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.08) 1px,transparent 1px)",
-    backgroundSize: "24px 24px",
-  },
-  "github-contributions": {
-    backgroundColor: "#e9f7ef",
-    backgroundImage: "radial-gradient(rgba(34,139,76,.16) 1.5px,transparent 1.5px)",
-    backgroundSize: "18px 18px",
-  },
-  "stripe-revenue": {
-    backgroundColor: "#eeecff",
-    backgroundImage: "repeating-linear-gradient(135deg,rgba(99,91,255,.09) 0 10px,transparent 10px 36px)",
-  },
-  testimonial: {
-    backgroundColor: "#111827",
-    backgroundImage: "radial-gradient(circle at 18% 20%,rgba(52,211,153,.22),transparent 34%),linear-gradient(138deg,#111827 0%,#183b45 54%,#6d5dfc 100%)",
-  },
-  "ios-notification": {
-    backgroundColor: "#1e1b4b",
-    backgroundImage: "radial-gradient(circle at 50% 50%, rgba(99,102,241,0.18), transparent 70%)",
-  },
-  spotify: {
-    backgroundColor: "#09090b",
-    backgroundImage: "radial-gradient(circle at 50% 50%, rgba(29,185,84,0.15), transparent 75%)",
-  },
-  appstore: {
-    backgroundColor: "#0c4a6e",
-    backgroundImage: "linear-gradient(to bottom right, #0284c7, #0369a1)",
-  },
-  "appstore-promo": {
-    backgroundColor: "#1e1b4b",
-    backgroundImage: "radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15), transparent 50%), linear-gradient(135deg, #090514 0%, #1e1145 100%)",
-  },
-  googlemaps: {
-    backgroundColor: "#052e16",
-    backgroundImage: "linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)",
-    backgroundSize: "20px 20px",
-  },
-  googleplay: {
-    backgroundColor: "#004d34",
-    backgroundImage: "radial-gradient(circle at 50% 50%, rgba(1,135,95,0.2), transparent 75%)",
-  },
-};
 
 /** "App screenshots": phone + editable app screen templates, filterable by kind. */
 function AppScreenTemplates() {
@@ -78,7 +34,7 @@ function AppScreenTemplates() {
   return (
     <>
       <Reveal>
-        <div id="app-screens" className="mt-14 flex flex-col justify-between gap-4 border-b border-white/10 pb-4 sm:flex-row sm:items-end">
+        <div id="app-screens" className="mt-16 flex scroll-mt-24 flex-col justify-between gap-4 border-b border-white/10 pb-4 sm:flex-row sm:items-end">
           <div>
             <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-zinc-500">App screenshots</p>
             <h2 className="mt-1 text-[24px] font-semibold">Realistic app screens in real phones</h2>
@@ -150,15 +106,41 @@ export default function TemplatesPage() {
 
       <section className="mx-auto max-w-7xl px-5 pb-24 pt-28 sm:px-8">
         <Reveal>
-          <div className="flex flex-col justify-between gap-5 border-b border-white/10 pb-7 sm:flex-row sm:items-end">
-            <div>
-              <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-cyan-300">Template library</p>
-              <h1 className="mt-2 text-[34px] font-medium leading-tight sm:text-[46px]">Templates</h1>
-            </div>
-            <p className="max-w-md text-[14px] leading-6 text-zinc-400">
-              Pick a realistic app screen, import a public post, build a data card, or choose a real device scene. Everything opens fully editable.
+          <header className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#0e0f14] px-6 py-10 sm:px-10 sm:py-14">
+            <div aria-hidden className="pointer-events-none absolute -right-24 -top-32 h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,.35),transparent_65%)]" />
+            <div aria-hidden className="pointer-events-none absolute -bottom-40 left-1/3 h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle,rgba(34,211,238,.18),transparent_65%)]" />
+            <p className="relative inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[12px] font-medium text-zinc-300">
+              <Sparkles size={13} className="text-cyan-300" /> Template library
             </p>
-          </div>
+            <h1 className="relative mt-5 max-w-3xl text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] sm:text-[58px]">
+              Start from something{" "}
+              <span className="bg-gradient-to-r from-cyan-200 via-indigo-200 to-fuchsia-200 bg-clip-text text-transparent">already beautiful.</span>
+            </h1>
+            <p className="relative mt-4 max-w-xl text-[15px] leading-relaxed text-zinc-400">
+              Store listing sets, realistic app screens, data cards and photoreal device scenes. Every template opens fully editable, so you only swap in what is yours.
+            </p>
+            <nav aria-label="Template sections" className="relative mt-8 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { href: "#store-sets", icon: Store, label: "Store listing sets", meta: `${STORE_SETS.length} sets · 8 shots each` },
+                { href: "#app-screens", icon: Smartphone, label: "App screens", meta: `${APP_SCREEN_TEMPLATES.length} phones` },
+                { href: "#content-cards", icon: LayoutGrid, label: "Content cards", meta: `${TEMPLATES.length} cards` },
+                { href: "#device-scenes", icon: MonitorSmartphone, label: "Device scenes", meta: `${groups.length} collections` },
+              ].map(({ href, icon: Icon, label, meta }) => (
+                <a
+                  key={href}
+                  href={href}
+                  className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 transition-colors hover:border-white/25 hover:bg-white/[0.06]"
+                >
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/[0.06] text-zinc-200"><Icon size={17} /></span>
+                  <span className="min-w-0">
+                    <span className="block text-[13.5px] font-semibold text-white">{label}</span>
+                    <span className="block text-[11.5px] text-zinc-500">{meta}</span>
+                  </span>
+                  <ArrowRight size={15} className="ml-auto text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:text-white" />
+                </a>
+              ))}
+            </nav>
+          </header>
         </Reveal>
 
         <StoreSetsSection />
@@ -225,35 +207,38 @@ export default function TemplatesPage() {
         <AppScreenTemplates />
 
         <Reveal>
-          <div className="mt-14 flex items-end justify-between border-b border-white/10 pb-4">
+          <div id="content-cards" className="mt-16 flex scroll-mt-24 flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
-              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Content tools</p>
-              <h2 className="mt-1 text-[24px] font-semibold">Editable data and code cards</h2>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Content cards</p>
+              <h2 className="mt-1 text-[28px] font-semibold tracking-[-0.03em] sm:text-[34px]">Data, code and store cards</h2>
             </div>
-            <span className="hidden text-[12px] text-zinc-500 sm:block">No device required</span>
+            <p className="max-w-sm text-[13.5px] leading-relaxed text-zinc-500">No device needed. Edit every number, name and colour, then drop the card into any composition.</p>
           </div>
         </Reveal>
-        <RevealGroup className="mt-5 grid gap-4 md:grid-cols-2">
+        <RevealGroup className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {tools.map((template) => {
             const previewUrl = templatePreviewUrl(template);
+            const look = CARD_LOOKS[template.app ?? "code"];
             return (
               <RevealItem key={template.slug}>
                 <Link
                   href={`/templates/${template.slug}`}
-                  className="group block h-full overflow-hidden rounded-lg border border-white/10 bg-[#101116] transition-colors hover:border-white/25"
+                  className="group block h-full overflow-hidden rounded-2xl border border-white/10 bg-[#101116] transition-[border-color,transform] duration-300 hover:-translate-y-0.5 hover:border-white/25"
                 >
-                  <div className="relative flex h-56 items-center justify-center overflow-hidden p-6" style={TOOL_BACKGROUNDS[template.slug as keyof typeof TOOL_BACKGROUNDS]}>
+                  <div className="relative flex h-64 items-center justify-center overflow-hidden p-7" style={{ background: look.css }}>
                     {previewUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={previewUrl} alt={template.label} className="max-h-[82%] max-w-[86%] object-contain drop-shadow-[0_16px_24px_rgba(0,0,0,.3)] transition-transform duration-300 group-hover:scale-[1.025]" />
+                      <img src={previewUrl} alt={`${template.label} template preview`} className="max-h-full max-w-full object-contain drop-shadow-[0_18px_28px_rgba(0,0,0,.28)] transition-transform duration-500 group-hover:scale-[1.035]" />
                     ) : null}
                   </div>
-                  <div className="border-t border-white/[0.08] p-4">
-                    <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-start justify-between gap-3 border-t border-white/[0.08] p-4">
+                    <div className="min-w-0">
                       <h3 className="text-[15px] font-semibold">{template.label}</h3>
-                      <ArrowUpRight size={15} className="text-zinc-600 transition-colors group-hover:text-white" />
+                      <p className="mt-1 text-[12.5px] leading-5 text-zinc-500">{template.blurb}</p>
                     </div>
-                    <p className="mt-1.5 text-[12.5px] leading-5 text-zinc-500">{template.blurb}</p>
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/10 text-zinc-500 transition-colors group-hover:border-white/30 group-hover:text-white">
+                      <ArrowUpRight size={15} />
+                    </span>
                   </div>
                 </Link>
               </RevealItem>
@@ -262,7 +247,7 @@ export default function TemplatesPage() {
         </RevealGroup>
 
         <Reveal>
-          <div className="mt-14 flex items-end justify-between border-b border-white/10 pb-4">
+          <div id="device-scenes" className="mt-16 flex scroll-mt-24 items-end justify-between border-b border-white/10 pb-4">
             <div>
               <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Device scenes</p>
               <h2 className="mt-1 text-[24px] font-semibold">Photoreal mockups by device</h2>
