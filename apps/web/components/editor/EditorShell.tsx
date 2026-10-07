@@ -21,6 +21,7 @@ import { AnimatePanel } from "./AnimatePanel";
 import { BottomBar } from "./BottomBar";
 import { CanvasStage } from "./CanvasStage";
 import { LeftPanel } from "./LeftPanel";
+import { LooksTray, MakePrettyButton, openLooks } from "./MakePretty";
 import { RightPanel } from "./RightPanel";
 import { ExportNextSteps } from "./ExportNextSteps";
 import { MobileGate } from "./MobileGate";
@@ -182,6 +183,8 @@ export function EditorShell({
         setScene(() => result.scene);
         useViewStore.getState().select(result.layerId);
         useViewStore.getState().triggerEntrance(result.layerId);
+        // pick a finished look in the screenshot's colours, with the others a click away
+        openLooks(true);
         track("media_added", { source: "homepage_drop" });
         trackOnce("first_media_added", { source: "homepage_drop" });
       } catch (e) {
@@ -518,8 +521,10 @@ export function EditorShell({
         {/* bottom toolbar (reset / position / 3D / emoji) + animate */}
         <div className="pointer-events-auto absolute bottom-1 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2">
           <ShotStrip />
+          <LooksTray />
           <div className="flex items-end gap-2">
             <BottomBar />
+            <MakePrettyButton />
             <AnimatePanel />
           </div>
         </div>
