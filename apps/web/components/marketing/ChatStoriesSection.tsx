@@ -45,21 +45,22 @@ export function ChatStoriesSection() {
             </div>
           ))}
         </div>
+      </div>
 
-        {/* infinite marquee of every app you can fake */}
-        <div className="mt-20">
-          <p className="mb-6 text-center text-[13px] text-zinc-500">Set your story in any of these apps</p>
-          <AppIconMarquee />
-        </div>
+      {/* full-bleed dock of the chat apps, each one opens in the editor */}
+      <div className="mt-24">
+        <AppIconMarquee />
+      </div>
 
-        <div className="mt-16 flex flex-col items-center gap-3">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="mt-12 flex flex-col items-center gap-3">
           <Link
             href="/editor"
             className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-6 text-[14.5px] font-semibold text-zinc-900 transition-colors hover:bg-zinc-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             Write your own chat story
           </Link>
-          <p className="text-[12px] text-zinc-500">
+          <p className="text-center text-[12px] text-zinc-500">
             Script it, style it, and export a vertical video for TikTok, Reels and Shorts.
           </p>
         </div>

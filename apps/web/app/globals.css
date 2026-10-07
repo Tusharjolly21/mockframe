@@ -159,15 +159,6 @@ input[type="color"]::-webkit-color-swatch {
   }
 }
 
-/* Infinite app-icon marquee (homepage): two identical tracks, shift by half. */
-@keyframes fk-marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .animate-\[fk-marquee_38s_linear_infinite\] { animation: none; }
-}
-
 /* guided flow: "Next" breathes once the first screen lands */
 @keyframes fk-nudge {
   0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
