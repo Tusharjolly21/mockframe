@@ -9,6 +9,8 @@ export type RequestOwner = {
   ownerId: string;
   uid: string | null;
   email?: string | null;
+  /** the provider vouches for `email` (Google, email link, or a verified password account) */
+  emailVerified?: boolean;
   isGuest: boolean;
   /** Firebase sign_in_provider — "anonymous" for guest sessions, "google.com" / "password" / "emailLink" for real accounts */
   signInProvider?: string;
@@ -30,6 +32,7 @@ export async function getRequestOwner(req: NextRequest): Promise<RequestOwner> {
         ownerId: `user_${safeOwnerPart(decoded.uid)}`,
         uid: decoded.uid,
         email: decoded.email ?? null,
+        emailVerified: decoded.email_verified === true,
         isGuest: false,
         signInProvider: decoded.firebase?.sign_in_provider,
       };

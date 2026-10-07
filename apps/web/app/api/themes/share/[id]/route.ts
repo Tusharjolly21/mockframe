@@ -14,7 +14,10 @@ async function access(req: NextRequest, id: string) {
   if (!snap.exists) return { owner, doc: null, role: null as Role | null };
   const data = snap.data() as { ownerUid: string; members?: { uid?: string | null; email?: string; role?: Role }[] };
   if (data.ownerUid === owner.uid) return { owner, doc: { ref, snap, data }, role: "contribute" as Role };
-  const member = (data.members ?? []).find((item) => item.uid === owner.uid || (!!owner.email && item.email?.toLowerCase() === owner.email.toLowerCase()));
+  // pending invites match by email only when the provider has verified it —
+  // otherwise anyone could register the invitee's address and read the theme
+  const verifiedEmail = owner.emailVerified ? owner.email?.toLowerCase() : undefined;
+  const member = (data.members ?? []).find((item) => item.uid === owner.uid || (!!verifiedEmail && item.email?.toLowerCase() === verifiedEmail));
   return { owner, doc: member ? { ref, snap, data } : null, role: member?.role ?? null };
 }
 
@@ -48,7 +51,10 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
     if (body.email && body.role && (body.role === "read" || body.role === "contribute") && result.doc.data.ownerUid === result.owner.uid) {
       const email = body.email.trim().toLowerCase();
       let uid: string | null = null;
-      try { uid = (await firebaseAuth().getUserByEmail(email)).uid; } catch { /* pending invite */ }
+      try {
+        const user = await firebaseAuth().getUserByEmail(email);
+        if (user.emailVerified) uid = user.uid; // unverified accounts claim it once they verify
+      } catch { /* pending invite */ }
       const members = (result.doc.data.members ?? []).filter((member: { email?: string }) => member.email?.toLowerCase() !== email);
       members.push({ email, uid, role: body.role });
       // keep the denormalized membership arrays in sync so GET's indexed queries find it

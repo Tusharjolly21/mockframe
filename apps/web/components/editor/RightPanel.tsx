@@ -26,6 +26,7 @@ import { WatermarkPanel } from "./WatermarkPanel";
 import { Popover, Seg, SliderRow } from "./ui";
 import { toast } from "./Toolbar";
 import { StaticScenePreview } from "./StaticScenePreview";
+import { TeamLibrary } from "./TeamLibrary";
 
 function ScenePreview({ scene, className }: { scene: SceneDocument; className?: string }) {
   return <StaticScenePreview scene={scene} className={`pointer-events-none w-full rounded-xl ${className ?? ""}`} />;
@@ -472,6 +473,7 @@ export function RightPanel() {
       )}
 
       <MyTemplates />
+      <TeamLibrary />
       <ConnectorsPanel />
       </>}
     </div>

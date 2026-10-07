@@ -23,7 +23,8 @@ export async function GET(req: NextRequest) {
     // Indexed union instead of scanning the whole global collection: themes I
     // own + themes I'm a member of (by uid, or by email for pending invites).
     // memberUids/memberEmails are denormalized on write for exactly this.
-    const email = owner.email?.toLowerCase();
+    // pending (email) invites only count for a provider-verified address
+    const email = owner.emailVerified ? owner.email?.toLowerCase() : undefined;
     const col = firestoreDb().collection("sharedThemes");
     const queries = [
       col.where("ownerUid", "==", owner.uid).get(),
@@ -51,7 +52,8 @@ export async function POST(req: NextRequest) {
 
     let invitedUid: string | null = null;
     try {
-      invitedUid = (await firebaseAuth().getUserByEmail(email)).uid;
+      const user = await firebaseAuth().getUserByEmail(email);
+      if (user.emailVerified) invitedUid = user.uid;
     } catch {
       // Pending invites are matched by email when the employee signs in.
     }

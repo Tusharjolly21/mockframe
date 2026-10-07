@@ -35,6 +35,7 @@ const PRO_FEATURES = [
   "Full-page website capture",
   "Custom-brand watermark",
   "Saved templates in your account",
+  "Team library — share templates with your team",
 ];
 
 type Billing = "monthly" | "yearly";
