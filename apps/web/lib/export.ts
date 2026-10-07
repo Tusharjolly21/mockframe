@@ -28,6 +28,24 @@ export async function exportScene(
   scene: SceneDocument,
   opts: { format: ExportFormat; scale: number; quality?: ExportQuality; watermark?: boolean }
 ): Promise<void> {
+  const blob = await renderSceneBlob(node, scene, opts);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = exportFileName(scene, opts);
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+
+export function exportFileName(scene: SceneDocument, opts: { format: ExportFormat; scale: number }): string {
+  return `mockframe-${Math.round(scene.canvas.width * opts.scale)}x${Math.round(scene.canvas.height * opts.scale)}.${opts.format === "jpeg" ? "jpg" : opts.format}`;
+}
+
+/** The scene as an image file, watermarked like every export. */
+export async function renderSceneBlob(
+  node: HTMLElement,
+  scene: SceneDocument,
+  opts: { format: ExportFormat; scale: number; quality?: ExportQuality; watermark?: boolean }
+): Promise<Blob> {
   // browsers silently fail or downscale beyond canvas limits — surface it
   // instead ("export resolution not being respected" user report)
   const outW = Math.round(scene.canvas.width * opts.scale);
@@ -61,10 +79,5 @@ export async function exportScene(
     canvas.toBlob(resolve, mime, encoderQuality)
   );
   if (!blob) throw new Error("Export failed");
-
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `mockframe-${Math.round(scene.canvas.width * opts.scale)}x${Math.round(scene.canvas.height * opts.scale)}.${opts.format === "jpeg" ? "jpg" : opts.format}`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  return blob;
 }

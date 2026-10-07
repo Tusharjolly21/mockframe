@@ -26,7 +26,8 @@ import { LeftPanel } from "./LeftPanel";
 import { LooksTray, MakePrettyButton, openLooks } from "./MakePretty";
 import { RightPanel } from "./RightPanel";
 import { ExportNextSteps } from "./ExportNextSteps";
-import { MobileGate } from "./MobileGate";
+import { PhoneEditor } from "./phone/PhoneEditor";
+import { usePhoneMode } from "./phone/usePhoneMode";
 import { ResumeDraftCard } from "./ResumeDraftCard";
 import { StarterModal } from "./StarterModal";
 import { ShortcutsSheet } from "./ShortcutsSheet";
@@ -71,6 +72,7 @@ export function EditorShell({
   embedded?: boolean;
 }) {
   const setScene = useSceneStore((s) => s.setScene);
+  const { phone, openFullEditor } = usePhoneMode(embedded);
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const [toast, setToast] = useState<string | null>(null);
   const [promoOpen, setPromoOpen] = useState(false);
@@ -550,6 +552,9 @@ export function EditorShell({
     return () => window.removeEventListener("framekit:toast", onToast);
   }, []);
 
+  if (phone === null) return <div className="h-dvh bg-[#0b0b0e] md:bg-transparent" />;
+  if (phone) return <PhoneEditor onFullEditor={openFullEditor} />;
+
   return (
     <div className="relative h-dvh overflow-hidden">
       {/* the canvas fills everything; panels float above it */}
@@ -598,7 +603,6 @@ export function EditorShell({
       </AnimatePresence>
 
       {promoOpen && <PromoPanel onClose={() => setPromoOpen(false)} />}
-      <MobileGate embedded={embedded} />
       <ExportNextSteps />
       <ShortcutsSheet />
       <StarterModal embedded={embedded} deepLinked={deepLinked} />

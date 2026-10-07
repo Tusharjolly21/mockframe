@@ -139,8 +139,8 @@ export function MobileChatBuilder() {
         </button>
 
         <p className="pt-1 text-center text-[11px] leading-5 text-zinc-600">
-          Free download, no watermark, no sign-up. Want more apps, video export and devices?{" "}
-          <Link href="/editor" target="_blank" rel="noopener" className="text-violet-300">Open the full editor</Link> on desktop.
+          Free download, no watermark, no sign-up. Have a real screenshot?{" "}
+          <Link href="/editor" className="text-violet-300">Put it in a device</Link>.
         </p>
       </section>
 
