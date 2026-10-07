@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence } from "motion/react";
 import type { Background, Backdrop, Effect, MockupLayer } from "@framekit/scene";
 import { backgroundToCss, noiseTile, overlayStyle, patternStyle } from "@framekit/renderer";
-import { Aperture, ArrowLeft, ArrowUpDown, Ban, Check, ChevronDown, Grid3x3, Image as ImageIcon, Lock, Pipette, Search, SlidersHorizontal, Sparkles, Square, Sun, X } from "lucide-react";
+import { Aperture, ArrowLeft, ArrowUpDown, Ban, ChevronDown, ChevronRight, Grid3x3, Image as ImageIcon, Lock, Pipette, Search, SlidersHorizontal, Sparkles, Square, Sun, X } from "lucide-react";
 import {
   SiAppstore,
   SiDribbble,
@@ -118,11 +118,11 @@ export function FrameControls() {
   if (view !== "hub") {
     const labels: Record<Exclude<FrameView, "hub">, string> = {
       background: "Background library",
-      overlay: "Overlay · light & shadow",
+      overlay: "Lighting",
       effects: "Effects",
       pattern: "Pattern",
-      portrait: "Portrait · depth",
-      border: "Border",
+      portrait: "Depth",
+      border: "Canvas frame",
     };
     return (
       <DetailView label={labels[view]} onBack={() => setView("hub")}>
@@ -138,12 +138,12 @@ export function FrameControls() {
 
   /* --------------------------------- hub ------------------------------------ */
   const backdrop = scene.canvas.backdrop;
-  const styleChips: { id: Exclude<FrameView, "hub">; label: string; icon: React.ReactNode; on: boolean }[] = [
-    { id: "overlay", label: "Overlay", icon: <Sun size={14} />, on: !!backdrop?.overlay },
-    { id: "effects", label: "Effects", icon: <SlidersHorizontal size={14} />, on: (scene.canvas.effects?.length ?? 0) > 0 },
-    { id: "pattern", label: "Pattern", icon: <Grid3x3 size={14} />, on: !!backdrop?.pattern },
-    { id: "portrait", label: "Portrait", icon: <Aperture size={14} />, on: !!backdrop?.portrait },
-    { id: "border", label: "Border", icon: <Square size={14} />, on: (scene.canvas.cornerRadius ?? 0) > 0 || (scene.canvas.border?.width ?? 0) > 0 },
+  const styleChips: { id: Exclude<FrameView, "hub" | "background">; label: string; hint: string; icon: React.ReactNode; on: boolean }[] = [
+    { id: "overlay", label: "Lighting", hint: "Window light and shadows across the scene", icon: <Sun size={14} />, on: !!backdrop?.overlay },
+    { id: "pattern", label: "Pattern", hint: "Shapes and lines behind the device", icon: <Grid3x3 size={14} />, on: !!backdrop?.pattern },
+    { id: "portrait", label: "Depth", hint: "Blur and stage the background", icon: <Aperture size={14} />, on: !!backdrop?.portrait },
+    { id: "effects", label: "Effects", hint: "Grain, glow and color grading", icon: <SlidersHorizontal size={14} />, on: (scene.canvas.effects?.length ?? 0) > 0 },
+    { id: "border", label: "Canvas frame", hint: "Rounded corners and a border on the image", icon: <Square size={14} />, on: (scene.canvas.cornerRadius ?? 0) > 0 || (scene.canvas.border?.width ?? 0) > 0 },
   ];
 
   // "Transparent background" — remove the whole canvas behind the device so
@@ -177,78 +177,31 @@ export function FrameControls() {
         <SizeSelector />
       </div>
 
-      {/* Transparent-canvas toggle — export the device alone on transparency */}
-      <div className="px-4 pt-4">
-        <button
-          onClick={toggleTransparent}
-          role="switch"
-          aria-checked={isClean}
-          className={`fk-press flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left ${
-            isClean ? "border-[#17171c] bg-[#f4f4f8]" : "border-[#e4e4ec] bg-white hover:border-[#c9c9d4]"
-          }`}
-        >
-          <span
-            className="h-6 w-6 shrink-0 rounded-md border border-black/10"
-            style={{
-              backgroundImage:
-                "linear-gradient(45deg,#d4d4dc 25%,transparent 25%),linear-gradient(-45deg,#d4d4dc 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#d4d4dc 75%),linear-gradient(-45deg,transparent 75%,#d4d4dc 75%)",
-              backgroundSize: "8px 8px",
-              backgroundPosition: "0 0,0 4px,4px -4px,-4px 0",
-              backgroundColor: "#fff",
-            }}
-          />
-          <span className="min-w-0 flex-1">
-            <span className="block text-[12.5px] font-semibold text-[#17171c]">Transparent background</span>
-            <span className="block text-[10.5px] leading-tight text-[#9a9aa4]">Export just the device — no canvas behind it</span>
-          </span>
-          <span
-            className={`grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border-2 ${
-              isClean ? "border-[#17171c] bg-[#17171c] text-white" : "border-[#d4d4de]"
-            }`}
-          >
-            {isClean && <Check size={11} strokeWidth={3.5} />}
-          </span>
-        </button>
-      </div>
-
-      {/* Style hub — each chip opens a focused sub-view (PostSpark Backdrop) */}
-      <div className="px-4 pt-4">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">Style</p>
-        <div className="grid grid-cols-2 gap-1.5">
+      <Section
+        title="Background"
+        action={
           <button
             onClick={() => setView("background")}
-            className="fk-press flex items-center gap-1.5 rounded-full border border-[#e4e4ec] bg-white px-3 py-2 text-[12px] font-semibold text-[#3c3c46] hover:border-[#c9c9d4]"
+            data-bg-library
+            className="fk-press rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold normal-case tracking-normal text-[#6b6b76] hover:bg-black/[0.05] hover:text-[#17171c]"
           >
-            <ImageIcon size={14} />
-            Backgrounds
+            Browse all
           </button>
-          {styleChips.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => setView(c.id)}
-              className={`fk-press flex items-center gap-1.5 rounded-full border px-3 py-2 text-[12px] font-semibold ${
-                c.on ? "border-[#17171c] bg-[#17171c] text-white" : "border-[#e4e4ec] bg-white text-[#3c3c46] hover:border-[#c9c9d4]"
-              }`}
-            >
-              {c.icon}
-              {c.label}
-              {c.on && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-400" />}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <Section title="Background" collapsible defaultOpen={false}>
+        }
+      >
         {/* mode chips: transparent / custom color / image */}
         <div className="mb-4 grid grid-cols-3 gap-2">
           <button
-            onClick={() => setBg({ type: "transparent" })}
+            onClick={toggleTransparent}
+            role="switch"
+            aria-checked={isClean}
+            title="Export just the device, with nothing behind it"
             className={`fk-tile flex flex-col items-center gap-1.5 rounded-xl border bg-white py-2.5 ${
-              bg.type === "transparent" ? "border-[#17171c] shadow-[0_0_0_1px_#17171c]" : "border-[#e8e8ef]"
+              isClean ? "border-[#17171c] shadow-[0_0_0_1px_#17171c]" : "border-[#e8e8ef]"
             }`}
           >
             <Ban size={16} className="text-[#6b6b76]" />
-            <span className="text-[10.5px] font-medium text-[#6b6b76]">Trans…</span>
+            <span className="text-[10.5px] font-medium text-[#6b6b76]">None</span>
           </button>
           <button
             onClick={() => colorRef.current?.click()}
@@ -344,7 +297,7 @@ export function FrameControls() {
         )}
 
         {/* curated library — first row visible, chevron expands the rest */}
-        {BG_CATEGORIES.map((cat) => {
+        {BG_CATEGORIES.slice(0, 3).map((cat) => {
           const isOpen = expanded.has(cat.id);
           const shown = isOpen ? cat.swatches : cat.swatches.slice(0, 4);
           const hasMore = cat.swatches.length > 4;
@@ -374,14 +327,17 @@ export function FrameControls() {
           );
         })}
 
-        {/* stock photo backdrops — downloaded + ingested locally so exports
-            never depend on a remote URL (html-to-image needs local assets) */}
-        <UnsplashPhotos
-          onPick={(assetId) => {
-            bumpAssets();
-            setBg({ type: "image", assetId, fit: "cover", blur: 0, opacity: 1 });
-          }}
-        />
+        {/* the full library (premium collections, photos) lives one tap away */}
+        <button
+          onClick={() => setView("background")}
+          className="fk-press flex w-full items-center justify-between rounded-xl border border-[#e4e4ec] bg-white px-3 py-2.5 text-[12px] font-semibold text-[#17171c] hover:border-[#17171c]"
+        >
+          <span>All backgrounds and photos</span>
+          <span className="flex items-center gap-1 text-[10.5px] font-medium text-[#9a9aa4]">
+            {BG_CATEGORIES.slice(3).reduce((n, c) => n + c.swatches.length, 0)}+ more
+            <ChevronRight size={14} />
+          </span>
+        </button>
 
         <input
           ref={fileRef}
@@ -423,6 +379,29 @@ export function FrameControls() {
           </button>
         </div>
       </Section>
+
+      {/* everything else that sits around the device, one row each */}
+      <section className="px-4 pb-1 pt-4">
+        <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">Finishing touches</h3>
+        <div className="overflow-hidden rounded-xl border border-[#ececf2]">
+          {styleChips.map((c, i) => (
+            <button
+              key={c.id}
+              data-touch={c.id}
+              onClick={() => setView(c.id)}
+              className={`fk-press flex w-full items-center gap-2.5 bg-white px-3 py-2.5 text-left hover:bg-[#f7f7fa] ${i ? "border-t border-[#ececf2]" : ""}`}
+            >
+              <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${c.on ? "bg-[#17171c] text-white" : "bg-[#f2f2f7] text-[#5a5a66]"}`}>{c.icon}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[12.5px] font-semibold text-[#17171c]">{c.label}</span>
+                <span className="block truncate text-[10.5px] text-[#9a9aa4]">{c.hint}</span>
+              </span>
+              <span className={`text-[10.5px] font-semibold ${c.on ? "text-emerald-600" : "text-[#b0b0ba]"}`}>{c.on ? "On" : "Off"}</span>
+              <ChevronRight size={14} className="shrink-0 text-[#b0b0ba]" />
+            </button>
+          ))}
+        </div>
+      </section>
     </>
   );
 }

@@ -89,6 +89,9 @@ interface ViewState {
   /** when on, dragging a mockup on the canvas rotates it in 3D (tiltX/tiltY) */
   threeD: boolean;
   setThreeD: (v: boolean) => void;
+  /** which group of controls the Content step shows for the selected device */
+  contentTab: "screen" | "device" | "position";
+  setContentTab: (t: "screen" | "device" | "position") => void;
   /** layer whose screenshot is being adjusted ON the canvas (pan/zoom/crop) */
   adjustId: string | null;
   setAdjustId: (id: string | null) => void;
@@ -120,6 +123,8 @@ export const useViewStore = create<ViewState>()((set) => ({
   entrance: { layerId: null, nonce: 0 },
   threeD: false,
   setThreeD: (threeD) => set({ threeD }),
+  contentTab: "screen",
+  setContentTab: (contentTab) => set({ contentTab }),
   adjustId: null,
   setAdjustId: (adjustId) => set(adjustId ? { adjustId, selectedIds: [adjustId], cropAspect: null } : { adjustId }),
   cropAspect: null,

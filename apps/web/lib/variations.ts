@@ -20,10 +20,10 @@ export interface Variation {
 
 export const VARIATIONS: Variation[] = [
   { id: "v-center", label: "Centered", presetId: "solo-center" },
-  { id: "v-float", label: "Floating", presetId: "solo-tilt" },
+  { id: "v-turn", label: "3D turn", presetId: "solo-turn" },
   { id: "v-lean", label: "Leaning", presetId: "solo-lean" },
   { id: "v-hero", label: "Hero crop", presetId: "solo-hero" },
-  { id: "v-flat", label: "Flat lay", presetId: "solo-flat" },
+  { id: "v-recline", label: "Tilted back", presetId: "solo-recline" },
   { id: "v-duo", label: "Side by side", presetId: "duo-side" },
   { id: "v-duo-persp", label: "Perspective pair", presetId: "duo-perspective" },
   { id: "v-duo-blank", label: "With blank frame", presetId: "duo-side", blankExtras: true },

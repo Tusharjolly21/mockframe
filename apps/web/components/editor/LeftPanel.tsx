@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { getDevice, previewDataUri } from "@framekit/devices";
 import type { MockupLayer, Shadow, StickerLayer, TextLayer } from "@framekit/scene";
 import { DEFAULT_SHADOW } from "@framekit/scene";
-import { Crop, Globe, ImagePlus, Move, Plus, Sparkles, TriangleAlert, X } from "lucide-react";
+import { Crop, Globe, ImageIcon, ImagePlus, Move, Plus, Smartphone, Sparkles, TriangleAlert, X } from "lucide-react";
 import { track, trackOnce } from "@/lib/analytics";
 import { ingestFile, resolveAsset } from "@/lib/assets";
 import { renderScreenshotIntoMockup } from "@/lib/mockuuups";
@@ -13,6 +13,7 @@ import { presentationForDevice } from "@/lib/deviceScene";
 import { decodeScreenAsset, isScreenAsset, SCREEN_APP_LABELS } from "@/lib/screens";
 import { useSceneStore, useViewStore } from "@/lib/store";
 import { enterAdjust, withCrop } from "@/lib/adjust";
+import { cameraFor } from "@/lib/layouts";
 import { openUpgrade } from "@/lib/billing/gate";
 import { ColorRow, Section, Seg, SliderRow } from "./ui";
 import { CaptureUrlDialog } from "./CaptureUrlDialog";
@@ -192,6 +193,8 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
   const [applyMode, setApplyMode] = useState<"selected" | "all">("selected");
   const [editing, setEditing] = useState(false);
   const [capturing, setCapturing] = useState(false);
+  const tab = useViewStore((s) => s.contentTab);
+  const setTab = useViewStore((s) => s.setContentTab);
   const deviceLayerCount = scene.layers.filter((l) => l.type === "mockup").length;
   const patch = (p: Partial<MockupLayer>) => updateLayer(layer.id, (l) => ({ ...(l as MockupLayer), ...p }));
 
@@ -231,14 +234,19 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
     ) ?? SHADOW_PRESETS[0];
 
   useEffect(() => {
-    const openCapture = () => setCapturing(true);
+    const openCapture = () => {
+      useViewStore.getState().setContentTab("screen");
+      setCapturing(true);
+    };
     window.addEventListener("framekit:start-capture", openCapture);
     return () => window.removeEventListener("framekit:start-capture", openCapture);
   }, []);
 
   return (
     <>
-      {isTemplate ? (
+      <ContentTabs tab={tab} onTab={setTab} card={isTemplate} />
+
+      {tab !== "screen" ? null : isTemplate ? (
         <section className="mx-3 mt-2 rounded-xl border border-[#dedee8] bg-[#f8f8fb] p-2.5">
           <div className="flex items-center justify-between">
             <p className="text-[12px] font-bold text-[#17171c]">{templateLabel} template</p>
@@ -264,7 +272,7 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
         </section>
       ) : null}
 
-      {!isTemplate && (
+      {tab === "device" && !isTemplate && (
       <div id="editor-device-step" className="scroll-mt-2 px-3 pt-1">
         <DevicePicker
           deviceId={layer.deviceId}
@@ -306,10 +314,12 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
       </div>
       )}
 
-      <TransformControls layer={layer} />
+      {tab === "position" && <TransformControls layer={layer} />}
 
-      {!isTemplate && (
-      <Section title="Media">
+      {tab === "screen" && !isTemplate && (
+      <MaybeSection show={!!asset} title="Screenshot">
+        {asset && (
+        <>
         <div
           onClick={() => fileRef.current?.click()}
           className="fk-tile relative grid place-items-center rounded-2xl bg-[#f2f2f7] py-5"
@@ -349,8 +359,10 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
           onClick={() => setCapturing(true)}
           className="fk-press mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#e4e4ec] bg-white py-1.5 text-[11.5px] font-semibold text-[#17171c] hover:border-[#17171c]"
         >
-          <Globe size={12} /> Capture a website by URL
+          <Globe size={12} /> Replace with a website capture
         </button>
+        </>
+        )}
         {capturing && (
           <CaptureUrlDialog
             onClose={() => setCapturing(false)}
@@ -464,7 +476,7 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
             {/* Redact & Blur Zones */}
             <div className="mt-3 border-t border-[#ececf2] pt-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-[#17171c]">Blur / Redact Zones</span>
+                <span className="text-[11px] font-bold text-[#17171c]">Hide private info</span>
                 <button
                   onClick={() => {
                     const current = layer.blurZones || [];
@@ -472,7 +484,7 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
                   }}
                   className="fk-press rounded-lg border border-violet-200 bg-violet-50 px-2 py-1 text-[10.5px] font-semibold text-violet-700 hover:border-violet-400"
                 >
-                  + Add Blur Zone
+                  + Blur an area
                 </button>
               </div>
               <div className="space-y-2">
@@ -613,19 +625,19 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
             e.target.value = "";
           }}
         />
-      </Section>
+      </MaybeSection>
       )}
 
       {/* Screen Studio builds generated screens & template cards. It's irrelevant
           for a plain uploaded photo / realistic-render, so hide it there. */}
-      {!hasPhotoMedia && (
+      {tab === "screen" && !hasPhotoMedia && (
         <div id="screen-studio-step" className="scroll-mt-2">
           <ScreenStudio layer={layer} />
         </div>
       )}
 
-      {device && device.variants.length > 1 && (
-        <Section title="Style" collapsible defaultOpen={false}>
+      {tab === "device" && device && device.variants.length > 1 && (
+        <Section title="Color">
           <div className="grid grid-cols-3 gap-2">
             {device.variants.map((v) => {
               const active = (layer.frameVariant ?? device.variants[0].id) === v.id;
@@ -651,7 +663,7 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
         </Section>
       )}
 
-      {!device && !isTemplate && (
+      {tab === "device" && !device && !isTemplate && (
         <Section title="Style">
           <Seg
             id="frameless-style"
@@ -674,7 +686,9 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
         </Section>
       )}
 
-      <Section title="Shadow" collapsible defaultOpen={false}>
+      {tab === "device" && (
+      <>
+      <Section title="Shadow">
         <div className="grid grid-cols-4 gap-2">
           {SHADOW_PRESETS.map((p) => (
             <button
@@ -836,9 +850,71 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
           </>
         )}
       </Section>
+      </>
+      )}
     </>
   );
 }
+
+/* ------------------------------- content tabs ------------------------------- */
+
+/** a titled section, or just its children (hidden inputs, dialogs) when there's nothing to show */
+function MaybeSection({ show, title, children }: { show: boolean; title: string; children: React.ReactNode }) {
+  return show ? <Section title={title}>{children}</Section> : <>{children}</>;
+}
+
+const CONTENT_TABS = [
+  { id: "screen", label: "Screen", card: "Card", icon: ImageIcon, hint: "What's on the screen" },
+  { id: "device", label: "Device", card: "Look", icon: Smartphone, hint: "Device, color, shadow, glare" },
+  { id: "position", label: "Position", card: "Position", icon: Move, hint: "Size, angle and 3D tilt" },
+] as const;
+
+/** Three plain groups for the selected shot instead of one long scroll. */
+function ContentTabs({
+  tab,
+  onTab,
+  card,
+}: {
+  tab: "screen" | "device" | "position";
+  onTab: (t: "screen" | "device" | "position") => void;
+  card: boolean;
+}) {
+  return (
+    <div className="sticky top-0 z-10 bg-white/95 px-3 pb-1 pt-2 backdrop-blur" role="tablist">
+      <div className="grid grid-cols-3 gap-0.5 rounded-xl bg-[#ececf2] p-1">
+        {CONTENT_TABS.map((t) => {
+          const on = tab === t.id;
+          const Icon = t.icon;
+          return (
+            <button
+              key={t.id}
+              role="tab"
+              aria-selected={on}
+              data-content-tab={t.id}
+              title={t.hint}
+              onClick={() => onTab(t.id)}
+              className={`fk-press flex h-8 items-center justify-center gap-1.5 rounded-lg text-[11.5px] font-semibold transition-colors ${
+                on ? "bg-white text-[#17171c] shadow-[0_1px_3px_rgba(20,20,40,0.14)]" : "text-[#7a7a86] hover:text-[#17171c]"
+              }`}
+            >
+              <Icon size={13} />
+              {card ? t.card : t.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const QUICK_ANGLES = [
+  { id: "flat", label: "Straight", tiltX: 0, tiltY: 0, rotate: 0 },
+  { id: "left", label: "Turned left", tiltX: 5, tiltY: 30, rotate: 0 },
+  { id: "right", label: "Turned right", tiltX: 5, tiltY: -30, rotate: 0 },
+  { id: "back", label: "Tilted back", tiltX: 32, tiltY: 0, rotate: 0 },
+  { id: "lean", label: "Leaning", tiltX: 4, tiltY: 10, rotate: -10 },
+  { id: "hero", label: "Hero angle", tiltX: 12, tiltY: -18, rotate: -4 },
+] as const;
 
 /** Deliberately kept near the top of the editing rail: these are the controls
  * people reach for while composing, not layout-preset controls. */
@@ -855,8 +931,42 @@ function TransformControls({ layer }: { layer: MockupLayer }) {
   const patchTransform = (patch: Partial<MockupLayer["transform"]>) =>
     updateLayer(layer.id, (current) => ({ ...(current as MockupLayer), transform: { ...(current as MockupLayer).transform, ...patch } }));
 
+  const t = layer.transform;
+  const isAngle = (a: (typeof QUICK_ANGLES)[number]) => Math.abs(t.tiltX - a.tiltX) < 1 && Math.abs(t.tiltY - a.tiltY) < 1 && Math.abs(t.rotate - a.rotate) < 1;
+
   return (
-    <Section title="Transform">
+    <Section
+      title="Position"
+      action={
+        <button
+          title="Back to centre, straight, full size"
+          onClick={() => patchTransform({ x: 0, y: 0, rotate: 0, tiltX: 0, tiltY: 0, scale: Math.round(base * 1000) / 1000 })}
+          className="fk-press rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold normal-case tracking-normal text-[#6b6b76] hover:bg-black/[0.05] hover:text-[#17171c]"
+        >
+          Reset
+        </button>
+      }
+    >
+      <span className="mb-1.5 block text-xs text-[#6b6b76]">Angle presets</span>
+      <div className="mb-3 grid grid-cols-6 gap-1.5">
+        {QUICK_ANGLES.map((a) => (
+          <button
+            key={a.id}
+            title={a.label}
+            data-angle={a.id}
+            onClick={() => patchTransform({ tiltX: a.tiltX, tiltY: a.tiltY, rotate: a.rotate, perspective: cameraFor(layer) })}
+            className={`fk-press grid aspect-square place-items-center rounded-lg border ${
+              isAngle(a) ? "border-[#17171c] bg-[#f4f4f8]" : "border-[#e8e8ef] bg-white hover:border-[#c9c9d4]"
+            }`}
+            style={{ perspective: "90px" }}
+          >
+            <span
+              className="block h-5 w-3 rounded-[3px] bg-gradient-to-br from-violet-500 to-cyan-400 shadow-sm"
+              style={{ transform: `rotateX(${a.tiltX}deg) rotateY(${a.tiltY}deg) rotateZ(${a.rotate}deg)` }}
+            />
+          </button>
+        ))}
+      </div>
       <SliderRow
         label="Size"
         value={Math.round((layer.transform.scale / base) * 100)}
