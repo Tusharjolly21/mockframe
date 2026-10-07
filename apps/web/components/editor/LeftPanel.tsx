@@ -23,6 +23,7 @@ import { ScreenStudio, isTemplateCard } from "./ScreenStudio";
 import { FrameControls } from "./FramePanel";
 import { FontPicker, useCustomFamilies } from "./FontPicker";
 import { TextAnimationControls } from "./TextAnimationControls";
+import { ClayControls, supportsClay } from "./ClayControls";
 import { isItalicOnly, nearestWeight, weightLabel, weightsFor } from "@/lib/fonts";
 import { ExportStep, StepFooter, StepNav } from "./StepFlow";
 
@@ -654,6 +655,8 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
           </div>
         </Section>
       )}
+
+      {tab === "device" && supportsClay(layer) && <ClayControls layer={layer} />}
 
       {tab === "device" && !device && !isTemplate && (
         <Section title="Style">

@@ -187,6 +187,8 @@ export const MockupLayerSchema = z.object({
       inset: z.number().min(0),
     })
     .optional(),
+  /** matte single-colour "clay" finish over the device frame (framed devices only) */
+  clay: z.object({ color: z.string().regex(/^#[0-9a-fA-F]{6}$/) }).optional(),
   /** diagonal light streak across the screen glass */
   glare: z
     .object({
