@@ -61,8 +61,10 @@ export function UpgradeModal({
   const pay = async () => {
     setBusy(true);
     try {
-      // navigates to Dodo's hosted checkout; the editor confirms Pro on return
+      // opens Dodo's checkout over the page; after payment Dodo returns to the
+      // editor, which confirms Pro. Resolves if the buyer closes it unpaid.
       await purchasePlan(plan, plans[plan].price);
+      setBusy(false);
     } catch (err) {
       toast(err instanceof Error ? err.message : "Checkout failed");
       setBusy(false);

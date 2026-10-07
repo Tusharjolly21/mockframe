@@ -30,13 +30,17 @@ export function useEntitlementSync(): void {
 /* -------------------------- Dodo Payments checkout -------------------------- */
 
 /**
- * Start a purchase: the server creates a Dodo Payments hosted-checkout session
- * and we navigate to it. Dodo returns the buyer to /editor?upgrade=success,
- * where confirmCheckoutReturn() unlocks Pro.
+ * Start a purchase: the server creates a Dodo Payments checkout session and
+ * we open it as an overlay on top of the current page, so the buyer never
+ * leaves their work. After payment Dodo navigates to /editor?upgrade=success,
+ * where confirmCheckoutReturn() unlocks Pro (the editor autosaves, so the
+ * scene is offered back there). If the overlay can't load, we fall back to
+ * the full-page hosted checkout.
  *
  * `expectedPrice` is the cents price the UI DISPLAYED — the server rejects the
  * checkout if its current price differs, so a stale tab can never charge a
- * price the user didn't see. Resolves only if navigation fails to start.
+ * price the user didn't see. Resolves when the buyer closes the overlay
+ * without paying; never resolves while a redirect is under way.
  */
 export async function purchasePlan(plan: PlanId, expectedPrice: number): Promise<void> {
   const res = await firebaseFetch("/api/billing/checkout", {
@@ -46,9 +50,45 @@ export async function purchasePlan(plan: PlanId, expectedPrice: number): Promise
   });
   const j = await res.json().catch(() => ({}));
   if (!res.ok || typeof j.checkoutUrl !== "string") throw new Error(j.error ?? "Checkout failed");
-  window.location.assign(j.checkoutUrl);
-  // keep the caller's busy state until the page unloads
-  await new Promise<never>(() => {});
+  const checkoutUrl: string = j.checkoutUrl;
+  const mode = j.mode === "live" ? "live" : "test";
+
+  const redirect = async (): Promise<never> => {
+    window.location.assign(checkoutUrl);
+    // keep the caller's busy state until the page unloads
+    return new Promise<never>(() => {});
+  };
+
+  let DodoPayments: (typeof import("dodopayments-checkout"))["DodoPayments"];
+  try {
+    ({ DodoPayments } = await import("dodopayments-checkout"));
+  } catch {
+    return redirect();
+  }
+
+  let navigating = false;
+  const outcome = await new Promise<"closed" | "failed">((resolve) => {
+    try {
+      DodoPayments.Initialize({
+        mode,
+        displayType: "overlay",
+        onEvent: (event) => {
+          if (event.event_type === "checkout.redirect") navigating = true; // the SDK navigates to the return URL
+          if (event.event_type === "checkout.error" && !navigating) resolve("failed");
+          if (event.event_type === "checkout.closed" && !navigating) resolve("closed");
+        },
+      });
+      DodoPayments.Checkout.open({ checkoutUrl });
+    } catch {
+      resolve("failed");
+    }
+  });
+  if (outcome === "failed") {
+    try {
+      DodoPayments.Checkout.close();
+    } catch {}
+    return redirect();
+  }
 }
 
 async function readStatus(): Promise<boolean> {

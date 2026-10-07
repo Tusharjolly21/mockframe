@@ -35,8 +35,8 @@ const PRO_FEATURES = [
   "4K & 6K output",
   "Full-page website capture",
   "Custom-brand watermark",
-  "Saved templates in your account",
-  "Team library — share templates with your team",
+  "Store screenshots in 39 languages, AI-translated",
+  "Saved templates & a shared team library",
 ];
 
 type Billing = "monthly" | "yearly";

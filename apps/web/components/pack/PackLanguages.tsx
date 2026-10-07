@@ -184,7 +184,7 @@ export function PackLanguages() {
       {message && <p className={`mt-1.5 text-[11px] ${message.tone === "error" ? "text-red-400" : "text-emerald-400"}`}>{message.text}</p>}
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
-      {upgradeOpen && <UpgradeModal reason="AI translation for store screenshots" onClose={() => setUpgradeOpen(false)} />}
+      {upgradeOpen && <UpgradeModal reason="AI caption translations" onClose={() => setUpgradeOpen(false)} />}
     </div>
   );
 }

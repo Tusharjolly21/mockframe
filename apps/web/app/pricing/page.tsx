@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Check } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { PlanComparison } from "@/components/marketing/PlanComparison";
 import { PricingPlans } from "@/components/marketing/PricingPlans";
 import { Reveal } from "@/components/marketing/Reveal";
 
@@ -32,7 +33,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "What does Pro add?",
-    a: "Pro unlocks the full chat and DM screen set (Telegram, Instagram, Slack, Discord and more), premium background collections, video and GIF export, 4K and 6K output, full-page website capture, your own custom-brand watermark, and saved templates. It starts at under $10 a month.",
+    a: "Pro unlocks the full chat and DM screen set (Telegram, Instagram, Slack, Discord and more), premium background collections, video and GIF export, 4K and 6K output, full-page website capture, AI translation of store screenshot captions into 39 languages, your own custom-brand watermark, and saved templates. It starts at under $10 a month.",
   },
   {
     q: "Can I cancel anytime?",
@@ -79,6 +80,18 @@ export default function PricingPage() {
               <Check size={14} className="text-emerald-400" /> {r}
             </span>
           ))}
+        </Reveal>
+      </section>
+
+      <section className="mx-auto max-w-4xl px-6 pb-24">
+        <Reveal>
+          <h2 className="text-center text-[28px] font-medium sm:text-[34px]">Compare plans</h2>
+          <p className="mx-auto mt-3 max-w-xl text-center text-[14.5px] leading-6 text-zinc-400">
+            Free covers the whole editor. Pro is for when the work ships: commercial use, video, store sets in every language and the biggest exports.
+          </p>
+          <div className="mt-8">
+            <PlanComparison />
+          </div>
         </Reveal>
       </section>
 

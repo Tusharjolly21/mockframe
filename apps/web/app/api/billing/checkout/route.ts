@@ -7,8 +7,9 @@ import { isPlanId, PLANS } from "@/lib/billing/plans";
 export const runtime = "nodejs";
 
 /**
- * POST { plan, expectedPrice } → { checkoutUrl } for Dodo Payments' hosted
- * checkout. The client redirects there; Dodo sends the buyer back to
+ * POST { plan, expectedPrice } → { checkoutUrl, mode } for Dodo Payments'
+ * checkout. The client opens it as an overlay on the page (falling back to a
+ * full redirect); after payment Dodo sends the buyer to
  * /editor?upgrade=success (with subscription_id/status appended), where the
  * editor confirms the entitlement via /api/billing/verify. The uid + plan are
  * attached as metadata so webhooks can attribute the purchase without a session.
@@ -47,7 +48,9 @@ export async function POST(req: NextRequest) {
       returnUrl: `${origin}/editor?upgrade=success`,
       cancelUrl: `${origin}/editor?upgrade=1&plan=${plan}`,
     });
-    return NextResponse.json({ checkoutUrl });
+    // the client opens this as an in-page overlay, which needs Dodo's mode
+    const mode = process.env.DODO_PAYMENTS_ENVIRONMENT === "live_mode" ? "live" : "test";
+    return NextResponse.json({ checkoutUrl, mode });
   } catch (err) {
     if (err instanceof DodoConfigError) {
       return NextResponse.json({ error: err.message }, { status: 501 });
