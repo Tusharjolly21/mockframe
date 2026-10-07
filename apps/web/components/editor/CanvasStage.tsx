@@ -34,7 +34,7 @@ export function CanvasStage() {
   const scene = useSceneStore((s) => s.scene);
   const setScene = useSceneStore((s) => s.setScene);
   const updateLayer = useSceneStore((s) => s.updateLayer);
-  const { zoom, pan, selectedIds, setZoom, setPan, select, bumpAssets, threeD, entrance, adjustId } = useViewStore();
+  const { zoom, pan, selectedIds, setZoom, setPan, select, bumpAssets, threeD, entrance, adjustId, textTime } = useViewStore();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<Drag | null>(null);
@@ -507,6 +507,7 @@ export function CanvasStage() {
           resolveAsset={resolveAsset}
           animateLayerId={entrance.layerId}
           animationNonce={entrance.nonce}
+          textTime={textTime}
           onBlurZonesChange={(layerId, zones) => {
             updateLayer(layerId, (l) => ({ ...l, blurZones: zones }));
           }}

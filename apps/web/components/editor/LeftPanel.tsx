@@ -22,6 +22,7 @@ import { MediaEditor } from "./MediaEditor";
 import { ScreenStudio, isTemplateCard } from "./ScreenStudio";
 import { FrameControls } from "./FramePanel";
 import { FontPicker, useCustomFamilies } from "./FontPicker";
+import { TextAnimationControls } from "./TextAnimationControls";
 import { isItalicOnly, nearestWeight, weightLabel, weightsFor } from "@/lib/fonts";
 import { ExportStep, StepFooter, StepNav } from "./StepFlow";
 
@@ -1079,6 +1080,7 @@ function TextControls({ layer }: { layer: TextLayer }) {
   useCustomFamilies(); // weightsFor() reads uploaded fonts — re-render when they change
 
   return (
+    <>
     <Section title="Text">
       <textarea
         value={layer.content}
@@ -1210,6 +1212,8 @@ function TextControls({ layer }: { layer: TextLayer }) {
         </TxBlock>
       </div>
     </Section>
+    <TextAnimationControls key={layer.id} layer={layer} onChange={(animation) => patch({ animation })} />
+    </>
   );
 }
 
