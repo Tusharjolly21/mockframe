@@ -8,7 +8,8 @@ import { ingestFile } from "@/lib/assets";
 import { buildScreenScene } from "@/lib/deviceScene";
 import type { ScreenApp } from "@/lib/screens/types";
 import { placeAsset } from "@/lib/sceneOps";
-import { useSceneStore, useViewStore } from "@/lib/store";
+import { useDraftsUi } from "@/lib/drafts";
+import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
 
 const SEEN_KEY = "fk-starter-seen";
 
@@ -54,6 +55,9 @@ export function StarterModal({ deepLinked, embedded }: { deepLinked: boolean; em
     if (scene) {
       setScene(() => scene);
       select(null);
+      // a fresh starting point, not an edit: autosave waits for the first change
+      sceneTemporal.getState().clear();
+      useDraftsUi.getState().setCurrent(null);
     }
     dismiss();
     if (replay) setTimeout(() => window.dispatchEvent(new CustomEvent("framekit:animate-open")), 600);

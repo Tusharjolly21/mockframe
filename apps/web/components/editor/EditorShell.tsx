@@ -8,6 +8,7 @@ import { confirmCheckoutReturn } from "@/lib/billing/client";
 import { ingestFile } from "@/lib/assets";
 import { loadCustomDevices, syncCustomDevicesFromServer } from "@/lib/customDevices";
 import { buildDeviceScene, buildScreenScene, isScreenApp } from "@/lib/deviceScene";
+import { startAutosave } from "@/lib/autosave";
 import { saveCurrentDraft } from "@/lib/drafts";
 import { ensureGoogleFont, loadCustomFonts } from "@/lib/fonts";
 import { ShotStrip } from "./ShotStrip";
@@ -22,6 +23,7 @@ import { LeftPanel } from "./LeftPanel";
 import { RightPanel } from "./RightPanel";
 import { ExportNextSteps } from "./ExportNextSteps";
 import { MobileGate } from "./MobileGate";
+import { ResumeDraftCard } from "./ResumeDraftCard";
 import { StarterModal } from "./StarterModal";
 import { ShortcutsSheet } from "./ShortcutsSheet";
 import { LogoChip, Toolbar } from "./Toolbar";
@@ -63,6 +65,9 @@ export function EditorShell({
   const [toast, setToast] = useState<string | null>(null);
   const [promoOpen, setPromoOpen] = useState(false);
   const extensionCaptures = useRef(new Set<string>());
+  const deepLinked = Boolean(
+    initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad || remixId || fromTemplate
+  );
 
   // Fonts: this browser's uploads (+ the account's), and every catalog family
   // the scene's text uses — drafts, templates and remixes arrive with fonts
@@ -213,6 +218,11 @@ export function EditorShell({
       clearTimeout(t);
     };
   }, [isCheckoutReturn, checkoutSubId, checkoutStatus]);
+
+  // Autosave every edit to Drafts. Declared after the deep-link effects above so
+  // a deep-linked scene is the untouched baseline. The embed runs inside other
+  // sites, where silently filling this origin's storage would be a surprise.
+  useEffect(() => (embedded ? undefined : startAutosave()), [embedded]);
 
   // The batch is a list of independent scene documents. Keep the active shot
   // current without making the editor shell re-render for every control tweak.
@@ -496,10 +506,8 @@ export function EditorShell({
       <MobileGate embedded={embedded} />
       <ExportNextSteps />
       <ShortcutsSheet />
-      <StarterModal
-        embedded={embedded}
-        deepLinked={Boolean(initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad || remixId || fromTemplate)}
-      />
+      <StarterModal embedded={embedded} deepLinked={deepLinked} />
+      <ResumeDraftCard embedded={embedded} deepLinked={deepLinked} />
     </div>
   );
 }

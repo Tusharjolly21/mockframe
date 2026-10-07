@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Check, Copy, Image as ImageIcon, LayoutTemplate, Pencil, Plus, Trash2 } from "lucide-react";
+import { openDraftInEditor } from "@/lib/autosave";
 import {
   captureThumbnail,
   deleteDraft,
   listDrafts,
-  openDraft,
   putDraft,
   saveCurrentDraft,
   saveDraft,
@@ -14,12 +14,11 @@ import {
   useDraftsUi,
   type DraftRecord,
 } from "@/lib/drafts";
-import { useSceneStore, useViewStore } from "@/lib/store";
+import { useSceneStore } from "@/lib/store";
 
 /** Save editable scenes and reusable personal templates in one cloud-backed library. */
 export function DraftsPanel({ onClose, onToast }: { onClose: () => void; onToast: (msg: string) => void }) {
   const scene = useSceneStore((s) => s.scene);
-  const setScene = useSceneStore((s) => s.setScene);
   const { currentId, setCurrent } = useDraftsUi();
 
   const [drafts, setDrafts] = useState<DraftRecord[] | null>(null);
@@ -47,20 +46,12 @@ export function DraftsPanel({ onClose, onToast }: { onClose: () => void; onToast
   };
 
   const load = (rec: DraftRecord) => {
-    try {
-      const next = openDraft(rec);
-      setScene(() => next);
-      setCurrent(rec.kind === "template" ? null : rec.id, rec.kind === "template" ? null : rec.name);
-      const view = useViewStore.getState();
-      view.bumpAssets();
-      view.select(null);
-      view.setActiveLayout(null);
-      window.dispatchEvent(new CustomEvent("framekit:fit")); // canvas size may differ
-      if (rec.kind === "template") onToast(`New scene created from “${rec.name}”`);
-      onClose();
-    } catch {
+    if (!openDraftInEditor(rec)) {
       onToast("This draft couldn't be opened — it may be from a newer version.");
+      return;
     }
+    if (rec.kind === "template") onToast(`New scene created from “${rec.name}”`);
+    onClose();
   };
 
   const duplicate = async (rec: DraftRecord) => {
@@ -157,7 +148,7 @@ export function DraftsPanel({ onClose, onToast }: { onClose: () => void; onToast
       ) : visible.length === 0 ? (
         <p className="px-3 py-5 text-center text-xs leading-relaxed text-[#9a9aa4]">
           {section === "scene"
-            ? "No saved scenes yet. Save this canvas to continue editing it later."
+            ? "No saved scenes yet. Your work saves here automatically as soon as you start editing."
             : "No personal templates yet. Save a finished style once, then reuse it without changing the original."}
         </p>
       ) : (
