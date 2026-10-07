@@ -73,6 +73,13 @@ export function Toolbar() {
     return sceneTemporal.subscribe(read);
   }, []);
 
+  // the filmstrip under the canvas opens the batch panel to export every shot
+  useEffect(() => {
+    const open = () => setMore("batch");
+    window.addEventListener("framekit:open-batch", open);
+    return () => window.removeEventListener("framekit:open-batch", open);
+  }, []);
+
   useEffect(() => {
     if (!layersOpen && !more) return;
     const onDown = (e: MouseEvent) => {

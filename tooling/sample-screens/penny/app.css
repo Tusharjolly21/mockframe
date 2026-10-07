@@ -1,0 +1,15 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap");
+:root { --bg: #f3f6f5; --accent: #0e8f74; --deep: #0b3b3f; --mint: #d7f5ea; --ink: #0f1a1c; --sub: #66737a; --faint: #9aa6ab; --line: rgba(15, 26, 28, 0.07); --display: "Manrope", "Inter", sans-serif; }
+.h1, .h2, .num { font-family: "Manrope", "Inter", sans-serif; }
+.num { letter-spacing: -0.03em; font-weight: 800; }
+.nav { height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+.nav .title { font-size: 17px; font-weight: 700; font-family: Manrope, Inter, sans-serif; }
+.iconbtn { box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.ico { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; flex-shrink: 0; }
+.tx { display: flex; align-items: center; gap: 12px; padding: 11px 0; }
+.tx + .tx { border-top: 1px solid var(--line); }
+.tx .t { font-weight: 650; font-size: 14.5px; }
+.tx .s { font-size: 12px; color: var(--sub); margin-top: 1px; }
+.amt { font-family: Manrope, Inter, sans-serif; font-weight: 750; font-size: 15px; }
+.pos { color: #0e9f6e; }
+.av { width: 40px; height: 40px; font-size: 14px; }

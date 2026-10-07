@@ -8,6 +8,7 @@ import {
   defaultInstagramRequests,
   defaultScreenDoc,
   defaultSocialDoc,
+  type AiAppDoc,
   type ScreenApp,
   type ScreenDoc,
 } from "./screens/types";
@@ -51,6 +52,8 @@ const lin = (angle: number, colors: string[]): Background => ({
 });
 const mesh = (seed: number, colors: string[]): Background => ({ type: "mesh-gradient", seed, colors });
 
+/** card-style docs default to standalone; inside a phone they are full screens */
+const inPhone = <T extends ScreenDoc>(doc: T): T => ({ ...doc, standalone: false });
 const dark = <T extends ScreenDoc>(doc: T): T => ({ ...doc, chrome: { ...doc.chrome, dark: true } });
 const android = <T extends ScreenDoc>(doc: T): T => ({ ...doc, chrome: { ...doc.chrome, platform: "android" } });
 
@@ -215,7 +218,21 @@ export const APP_SCREEN_TEMPLATES: AppScreenTemplate[] = [
   {
     slug: "ai-app-home", label: "AI app home", category: "AI", app: "aiapp",
     blurb: "The home screen of an AI assistant app.",
-    deviceId: "pixel-10-pro-fold", frameVariant: "moonstone", doc: () => android(defaultScreenDoc("aiapp")),
+    deviceId: "pixel-10-pro", frameVariant: "moonstone", doc: () => android({
+      ...(defaultScreenDoc("aiapp") as AiAppDoc),
+      // the bare default has no content and renders an empty "Welcome"
+      archetype: "dashboard",
+      appName: "Lumen",
+      palette: { primary: "#6d5dfc", bg: "#f6f5ff", card: "#ffffff", text: "#17152e", muted: "#8a87a6" },
+      header: { title: "Good morning, Ava", subtitle: "Your assistant saved you 3h 20m this week" },
+      stats: [{ label: "Tasks done", value: "48" }, { label: "Hours saved", value: "3.3" }],
+      items: [
+        { title: "Summarise the Q3 report", subtitle: "12 pages · ready in 20s", value: "New", emoji: "📄" },
+        { title: "Draft a reply to Maya", subtitle: "Friendly, under 100 words", value: "Draft", emoji: "✉️" },
+        { title: "Plan Friday's offsite", subtitle: "Agenda, venue and travel", value: "3 steps", emoji: "🗓️" },
+      ],
+      tabs: ["Home", "Chats", "Library", "You"],
+    }),
     background: studio("st-lilac"), cardBg: "radial-gradient(circle at 50% 30%,#ece7fb,#b6a9dc)", ink: "#1e1b4b",
   },
 
@@ -223,28 +240,28 @@ export const APP_SCREEN_TEMPLATES: AppScreenTemplate[] = [
   {
     slug: "spotify-now-playing", label: "Spotify now playing", category: "Apps & Store", app: "spotify",
     blurb: "Spotify's player with album art, progress and controls.",
-    deviceId: "iphone-17-pro", frameVariant: "black-titanium", doc: () => defaultScreenDoc("spotify"),
+    deviceId: "iphone-17-pro", frameVariant: "black-titanium", doc: () => inPhone(defaultScreenDoc("spotify")),
     background: lin(160, ["#1db954", "#0b3d1d", "#050505"]), cardBg: "linear-gradient(160deg,#1db954,#050505)",
     headline: "On repeat",
   },
   {
     slug: "app-store-listing", label: "App Store listing", category: "Apps & Store", app: "appstore",
     blurb: "Your app's App Store page with icon, ratings and Get button.",
-    deviceId: "iphone-17-pro-max", frameVariant: "natural-titanium", doc: () => defaultScreenDoc("appstore"),
+    deviceId: "iphone-17-pro-max", frameVariant: "natural-titanium", doc: () => inPhone(defaultScreenDoc("appstore")),
     background: lin(150, ["#38bdf8", "#2563eb", "#1e1b4b"]), cardBg: "linear-gradient(150deg,#38bdf8,#1e1b4b)",
     headline: "Now on the App Store",
   },
   {
     slug: "google-play-listing", label: "Google Play listing", category: "Apps & Store", app: "googleplay",
     blurb: "Your app's Google Play page on a Pixel.",
-    deviceId: "pixel-10-pro", frameVariant: "jade", doc: () => android(defaultScreenDoc("googleplay")),
+    deviceId: "pixel-10-pro", frameVariant: "jade", doc: () => android(inPhone(defaultScreenDoc("googleplay"))),
     background: lin(150, ["#34d399", "#01875f", "#003d2b"]), cardBg: "linear-gradient(150deg,#34d399,#003d2b)",
     headline: "Get it on Google Play",
   },
   {
     slug: "google-maps-route", label: "Google Maps route", category: "Apps & Store", app: "googlemaps",
     blurb: "A Google Maps navigation route with ETA.",
-    deviceId: "galaxy-s25-edge", frameVariant: "titanium-silver", doc: () => android(defaultScreenDoc("googlemaps")),
+    deviceId: "galaxy-s25-edge", frameVariant: "titanium-silver", doc: () => android(inPhone(defaultScreenDoc("googlemaps"))),
     background: studio("st-white"), cardBg: "radial-gradient(circle at 50% 30%,#ffffff,#c9ccd3)", ink: "#111827",
     headline: "Find your way",
   },

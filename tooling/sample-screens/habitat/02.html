@@ -1,0 +1,36 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../lib/base.css"><link rel="stylesheet" href="app.css">
+<script src="../lib/icons.js"></script><script src="../lib/base.js"></script>
+<style>
+  .hero { margin: 4px 16px 0; text-align: center; padding: 6px 0 0; }
+  .flame { width: 76px; height: 76px; margin: 0 auto; border-radius: 26px; background: linear-gradient(160deg, #ffb27a, #ff6a3d); display: grid; place-items: center; color: #fff; box-shadow: 0 12px 26px rgba(255,106,61,.35); }
+  /* heatmap card spans y 300–600 in page px */
+  .heat { position: absolute; top: calc(var(--bar) + 252px); left: 22px; right: 22px; height: 288px; padding: 16px; border-radius: 26px; }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; margin-top: 10px; }
+  .cal i { height: 32px; border-radius: 9px; background: #f1ede6; display: block; }
+  .cal .l2 { background: #c8f0dd; } .cal .l3 { background: #7fdcb2; } .cal .l4 { background: #34c38f; }
+  .cal .today { box-shadow: 0 0 0 2.5px #fff, 0 0 0 4.5px #16161d; }
+  .cal .empty { background: transparent; border: 1.5px dashed #e6e0d6; }
+  .dow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; margin-top: 10px; text-align: center; font-size: 11px; font-weight: 600; color: var(--faint); }
+  .st { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 16px; }
+  .st .card { padding: 12px; text-align: center; }
+</style></head><body>
+<div class="screen">
+  <div class="nav"><div class="iconbtn"><i data-i="chevron-left" style="font-size:20px"></i></div><div class="title">Morning walk</div><div class="iconbtn"><i data-i="ellipsis" style="font-size:18px"></i></div></div>
+  <div class="hero"><div class="flame"><i data-i="flame" style="font-size:40px" data-s="1.8"></i></div><div class="num" style="font-size:34px;margin-top:12px">32-day streak</div><div class="muted" style="font-size:13px;margin-top:2px;font-weight:550">Your longest yet · best was 21 days</div></div>
+</div>
+<div class="card heat">
+  <div class="row between"><div style="font-family:Sora;font-weight:650;font-size:16px;letter-spacing:-.02em">October</div><div class="row" style="gap:8px;color:var(--faint)"><i data-i="chevron-left" style="font-size:18px"></i><i data-i="chevron-right" style="font-size:18px;color:var(--ink)"></i></div></div>
+  <div class="dow"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+  <div class="cal"><i class="l3"></i><i class="l4"></i><i class="l3"></i><i class="l2"></i><i class="l4"></i><i class="l4"></i><i class="l3"></i><i class="l3"></i><i class="l3"></i><i class="l3"></i><i class="l4"></i><i class="l4"></i><i class="l4"></i><i class="l3"></i><i class="l3"></i><i class="l4"></i><i class="l4"></i><i class="l4"></i><i class="l4"></i><i class="l3"></i><i class="l3"></i><i class="l4"></i><i class="l3"></i><i class="l4 today"></i><i class="l2"></i><i class="l4"></i><i class="l4"></i><i class="l3"></i><i class="l3"></i><i class="l4"></i><i class="l4"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i><i class="empty"></i></div>
+</div>
+<div class="screen" style="top:calc(var(--bar) + 556px)">
+  <div class="st">
+    <div class="card"><div class="num" style="font-size:22px">96%</div><div class="muted" style="font-size:11.5px;font-weight:600;margin-top:2px">This month</div></div>
+    <div class="card"><div class="num" style="font-size:22px">184</div><div class="muted" style="font-size:11.5px;font-weight:600;margin-top:2px">Total walks</div></div>
+    <div class="card"><div class="num" style="font-size:22px">7:12</div><div class="muted" style="font-size:11.5px;font-weight:600;margin-top:2px">Usual time</div></div>
+  </div>
+</div>
+<div class="tabs"><div><i data-i="circle-check"></i>Today</div><div class="on"><i data-i="layout-grid"></i>Habits</div><div><i data-i="chart-column"></i>Stats</div><div><i data-i="user"></i>Me</div></div>
+</body></html>

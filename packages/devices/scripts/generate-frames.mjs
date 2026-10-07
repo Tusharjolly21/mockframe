@@ -357,7 +357,7 @@ ${lights}
 <rect x="${M}" y="${M + 76}" width="${viewW}" height="${toolbarH - 76}" fill="${c.toolbar}"/>
 <rect x="${M + 170}" y="${M + 88}" width="${viewW - 420}" height="52" rx="26" fill="${c.urlbar}"/>
 <circle cx="${M + 200}" cy="${M + 114}" r="10" fill="none" stroke="${c.textDim}" stroke-width="4"/>
-<text x="${M + 226}" y="${M + 123}" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="30" fill="${c.text}" id="fk_urltext_${p}">framekit.app</text>
+<text x="${M + 226}" y="${M + 123}" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="30" fill="${c.text}" id="fk_urltext_${p}">mockframe.app</text>
 <g fill="${c.textDim}">
   <circle cx="${M + 60}" cy="${M + 114}" r="3.6"/><circle cx="${M + 60}" cy="${M + 114}" r="3.6"/>
   <path d="M${M + 96} ${M + 104} l-12 10 12 10" stroke="${c.textDim}" stroke-width="5" fill="none" stroke-linecap="round"/>
@@ -376,7 +376,7 @@ ${lights}
   <rect x="2" y="7" width="12" height="9" rx="2"/>
   <path d="M5 7 V4 a3 3 0 0 1 6 0 v3"/>
 </g>
-<text x="${M + 76}" y="${M + 128}" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="24" font-weight="600" fill="${c.text}" id="fk_urltext_${p}">framekit.app</text>
+<text x="${M + 76}" y="${M + 128}" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="24" font-weight="600" fill="${c.text}" id="fk_urltext_${p}">mockframe.app</text>
 
 <!-- dummy tabs inside sidebar -->
 <g fill="${c.textDim}" opacity="0.6" transform="translate(${M + 24}, ${M + 176})">
@@ -408,7 +408,7 @@ ${lights}
 <path d="${rr(M, M, viewW, toolbarH, { tl: winR, tr: winR, br: 0, bl: 0 })}" fill="${c.toolbar}"/>
 ${lights}
 <rect x="${M + viewW / 2 - 460}" y="${M + 24}" width="920" height="56" rx="16" fill="${c.urlbar}"/>
-<text x="${M + viewW / 2}" y="${M + 62}" text-anchor="middle" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="30" fill="${c.text}" id="fk_urltext_${p}">framekit.app</text>
+<text x="${M + viewW / 2}" y="${M + 62}" text-anchor="middle" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="30" fill="${c.text}" id="fk_urltext_${p}">mockframe.app</text>
 <g stroke="${c.textDim}" stroke-width="5" fill="none" stroke-linecap="round">
   <path d="M${M + 210} ${M + 40} l-14 12 14 12"/>
   <path d="M${M + 250} ${M + 40} l14 12 -14 12" opacity="0.45"/>

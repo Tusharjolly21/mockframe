@@ -1,0 +1,49 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../lib/base.css"><link rel="stylesheet" href="app.css">
+<script src="../lib/icons.js"></script><script src="../lib/base.js"></script>
+<style>
+  /* the unlocked card spans y 120–350 in page px: storeSets crops it */
+  .unlock { position: absolute; top: calc(var(--bar) + 66px); left: 24px; right: 24px; height: 230px; border-radius: 28px; padding: 20px; overflow: hidden; text-align: center; }
+  .unlock .ring { width: 92px; height: 92px; border-radius: 50%; margin: 2px auto 0; background: conic-gradient(from 210deg, #ffe08a, #fff, #ffd166, #fff3c4, #ffe08a); display: grid; place-items: center; box-shadow: 0 10px 30px rgba(120,20,40,.35); }
+  .unlock .ring > div { width: 74px; height: 74px; border-radius: 50%; background: linear-gradient(160deg, #ff8a4c, #e8336d); display: grid; place-items: center; color: #fff; }
+  .spark { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #fff; opacity: .7; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 8px; padding: 16px 12px 14px; }
+  .b { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; text-align: center; }
+  .b .m { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; color: #fff; }
+  .b.locked .m { background: #ececf0 !important; color: #b4b4be; }
+  .b.locked { color: var(--faint); }
+</style></head>
+<body>
+<div class="screen">
+  <div class="nav"><div class="iconbtn"><i data-i="chevron-left" style="font-size:20px"></i></div><div class="title">Achievements</div><div class="iconbtn"><i data-i="share" style="font-size:17px"></i></div></div>
+</div>
+<div class="unlock grad">
+  <span class="spark" style="left:30px;top:40px"></span><span class="spark" style="left:300px;top:30px;width:4px;height:4px"></span><span class="spark" style="left:60px;top:150px;width:4px;height:4px"></span><span class="spark" style="left:320px;top:130px"></span>
+  <div style="font-size:11.5px;font-weight:700;letter-spacing:.1em;opacity:.9">NEW BADGE UNLOCKED</div>
+  <div class="ring" style="margin-top:12px"><div><i data-i="medal" style="font-size:36px" data-s="1.8"></i></div></div>
+  <div style="font-family:var(--display);font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:12px">Sub-25 5K</div>
+  <div style="font-size:13px;opacity:.92;margin-top:2px">24:41 at Riverside · faster than 82% of runners</div>
+</div>
+<div class="screen" style="top:calc(var(--bar) + 306px)">
+  <div class="row between pad"><div class="h2">Badges</div><div class="muted" style="font-size:13px;font-weight:600">18 of 40</div></div>
+  <div class="card" style="margin:10px 16px 0">
+    <div class="grid">
+      <div class="b"><div class="m" style="background:linear-gradient(150deg,#ff8a4c,#e8336d)"><i data-i="footprints" style="font-size:24px"></i></div>First 10K</div>
+      <div class="b"><div class="m" style="background:linear-gradient(150deg,#60a5fa,#2563eb)"><i data-i="sunrise" style="font-size:24px"></i></div>Early bird</div>
+      <div class="b"><div class="m" style="background:linear-gradient(150deg,#4ade80,#16a34a)"><i data-i="mountain" style="font-size:24px"></i></div>Hill hero</div>
+      <div class="b"><div class="m" style="background:linear-gradient(150deg,#fbbf24,#f97316)"><i data-i="flame" style="font-size:24px"></i></div>30-day streak</div>
+      <div class="b"><div class="m" style="background:linear-gradient(150deg,#c084fc,#7c3aed)"><i data-i="moon" style="font-size:24px"></i></div>Night owl</div>
+      <div class="b"><div class="m" style="background:linear-gradient(150deg,#22d3ee,#0891b2)"><i data-i="snowflake" style="font-size:24px"></i></div>Winter miles</div>
+      <div class="b locked"><div class="m"><i data-i="trophy" style="font-size:24px"></i></div>Half marathon</div>
+      <div class="b locked"><div class="m"><i data-i="crown" style="font-size:24px"></i></div>Marathon</div>
+    </div>
+  </div>
+  <div class="row between pad" style="margin-top:18px"><div class="h2">Personal bests</div><div style="color:var(--accent);font-size:13px;font-weight:600">See all</div></div>
+  <div class="card" style="margin:10px 16px 0;padding:4px 16px">
+    <div class="row between" style="padding:12px 0;border-bottom:1px solid var(--line)"><div><div style="font-weight:650">5K</div><div class="muted" style="font-size:12px">Oct 20 · Riverside loop</div></div><div class="row" style="gap:8px"><span class="chip" style="background:#fff0ee;color:var(--accent);height:22px;font-size:11px">NEW</span><span class="num" style="font-size:19px;font-weight:750">24:41</span></div></div>
+    <div class="row between" style="padding:12px 0"><div><div style="font-weight:650">10K</div><div class="muted" style="font-size:12px">Sep 14 · Harbour 10</div></div><span class="num" style="font-size:19px;font-weight:750">52:08</span></div>
+  </div>
+</div>
+<div class="tabs"><div><i data-i="circle-dot"></i>Today</div><div><i data-i="route"></i>Runs</div><div><i data-i="calendar"></i>Plan</div><div class="on"><i data-i="user"></i>Profile</div></div>
+</body></html>

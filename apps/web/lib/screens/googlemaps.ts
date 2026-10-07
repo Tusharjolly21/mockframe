@@ -1,16 +1,90 @@
 "use client";
 
-import { esc, systemFont } from "./common";
+import { esc, systemFont, textBlock, wrapText } from "./common";
 import type { GoogleMapsDoc } from "./types";
 
+/* ------------------------------ standalone card ------------------------------
+   Turn-by-turn navigation: a drawn map with the route, the green turn banner
+   over it and the ETA sheet underneath. */
+
+const CARD_X = 14;
+const CARD_W = 402 - CARD_X * 2;
+const CARD_H = 430;
+const MAP_H = 300;
+
+function renderGoogleMapsCard(doc: GoogleMapsDoc): string {
+  const dark = !!doc.dark;
+  const font = systemFont("android");
+  const x = CARD_X;
+  const y = 14;
+  const route = doc.routeColor || "#1a73e8";
+  const land = dark ? "#1d2127" : "#eef0ea";
+  const block = dark ? "#252a31" : "#f8f8f4";
+  const road = dark ? "#3a404a" : "#ffffff";
+  const roadEdge = dark ? "#2b3038" : "#dadce0";
+  const park = dark ? "#1f3326" : "#cfe8c8";
+  const water = dark ? "#16293d" : "#aad3f5";
+  const hwy = dark ? "#6b5a2c" : "#fde293";
+  const ink = dark ? "#e8eaed" : "#202124";
+  const sub = dark ? "#9aa0a6" : "#5f6368";
+  const eta = dark ? "#81c995" : "#188038";
+  const mx = x;
+  const my = y;
+  // streets: a slightly skewed grid, a highway and a river
+  let streets = "";
+  for (let i = -1; i < 9; i++) streets += `<path d="M${mx + i * 52} ${my} l${-40} ${MAP_H}" stroke="${roadEdge}" stroke-width="9"/><path d="M${mx + i * 52} ${my} l${-40} ${MAP_H}" stroke="${road}" stroke-width="6.5"/>`;
+  for (let j = 0; j < 7; j++) streets += `<path d="M${mx} ${my + 20 + j * 48} l${CARD_W} ${-24}" stroke="${roadEdge}" stroke-width="9"/><path d="M${mx} ${my + 20 + j * 48} l${CARD_W} ${-24}" stroke="${road}" stroke-width="6.5"/>`;
+  const routePath = `M${mx + 64} ${my + 222} L${mx + 108} ${my + 196} L${mx + 156} ${my + 200} L${mx + 196} ${my + 162} L${mx + 262} ${my + 150} L${mx + 300} ${my + 128}`;
+  const pinX = mx + 300;
+  const pinY = my + 140;
+  const banner = 78;
+  const bx = x + 12;
+  const by = y + 12;
+  const instr = wrapText(doc.instruction, 16, CARD_W - 24 - 70).slice(0, 2);
+  const sheetY = y + MAP_H;
+  return `
+<defs>
+  <filter id="gm-card-sh" x="-15%" y="-10%" width="130%" height="130%"><feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#0b1a2c" flood-opacity="${dark ? 0.5 : 0.18}"/></filter>
+  <filter id="gm-soft" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000000" flood-opacity="0.22"/></filter>
+  <clipPath id="gm-map"><path d="M${x} ${y + 28} a28 28 0 0 1 28 -28 h${CARD_W - 56} a28 28 0 0 1 28 28 v${MAP_H - 28} h-${CARD_W} Z"/></clipPath>
+</defs>
+<rect x="${x}" y="${y}" width="${CARD_W}" height="${CARD_H}" rx="28" fill="${dark ? "#202124" : "#ffffff"}" filter="url(#gm-card-sh)"/>
+<g clip-path="url(#gm-map)">
+  <rect x="${mx}" y="${my}" width="${CARD_W}" height="${MAP_H}" fill="${land}"/>
+  <rect x="${mx + 20}" y="${my + 30}" width="${CARD_W}" height="${MAP_H}" fill="${block}" opacity="0.6"/>
+  <path d="M${mx + 210} ${my + 200} q40 -30 90 -10 t70 30 v80 h-170 Z" fill="${park}"/>
+  <path d="M${mx - 10} ${my + 70} q60 -20 90 10 t60 60 q-50 20 -90 -10 t-70 -20 Z" fill="${park}"/>
+  <g fill="none" stroke-linecap="round">${streets}</g>
+  <path d="M${mx - 10} ${my + MAP_H - 40} C${mx + 90} ${my + MAP_H - 70} ${mx + 180} ${my + MAP_H - 10} ${mx + CARD_W + 10} ${my + MAP_H - 60}" stroke="${water}" stroke-width="26" fill="none"/>
+  <path d="M${mx - 10} ${my + 60} C${mx + 120} ${my + 110} ${mx + 230} ${my + 40} ${mx + CARD_W + 10} ${my + 70}" stroke="${dark ? "#4a3f22" : "#f2c94c"}" stroke-width="14" fill="none"/>
+  <path d="M${mx - 10} ${my + 60} C${mx + 120} ${my + 110} ${mx + 230} ${my + 40} ${mx + CARD_W + 10} ${my + 70}" stroke="${hwy}" stroke-width="10" fill="none"/>
+  <path d="${routePath}" stroke="${dark ? "#0b3d91" : "#174ea6"}" stroke-width="13" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="${routePath}" stroke="${route}" stroke-width="8.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="${mx + 64}" cy="${my + 222}" r="16" fill="${route}" opacity="0.18"/>
+  <circle cx="${mx + 64}" cy="${my + 222}" r="8.5" fill="${route}" stroke="#ffffff" stroke-width="3"/>
+  <g filter="url(#gm-soft)"><path d="M${pinX} ${pinY + 2} c-7 -9 -13 -15 -13 -23 a13 13 0 0 1 26 0 c0 8 -6 14 -13 23 Z" fill="#ea4335"/></g>
+  <circle cx="${pinX}" cy="${pinY - 21}" r="5" fill="#a50e0e"/>
+  <rect x="${mx + 186}" y="${my + 186}" width="62" height="24" rx="12" fill="${dark ? "#202124" : "#ffffff"}" filter="url(#gm-soft)"/>
+  <text x="${mx + 217}" y="${my + 202}" font-family="${font}" font-size="11.5" font-weight="600" fill="${ink}" text-anchor="middle">${esc(`${doc.durationMinutes} min`)}</text>
+</g>
+<g filter="url(#gm-soft)"><rect x="${bx}" y="${by}" width="${CARD_W - 24}" height="${banner}" rx="20" fill="#0f7b3e"/></g>
+<g transform="translate(${bx + 16} ${by + 19})" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 38V20c0-5 3-8 8-8h14"/><path d="M24 4l8 8-8 8"/></g>
+<text x="${bx + 66}" y="${by + 27}" font-family="${font}" font-size="12.5" font-weight="500" fill="#ffffff" opacity="0.85">In 1/4 mi</text>
+${textBlock(instr, { font, x: bx + 66, y: by + 47, size: 16, lineHeight: 19, color: "#ffffff", weight: 600 })}
+<text x="${x + 24}" y="${sheetY + 44}" font-family="${font}" font-size="28" font-weight="600" fill="${eta}" letter-spacing="-0.5">${esc(`${doc.durationMinutes} min`)}</text>
+<text x="${x + 24}" y="${sheetY + 70}" font-family="${font}" font-size="14" fill="${sub}">${esc(`${doc.distanceText} · ${doc.start} → ${doc.destination}`)}</text>
+<text x="${x + 24}" y="${sheetY + 92}" font-family="${font}" font-size="12.5" fill="${sub}">Fastest route now due to traffic conditions</text>
+<circle cx="${x + CARD_W - 50}" cy="${sheetY + 50}" r="24" fill="#d93025"/>
+<path d="M${x + CARD_W - 57} ${sheetY + 43} l14 14 M${x + CARD_W - 43} ${sheetY + 43} l-14 14" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+<rect x="${x + CARD_W / 2 - 18}" y="${sheetY + 10}" width="36" height="4" rx="2" fill="${dark ? "#5f6368" : "#dadce0"}"/>`;
+}
+
 export function googleMapsCardSize(doc: GoogleMapsDoc): { width: number; height: number } {
-  return {
-    width: 402,
-    height: 185,
-  };
+  return { width: 402, height: CARD_H + 28 };
 }
 
 export function renderGoogleMaps(doc: GoogleMapsDoc): string {
+  if (doc.standalone) return renderGoogleMapsCard(doc);
   const isDark = !!doc.dark;
   const width = 402;
   const height = doc.standalone ? googleMapsCardSize(doc).height : 874;

@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../lib/base.css"><link rel="stylesheet" href="app.css">
+<script src="../lib/icons.js"></script><script src="../lib/base.js"></script>
+<style>
+  /* the featured goal spans y 150–340 in page px */
+  .goal { position: absolute; top: calc(var(--bar) + 102px); left: 22px; right: 22px; height: 178px; border-radius: 24px; padding: 18px; color: #fff; overflow: hidden;
+    background: linear-gradient(135deg, #f59e0b, #ef6c3a 55%, #d9467a); }
+  .goal .sun { position: absolute; right: 22px; top: 18px; width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #fff6c9, #ffd166); box-shadow: 0 0 0 10px rgba(255,255,255,.14); }
+  .goal .waves { position: absolute; left: 0; right: 0; bottom: 0; height: 60px; }
+  .pots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 16px; }
+  .pots .card { padding: 14px; }
+</style></head>
+<body>
+<div class="screen"><div class="nav" style="height:92px;align-items:flex-end;padding-bottom:6px"><div><div class="muted" style="font-size:13px;font-weight:600">Total saved</div><div class="num" style="font-size:30px">€7,940<span style="font-size:14px;color:#0e9f6e;font-weight:700;letter-spacing:0"> +€260 this month</span></div></div><div class="iconbtn"><i data-i="plus" style="font-size:20px"></i></div></div></div>
+<div class="goal">
+  <div class="sun"></div>
+  <svg class="waves" viewBox="0 0 360 60" preserveAspectRatio="none"><path d="M0 26 C40 16 80 36 120 26 S200 16 240 26 S320 36 360 24 V60 H0Z" fill="rgba(255,255,255,.18)"/><path d="M0 40 C50 30 90 48 140 40 S230 30 280 40 S340 46 360 38 V60 H0Z" fill="rgba(255,255,255,.22)"/></svg>
+  <div style="position:relative"><div class="row" style="gap:6px;font-size:12px;font-weight:700;letter-spacing:.06em;opacity:.95"><i data-i="plane" style="font-size:14px"></i> GOAL · MAY 2027</div>
+  <div style="font-family:Manrope;font-size:25px;font-weight:800;letter-spacing:-.02em;margin-top:6px">Summer in Lisbon</div>
+  <div class="row" style="gap:6px;align-items:baseline;margin-top:8px"><span class="num" style="font-size:26px">€1,860</span><span style="font-size:13px;font-weight:600;opacity:.9">of €2,400</span></div>
+  <div style="height:9px;border-radius:99px;background:rgba(255,255,255,.3);margin-top:10px;width:78%;overflow:hidden"><i style="display:block;height:100%;width:78%;background:#fff;border-radius:99px"></i></div></div>
+</div>
+<div class="screen" style="top:calc(var(--bar) + 296px)">
+  <div class="row between pad" style="margin-bottom:10px"><div class="h2" style="font-size:18px">Your pots</div><div style="color:var(--accent);font-size:13px;font-weight:650">Manage</div></div>
+  <div class="pots">
+    <div class="card"><div class="ico" style="background:var(--mint);color:var(--accent)"><i data-i="shield-check" style="font-size:19px"></i></div><div style="font-weight:650;margin-top:10px">Rainy day</div><div class="num" style="font-size:20px;margin-top:2px">€4,200</div><div class="track" style="margin-top:8px"><i style="width:84%"></i></div></div>
+    <div class="card"><div class="ico" style="background:#ecebff;color:#6366f1"><i data-i="graduation-cap" style="font-size:19px"></i></div><div style="font-weight:650;margin-top:10px">Course</div><div class="num" style="font-size:20px;margin-top:2px">€880</div><div class="track" style="margin-top:8px"><i style="width:44%;background:#6366f1"></i></div></div>
+  </div>
+  <div class="card" style="margin:12px 16px 0;padding:14px 16px">
+    <div class="row" style="gap:12px"><div class="ico" style="background:#fff3dc;color:#d97706"><i data-i="sparkles" style="font-size:19px"></i></div><div class="grow"><div style="font-weight:650;font-size:14.5px">Round-ups are on</div><div class="muted" style="font-size:12px">Spare change saved €38.40 this month</div></div><i data-i="chevron-right" style="font-size:18px;color:var(--faint)"></i></div>
+  </div>
+  <div class="card" style="margin:10px 16px 0;padding:14px 16px">
+    <div class="row" style="gap:12px"><div class="ico" style="background:#e0f4fe;color:#0284c7"><i data-i="repeat" style="font-size:19px"></i></div><div class="grow"><div style="font-weight:650;font-size:14.5px">€150 every payday</div><div class="muted" style="font-size:12px">Auto-save to Summer in Lisbon</div></div><i data-i="chevron-right" style="font-size:18px;color:var(--faint)"></i></div>
+  </div>
+</div>
+<div class="tabs"><div><i data-i="house"></i>Home</div><div><i data-i="chart-pie"></i>Spending</div><div><i data-i="credit-card"></i>Cards</div><div class="on"><i data-i="piggy-bank"></i>Savings</div><div><i data-i="user"></i>Profile</div></div>
+</body></html>

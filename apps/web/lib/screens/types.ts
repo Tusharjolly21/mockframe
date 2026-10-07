@@ -1655,10 +1655,11 @@ export function defaultTemplateDoc(app: "bluesky" | "xpost" | "social" | "code" 
       commentList: [],
       sourceLabel: "X",
       standalone: true,
-      frame: "none",
+      // "none" draws no card surface at all; the template is a card
+      frame: "card",
       cardWidth: 560,
       postFontSize: 27,
-      postPadding: 32,
+      postPadding: 18,
       cardRadius: 26,
       cardShadow: 1.15,
     };

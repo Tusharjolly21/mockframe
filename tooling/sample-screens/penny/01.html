@@ -1,0 +1,42 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../lib/base.css"><link rel="stylesheet" href="app.css">
+<script src="../lib/icons.js"></script><script src="../lib/base.js"></script>
+<style>
+  .bal { margin: 6px 16px 0; padding: 20px; border-radius: 26px; background: linear-gradient(150deg, #0e8f74, #0b3b3f); color: #fff; position: relative; overflow: hidden; }
+  .bal::before { content: ""; position: absolute; right: -70px; top: -90px; width: 230px; height: 230px; border-radius: 50%; background: radial-gradient(circle, rgba(126,240,200,.45), transparent 70%); }
+  .acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 16px 0; }
+  .acts div { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+  .acts span { width: 54px; height: 54px; border-radius: 18px; background: #fff; display: grid; place-items: center; color: var(--deep); box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.05); }
+  .accts { display: flex; gap: 10px; margin: 14px 16px 0; }
+  .accts .card { flex: 1; padding: 12px 13px; border-radius: 18px; }
+</style></head>
+<body>
+<div class="screen">
+  <div class="nav"><div class="row" style="gap:10px"><div class="avatar av" style="background:linear-gradient(150deg,#34d3a0,#0e8f74)">MA</div><div><div class="muted" style="font-size:12.5px;font-weight:600">Good morning</div><div style="font-weight:750;font-size:16px;font-family:Manrope">Maya Alvarez</div></div></div><div class="iconbtn"><i data-i="bell" style="font-size:18px"></i></div></div>
+  <div class="bal">
+    <div class="row between" style="position:relative"><span style="font-size:13px;font-weight:600;opacity:.85">Total balance</span><span class="chip" style="background:rgba(255,255,255,.16);color:#fff;height:24px"><i data-i="eye" style="font-size:13px"></i> EUR</span></div>
+    <div class="num" style="font-size:40px;margin-top:6px;position:relative">€12,480<span style="opacity:.6;font-size:26px">.52</span></div>
+    <div class="row" style="gap:6px;margin-top:4px;font-size:12.5px;font-weight:600;position:relative"><span style="color:#7ef0c8">▲ €842.10</span><span style="opacity:.75">this month</span></div>
+    <svg viewBox="0 0 330 60" style="width:100%;height:56px;margin-top:10px;position:relative"><defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ef0c8" stop-opacity=".45"/><stop offset="1" stop-color="#7ef0c8" stop-opacity="0"/></linearGradient></defs><path d="M0 46 C30 44 40 30 70 34 S120 48 150 36 S200 14 230 22 S290 20 330 6 V60 H0Z" fill="url(#a)"/><path d="M0 46 C30 44 40 30 70 34 S120 48 150 36 S200 14 230 22 S290 20 330 6" fill="none" stroke="#7ef0c8" stroke-width="2.5" stroke-linecap="round"/><circle cx="330" cy="6" r="4" fill="#fff"/></svg>
+  </div>
+  <div class="acts">
+    <div><span><i data-i="send" style="font-size:21px"></i></span>Send</div>
+    <div><span><i data-i="arrow-down-left" style="font-size:22px"></i></span>Request</div>
+    <div><span><i data-i="plus" style="font-size:22px"></i></span>Top up</div>
+    <div><span><i data-i="arrow-left-right" style="font-size:21px"></i></span>Exchange</div>
+  </div>
+  <div class="accts">
+    <div class="card"><div class="muted" style="font-size:12px;font-weight:600">Main</div><div class="num" style="font-size:17px;margin-top:4px">€4,210</div></div>
+    <div class="card"><div class="muted" style="font-size:12px;font-weight:600">Savings</div><div class="num" style="font-size:17px;margin-top:4px">€7,940</div></div>
+    <div class="card"><div class="muted" style="font-size:12px;font-weight:600">Joint</div><div class="num" style="font-size:17px;margin-top:4px">€330</div></div>
+  </div>
+  <div class="row between pad" style="margin-top:18px"><div class="h2" style="font-size:18px">Recent</div><div style="color:var(--accent);font-size:13px;font-weight:650">See all</div></div>
+  <div class="card" style="margin:8px 16px 0;padding:2px 16px">
+    <div class="tx"><div class="ico" style="background:#fff2df;color:#e07b00"><i data-i="shopping-cart" style="font-size:19px"></i></div><div class="grow"><div class="t">Market Fresco</div><div class="s">Groceries · 08:12</div></div><div class="amt">−€46.20</div></div>
+    <div class="tx"><div class="ico" style="background:var(--mint);color:var(--accent)"><i data-i="briefcase" style="font-size:19px"></i></div><div class="grow"><div class="t">Northwind Studio</div><div class="s">Salary · Yesterday</div></div><div class="amt pos">+€3,240.00</div></div>
+    <div class="tx"><div class="ico" style="background:#ecebff;color:#5b55e8"><i data-i="music" style="font-size:19px"></i></div><div class="grow"><div class="t">Soundwave</div><div class="s">Subscription · Mon</div></div><div class="amt">−€10.99</div></div>
+  </div>
+</div>
+<div class="tabs"><div class="on"><i data-i="house"></i>Home</div><div><i data-i="chart-pie"></i>Spending</div><div><i data-i="credit-card"></i>Cards</div><div><i data-i="piggy-bank"></i>Savings</div><div><i data-i="user"></i>Profile</div></div>
+</body></html>

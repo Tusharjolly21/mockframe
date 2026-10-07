@@ -63,7 +63,7 @@ export function renderSocialCard(doc: SocialPostDoc, avatarUrl?: string): Framed
         const markSize = doc.network === "threads" ? 30 : 14;
         parts.push(`<text font-family="${font}" font-size="${markSize}" font-weight="750" fill="${c.text}" text-anchor="end" x="${x + w - p}" y="${cy + (markSize > 20 ? 34 : 26)}">${esc(mark)}</text>`);
       }
-      cy += 76;
+      cy += 84;
 
       const lines = wrapText(doc.text, size, contentW);
       parts.push(baseTextBlock(lines, { font, x: inX, y: cy, size, lineHeight: lineH, color: c.text }));

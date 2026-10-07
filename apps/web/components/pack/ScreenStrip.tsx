@@ -6,7 +6,13 @@ import { usePackStore } from "@/lib/pack/store";
 
 /** Left rail: one thumbnail per screen, multi-file add, drag (or buttons) to reorder. */
 export function ScreenStrip() {
-  const { pack, activeScreenId, setActiveScreen, addFiles, removeScreenById, moveScreenById } = usePackStore();
+  const { pack, activeScreenId, setActiveScreen, addFiles, replaceScreenFile, removeScreenById, moveScreenById } = usePackStore();
+  const replaceInput = useRef<HTMLInputElement>(null);
+  const replaceFor = useRef<string | null>(null);
+  const pickFor = (id: string) => {
+    replaceFor.current = id;
+    replaceInput.current?.click();
+  };
   const fileInput = useRef<HTMLInputElement>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
@@ -29,8 +35,24 @@ export function ScreenStrip() {
             draggable
             onDragStart={(e) => { e.dataTransfer.setData("text/plain", String(i)); setDragIndex(i); }}
             onDragOver={(e) => e.preventDefault()}
-            onDrop={() => dragIndex !== null && (reorder(dragIndex, i), setDragIndex(null))}
-            onClick={() => setActiveScreen(screen.id)}
+            onDrop={(e) => {
+              // an image dropped on a screen replaces its screenshot; a dragged thumbnail reorders
+              const file = e.dataTransfer.files?.[0];
+              if (file) {
+                e.preventDefault();
+                e.stopPropagation();
+                void replaceScreenFile(screen.id, file);
+                return;
+              }
+              if (dragIndex !== null) {
+                reorder(dragIndex, i);
+                setDragIndex(null);
+              }
+            }}
+            onClick={() => {
+              setActiveScreen(screen.id);
+              if (!screen.assetId) pickFor(screen.id);
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 if (e.key === " ") e.preventDefault();
@@ -46,7 +68,7 @@ export function ScreenStrip() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={asset.url} alt={`Screen ${i + 1}`} className="h-full w-full object-cover" />
               ) : (
-                <span className="px-2 text-center text-[11px] text-white/40">Drop a screenshot</span>
+                <span className="px-2 text-center text-[11px] text-white/40">Drop or click to add a screenshot</span>
               )}
             </div>
             <div className="mt-1 flex items-center justify-between px-0.5 text-[11px] text-white/50">
@@ -54,6 +76,7 @@ export function ScreenStrip() {
               <span className="flex gap-1 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
                 <button aria-label="Move up" onClick={(e) => { e.stopPropagation(); moveScreenById(screen.id, -1); }}>↑</button>
                 <button aria-label="Move down" onClick={(e) => { e.stopPropagation(); moveScreenById(screen.id, 1); }}>↓</button>
+                <button aria-label="Replace screenshot" title="Replace screenshot" onClick={(e) => { e.stopPropagation(); pickFor(screen.id); }}>↻</button>
                 <button aria-label="Remove" onClick={(e) => { e.stopPropagation(); removeScreenById(screen.id); }}>×</button>
               </span>
             </div>
@@ -66,6 +89,17 @@ export function ScreenStrip() {
       >
         + Add screenshots
       </button>
+      <input
+        ref={replaceInput}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file && replaceFor.current) void replaceScreenFile(replaceFor.current, file);
+          e.target.value = "";
+        }}
+      />
       <input
         ref={fileInput}
         type="file"

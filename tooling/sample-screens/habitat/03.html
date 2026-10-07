@@ -1,0 +1,33 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../lib/base.css"><link rel="stylesheet" href="app.css">
+<script src="../lib/icons.js"></script><script src="../lib/base.js"></script>
+<style>
+  .field { margin: 0 16px; padding: 16px; border-radius: 20px; }
+  .lab { font-size: 12px; font-weight: 650; color: var(--sub); margin: 18px 20px 8px; text-transform: uppercase; letter-spacing: .06em; }
+  .icons { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 0 16px; }
+  .icons div { aspect-ratio: 1; border-radius: 16px; background: #fff; display: grid; place-items: center; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .icons .on { background: var(--lilac); box-shadow: inset 0 0 0 2px #6d4ad6; color: #6d4ad6; }
+  .sw { display: flex; gap: 10px; margin: 0 18px; }
+  .sw i { width: 38px; height: 38px; border-radius: 50%; display: block; }
+  .sw .on { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--ink); }
+  .days { display: flex; gap: 6px; margin: 0 16px; }
+  .days div { flex: 1; height: 42px; border-radius: 14px; display: grid; place-items: center; font-weight: 650; font-size: 13px; background: #fff; color: var(--sub); }
+  .days .on { background: var(--ink); color: #fff; }
+</style></head><body>
+<div class="screen">
+  <div class="nav"><div class="iconbtn"><i data-i="x" style="font-size:19px"></i></div><div class="title">New habit</div><div style="width:38px"></div></div>
+  <div class="card field" style="margin-top:8px"><div class="row" style="gap:12px"><div style="width:46px;height:46px;border-radius:15px;background:var(--lilac);display:grid;place-items:center;color:#6d4ad6"><i data-i="book-open" style="font-size:23px"></i></div><div class="grow"><div class="muted" style="font-size:11.5px;font-weight:600">Name</div><div style="font-family:Sora;font-size:19px;font-weight:650;letter-spacing:-.02em">Read 20 pages<span style="display:inline-block;width:2px;height:20px;background:#6d4ad6;margin-left:2px;vertical-align:-3px"></span></div></div></div></div>
+  <div class="lab">Icon</div>
+  <div class="icons"><div class="on"><i data-i="book-open" style="font-size:21px"></i></div><div><i data-i="footprints" style="font-size:21px"></i></div><div><i data-i="droplet" style="font-size:21px"></i></div><div><i data-i="brain" style="font-size:21px"></i></div><div><i data-i="dumbbell" style="font-size:21px"></i></div><div><i data-i="pen-line" style="font-size:21px"></i></div></div>
+  <div class="lab">Colour</div>
+  <div class="sw"><i style="background:var(--mint)"></i><i style="background:var(--peach)"></i><i style="background:var(--sky)"></i><i class="on" style="background:var(--lilac)"></i><i style="background:var(--butter)"></i><i style="background:var(--rose)"></i><i style="background:var(--aqua)"></i></div>
+  <div class="lab">Repeat</div>
+  <div class="days"><div class="on">M</div><div class="on">T</div><div class="on">W</div><div class="on">T</div><div class="on">F</div><div>S</div><div>S</div></div>
+  <div class="card field" style="margin-top:14px;padding:4px 16px">
+    <div class="row between" style="padding:12px 0;border-bottom:1px solid var(--line)"><div class="row" style="gap:10px"><i data-i="bell" style="font-size:19px;color:var(--sub)"></i><span style="font-weight:600">Remind me</span></div><span style="font-family:Sora;font-weight:650">9:30 PM</span></div>
+    <div class="row between" style="padding:12px 0"><div class="row" style="gap:10px"><i data-i="target" style="font-size:19px;color:var(--sub)"></i><span style="font-weight:600">Goal</span></div><span style="font-family:Sora;font-weight:650">20 pages</span></div>
+  </div>
+  <div class="btn" style="position:absolute;left:16px;right:16px;bottom:44px;background:var(--ink)">Create habit</div>
+</div>
+</body></html>

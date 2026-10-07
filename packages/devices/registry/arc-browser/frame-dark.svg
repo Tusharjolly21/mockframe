@@ -14,7 +14,7 @@
   <rect x="2" y="7" width="12" height="9" rx="2"/>
   <path d="M5 7 V4 a3 3 0 0 1 6 0 v3"/>
 </g>
-<text x="86" y="138" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="24" font-weight="600" fill="#f3f4f6" id="fk_urltext_fk_arc-browser_dark">framekit.app</text>
+<text x="86" y="138" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="24" font-weight="600" fill="#f3f4f6" id="fk_urltext_fk_arc-browser_dark">mockframe.app</text>
 
 <!-- dummy tabs inside sidebar -->
 <g fill="#71717a" opacity="0.6" transform="translate(34, 186)">

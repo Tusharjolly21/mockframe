@@ -1,7 +1,7 @@
 "use client";
 
 import { getDevice, listDevices } from "@framekit/devices";
-import { createMockupLayer, createScene, type SceneDocument } from "@framekit/scene";
+import { createMockupLayer, createScene, type Backdrop, type Background, type SceneDocument } from "@framekit/scene";
 import { defaultTemplateDoc, encodeScreenAsset, fitCardScale, resolveScreenAsset } from "./screens";
 
 /**
@@ -99,64 +99,88 @@ export function groupPreviewUrl(group: string): string | null {
   return first ? templatePreviewUrl(first) : null;
 }
 
+const meshBg = (seed: number, colors: string[]): Background => ({ type: "mesh-gradient", seed, colors });
+const linBg = (angle: number, colors: string[]): Background => ({ type: "linear-gradient", angle, stops: colors.map((color, i) => ({ at: i / (colors.length - 1), color })) });
+const radBg = (cx: number, cy: number, colors: string[]): Background => ({ type: "radial-gradient", cx, cy, stops: colors.map((color, i) => ({ at: i / (colors.length - 1), color })) });
+
+export interface CardLook {
+  width: number;
+  height: number;
+  background: Background;
+  backdrop?: Backdrop;
+  /** share of the canvas the card fills */
+  fill: number;
+  /** CSS mirror of the background for gallery cards */
+  css: string;
+}
+
+/** The canvas each content card opens on: size, background and how big the card sits. */
+export const CARD_LOOKS: Record<TemplateApp, CardLook> = {
+  social: {
+    width: 1080, height: 1080, fill: 0.8,
+    background: { type: "solid", color: "#82b5e8" },
+    backdrop: { pattern: { kind: "stripes", intensity: 0.12, thickness: 0.56, color: "#dceeff" } },
+    css: "repeating-linear-gradient(45deg,rgba(220,238,255,.25) 0 26px,transparent 26px 92px),#82b5e8",
+  },
+  code: {
+    width: 1600, height: 1000, fill: 0.74,
+    background: radBg(0.5, 0.15, ["#2a3553", "#0f1424", "#070a12"]),
+    backdrop: { pattern: { kind: "grid", intensity: 0.07, thickness: 0.2, color: "#94a3b8" } },
+    css: "radial-gradient(circle at 50% 15%,#2a3553,#0f1424 55%,#070a12)",
+  },
+  github: {
+    width: 1600, height: 900, fill: 0.86,
+    background: radBg(0.5, 0.1, ["#ffffff", "#e3f9ea", "#b7ecc8"]),
+    css: "radial-gradient(circle at 50% 10%,#ffffff,#e3f9ea 50%,#b7ecc8)",
+  },
+  stripe: {
+    width: 1280, height: 1000, fill: 0.7,
+    background: meshBg(23, ["#635bff", "#a960ee", "#ff6b9d", "#2b1b7c"]),
+    css: "radial-gradient(circle at 15% 20%,#ff6b9d,transparent 45%),radial-gradient(circle at 85% 80%,#2b1b7c,transparent 50%),linear-gradient(135deg,#635bff,#a960ee)",
+  },
+  testimonial: {
+    width: 1200, height: 1000, fill: 0.8,
+    background: meshBg(61, ["#0f172a", "#312e81", "#6d28d9", "#0e7490"]),
+    css: "radial-gradient(circle at 80% 15%,#6d28d9,transparent 50%),radial-gradient(circle at 15% 85%,#0e7490,transparent 50%),linear-gradient(140deg,#0f172a,#312e81)",
+  },
+  "ios-notification": {
+    width: 1080, height: 1080, fill: 0.84,
+    background: meshBg(17, ["#7dd3fc", "#a78bfa", "#f0abfc", "#6366f1"]),
+    css: "radial-gradient(circle at 20% 20%,#7dd3fc,transparent 50%),radial-gradient(circle at 80% 75%,#f0abfc,transparent 50%),linear-gradient(135deg,#a78bfa,#6366f1)",
+  },
+  spotify: {
+    width: 1080, height: 1350, fill: 0.84,
+    background: meshBg(9, ["#1e1b4b", "#7c3aed", "#0b0b0f", "#be185d"]),
+    css: "radial-gradient(circle at 25% 20%,#7c3aed,transparent 50%),radial-gradient(circle at 80% 80%,#be185d,transparent 45%),#0b0b0f",
+  },
+  appstore: {
+    width: 1080, height: 1350, fill: 0.84,
+    background: linBg(160, ["#eef2ff", "#c7d2fe", "#a5b4fc"]),
+    css: "linear-gradient(160deg,#eef2ff,#c7d2fe 55%,#a5b4fc)",
+  },
+  "appstore-promo": {
+    width: 1440, height: 1080, fill: 0.86,
+    background: linBg(160, ["#e9e9f2", "#cfd0e3"]),
+    css: "linear-gradient(160deg,#e9e9f2,#cfd0e3)",
+  },
+  googlemaps: {
+    width: 1080, height: 1080, fill: 0.84,
+    background: meshBg(33, ["#064e3b", "#047857", "#0f766e", "#022c22"]),
+    css: "radial-gradient(circle at 75% 20%,#0f766e,transparent 50%),linear-gradient(150deg,#047857,#022c22)",
+  },
+  googleplay: {
+    width: 1080, height: 1350, fill: 0.84,
+    background: linBg(160, ["#f0fdf4", "#bbf7d0", "#6ee7b7"]),
+    css: "linear-gradient(160deg,#f0fdf4,#bbf7d0 55%,#6ee7b7)",
+  },
+};
+
 /** A fresh scene holding just this template — a content card or a photo scene. */
 export function makeTemplateScene(meta: TemplateMeta): SceneDocument {
   if (meta.deviceId) return makeSceneDeviceScene(meta.deviceId);
 
-  const isPost = meta.app === "social";
-  const isTestimonial = meta.app === "testimonial";
-  const scene = isPost
-    ? createScene({
-        width: 1080,
-        height: 1080,
-        background: { type: "solid", color: "#82b5e8" },
-        backdrop: { pattern: { kind: "stripes", intensity: 0.12, thickness: 0.56, color: "#dceeff" } },
-      })
-    : isTestimonial
-      ? createScene({
-          width: 1080,
-          height: 1080,
-          background: { type: "linear-gradient", angle: 138, stops: [{ at: 0, color: "#111827" }, { at: 0.52, color: "#183b45" }, { at: 1, color: "#6d5dfc" }] },
-          backdrop: { pattern: { kind: "waves", intensity: 0.1, thickness: 0.3, color: "#d7fff5" } },
-        })
-    : meta.app === "ios-notification"
-      ? createScene({
-          width: 1080,
-          height: 1080,
-          background: { type: "linear-gradient", angle: 138, stops: [{ at: 0, color: "#1e1b4b" }, { at: 0.5, color: "#311042" }, { at: 1, color: "#4338ca" }] },
-          backdrop: { pattern: { kind: "waves", intensity: 0.15, thickness: 0.35, color: "#a5b4fc" } },
-        })
-    : meta.app === "spotify"
-      ? createScene({
-          width: 1080,
-          height: 1080,
-          background: { type: "radial-gradient", cx: 0.5, cy: 0.5, stops: [{ at: 0, color: "#1e293b" }, { at: 1, color: "#09090b" }] },
-        })
-    : meta.app === "appstore"
-      ? createScene({
-          width: 1080,
-          height: 1080,
-          background: { type: "linear-gradient", angle: 135, stops: [{ at: 0, color: "#0284c7" }, { at: 1, color: "#075985" }] },
-        })
-    : meta.app === "googlemaps"
-      ? createScene({
-          width: 1080,
-          height: 1080,
-          background: { type: "linear-gradient", angle: 135, stops: [{ at: 0, color: "#166534" }, { at: 1, color: "#14532d" }] },
-        })
-    : meta.app === "googleplay"
-      ? createScene({
-          width: 1080,
-          height: 1080,
-          background: { type: "linear-gradient", angle: 135, stops: [{ at: 0, color: "#01875f" }, { at: 1, color: "#004d34" }] },
-        })
-    : meta.app === "appstore-promo"
-      ? createScene({
-          width: 1440,
-          height: 1080,
-          background: { type: "linear-gradient", angle: 160, stops: [{ at: 0, color: "#e9e9f2" }, { at: 1, color: "#cfd0e3" }] },
-        })
-    : createScene({ width: 1920, height: 1080 });
+  const look = CARD_LOOKS[meta.app!] ?? CARD_LOOKS.code;
+  const scene = createScene({ width: look.width, height: look.height, background: look.background, ...(look.backdrop ? { backdrop: look.backdrop } : {}) });
   const iphone = getDevice("iphone-16-pro") ?? listDevices()[0];
   const layer = createMockupLayer({ deviceId: null, frameHeight: iphone.frame.height, canvasHeight: scene.canvas.height });
   layer.media = {
@@ -167,25 +191,9 @@ export function makeTemplateScene(meta: TemplateMeta): SceneDocument {
     offsetY: 0,
     scale: 1,
   };
-  // Standalone cards resolve at 3x logical pixels. The generic device-derived
-  // initial scale makes them tiny, so start them at a useful composition size.
-  let initialScale = 0.72;
-  if (isPost) initialScale = 0.5;
-  else if (isTestimonial) initialScale = 0.37;
-  else if (meta.app === "github") initialScale = 0.58;
-  else if (meta.app === "ios-notification") initialScale = 0.6;
-  else if (meta.app === "spotify") initialScale = 0.5;
-  else if (meta.app === "appstore") initialScale = 0.45;
-  else if (meta.app === "googlemaps") initialScale = 0.52;
-  else if (meta.app === "googleplay") initialScale = 0.45;
-
-  // never larger than the canvas: a card that spills past the edges is cropped
-  const fit = fitCardScale(layer.media.assetId, scene.canvas.width, scene.canvas.height, 0.88);
-  if (fit !== undefined) initialScale = Math.min(initialScale, fit);
-  layer.transform = {
-    ...layer.transform,
-    scale: initialScale,
-  };
+  // Standalone cards resolve at 3x logical pixels; size each to fill its share
+  // of the canvas so it opens composed rather than tiny or cropped.
+  layer.transform = { ...layer.transform, scale: fitCardScale(layer.media.assetId, scene.canvas.width, scene.canvas.height, look.fill) ?? 0.6 };
   scene.id = `scene-template-${meta.app}`;
   layer.id = "layer-template";
   scene.layers.push(layer);

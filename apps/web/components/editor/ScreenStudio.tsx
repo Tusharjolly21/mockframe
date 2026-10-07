@@ -228,6 +228,17 @@ const AVATAR_APPS = new Set<ScreenApp>([
   "googleplay",
 ]);
 
+/* These cards carry their own `dark` flag (Spotify defaults to dark), so the
+   Light/Dark switch reads and writes it alongside chrome.dark. */
+const DOC_DARK_APPS = new Set<ScreenDoc["app"]>(["ios-notification", "spotify", "appstore", "googleplay", "googlemaps"]);
+function themeIsDark(doc: ScreenDoc): boolean {
+  if (!DOC_DARK_APPS.has(doc.app)) return !!doc.chrome?.dark;
+  const own = (doc as { dark?: boolean }).dark;
+  return doc.app === "spotify" ? own !== false : !!own;
+}
+/** cards whose renderer draws a window frame (macOS, Safari, Card, Stack…) */
+const WINDOW_FRAME_APPS = new Set<ScreenDoc["app"]>(["social", "xpost", "bluesky", "code"]);
+
 export function isTemplateCard(doc: ScreenDoc): boolean {
   return doc.app === "code" || ((doc.app === "bluesky" || doc.app === "xpost" || doc.app === "social" || doc.app === "ios-notification" || doc.app === "spotify" || doc.app === "appstore" || doc.app === "appstore-promo" || doc.app === "googlemaps" || doc.app === "googleplay") && !!(doc as { standalone?: boolean }).standalone);
 }
@@ -391,8 +402,8 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       }`}
       action={removeBtn}
     >
-      {/* shared status-bar chrome (the promo card draws no status bar) */}
-      {doc.app !== "testimonial" && doc.app !== "appstore-promo" && (
+      {/* shared status-bar chrome — standalone cards draw no status bar */}
+      {doc.app !== "testimonial" && doc.app !== "appstore-promo" && !isStandaloneContent(doc) && (
         <div className="mb-3 flex gap-2">
           <Field label="Time" value={doc.chrome.time} onChange={(time) => setDoc({ ...doc, chrome: { ...doc.chrome, time } })} className="w-20" />
           <div className="flex-1">
@@ -424,8 +435,8 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
             { value: "light", label: "Light" },
             { value: "dark", label: "Dark" },
           ]}
-          value={doc.chrome.dark ? "dark" : "light"}
-          onChange={(v) => setDoc({ ...doc, chrome: { ...doc.chrome, dark: v === "dark" } })}
+          value={themeIsDark(doc) ? "dark" : "light"}
+          onChange={(v) => setDoc({ ...doc, chrome: { ...doc.chrome, dark: v === "dark" }, ...(DOC_DARK_APPS.has(doc.app) ? { dark: v === "dark" } : {}) } as ScreenDoc)}
         />
       )}
 
@@ -452,7 +463,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       )}
 
       {/* window frame for the standalone Template cards (Code / Bluesky / X) */}
-      {isTemplateCard(doc) && doc.app !== "appstore-promo" && (
+      {isTemplateCard(doc) && WINDOW_FRAME_APPS.has(doc.app) && (
         <FrameField value={(doc as { frame?: FrameStyle }).frame ?? "none"} onChange={(frame) => setDoc({ ...doc, frame } as ScreenDoc)} />
       )}
 

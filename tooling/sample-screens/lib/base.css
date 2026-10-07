@@ -1,0 +1,72 @@
+/* Shared chrome for the store-set sample screens. Pages render at the iOS
+   CSS viewport (402 × 874, status bar 54) or the Android one (412 × 920,
+   status bar 36); `render.mjs` picks with ?p=ios|android. Layout below the
+   status bar is identical on both, so crops written in iOS px map across. */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bar: 54px;
+  --font: "Inter", system-ui, sans-serif;
+  --display: "Inter Display", "Inter", system-ui, sans-serif;
+  --bg: #f5f5f7;
+  --card: #ffffff;
+  --ink: #111114;
+  --sub: #6b6b76;
+  --faint: #a1a1aa;
+  --line: rgba(17, 17, 20, 0.07);
+  --accent: #ff5a5f;
+  --on-accent: #ffffff;
+  --tab-bg: rgba(255, 255, 255, 0.94);
+  --chrome: #0b0b0f;
+}
+html[data-p="android"] { --bar: 36px; }
+html, body { width: 100vw; height: 100vh; overflow: hidden; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01", "tnum";
+  position: relative;
+}
+.screen { position: absolute; inset: var(--bar) 0 0 0; display: flex; flex-direction: column; }
+.pad { padding: 0 16px; }
+.num { font-family: var(--display); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.muted { color: var(--sub); }
+.faint { color: var(--faint); }
+.row { display: flex; align-items: center; }
+.between { justify-content: space-between; }
+.grow { flex: 1; }
+.card { background: var(--card); border-radius: 22px; box-shadow: 0 1px 2px rgba(15, 15, 30, 0.04), 0 6px 22px rgba(15, 15, 30, 0.05); }
+.dark .card, .card.dark { box-shadow: none; border: 1px solid var(--line); }
+.eyebrow { font-size: 11.5px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sub); }
+.h1 { font-family: var(--display); font-size: 28px; font-weight: 700; letter-spacing: -0.03em; }
+.h2 { font-family: var(--display); font-size: 19px; font-weight: 700; letter-spacing: -0.02em; }
+.chip { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 650; white-space: nowrap; }
+.btn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 54px; border-radius: 999px; font-size: 16.5px; font-weight: 650; background: var(--accent); color: var(--on-accent); }
+.iconbtn { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--card); }
+.track { height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.track > i { display: block; height: 100%; border-radius: 99px; background: var(--accent); }
+svg.ic { width: 1em; height: 1em; flex-shrink: 0; }
+.avatar { border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden; }
+
+/* status bars */
+.sb { position: absolute; top: 0; left: 0; right: 0; height: var(--bar); z-index: 50; color: var(--chrome); display: flex; align-items: center; font-weight: 600; }
+.sb.ios { padding: 4px 30px 0 52px; justify-content: space-between; font-size: 17px; }
+.sb.ios .time { width: 54px; text-align: center; margin-left: -8px; }
+.sb.android { padding: 0 20px 0 22px; justify-content: space-between; font-size: 14px; font-weight: 500; font-family: "Roboto", var(--font); }
+.sb .icons { display: flex; align-items: center; gap: 6px; }
+
+/* bottom tab bar */
+.tabs { position: absolute; left: 0; right: 0; bottom: 0; display: flex; padding: 9px 8px 30px; background: var(--tab-bg); border-top: 1px solid var(--line); z-index: 40; backdrop-filter: blur(20px); }
+html[data-p="android"] .tabs { padding: 10px 8px 26px; }
+.tabs > div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 550; color: var(--faint); }
+.tabs > div svg { width: 24px; height: 24px; }
+.tabs > div.on { color: var(--accent); font-weight: 650; }
+html[data-p="android"] .tabs > div.on svg { background: color-mix(in srgb, var(--accent) 16%, transparent); border-radius: 99px; padding: 4px 18px; width: 60px; height: 32px; margin: -4px 0; box-sizing: border-box; }
+html[data-p="android"] .tabs > div { font-size: 11.5px; }
+html[data-p="android"] .tabs > div.on { color: var(--ink); }
+html[data-p="android"] .tabs > div.on svg { color: var(--accent); }
+
+.home { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; border-radius: 3px; background: var(--chrome); z-index: 60; }
+html[data-p="android"] .home { width: 108px; height: 4px; bottom: 9px; }

@@ -161,10 +161,9 @@ function safeName(value: string): string {
 /** The batch is identified by the content a user uploaded, not a generic
  * device outline. Multi-phone shots show up to three screenshot thumbnails. */
 function ShotMediaPreview({ scene }: { scene: SceneDocument }) {
-  const assets = scene.layers
-    .flatMap((layer) => layer.type === "mockup" && layer.media ? [resolveAsset(layer.media.assetId)] : [])
-    .filter(Boolean)
-    .slice(0, 3);
+  // one screen can appear twice (a phone plus a card lifted out of it)
+  const ids = [...new Set(scene.layers.flatMap((layer) => layer.type === "mockup" && layer.media ? [layer.media.assetId] : []))];
+  const assets = ids.map((id) => resolveAsset(id)).filter(Boolean).slice(0, 3);
 
   if (!assets.length) return <StaticScenePreview scene={scene} className="h-full w-full" />;
   return (
