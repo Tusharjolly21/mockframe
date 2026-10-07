@@ -313,6 +313,8 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
   // a promo format sets the card AND the canvas to the target size, so the
   // export is exactly that format with the card filling it edge to edge
   const applyPromoFormat = (next: AppStorePromoDoc) => {
+    // inside a phone the card is a screen: change its size only, not the canvas
+    if (layer.deviceId) return setDoc(next);
     const width = next.cardWidth ?? 1920;
     const height = next.cardHeight ?? 1080;
     const assetId = encodeScreenAsset({ ...next, chrome: { ...next.chrome, platform: effectivePlatform(next.app, devPlatform) } });
@@ -3458,7 +3460,7 @@ function AppStorePromoFields({ doc, setDoc, applyFormat }: { doc: AppStorePromoD
   const showcase = doc.showcase ?? "app";
   const showApp = showcase !== "web";
   const showWeb = showcase !== "app";
-  const stage = (doc.layout ?? "stage") === "stage";
+  const stage = doc.layout === "stage";
   const activeFormat =
     PROMO_FORMATS.find((f) => f.width === (doc.cardWidth ?? 1200) && f.height === (doc.cardHeight ?? 900) && (!doc.format || doc.format === f.id)) ??
     PROMO_FORMATS.find((f) => f.width === (doc.cardWidth ?? 1200) && f.height === (doc.cardHeight ?? 900));

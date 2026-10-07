@@ -241,7 +241,7 @@ export interface AppStorePromoDoc {
   webScreenshot?: string;
   /** address shown in the browser's URL bar */
   webUrl?: string;
-  /** "stage": full-bleed launch poster (default); "classic": paper card with an accent field */
+  /** "stage": full-bleed launch poster (new cards); "classic"/absent: paper card with an accent field */
   layout?: "stage" | "classic";
   /** store category shown under the app name on the stage layout */
   category?: string;

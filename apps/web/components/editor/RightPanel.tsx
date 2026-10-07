@@ -657,6 +657,7 @@ function BulkExportDialog({ scene, onClose }: { scene: SceneDocument; onClose: (
       if (checked.has(v.id)) items.push({ name: v.id.replace(/^v-/, ""), scene: applyVariation(scene, v) });
     }
     if (!items.length) return;
+    if (!guardProScreens(items.map((i) => i.scene), removeWatermark)) return;
     setProgress({ done: 0, total: items.length });
     try {
       await bulkExportZip(items, {

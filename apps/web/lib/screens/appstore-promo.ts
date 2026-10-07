@@ -164,7 +164,8 @@ export function browserWindow(o: BrowserOpts): string {
 }
 
 export function renderAppStorePromo(doc: AppStorePromoDoc, avatarUrl?: string, screenshotUrl?: string, webShotUrl?: string): string {
-  if ((doc.layout ?? "stage") === "stage") return renderPromoStage(doc, avatarUrl, screenshotUrl, webShotUrl);
+  // cards saved before the stage design have no `layout`: keep them classic
+  if (doc.layout === "stage") return renderPromoStage(doc, avatarUrl, screenshotUrl, webShotUrl);
   const { width: W, height: H } = appStorePromoCardSize(doc);
   const k = Math.min(W / 1200, H / 900);
   // the Light/Dark switch writes chrome.dark; older docs carry `dark`

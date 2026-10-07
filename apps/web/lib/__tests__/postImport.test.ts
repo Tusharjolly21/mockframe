@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   PostImportError,
   htmlToText,
@@ -6,6 +6,7 @@ import {
   parseFxTweet,
   parseMastodonStatus,
   parseOpenGraphPost,
+  importPost,
   parsePostUrl,
   postTime,
 } from "../server/postImport";
@@ -123,5 +124,43 @@ describe("parseOpenGraphPost", () => {
   });
   it("explains login walls", () => {
     expect(() => parseOpenGraphPost("<html></html>", "linkedin", "https://www.linkedin.com/posts/x")).toThrow(/signed-in members/);
+  });
+});
+
+describe("importPost limits", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("rejects a malformed Bluesky handle with a clear error", () => {
+    expect(() => parsePostUrl("https://bsky.app/profile/%E0%A4%A/post/3kxyz")).toThrow(PostImportError);
+  });
+
+  it("keeps the photo payload within budget and asks X for the medium rendition", async () => {
+    const seen: string[] = [];
+    const big = new Uint8Array(1_200_000); // 1.2 MB each: only two fit the 3 MB budget
+    vi.stubGlobal("fetch", async (input: string | URL) => {
+      const url = String(input);
+      seen.push(url);
+      if (url.startsWith("https://api.fxtwitter.com/")) {
+        return new Response(
+          JSON.stringify({
+            tweet: {
+              text: "four photos",
+              author: { name: "Jane", screen_name: "jane" },
+              media: { photos: [1, 2, 3, 4].map((n) => ({ url: `https://pbs.twimg.com/media/${n}.jpg` })) },
+            },
+          }),
+          { headers: { "content-type": "application/json" } }
+        );
+      }
+      return new Response(big, { headers: { "content-type": "image/jpeg", "content-length": String(big.length) } });
+    });
+    const post = await importPost("https://x.com/jane/status/1");
+    expect(post.images).toHaveLength(2);
+    expect(seen.filter((u) => u.includes("pbs.twimg.com/media/")).every((u) => u.includes("name=medium"))).toBe(true);
+  });
+
+  it("refuses oversized provider JSON", async () => {
+    vi.stubGlobal("fetch", async () => new Response("{}", { headers: { "content-type": "application/json", "content-length": String(50_000_000) } }));
+    await expect(importPost("https://x.com/jane/status/1")).rejects.toThrow(/unexpectedly large/);
   });
 });

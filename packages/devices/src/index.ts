@@ -53,9 +53,34 @@ const LEGACY_DEVICE_REPLACEMENTS: Record<string, string> = {
   "psd-composite-watch-02": "psd-composite-watch-01",
   "samsung-s24-ultra-psd-violet": "samsung-s24-ultra-psd-gray",
 };
+// A replacement with a different screen size is resolved as a scaled copy, so
+// a saved layer keeps the on-canvas size it had with the retired device.
+const LEGACY_SCREEN_WIDTH: Record<string, number> = {
+  "macbook-pro-16-mockup": 1496,
+};
+
+function scaledDevice(d: Device, k: number): Device {
+  const rect = (r: { x: number; y: number; width: number; height: number }) => ({ x: r.x * k, y: r.y * k, width: r.width * k, height: r.height * k });
+  return {
+    ...d,
+    frame: { ...d.frame, width: d.frame.width * k, height: d.frame.height * k, screenRect: rect(d.frame.screenRect) },
+    plate: d.plate
+      ? {
+          ...d.plate,
+          width: d.plate.width * k,
+          height: d.plate.height * k,
+          screenRect: rect(d.plate.screenRect),
+          screenQuad: d.plate.screenQuad?.map(([x, y]) => [x * k, y * k]) as typeof d.plate.screenQuad,
+        }
+      : d.plate,
+  };
+}
+
 for (const [legacyId, replacementId] of Object.entries(LEGACY_DEVICE_REPLACEMENTS)) {
   const replacement = byId.get(replacementId);
-  if (replacement) byId.set(legacyId, replacement);
+  if (!replacement) continue;
+  const targetW = LEGACY_SCREEN_WIDTH[legacyId];
+  byId.set(legacyId, targetW ? scaledDevice(replacement, targetW / replacement.frame.screenRect.width) : replacement);
 }
 
 /**

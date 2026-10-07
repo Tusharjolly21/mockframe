@@ -118,7 +118,13 @@ export function parsePostUrl(raw: string): PostTarget {
   if (host === "bsky.app") {
     const m = url.pathname.match(/^\/profile\/([^/]+)\/post\/([a-z0-9]+)/i);
     if (!m) throw new PostImportError("That Bluesky link isn't a post — open the post and copy its link");
-    return { provider: "bluesky", actor: decodeURIComponent(m[1]), rkey: m[2] };
+    let actor: string;
+    try {
+      actor = decodeURIComponent(m[1]);
+    } catch {
+      throw new PostImportError("That doesn't look like a Bluesky post link");
+    }
+    return { provider: "bluesky", actor, rkey: m[2] };
   }
   if (THREADS_HOSTS.has(host)) {
     if (!/^\/@[^/]+\/post\/[\w-]+/i.test(url.pathname)) throw new PostImportError("That Threads link isn't a post — open the post and copy its link");
@@ -190,7 +196,8 @@ export function parseBlueskyThread(data: { thread?: { post?: BskyPost } }, sourc
   const p = data.thread?.post;
   if (!p) throw new PostImportError("That Bluesky post couldn't be found");
   const embedImages = p.embed?.images ?? p.embed?.media?.images ?? [];
-  const images = embedImages.map((i) => i.fullsize || i.thumb).filter((u): u is string => !!u);
+  // the ~1000px thumb is plenty for a card and keeps the response small
+  const images = embedImages.map((i) => i.thumb || i.fullsize).filter((u): u is string => !!u);
   if (!images.length && p.embed?.thumbnail) images.push(p.embed.thumbnail); // video poster
   return {
     provider: "bluesky",
@@ -300,6 +307,38 @@ export function parseOpenGraphPost(html: string, provider: "threads" | "linkedin
 
 const UA = "Mozilla/5.0 (compatible; MockFrameBot/1.0; +https://mockframe.app)";
 
+/** Read a response body, giving up (null) once it passes `max` bytes. */
+async function readLimited(res: Response, max: number): Promise<Uint8Array | null> {
+  const declared = Number(res.headers.get("content-length") || 0);
+  if (declared > max) {
+    await res.body?.cancel().catch(() => {});
+    return null;
+  }
+  if (!res.body) return new Uint8Array(await res.arrayBuffer());
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > max) {
+      await reader.cancel().catch(() => {});
+      return null;
+    }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(total);
+  let at = 0;
+  for (const c of chunks) {
+    out.set(c, at);
+    at += c.byteLength;
+  }
+  return out;
+}
+
+const JSON_MAX_BYTES = 2 * 1024 * 1024;
+
 async function getJson<T>(url: string, notFound: string): Promise<T> {
   let res: Response;
   try {
@@ -310,7 +349,13 @@ async function getJson<T>(url: string, notFound: string): Promise<T> {
   if (res.status === 404 || res.status === 403 || res.status === 401) throw new PostImportError(notFound);
   if (res.status === 429) throw new PostImportError("The provider is rate-limiting requests — try again in a minute");
   if (!res.ok) throw new PostImportError("The provider had a problem returning this post — try again shortly");
-  return (await res.json()) as T;
+  const body = await readLimited(res, JSON_MAX_BYTES).catch(() => null);
+  if (!body) throw new PostImportError("The provider returned an unexpectedly large response");
+  try {
+    return JSON.parse(new TextDecoder().decode(body)) as T;
+  } catch {
+    throw new PostImportError("The provider returned something that isn't a post");
+  }
 }
 
 /** Fetch a public page, following redirects only within the provider's own hosts. */
@@ -340,20 +385,26 @@ async function getHtml(url: URL, allowedHosts: Set<string>): Promise<string> {
   throw new PostImportError("That link redirected too many times");
 }
 
-const IMAGE_MAX_BYTES = 4 * 1024 * 1024;
+const IMAGE_MAX_BYTES = 3 * 1024 * 1024;
+/** all images together: base64 inflates by a third and the JSON reply must stay under the host's 4.5 MB cap */
+const IMAGES_TOTAL_BYTES = 3 * 1024 * 1024;
 
-/** Download one image as a data URL; null on anything unexpected (the card falls back gracefully). */
-async function imageDataUrl(raw: string, checkHost: boolean): Promise<string | null> {
+/** Download one image; null on anything unexpected (the card falls back gracefully). */
+async function fetchImage(raw: string, checkHost: boolean): Promise<{ type: string; buf: Buffer } | null> {
   try {
     const url = new URL(raw);
     if (url.protocol !== "https:") return null;
     if (checkHost) await assertPublicUrl(url);
+    // X serves several renditions; "medium" (≤1200px) is plenty for a card
+    if (url.hostname === "pbs.twimg.com" && url.pathname.startsWith("/media/")) url.searchParams.set("name", "medium");
     const res = await fetch(url, { redirect: "error", signal: AbortSignal.timeout(10_000) });
     const type = res.headers.get("content-type") || "";
-    if (!res.ok || !/^image\/(png|jpe?g|webp|gif|avif)/i.test(type)) return null;
-    const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length > IMAGE_MAX_BYTES) return null;
-    return `data:${type.split(";")[0]};base64,${buf.toString("base64")}`;
+    if (!res.ok || !/^image\/(png|jpe?g|webp|gif|avif)/i.test(type)) {
+      await res.body?.cancel().catch(() => {});
+      return null;
+    }
+    const body = await readLimited(res, IMAGE_MAX_BYTES);
+    return body ? { type: type.split(";")[0], buf: Buffer.from(body) } : null;
   } catch {
     return null;
   }
@@ -399,9 +450,17 @@ export async function importPost(raw: string): Promise<ImportedPost> {
       break;
   }
   const arbitraryHost = target.provider === "mastodon";
-  const [avatar, ...images] = await Promise.all([
-    post.avatar ? imageDataUrl(post.avatar, arbitraryHost) : Promise.resolve(null),
-    ...post.images.map((u) => imageDataUrl(u, arbitraryHost)),
+  const fetched = await Promise.all([
+    post.avatar ? fetchImage(post.avatar, arbitraryHost) : Promise.resolve(null),
+    ...post.images.map((u) => fetchImage(u, arbitraryHost)),
   ]);
+  // avatar first, then photos in order, until the size budget is spent
+  let budget = IMAGES_TOTAL_BYTES;
+  const encoded = fetched.map((img) => {
+    if (!img || img.buf.length > budget) return null;
+    budget -= img.buf.length;
+    return `data:${img.type};base64,${img.buf.toString("base64")}`;
+  });
+  const [avatar, ...images] = encoded;
   return { ...post, avatar: avatar ?? undefined, images: images.filter((u): u is string => !!u) };
 }

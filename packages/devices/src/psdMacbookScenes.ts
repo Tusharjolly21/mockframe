@@ -5,9 +5,9 @@ type Quad = [[number, number], [number, number], [number, number], [number, numb
 const ROOT = "/psd-templates";
 const SOURCE_SIZE: [number, number] = [2560, 1664];
 
-// Plates are cropped to the laptop (+90px margin) and scaled so the screen is
-// ~1:1 with a 2560-wide screenshot; the source PSDs are 7500 × 5000 with the
-// laptop filling only the middle third, which made it tiny on the canvas.
+// Plates are cropped to the laptop (+90px margin): the source PSDs are
+// 7500 × 5000 with the laptop filling only the middle third, which made it
+// tiny on the canvas. `size`/`quad` are in cropped-PNG pixels.
 const MACBOOKS: Array<{
   id: string;
   name: string;
@@ -38,7 +38,18 @@ const MACBOOKS: Array<{
   },
 ];
 
-export const PSD_MACBOOK_SCENES: Device[] = MACBOOKS.map((macbook) => {
+// Logical units stay those of the original 7500-wide plates (screen ≈ 3444
+// units wide) so drafts saved before the crop keep their on-canvas size; the
+// cropped PNGs are simply drawn at that logical size.
+const ORIGINAL_SCREEN_W: Record<string, number> = { realistic: 3444.2708, clay: 3444.2708, vector: 3437 };
+
+export const PSD_MACBOOK_SCENES: Device[] = MACBOOKS.map((raw) => {
+  const k = ORIGINAL_SCREEN_W[raw.id] / (raw.quad[1][0] - raw.quad[0][0]);
+  const macbook = {
+    ...raw,
+    size: [raw.size[0] * k, raw.size[1] * k] as [number, number],
+    quad: raw.quad.map(([x, y]) => [x * k, y * k]) as Quad,
+  };
   const left = Math.min(...macbook.quad.map(([x]) => x));
   const top = Math.min(...macbook.quad.map(([, y]) => y));
   const right = Math.max(...macbook.quad.map(([x]) => x));
