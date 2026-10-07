@@ -8,6 +8,7 @@ import {
   defaultInstagramRequests,
   defaultScreenDoc,
   defaultSocialDoc,
+  type AiAppDoc,
   type ScreenApp,
   type ScreenDoc,
 } from "./screens/types";
@@ -217,7 +218,21 @@ export const APP_SCREEN_TEMPLATES: AppScreenTemplate[] = [
   {
     slug: "ai-app-home", label: "AI app home", category: "AI", app: "aiapp",
     blurb: "The home screen of an AI assistant app.",
-    deviceId: "pixel-10-pro-fold", frameVariant: "moonstone", doc: () => android(defaultScreenDoc("aiapp")),
+    deviceId: "pixel-10-pro", frameVariant: "moonstone", doc: () => android({
+      ...(defaultScreenDoc("aiapp") as AiAppDoc),
+      // the bare default has no content and renders an empty "Welcome"
+      archetype: "dashboard",
+      appName: "Lumen",
+      palette: { primary: "#6d5dfc", bg: "#f6f5ff", card: "#ffffff", text: "#17152e", muted: "#8a87a6" },
+      header: { title: "Good morning, Ava", subtitle: "Your assistant saved you 3h 20m this week" },
+      stats: [{ label: "Tasks done", value: "48" }, { label: "Hours saved", value: "3.3" }],
+      items: [
+        { title: "Summarise the Q3 report", subtitle: "12 pages · ready in 20s", value: "New", emoji: "📄" },
+        { title: "Draft a reply to Maya", subtitle: "Friendly, under 100 words", value: "Draft", emoji: "✉️" },
+        { title: "Plan Friday's offsite", subtitle: "Agenda, venue and travel", value: "3 steps", emoji: "🗓️" },
+      ],
+      tabs: ["Home", "Chats", "Library", "You"],
+    }),
     background: studio("st-lilac"), cardBg: "radial-gradient(circle at 50% 30%,#ece7fb,#b6a9dc)", ink: "#1e1b4b",
   },
 

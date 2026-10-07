@@ -18,6 +18,8 @@ interface PackState {
   /** all pack mutations flow through here — schedules the debounced autosave */
   update: (mut: (pack: PackDocument) => PackDocument) => void;
   addFiles: (files: File[]) => Promise<void>;
+  /** swap the screenshot on one screen, keeping its captions and overrides */
+  replaceScreenFile: (id: string, file: File) => Promise<void>;
   removeScreenById: (id: string) => void;
   moveScreenById: (id: string, delta: -1 | 1) => void;
   setActiveScreen: (id: string) => void;
@@ -70,6 +72,15 @@ export const usePackStore = create<PackState>()((set, get) => ({
     set({ pack, warnings: [...get().warnings, ...warnings] });
     if (addedIds.length) set({ activeScreenId: addedIds[addedIds.length - 1] });
     scheduleSave(pack);
+  },
+
+  replaceScreenFile: async (id, file) => {
+    if (!file.type.startsWith("image/")) return;
+    const asset = await ingestFile(file);
+    get().update((p) => ({ ...p, screens: p.screens.map((s) => (s.id === id ? { ...s, assetId: asset.id } : s)) }));
+    if (asset.width >= asset.height) {
+      set({ warnings: [...get().warnings, `${asset.name} looks landscape — store phone screenshots are portrait; it will be cover-cropped.`] });
+    }
   },
 
   removeScreenById: (id) => get().update((p) => removeScreen(p, id)),

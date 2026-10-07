@@ -466,10 +466,12 @@ export function EditorShell({
       <AnimatePresence>
         {toast && (
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            className="fk-card absolute bottom-16 left-1/2 z-50 -translate-x-1/2 rounded-full px-5 py-2.5 text-[13px] font-medium text-[#17171c]"
+            exit={{ opacity: 0, y: -8 }}
+            // top centre, under the toolbar: the bottom belongs to the filmstrip,
+            // the bottom bar and the post-export nudge, which would cover it
+            className="fk-card pointer-events-none absolute left-1/2 top-[76px] z-[70] max-w-[min(560px,92vw)] -translate-x-1/2 rounded-full px-5 py-2.5 text-center text-[13px] font-medium text-[#17171c]"
           >
             {toast}
           </motion.div>

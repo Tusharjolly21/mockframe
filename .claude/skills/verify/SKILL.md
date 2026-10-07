@@ -27,7 +27,7 @@ Downloads (exports) work via `page.waitForEvent("download")`. `Meta+s` etc. reac
 - Device picker trigger: `button:has-text("<current device name>")`; category pills by text ("Tablet").
 - Background swatches: `[title="<swatch id>"]` (e.g. `rf-iris`); categories by label text ("Refract").
 - Canvas size popover: trigger shows active preset label; presets inside have `title="W × H"`.
-- Toast pill appears bottom-center (`framekit:toast` custom event).
+- Toast pill appears top-center under the toolbar (`framekit:toast` custom event).
 
 ## Gotchas
 - Popovers close on outside `mousedown` — click empty canvas (`page.mouse.click(800, 500)`) to dismiss.

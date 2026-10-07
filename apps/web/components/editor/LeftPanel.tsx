@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { getDevice, previewDataUri } from "@framekit/devices";
+import { getDevice, previewDataUri, type DeviceCategory } from "@framekit/devices";
 import type { MockupLayer, Shadow, StickerLayer, TextLayer } from "@framekit/scene";
 import { DEFAULT_SHADOW } from "@framekit/scene";
 import { Crop, Globe, ImageIcon, ImagePlus, Move, Plus, Smartphone, Sparkles, TriangleAlert, X } from "lucide-react";
@@ -125,6 +125,9 @@ export function LeftPanel() {
 
 /** Layouts create independent mockup layers. This selector makes that explicit:
  * a user picks a phone, then edits/uploads only that phone's screenshot. */
+/** what to call a screenshot slot, by the kind of device holding it */
+const SLOT_LABEL: Partial<Record<DeviceCategory, string>> = { phone: "Phone", tablet: "Tablet", laptop: "Laptop", desktop: "Desktop", browser: "Browser", watch: "Watch", scene: "Scene" };
+
 function PhoneSlots({
   layers,
   activeId,
@@ -170,7 +173,7 @@ function PhoneSlots({
                   <span className="h-7 w-10 rounded bg-white shadow-sm" />
                 )}
               </span>
-              <span className="mt-1 block truncate text-[10px] font-semibold text-[#31313a]">{layer.deviceId ? "Phone" : "Screenshot"} {index + 1}</span>
+              <span className="mt-1 block truncate text-[10px] font-semibold text-[#31313a]">{device ? SLOT_LABEL[device.category] ?? "Device" : "Screenshot"} {index + 1}</span>
               <span className="block truncate text-[9px] text-[#92929d]">{layer.media ? "Screenshot set" : "Add screenshot"}</span>
             </motion.button>
           );

@@ -14,7 +14,7 @@
 <rect x="10" y="86" width="2560" height="74" fill="#35363a"/>
 <rect x="180" y="98" width="2140" height="52" rx="26" fill="#282a2d"/>
 <circle cx="210" cy="124" r="10" fill="none" stroke="#80868b" stroke-width="4"/>
-<text x="236" y="133" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="30" fill="#e8eaed" id="fk_urltext_fk_chrome-browser_dark">framekit.app</text>
+<text x="236" y="133" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="30" fill="#e8eaed" id="fk_urltext_fk_chrome-browser_dark">mockframe.app</text>
 <g fill="#80868b">
   <circle cx="70" cy="124" r="3.6"/><circle cx="70" cy="124" r="3.6"/>
   <path d="M106 114 l-12 10 12 10" stroke="#80868b" stroke-width="5" fill="none" stroke-linecap="round"/>
