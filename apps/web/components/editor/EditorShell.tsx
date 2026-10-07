@@ -9,6 +9,8 @@ import { ingestFile } from "@/lib/assets";
 import { loadCustomDevices, syncCustomDevicesFromServer } from "@/lib/customDevices";
 import { buildDeviceScene, buildScreenScene, deviceForScreenshot, isScreenApp } from "@/lib/deviceScene";
 import { takeParkedScreenshot } from "@/lib/handoff";
+import { planFigmaScenes } from "@/lib/figmaOpen";
+import type { FigmaImportManifest } from "@/lib/figmaImport";
 import { startAutosave } from "@/lib/autosave";
 import { saveCurrentDraft, useDraftsUi } from "@/lib/drafts";
 import { ensureGoogleFont, loadCustomFonts } from "@/lib/fonts";
@@ -45,6 +47,7 @@ export function EditorShell({
   openReplayOnLoad = false,
   remixId,
   openDroppedOnLoad = false,
+  figmaImportId,
   fromTemplate = false,
   embedded = false,
 }: {
@@ -61,6 +64,8 @@ export function EditorShell({
   remixId?: string;
   /** a screenshot was dropped on a marketing page and parked for us (lib/handoff) */
   openDroppedOnLoad?: boolean;
+  /** /editor?figma=<id>: frames sent from the Figma plugin */
+  figmaImportId?: string;
   /** a template page already loaded a scene, so skip the first-run picker */
   fromTemplate?: boolean;
   embedded?: boolean;
@@ -71,9 +76,10 @@ export function EditorShell({
   const [promoOpen, setPromoOpen] = useState(false);
   const extensionCaptures = useRef(new Set<string>());
   const deepLinked = Boolean(
-    initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad || remixId || openDroppedOnLoad || fromTemplate
+    initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad || remixId || openDroppedOnLoad || figmaImportId || fromTemplate
   );
   const droppedTaken = useRef(false);
+  const figmaTaken = useRef(false);
 
   // Fonts: this browser's uploads (+ the account's), and every catalog family
   // the scene's text uses — drafts, templates and remixes arrive with fonts
@@ -130,9 +136,9 @@ export function EditorShell({
   }, [openReplayOnLoad]);
 
   useEffect(() => {
-    track("editor_opened", { entry: openDroppedOnLoad ? "homepage_drop" : initialDeviceId ? "device_page" : openCalibrate ? "calibrate" : "direct" });
+    track("editor_opened", { entry: openDroppedOnLoad ? "homepage_drop" : figmaImportId ? "figma" : initialDeviceId ? "device_page" : openCalibrate ? "calibrate" : "direct" });
     trackOnce("editor_first_open");
-  }, [initialDeviceId, openCalibrate, openDroppedOnLoad]);
+  }, [initialDeviceId, openCalibrate, openDroppedOnLoad, figmaImportId]);
 
   useEffect(() => {
     if (!embedded || window.parent === window) return;
@@ -192,6 +198,52 @@ export function EditorShell({
       }
     })();
   }, [openDroppedOnLoad, setScene]);
+
+  // Deep-link: /editor?figma=<id> — frames sent from the Figma plugin, each in
+  // a device that fits (several become a shot batch), or a store listing set.
+  useEffect(() => {
+    if (!figmaImportId || figmaTaken.current) return;
+    figmaTaken.current = true;
+    window.history.replaceState({}, "", "/editor");
+    const say = (detail: string) => window.dispatchEvent(new CustomEvent("framekit:toast", { detail }));
+    void (async () => {
+      try {
+        const base = `/api/figma-import/${encodeURIComponent(figmaImportId)}`;
+        const res = await fetch(base);
+        const manifest = (await res.json().catch(() => null)) as (FigmaImportManifest & { error?: string }) | null;
+        if (!res.ok || !manifest) return say(manifest?.error ?? "Your Figma frames couldn't be loaded. Send them again.");
+        const frames: { asset: Awaited<ReturnType<typeof ingestFile>>; name: string }[] = [];
+        for (let i = 0; i < manifest.frames.length; i++) {
+          const r = await fetch(`${base}/${i}`);
+          if (!r.ok) continue;
+          const blob = await r.blob();
+          const name = manifest.frames[i].name;
+          frames.push({ asset: await ingestFile(new File([blob], `${name}.${blob.type === "image/jpeg" ? "jpg" : "png"}`, { type: blob.type })), name });
+        }
+        if (!frames.length) return say("Your Figma frames couldn't be loaded. Send them again.");
+        const { shots, filled } = planFigmaScenes(manifest, frames);
+        if (!shots.length) return;
+        useViewStore.getState().bumpAssets();
+        const [first] = shots;
+        // the batch strip under the canvas switches between the shots
+        useShotBatchStore.setState({ shots: shots.map((s) => ({ id: s.id, name: s.name, scene: s.scene })), activeId: first.id });
+        useSceneStore.setState({ scene: first.base });
+        useSceneStore.temporal.getState().clear();
+        useDraftsUi.getState().setCurrent(null);
+        // putting the frame in is a real edit, so autosave keeps it
+        setScene(() => first.scene);
+        window.dispatchEvent(new CustomEvent("framekit:fit"));
+        if (shots.length === 1) openLooks(false);
+        track("figma_import_opened", { frames: frames.length, mode: manifest.mode });
+        trackOnce("first_media_added", { source: "figma" });
+        if (manifest.mode === "set" && !filled) say("Store sets need phone-shaped frames, so the sample screens stayed. Send them as In devices instead.");
+        else if (manifest.mode === "set") say(frames.length === 1 ? "Your frame is in all eight shots" : `Your ${frames.length} frames are in all eight shots`);
+        else say(shots.length === 1 ? "Your frame from Figma is in" : `${shots.length} frames from Figma, one shot each`);
+      } catch (e) {
+        say(e instanceof Error ? e.message : "Your Figma frames couldn't be loaded");
+      }
+    })();
+  }, [figmaImportId, setScene]);
 
   // Deep-link: /editor?screen=<app> (from the /tools chat-screen generator
   // pages) opens an iPhone pre-loaded with that app's default chat screen.

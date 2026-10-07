@@ -25,6 +25,7 @@ const UPDATED = {
   templates: new Date("2026-10-07"), // premium layouts + photoreal collections
   devices: new Date("2026-10-07"), // realistic mockups reorganised
   recorder: new Date("2026-10-07"), // auto-zoom screen recorder launch
+  figma: new Date("2026-10-07"), // Figma plugin launch
 } as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -34,6 +35,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/app-store-screenshots`, lastModified: UPDATED.packStudio, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/ai`, lastModified: UPDATED.ai, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/screen-recorder`, lastModified: UPDATED.recorder, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${SITE_URL}/figma-plugin`, lastModified: UPDATED.figma, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/compare/appscreens`, lastModified: UPDATED.compare, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/tools`, lastModified: UPDATED.tools, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/launch-kit`, lastModified: UPDATED.launchKit, changeFrequency: "weekly", priority: 0.9 },
