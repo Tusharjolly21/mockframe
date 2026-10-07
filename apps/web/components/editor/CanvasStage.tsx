@@ -49,13 +49,15 @@ export function CanvasStage() {
   const emptyTargetRef = useRef<string | null>(null);
 
   /* ------------------------------ fit to view ------------------------------ */
-  // insets keep the scene clear of the floating panels
+  // insets keep the scene clear of the floating panels (and of the filmstrip
+  // a multi-shot set shows above the bottom bar)
+  const hasStrip = useShotBatchStore((s) => s.shots.length > 1);
   const fit = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
     const INSET_X = 340;
     const INSET_TOP = 88;
-    const INSET_BOTTOM = 84;
+    const INSET_BOTTOM = hasStrip ? 196 : 84;
     const innerW = el.clientWidth - INSET_X * 2;
     const innerH = el.clientHeight - INSET_TOP - INSET_BOTTOM;
     const z = Math.min(innerW / scene.canvas.width, innerH / scene.canvas.height);
@@ -64,7 +66,7 @@ export function CanvasStage() {
       x: INSET_X + (innerW - scene.canvas.width * z) / 2,
       y: INSET_TOP + (innerH - scene.canvas.height * z) / 2,
     });
-  }, [scene.canvas, setPan, setZoom]);
+  }, [scene.canvas, setPan, setZoom, hasStrip]);
 
   // The canvas is sticky: always auto-fit and centered. It only re-lays-out
   // when the canvas dimensions (aspect ratio) or the window change.
@@ -79,7 +81,7 @@ export function CanvasStage() {
       ro?.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene.canvas.width, scene.canvas.height]);
+  }, [scene.canvas.width, scene.canvas.height, hasStrip]);
 
   /* ------------------ selection overlay + ⊕ empty screens ------------------
      One measurement pass for both. DOM rects lie while a layer is mid-entrance

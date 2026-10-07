@@ -15,6 +15,7 @@ import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
 import { SocialBrandIcon } from "@/components/SocialBrandIcon";
+import { StoreSetsSection } from "@/components/templates/StoreSetsSection";
 import { APP_SCREEN_TEMPLATES, APP_TEMPLATE_CATEGORIES, type AppTemplateCategory } from "@/lib/appScreenTemplates";
 import { encodeScreenAsset, resolveScreenAsset } from "@/lib/screens";
 
@@ -159,6 +160,8 @@ export default function TemplatesPage() {
             </p>
           </div>
         </Reveal>
+
+        <StoreSetsSection />
 
         <Reveal>
           <section className="mt-8 overflow-hidden rounded-lg border border-white/10 bg-[#101116]">

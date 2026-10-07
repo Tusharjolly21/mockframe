@@ -9,6 +9,7 @@ import { ingestFile } from "@/lib/assets";
 import { loadCustomDevices, syncCustomDevicesFromServer } from "@/lib/customDevices";
 import { buildDeviceScene, buildScreenScene, isScreenApp } from "@/lib/deviceScene";
 import { saveCurrentDraft } from "@/lib/drafts";
+import { ShotStrip } from "./ShotStrip";
 import { useShotBatchStore } from "@/lib/shotBatch";
 import { duplicateLayer, groupLayers, placeAsset, removeLayer, reorderLayer, ungroupLayers } from "@/lib/sceneOps";
 import { copyLayers, hasCopiedLayers, pasteLayers, runArrange, type ArrangeAction } from "@/lib/arrange";
@@ -453,9 +454,12 @@ export function EditorShell({
         </div>
 
         {/* bottom toolbar (reset / position / 3D / emoji) + animate */}
-        <div className="pointer-events-auto absolute bottom-1 left-1/2 flex -translate-x-1/2 items-end gap-2">
-          <BottomBar />
-          <AnimatePanel />
+        <div className="pointer-events-auto absolute bottom-1 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2">
+          <ShotStrip />
+          <div className="flex items-end gap-2">
+            <BottomBar />
+            <AnimatePanel />
+          </div>
         </div>
       </div>
 

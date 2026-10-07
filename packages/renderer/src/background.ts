@@ -58,7 +58,9 @@ export function backgroundToCss(bg: Background, panoramaIdx?: number, panoramaTo
     css = {
       ...css,
       backgroundSize: `${panoramaTotal * 100}% 100%`,
-      backgroundPosition: `${-(panoramaIdx * 100)}% 0%`,
+      // a percentage aligns that point of the image with the same point of the
+      // box, so shot i of n sits at i / (n - 1), not -i × 100%
+      backgroundPosition: `${(panoramaIdx / (panoramaTotal - 1)) * 100}% 0%`,
       backgroundAttachment: "scroll",
       backgroundRepeat: "no-repeat",
     };

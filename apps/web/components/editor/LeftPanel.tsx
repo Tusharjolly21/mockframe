@@ -139,7 +139,7 @@ function PhoneSlots({
     <section className="border-b border-[#ececf2] px-3 pb-3 pt-2">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">Screenshots</h3>
-        <span className="text-[10px] font-medium text-[#a0a0aa]">{layers.length} shots</span>
+        <span className="text-[10px] font-medium text-[#a0a0aa]">{layers.length} on this canvas</span>
       </div>
       <div className="grid grid-cols-3 gap-1.5">
         {layers.slice(0, 3).map((layer, index) => {
@@ -157,7 +157,7 @@ function PhoneSlots({
               className={`fk-press min-w-0 rounded-lg border p-1.5 text-left ${
                 active ? "border-[#17171c] bg-[#f4f4f8] shadow-[0_0_0_1px_#17171c]" : "border-[#e4e4ec] bg-white hover:border-[#a9a9b3]"
               }`}
-              title={`Edit shot ${index + 1}`}
+              title={`Edit screen ${index + 1}`}
             >
               <span className="grid h-12 place-items-center overflow-hidden rounded-md bg-[#ececf2]">
                 {asset ? (
@@ -170,7 +170,7 @@ function PhoneSlots({
                   <span className="h-7 w-10 rounded bg-white shadow-sm" />
                 )}
               </span>
-              <span className="mt-1 block truncate text-[10px] font-semibold text-[#31313a]">Shot {index + 1}</span>
+              <span className="mt-1 block truncate text-[10px] font-semibold text-[#31313a]">{layer.deviceId ? "Phone" : "Screenshot"} {index + 1}</span>
               <span className="block truncate text-[9px] text-[#92929d]">{layer.media ? "Screenshot set" : "Add screenshot"}</span>
             </motion.button>
           );

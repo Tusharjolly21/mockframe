@@ -481,6 +481,48 @@ register("bm-ice", "Ice Beams", beams(913, "#020814", ["#38bdf8", "#e0f2fe", "#6
 register("bm-gold", "Gold Beams", beams(923, "#0d0802", ["#fbbf24", "#fde68a", "#f97316"]));
 register("bm-mint", "Mint Beams", beams(931, "#010d09", ["#34d399", "#a7f3d0", "#22d3ee"]));
 
+/* ------------------------------ store-set art ------------------------------- */
+/* Portrait backdrops for the store listing sets (lib/storeSets.ts), drawn at
+   the App Store's 6.9" size so they stay crisp on every shot. */
+
+const PW = 1320;
+const PH = 2868;
+
+function nightSky(seed: number, top: string, bottom: string, glow: string): string {
+  const rng = mulberry32(seed);
+  const stars = Array.from({ length: 170 }, () => {
+    const x = Math.round(rng() * PW);
+    const y = Math.round(rng() * PH);
+    const r = (rng() < 0.12 ? 2.6 : 1.1 + rng() * 1.2).toFixed(1);
+    return `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" opacity="${(0.18 + rng() * 0.6).toFixed(2)}"/>`;
+  }).join("");
+  return `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PW} ${PH}">` +
+      `<defs><linearGradient id="ns_bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bottom}"/></linearGradient>` +
+      `<radialGradient id="ns_glow" cx="0.5" cy="0.08" r="0.62"><stop offset="0" stop-color="${glow}" stop-opacity="0.55"/><stop offset="1" stop-color="${glow}" stop-opacity="0"/></radialGradient></defs>` +
+      `<rect width="${PW}" height="${PH}" fill="url(#ns_bg)"/><rect width="${PW}" height="${PH}" fill="url(#ns_glow)"/>${stars}</svg>`
+  )}`;
+}
+
+BUILTIN_BACKGROUNDS["builtin:set-night"] = {
+  url: nightSky(1201, "#1a1f4d", "#070a1c", "#7c6cf0"),
+  width: PW,
+  height: PH,
+  label: "Night Sky",
+};
+
+/* Sample app screens shipped with the store sets: builtin:sample/<app>/<ios|android>-NN */
+const SAMPLE_SIZE = { ios: { width: 1206, height: 2622 }, android: { width: 1277, height: 2852 } } as const;
+const SAMPLE_RE = /^builtin:sample\/([a-z0-9-]+)\/(ios|android)-(\d{2})$/;
+
+function resolveSample(assetId: string): (ResolvedAsset & { label: string }) | undefined {
+  const m = SAMPLE_RE.exec(assetId);
+  if (!m) return undefined;
+  const [, app, platform, n] = m;
+  const size = SAMPLE_SIZE[platform as keyof typeof SAMPLE_SIZE];
+  return { url: `/store-sets/${app}/${platform}-${n}.webp`, ...size, label: `${app} screen ${Number(n)}` };
+}
+
 export function resolveBuiltin(assetId: string): (ResolvedAsset & { label: string }) | undefined {
-  return BUILTIN_BACKGROUNDS[assetId];
+  return BUILTIN_BACKGROUNDS[assetId] ?? resolveSample(assetId);
 }
