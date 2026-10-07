@@ -14,6 +14,8 @@ import {
   SiMessenger,
   SiReddit,
   SiSignal,
+  SiGooglemessages,
+  SiWechat,
   SiSpotify,
   SiStripe,
   SiTinder,
@@ -78,6 +80,8 @@ import {
   type ScreenApp,
   type ScreenDoc,
   type SignalDoc,
+  type GMessagesDoc,
+  type WeChatDoc,
   type SlackDoc,
   type SnapchatDoc,
   type TelegramDoc,
@@ -148,6 +152,8 @@ const APPS: AppMeta[] = [
   { app: "discord", label: "Discord DM", icon: SiDiscord, tint: "#404eed", cat: "Messaging", kw: "discord dm direct message", make: () => defaultDiscordDm() },
   { app: "slack", label: "Slack", icon: Slack, tint: "#4a154b", cat: "Messaging", kw: "workspace channel" },
   { app: "signal", label: "Signal", icon: SiSignal, tint: "#3a76f0", cat: "Messaging", kw: "private encrypted" },
+  { app: "gmessages", label: "Google Messages", icon: SiGooglemessages, tint: "#1a73e8", cat: "Messaging", kw: "android sms rcs text google" },
+  { app: "wechat", label: "WeChat", icon: SiWechat, tint: "#07c160", cat: "Messaging", kw: "weixin china chinese" },
   { app: "line", label: "LINE", icon: SiLine, tint: "#06c755", cat: "Messaging", kw: "japan korea sticker green chat" },
   { app: "teams", label: "Teams", icon: MessagesSquare, tint: "#5b5fc7", cat: "Messaging", kw: "microsoft work office channel" },
   { app: "ai", label: "AI Chat", icon: Sparkles, tint: "#7c3aed", cat: "AI Chats", kw: "chatgpt claude gemini grok perplexity gpt" },
@@ -202,6 +208,8 @@ const AVATAR_APPS = new Set<ScreenApp>([
   "snapchat",
   "email",
   "signal",
+  "gmessages",
+  "wechat",
   "line",
   "dating",
   "youtube",
@@ -475,6 +483,8 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       {doc.app === "discord" && <DiscordFields doc={doc} setDoc={setDoc} />}
       {doc.app === "slack" && <SlackFields doc={doc} setDoc={setDoc} />}
       {doc.app === "signal" && <SignalFields doc={doc} setDoc={setDoc} />}
+      {doc.app === "gmessages" && <GMessagesFields doc={doc} setDoc={setDoc} />}
+      {doc.app === "wechat" && <WeChatFields doc={doc} setDoc={setDoc} />}
       {doc.app === "reddit" && <RedditFields doc={doc} setDoc={setDoc} />}
       {doc.app === "line" && <LineFields doc={doc} setDoc={setDoc} />}
       {doc.app === "dating" && <DatingFields doc={doc} setDoc={setDoc} />}
@@ -1327,6 +1337,38 @@ function SignalFields({ doc, setDoc }: { doc: SignalDoc; setDoc: (d: ScreenDoc) 
         onChange={(messages) => setDoc({ ...doc, messages })}
         makeNew={(from) => ({ from, text: "", ticks: "read" as WhatsAppTicks })}
         extra={tickExtra}
+      />
+    </>
+  );
+}
+
+function GMessagesFields({ doc, setDoc }: { doc: GMessagesDoc; setDoc: (d: ScreenDoc) => void }) {
+  return (
+    <>
+      <div className="flex gap-2">
+        <Field label="Contact name" value={doc.contact} onChange={(contact) => setDoc({ ...doc, contact })} className="flex-1" />
+        <Field label="Status" value={doc.presence ?? ""} onChange={(presence) => setDoc({ ...doc, presence })} className="w-24" placeholder="optional" />
+      </div>
+      <MessageRows
+        messages={doc.messages}
+        onChange={(messages) => setDoc({ ...doc, messages })}
+        makeNew={(from) => ({ from, text: "" })}
+      />
+    </>
+  );
+}
+
+function WeChatFields({ doc, setDoc }: { doc: WeChatDoc; setDoc: (d: ScreenDoc) => void }) {
+  return (
+    <>
+      <div className="flex gap-2">
+        <Field label="Contact name" value={doc.contact} onChange={(contact) => setDoc({ ...doc, contact })} className="flex-1" />
+        <Field label="Your name" value={doc.me ?? ""} onChange={(me) => setDoc({ ...doc, me })} className="w-24" placeholder="Me" />
+      </div>
+      <MessageRows
+        messages={doc.messages}
+        onChange={(messages) => setDoc({ ...doc, messages })}
+        makeNew={(from) => ({ from, text: "" })}
       />
     </>
   );

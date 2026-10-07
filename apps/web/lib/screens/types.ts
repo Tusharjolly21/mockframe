@@ -545,6 +545,30 @@ export interface SignalDoc {
   messages: Array<ChatMessage & { ticks?: WhatsAppTicks; reaction?: string }>;
 }
 
+/** Google Messages (Android RCS) conversation. */
+export interface GMessagesDoc {
+  app: "gmessages";
+  chrome: ScreenChrome;
+  avatar?: string;
+  contact: string;
+  /** subtitle under the name ("Active now"); optional */
+  presence?: string;
+  messages: Array<ChatMessage & { reaction?: string; status?: string }>;
+}
+
+/** WeChat (微信) conversation. */
+export interface WeChatDoc {
+  app: "wechat";
+  chrome: ScreenChrome;
+  avatar?: string;
+  contact: string;
+  /** your own display name (initials on your avatar) */
+  me?: string;
+  /** unread count shown beside the back chevron */
+  unread?: number;
+  messages: ChatMessage[];
+}
+
 export interface RedditComment {
   user: string;
   text: string;
@@ -814,6 +838,8 @@ export type ScreenDoc =
   | DiscordDoc
   | SlackDoc
   | SignalDoc
+  | GMessagesDoc
+  | WeChatDoc
   | RedditDoc
   | LineDoc
   | DatingDoc
@@ -851,6 +877,8 @@ export const SCREEN_APP_LABELS: Record<ScreenApp, string> = {
   discord: "Discord",
   slack: "Slack",
   signal: "Signal",
+  gmessages: "Google Messages",
+  wechat: "WeChat",
   reddit: "Reddit",
   line: "LINE",
   dating: "Dating",
@@ -1026,6 +1054,8 @@ export const APP_PLATFORMS: Record<ScreenApp, ("ios" | "android")[]> = {
   discord: ["ios", "android"],
   slack: ["ios", "android"],
   signal: ["ios", "android"],
+  gmessages: ["android"],
+  wechat: ["ios", "android"],
   reddit: ["ios", "android"],
   line: ["ios", "android"],
   dating: ["ios", "android"],
@@ -1242,6 +1272,32 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
           { from: "me", text: "yep, 8-hour timer set", ticks: "read" },
           { from: "them", text: "perfect, Signal is unreal for this" },
           { from: "me", text: "privacy > everything 🔒", ticks: "delivered" },
+        ],
+      };
+    case "gmessages":
+      return {
+        app,
+        chrome: { ...chrome, platform: "android" },
+        contact: "Maya Chen",
+        messages: [
+          { from: "them", text: "Are we still on for dinner tonight?" },
+          { from: "them", text: "I can book the 8pm table 🍜" },
+          { from: "me", text: "Yes! 8 works perfectly" },
+          { from: "them", text: "Booked. See you there", reaction: "❤️" },
+          { from: "me", text: "Can't wait 🙌", status: "Read" },
+        ],
+      };
+    case "wechat":
+      return {
+        app,
+        chrome,
+        contact: "Li Wei",
+        me: "Alex",
+        messages: [
+          { from: "them", text: "早上好! Did the samples arrive?" },
+          { from: "me", text: "They did, quality looks great 👍" },
+          { from: "them", text: "Perfect. I'll send the invoice today" },
+          { from: "me", text: "Thanks, talk soon!" },
         ],
       };
     case "reddit":

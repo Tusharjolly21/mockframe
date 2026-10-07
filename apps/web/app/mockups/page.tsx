@@ -64,7 +64,7 @@ export default function MockupsIndexPage() {
 
       <div className="mx-auto max-w-6xl px-6 pb-20">
         {groups.map((g) => (
-          <section key={g.cat} className="pt-10">
+          <section key={g.cat} id={g.cat} className="scroll-mt-24 pt-10">
             <Reveal>
               <div className="flex items-baseline justify-between">
                 <h2 className="text-[22px] font-medium tracking-[-0.02em] sm:text-[26px]">{g.meta.label}</h2>

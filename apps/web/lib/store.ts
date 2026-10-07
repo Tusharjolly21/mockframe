@@ -71,7 +71,12 @@ export function withTransientHistory(run: () => void) {
 /* -------------------------------- view store -------------------------------- */
 /* Editor-only state: zoom/pan/selection. Never serialized into the document. */
 
+/** The editor's guided flow: add content → style the scene → export. */
+export type EditorStep = "content" | "style" | "export";
+
 interface ViewState {
+  step: EditorStep;
+  setStep: (step: EditorStep) => void;
   zoom: number;
   pan: { x: number; y: number };
   /** selection supports shift-click multi-select; last entry is the primary */
@@ -98,6 +103,8 @@ interface ViewState {
 }
 
 export const useViewStore = create<ViewState>()((set) => ({
+  step: "content",
+  setStep: (step) => set({ step }),
   zoom: 0.4,
   pan: { x: 0, y: 0 },
   selectedIds: [],

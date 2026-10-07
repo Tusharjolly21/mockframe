@@ -6,6 +6,7 @@ import {
   bubbleBaseline,
   esc,
   fileCard,
+  glyph,
   linkCard,
   homeIndicator,
   micIcon,
@@ -22,7 +23,7 @@ import {
   wrapText,
 } from "./common";
 import { fontFor } from "./fonts";
-import { resolveWallpaper } from "./wallpapers";
+import { resolveWallpaper, whatsappDoodle } from "./wallpapers";
 import type { WhatsAppDoc, WhatsAppGroupDoc, WhatsAppTicks } from "./types";
 
 /**
@@ -49,65 +50,98 @@ export function renderWhatsApp(
   const textBlock = (lines: string[], o: Parameters<typeof baseTextBlock>[1]) =>
     baseTextBlock(lines, { font, ...o });
   const dark = !!doc.chrome.dark;
+  const android = platform === "android";
   const c = {
-    wallpaper: dark ? "#0b141a" : "#ece5dd",
-    headerBg: dark ? "#1f2c34" : "#f6f6f6",
+    headerBg: dark ? "#1f2c34" : android ? "#ffffff" : "#f6f6f6",
     hairline: dark ? "#2c3942" : "#dcdcdc",
     text: dark ? "#e9edef" : "#000000",
     subtle: dark ? "#8696a0" : "#667781",
+    icon: dark ? "#aebac1" : "#54656f", // Android app-bar glyphs
     incoming: dark ? "#202c33" : "#ffffff",
     outgoing: dark ? "#005c4b" : "#dcf8c6",
     bubbleText: dark ? "#e9edef" : "#111b21",
+    outMeta: dark ? "rgba(233,237,239,0.6)" : "#667781", // time inside a sent bubble
     blueTick: "#53bdeb",
     accent: dark ? "#00a884" : "#008069", // WhatsApp green — unified across iOS/Android (never iOS blue)
-    chipBg: dark ? "#1d282f" : "#fdf4c5",
-    chipText: dark ? "#8696a0" : "#54656f",
+    chipBg: dark ? "#182229" : "#fdf4c5",
+    chipText: dark ? "#ffd279" : "#54656f", // the encryption notice is amber in dark mode
+    dateBg: dark ? "#182229" : "#ffffff",
   };
 
-  const parts: string[] = [resolveWallpaper(doc.wallpaper, dark) ?? `<rect width="${SW}" height="${SH}" fill="${c.wallpaper}"/>`];
+  const parts: string[] = [resolveWallpaper(doc.wallpaper, dark) ?? whatsappDoodle(dark)];
+  const presence = doc.chrome._anim?.typing ? "typing…" : doc.presence || "online";
+  const presenceColor = doc.chrome._anim?.typing ? c.accent : c.subtle;
 
   /* header */
   const HEADER_H = 102;
   parts.push(
     `<rect width="${SW}" height="${HEADER_H}" fill="${c.headerBg}"/>`,
-    `<rect y="${HEADER_H - 0.5}" width="${SW}" height="0.5" fill="${c.hairline}"/>`,
-    statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.text, platform }),
-    `<path d="M24 62 l-10 11 10 11" fill="none" stroke="${c.accent}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`,
-    avatar(doc.contact, 52, 73, 19, "wa", avatarUrl),
-    textBlock([doc.contact], { x: 80, y: 70, size: 16.5, lineHeight: 19, color: c.text, weight: 600 }),
-    doc.verified
-      ? verifiedBadge(80 + textWidth(doc.contact, 16.5) + 5, 70 - 13, c.accent)
-      : "",
-    textBlock([doc.chrome._anim?.typing ? "typing…" : doc.presence || "online"], { x: 80, y: 87, size: 12, lineHeight: 14, color: doc.chrome._anim?.typing ? c.accent : c.subtle }),
-    videoIcon(SW - 76, 73, 25, c.text),
-    phoneIcon(SW - 34, 73, 21, c.text)
+    dark || !android ? `<rect y="${HEADER_H - 0.5}" width="${SW}" height="0.5" fill="${c.hairline}"/>` : "",
+    statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.text, platform })
   );
+  if (android) {
+    // Material app bar: ← arrow, photo, name over presence, then video · call · ⋮
+    parts.push(
+      glyph(MD.arrowBack, 22, 73, 24, c.icon),
+      waAvatar(56, 73, 20, dark, avatarUrl),
+      textBlock([doc.contact], { x: 86, y: 70, size: 17, lineHeight: 20, color: c.text, weight: 500 }),
+      doc.verified ? verifiedBadge(86 + textWidth(doc.contact, 17) + 5, 70 - 13, c.accent) : "",
+      textBlock([presence], { x: 86, y: 88, size: 13, lineHeight: 15, color: presenceColor }),
+      glyph(MD.videocam, SW - 112, 73, 26, c.icon),
+      glyph(MD.call, SW - 66, 73, 23, c.icon),
+      glyph(MD.moreVert, SW - 24, 73, 24, c.icon)
+    );
+  } else {
+    parts.push(
+      `<path d="M24 62 l-10 11 10 11" fill="none" stroke="${c.accent}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`,
+      waAvatar(52, 73, 19, dark, avatarUrl),
+      textBlock([doc.contact], { x: 80, y: 70, size: 16.5, lineHeight: 19, color: c.text, weight: 600 }),
+      doc.verified ? verifiedBadge(80 + textWidth(doc.contact, 16.5) + 5, 70 - 13, c.accent) : "",
+      textBlock([presence], { x: 80, y: 87, size: 12, lineHeight: 14, color: presenceColor }),
+      videoIcon(SW - 76, 73, 25, c.text),
+      phoneIcon(SW - 34, 73, 21, c.text)
+    );
+  }
 
   /* message body (scrolls to bottom when taller than the band) */
   const bodyStart = parts.length;
   let y = HEADER_H + 14;
-  const chipText = "Messages and calls are end-to-end encrypted.";
-  const chipW = Math.min(SW - 48, textWidth(chipText, 11) + 34);
-  parts.push(
-    `<rect x="${(SW - chipW) / 2}" y="${y}" width="${chipW.toFixed(1)}" height="34" rx="8" fill="${c.chipBg}"/>`,
-    `<text font-family="${font}" font-size="11" fill="${c.chipText}" text-anchor="middle" x="${SW / 2 + 6}" y="${y + 21}">${esc(chipText)}</text>`,
-    `<text font-size="10" text-anchor="middle" x="${(SW - chipW) / 2 + 15}" y="${y + 21.5}">🔒</text>`
+  // encryption notice: centered, wrapped, with a small lock leading the first line
+  const chipLines = wrapText(
+    "Messages and calls are end-to-end encrypted. Only people in this chat can read, listen to, or share them. Learn more",
+    12,
+    268
   );
-  y += 50;
+  const chipW = Math.max(...chipLines.map((l, i) => textWidth(l, 12) + (i === 0 ? 16 : 0))) + 28;
+  const chipH = chipLines.length * 16 + 16;
+  const lockX = SW / 2 - (textWidth(chipLines[0], 12) + 16) / 2;
+  parts.push(
+    `<rect x="${((SW - chipW) / 2).toFixed(1)}" y="${y}" width="${chipW.toFixed(1)}" height="${chipH}" rx="8" fill="${c.chipBg}"/>`,
+    glyph(MD.lock, lockX + 5, y + 19.5, 11, c.chipText),
+    `<text font-family="${font}" font-size="12" fill="${c.chipText}" text-anchor="middle">${chipLines
+      .map((l, i) => `<tspan x="${(SW / 2 + (i === 0 ? 8 : 0)).toFixed(1)}" y="${y + 24 + i * 16}">${esc(l)}</tspan>`)
+      .join("")}</text>`
+  );
+  y += chipH + 14;
 
   /* messages */
   const time = doc.chrome.time || "9:41";
+  const dateChip = (label: string, cy: number) => {
+    const pw = textWidth(label, 11.5) + 26;
+    return (
+      `<rect x="${(SW - pw) / 2}" y="${cy}" width="${pw.toFixed(0)}" height="26" rx="8" fill="${c.dateBg}"/>` +
+      `<text font-family="${font}" font-size="11.5" font-weight="500" fill="${c.subtle}" text-anchor="middle" x="${SW / 2}" y="${cy + 17}">${esc(label)}</text>`
+    );
+  };
+  const dateChips: { idx: number; y: number; label: string }[] = [];
   for (let i = 0; i < doc.messages.length; i++) {
     const m = doc.messages[i];
     const mine = m.from === "me";
 
     // date separator pill ("Today" / "Yesterday")
     if (m.dateLabel) {
-      const pw = textWidth(m.dateLabel, 11.5) + 26;
-      parts.push(
-        `<rect x="${(SW - pw) / 2}" y="${y}" width="${pw.toFixed(0)}" height="26" rx="8" fill="${dark ? "#1d282f" : "#ffffff"}"/>`,
-        `<text font-family="${font}" font-size="11.5" font-weight="600" fill="${c.subtle}" text-anchor="middle" x="${SW / 2}" y="${y + 17}">${esc(m.dateLabel)}</text>`
-      );
+      dateChips.push({ idx: parts.length, y, label: m.dateLabel });
+      parts.push(dateChip(m.dateLabel, y));
       y += 38;
     }
 
@@ -224,10 +258,11 @@ export function renderWhatsApp(
       `<rect x="${x}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="9" fill="${fill}" style="filter:drop-shadow(0 0.5px 0.5px rgba(0,0,0,0.12))"/>`
     );
     if (isGroupStart)
+      // tail on the first bubble of a run: that top corner goes square
       parts.push(
         mine
-          ? `<path d="M${x + w - 4} ${y} h 10 c -3 6 -6 8 -10 9 Z" fill="${fill}"/>`
-          : `<path d="M${x + 4} ${y} h -10 c 3 6 6 8 10 9 Z" fill="${fill}"/>`
+          ? `<rect x="${(x + w - 10).toFixed(1)}" y="${y}" width="10" height="10" fill="${fill}"/><path d="M${x + w - 4} ${y} h 10 c -3 6 -6 8 -10 9 Z" fill="${fill}"/>`
+          : `<rect x="${x}" y="${y}" width="10" height="10" fill="${fill}"/><path d="M${x + 4} ${y} h -10 c 3 6 6 8 10 9 Z" fill="${fill}"/>`
       );
     parts.push(
       textBlock(lines, {
@@ -242,10 +277,10 @@ export function renderWhatsApp(
     // meta: time (+ ticks for outgoing) bottom-right inside the bubble
     const metaY = y + h - 7;
     const laterReply = doc.messages.slice(i + 1).some((n) => n.from === "them");
-    const ticksSvg = mine ? ticks(m.ticks ?? (laterReply ? "read" : "delivered"), x + w - 9, metaY, c.subtle, c.blueTick) : "";
+    const ticksSvg = mine ? ticks(m.ticks ?? (laterReply ? "read" : "delivered"), x + w - 9, metaY, c.outMeta, c.blueTick) : "";
     const timeX = mine ? x + w - 9 - 18 : x + w - 9;
     parts.push(
-      `<text font-family="${font}" font-size="10.5" fill="${c.subtle}" text-anchor="end" x="${timeX}" y="${metaY}">${esc(time)}</text>`,
+      `<text font-family="${font}" font-size="10.5" fill="${mine ? c.outMeta : c.subtle}" text-anchor="end" x="${timeX}" y="${metaY}">${esc(time)}</text>`,
       ticksSvg
     );
 
@@ -273,14 +308,56 @@ export function renderWhatsApp(
     y += th + 10;
   }
 
-  // pin the body to the bottom of the visible band above the composer
+  // pin the body to the bottom of the visible band above the composer. Once
+  // the latest date pill scrolls under the header it sticks below it instead,
+  // as it does in WhatsApp.
+  const bodyBottom = SH - (android ? 80 : 92);
+  const scrolled = Math.max(0, y - bodyBottom);
+  const STICKY_Y = HEADER_H + 8;
+  const stuck = [...dateChips].reverse().find((d) => d.y - scrolled < STICKY_Y);
+  if (stuck) parts[stuck.idx] = "";
   const body = parts.splice(bodyStart);
-  parts.push(scrollBody(body.join("\n"), { top: HEADER_H, bottom: SH - 92, contentBottom: y }));
+  parts.push(scrollBody(body.join("\n"), { top: HEADER_H, bottom: bodyBottom, contentBottom: y }));
+  if (stuck) parts.push(dateChip(stuck.label, STICKY_Y));
 
   /* input bar */
   parts.push(...waComposer({ platform, dark, subtle: c.subtle, headerBg: c.headerBg, font }));
 
   return parts.join("\n");
+}
+
+/* Material Symbols geometry (Apache-2.0) for the Android chrome. */
+const MD = {
+  arrowBack: "M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z",
+  videocam:
+    "M15 8v8H5V8h10m1-2H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4V7c0-.55-.45-1-1-1z",
+  call:
+    "M6.54 5c.06.89.21 1.76.45 2.59l-1.2 1.2c-.41-1.2-.67-2.47-.76-3.79h1.51m9.86 12.02c.85.24 1.72.39 2.6.45v1.49c-1.32-.09-2.59-.35-3.8-.75l1.2-1.19M7.5 3H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.49c0-.55-.45-1-1-1-1.24 0-2.45-.2-3.57-.57-.1-.04-.21-.05-.31-.05-.26 0-.51.1-.71.29l-2.2 2.2c-2.83-1.45-5.15-3.76-6.59-6.59l2.2-2.2c.28-.28.36-.67.25-1.02C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1z",
+  moreVert:
+    "M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z",
+  lock:
+    "M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6z",
+  emoji:
+    "M15.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm-7 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm3.49-9C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-2.5c2.33 0 4.32-1.45 5.12-3.5H6.88c.8 2.05 2.79 3.5 5.12 3.5z",
+  attach:
+    "M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z",
+  camera:
+    "M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zM9 2 7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z",
+  mic:
+    "M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z",
+};
+
+/** The contact photo, or WhatsApp's own grey silhouette when there isn't one. */
+function waAvatar(cx: number, cy: number, r: number, dark: boolean, imageUrl?: string): string {
+  if (imageUrl) return avatar("", cx, cy, r, "wa", imageUrl);
+  const bg = dark ? "#6a7175" : "#dfe5e7";
+  const fg = dark ? "#cfd4d6" : "#ffffff";
+  return (
+    `<defs><clipPath id="wadp"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath></defs>` +
+    `<g clip-path="url(#wadp)"><circle cx="${cx}" cy="${cy}" r="${r}" fill="${bg}"/>` +
+    `<circle cx="${cx}" cy="${(cy - r * 0.2).toFixed(1)}" r="${(r * 0.38).toFixed(1)}" fill="${fg}"/>` +
+    `<ellipse cx="${cx}" cy="${(cy + r * 0.86).toFixed(1)}" rx="${(r * 0.7).toFixed(1)}" ry="${(r * 0.56).toFixed(1)}" fill="${fg}"/></g>`
+  );
 }
 
 /* ------------------------------- group chat ---------------------------------- */
@@ -303,7 +380,6 @@ export function renderWhatsAppGroup(doc: WhatsAppGroupDoc, avatarUrl?: string): 
   // No — sender labels change bubble height, so lay out directly here.
   const dark = !!doc.chrome.dark;
   const c = {
-    wallpaper: dark ? "#0b141a" : "#ece5dd",
     headerBg: dark ? "#1f2c34" : "#f6f6f6",
     hairline: dark ? "#2c3942" : "#dcdcdc",
     text: dark ? "#e9edef" : "#000000",
@@ -315,7 +391,7 @@ export function renderWhatsAppGroup(doc: WhatsAppGroupDoc, avatarUrl?: string): 
     accent: dark ? "#00a884" : "#008069", // WhatsApp green — unified across iOS/Android (never iOS blue)
   };
 
-  const parts: string[] = [resolveWallpaper(doc.wallpaper, dark) ?? `<rect width="${SW}" height="${SH}" fill="${c.wallpaper}"/>`];
+  const parts: string[] = [resolveWallpaper(doc.wallpaper, dark) ?? whatsappDoodle(dark)];
 
   const HEADER_H = 102;
   parts.push(
@@ -451,23 +527,25 @@ function waComposer(o: {
   const homeColor = dark ? "#e9edef" : "#000000";
 
   if (platform === "android") {
-    const iy = SH - 74;
-    const pillW = SW - 20 - 60; // leave room for the FAB
-    const green = "#00a884";
-    const fx = SW - 34, fy = iy + 22;
+    // floating pill (emoji · Message · clip · ₹ · camera) beside the round mic button
+    const PH = 48;
+    const iy = SH - 22 - PH;
+    const cy = iy + PH / 2;
+    const fabR = 24;
+    const fx = SW - 6 - fabR;
+    const px = 6;
+    const pw = fx - fabR - 6 - px;
+    const pr = px + pw;
     return [
-      // input pill (solid, elevated)
-      `<rect x="12" y="${iy}" width="${pillW}" height="44" rx="22" fill="${dark ? "#1f2c33" : "#ffffff"}" style="filter:drop-shadow(0 1px 3px rgba(0,0,0,0.25))"/>`,
-      // emoji smiley (left)
-      `<circle cx="34" cy="${iy + 22}" r="10" fill="none" stroke="${subtle}" stroke-width="1.7"/><path d="M30 ${iy + 24} a5 5 0 0 0 8 0 M30.5 ${iy + 19} h0.01 M37.5 ${iy + 19} h0.01" stroke="${subtle}" stroke-width="1.7" stroke-linecap="round" fill="none"/>`,
-      `<text font-family="${font}" font-size="15" fill="${subtle}" x="56" y="${iy + 28}">Message</text>`,
-      // attach (paperclip), ₹ pay, camera inside the pill (right)
-      `<path d="M${pillW - 40} ${iy + 15} l -6 7 a 5.5 5.5 0 0 0 8.5 7 l 7.5 -9 a 3.6 3.6 0 0 0 -5.5 -4.7 l -7 8.5" fill="none" stroke="${subtle}" stroke-width="1.7" stroke-linecap="round"/>`,
-      `<circle cx="${pillW - 14}" cy="${iy + 22}" r="10" fill="none" stroke="${subtle}" stroke-width="1.6"/><text font-family="${font}" font-size="12" font-weight="600" fill="${subtle}" text-anchor="middle" x="${pillW - 14}" y="${iy + 26}">₹</text>`,
-      `<rect x="${pillW + 8}" y="${iy + 14}" width="18" height="14" rx="4" fill="none" stroke="${subtle}" stroke-width="1.7"/><circle cx="${pillW + 17}" cy="${iy + 21}" r="3.4" fill="none" stroke="${subtle}" stroke-width="1.5"/>`,
-      // green send/mic FAB
-      `<circle cx="${fx}" cy="${fy}" r="24" fill="${green}" style="filter:drop-shadow(0 2px 5px rgba(0,0,0,0.3))"/>`,
-      micIcon(fx, fy, 22, "#ffffff"),
+      `<rect x="${px}" y="${iy}" width="${pw}" height="${PH}" rx="${PH / 2}" fill="${dark ? "#1f2c34" : "#ffffff"}"${dark ? "" : ` style="filter:drop-shadow(0 1px 1.5px rgba(11,20,26,0.14))"`}/>`,
+      glyph(MD.emoji, px + 25, cy, 25, subtle),
+      `<text font-family="${font}" font-size="17" fill="${subtle}" x="${px + 50}" y="${cy + 6}">Message</text>`,
+      glyph(MD.attach, pr - 100, cy, 24, subtle, 45),
+      `<circle cx="${pr - 62}" cy="${cy}" r="10" fill="none" stroke="${subtle}" stroke-width="1.8"/>`,
+      `<text font-family="${font}" font-size="12.5" font-weight="700" fill="${subtle}" text-anchor="middle" x="${pr - 62}" y="${cy + 4.5}">₹</text>`,
+      glyph(MD.camera, pr - 24, cy, 24, subtle),
+      `<circle cx="${fx}" cy="${cy}" r="${fabR}" fill="#00a884"/>`,
+      glyph(MD.mic, fx, cy, 24, "#ffffff"),
       homeIndicator(homeColor, platform),
     ];
   }

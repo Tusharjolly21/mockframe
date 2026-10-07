@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { HOME_STORIES } from "@/lib/marketing/stories";
 import { AppIconMarquee } from "./AppIconMarquee";
 import { LiveChatStory, PhoneShell } from "./LiveChatStory";
@@ -14,22 +13,19 @@ import { LiveChatStory, PhoneShell } from "./LiveChatStory";
  */
 export function ChatStoriesSection() {
   return (
-    <section className="relative overflow-hidden border-t border-white/[0.06] bg-[#0b0b0d] py-28">
+    <section className="relative overflow-hidden border-t border-white/[0.06] bg-[#0b0b0d] py-24 sm:py-32">
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px"
         style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)" }}
       />
       <div className="mx-auto max-w-6xl px-6">
-        <div className="flex flex-col items-center text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> The chat-story format
-          </span>
-          <h2 className="mt-5 max-w-2xl text-[30px] font-medium leading-[1.1] tracking-[-0.025em] text-white sm:text-[46px]">
+        <div className="grid gap-6 lg:grid-cols-12 lg:items-end lg:gap-16">
+          <h2 className="text-balance text-[32px] font-semibold leading-[1.05] tracking-[-0.04em] text-white sm:text-[44px] lg:col-span-7">
             Chat stories that keep viewers to the last message
           </h2>
-          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-zinc-400">
-            A conversation unfolds line by line and people stay to see how it ends. Every story below is
-            playing live in the same engine that renders your export — press nothing, it&apos;s already running.
+          <p className="max-w-md text-[16px] leading-relaxed text-zinc-400 lg:col-span-5">
+            A conversation unfolds line by line and people stay to see how it ends. The chats below are playing live
+            in the same engine that renders your video export.
           </p>
         </div>
 
@@ -42,34 +38,30 @@ export function ChatStoriesSection() {
                 </PhoneShell>
               </div>
               <div className="mt-7 text-center">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-emerald-300">
-                  <span className="h-1 w-1 rounded-full bg-emerald-400" /> {story.eyebrow}
-                </span>
-                <h3 className="mt-3 text-[20px] font-medium tracking-[-0.02em] text-white">{story.title}</h3>
+                <span className="text-[12.5px] font-medium text-emerald-300/90">{story.eyebrow.replace(" · ", ", ")}</span>
+                <h3 className="mt-1.5 text-[20px] font-medium tracking-[-0.02em] text-white">{story.title}</h3>
                 <p className="mx-auto mt-2 max-w-[16rem] text-[13.5px] leading-relaxed text-zinc-400">{story.blurb}</p>
               </div>
             </div>
           ))}
         </div>
+      </div>
 
-        {/* infinite marquee of every app you can fake */}
-        <div className="mt-20">
-          <p className="mb-6 text-center text-[11px] font-semibold uppercase tracking-widest text-zinc-600">
-            Fake any app your story needs
-          </p>
-          <AppIconMarquee />
-        </div>
+      {/* full-bleed dock of the chat apps, each one opens in the editor */}
+      <div className="mt-24">
+        <AppIconMarquee />
+      </div>
 
-        <div className="mt-16 flex flex-col items-center gap-3">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="mt-12 flex flex-col items-center gap-3">
           <Link
             href="/editor"
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-[14.5px] font-semibold text-zinc-900 transition-colors hover:bg-zinc-200"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-6 text-[14.5px] font-semibold text-zinc-900 transition-colors hover:bg-zinc-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             Write your own chat story
-            <ArrowRight size={17} />
           </Link>
-          <p className="text-[12px] text-zinc-500">
-            Script it, style it, export a vertical video for TikTok, Reels &amp; Shorts — no editing.
+          <p className="text-center text-[12px] text-zinc-500">
+            Script it, style it, and export a vertical video for TikTok, Reels and Shorts.
           </p>
         </div>
       </div>
