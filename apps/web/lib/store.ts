@@ -89,6 +89,12 @@ interface ViewState {
   /** when on, dragging a mockup on the canvas rotates it in 3D (tiltX/tiltY) */
   threeD: boolean;
   setThreeD: (v: boolean) => void;
+  /** layer whose screenshot is being adjusted ON the canvas (pan/zoom/crop) */
+  adjustId: string | null;
+  setAdjustId: (id: string | null) => void;
+  /** locked crop ratio (px w/h) while cropping a frameless shot; null = free */
+  cropAspect: number | null;
+  setCropAspect: (a: number | null) => void;
   /** free-tier watermark is baked into exports; a paid plan (future) flips this */
   removeWatermark: boolean;
   setRemoveWatermark: (v: boolean) => void;
@@ -114,6 +120,10 @@ export const useViewStore = create<ViewState>()((set) => ({
   entrance: { layerId: null, nonce: 0 },
   threeD: false,
   setThreeD: (threeD) => set({ threeD }),
+  adjustId: null,
+  setAdjustId: (adjustId) => set(adjustId ? { adjustId, selectedIds: [adjustId], cropAspect: null } : { adjustId }),
+  cropAspect: null,
+  setCropAspect: (cropAspect) => set({ cropAspect }),
   removeWatermark: false,
   setRemoveWatermark: (removeWatermark) => set({ removeWatermark }),
   setZoom: (zoom) => set({ zoom }),

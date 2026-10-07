@@ -1,5 +1,5 @@
 export { SceneRenderer, noiseTile } from "./SceneRenderer";
-export { MockupLayerView } from "./MockupLayerView";
+export { MockupLayerView, mediaPlacement, mediaCrop, uncroppedBox, plateWarp } from "./MockupLayerView";
 export { backgroundToCss, meshGradientCss, mulberry32 } from "./background";
 export { patternStyle, overlayStyle, stageStyle, portraitBlur, waveTile } from "./backdrop";
 export { shadowToFilter } from "./shadow";

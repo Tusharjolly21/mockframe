@@ -5,13 +5,14 @@ import { motion } from "motion/react";
 import { getDevice, previewDataUri } from "@framekit/devices";
 import type { MockupLayer, Shadow, StickerLayer, TextLayer } from "@framekit/scene";
 import { DEFAULT_SHADOW } from "@framekit/scene";
-import { Crop, Globe, ImagePlus, Plus, Sparkles, TriangleAlert, X } from "lucide-react";
+import { Crop, Globe, ImagePlus, Move, Plus, Sparkles, TriangleAlert, X } from "lucide-react";
 import { track, trackOnce } from "@/lib/analytics";
 import { ingestFile, resolveAsset } from "@/lib/assets";
 import { renderScreenshotIntoMockup } from "@/lib/mockuuups";
 import { presentationForDevice } from "@/lib/deviceScene";
 import { decodeScreenAsset, isScreenAsset, SCREEN_APP_LABELS } from "@/lib/screens";
 import { useSceneStore, useViewStore } from "@/lib/store";
+import { enterAdjust, withCrop } from "@/lib/adjust";
 import { openUpgrade } from "@/lib/billing/gate";
 import { ColorRow, Section, Seg, SliderRow } from "./ui";
 import { CaptureUrlDialog } from "./CaptureUrlDialog";
@@ -409,27 +410,45 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
                 />
               </>
             )}
-            {/* photo-scene screens: zoom + reposition the screenshot inside the screen */}
-            {device?.plate && (
+            {/* freehand: pan / zoom inside any device screen, crop a frameless shot */}
+            {!layer.render && (
               <div className="mt-2 rounded-xl bg-[#f6f6fa] p-2.5">
-                <SliderRow
-                  label="Zoom"
-                  value={layer.media.scale}
-                  min={1}
-                  max={3}
-                  step={0.01}
-                  format={(v) => `${Math.round(v * 100)}%`}
-                  onChange={(scale) => patch({ media: { ...layer.media!, scale } })}
-                />
-                <div className="mt-1 flex items-center justify-between gap-2">
-                  <span className="text-[10.5px] leading-tight text-[#9a9aa4]">Drag the screenshot on the canvas to reposition</span>
+                {device && layer.media.fit !== "fill" && (
+                  <SliderRow
+                    label="Zoom"
+                    value={layer.media.scale}
+                    min={0.3}
+                    max={4}
+                    step={0.01}
+                    format={(v) => `${Math.round(v * 100)}%`}
+                    onChange={(scale) => patch({ media: { ...layer.media!, scale } })}
+                  />
+                )}
+                <div className={`flex items-center gap-2 ${device && layer.media.fit !== "fill" ? "mt-1.5" : ""}`}>
                   <button
-                    onClick={() => patch({ media: { ...layer.media!, offsetX: 0, offsetY: 0, scale: 1 } })}
-                    className="fk-press shrink-0 rounded-lg border border-[#e4e4ec] bg-white px-2 py-1 text-[11px] font-semibold text-[#17171c] hover:border-[#17171c]"
+                    data-adjust-open
+                    onClick={() => enterAdjust(layer.id)}
+                    className="fk-press flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#17171c] py-1.5 text-[11.5px] font-semibold text-white hover:bg-black"
                   >
-                    Reset
+                    <Move size={12} /> {device ? "Adjust on canvas" : "Crop on canvas"}
                   </button>
+                  {(device ? layer.media.offsetX || layer.media.offsetY || layer.media.scale !== 1 : layer.media.crop) && (
+                    <button
+                      onClick={() => {
+                        if (device) patch({ media: { ...layer.media!, offsetX: 0, offsetY: 0, scale: 1 } });
+                        else if (asset) updateLayer(layer.id, (l) => (l.type === "mockup" ? withCrop(l, { x: 0, y: 0, w: 1, h: 1 }, asset.width, asset.height) : l));
+                      }}
+                      className="fk-press shrink-0 rounded-lg border border-[#e4e4ec] bg-white px-2 py-1.5 text-[11px] font-semibold text-[#17171c] hover:border-[#17171c]"
+                    >
+                      Reset
+                    </button>
+                  )}
                 </div>
+                <p className="mt-1.5 text-[10.5px] leading-snug text-[#9a9aa4]">
+                  {device
+                    ? "Or double-click the screenshot. Drag it to move, scroll or pull a corner to zoom."
+                    : "Or double-click the screenshot, then drag its edges."}
+                </p>
               </div>
             )}
             {/* composed screens stay editable as docs — cropping only applies to uploads */}
@@ -563,7 +582,7 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
                   bumpAssets();
                   updateLayer(layer.id, (l) => ({
                     ...(l as MockupLayer),
-                    media: { ...(l as MockupLayer).media!, assetId: composite.id, offsetX: 0, offsetY: 0, scale: 1 },
+                    media: { ...(l as MockupLayer).media!, assetId: composite.id, offsetX: 0, offsetY: 0, scale: 1, crop: undefined },
                     render: { ...renderMeta, sourceAssetId: newId },
                   }));
                   toast("Updated on the device ✨");
@@ -571,7 +590,7 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
                   toast(e instanceof Error ? e.message : "Re-render failed");
                 }
               } else {
-                patch({ media: { ...layer.media!, assetId: newId, offsetX: 0, offsetY: 0, scale: 1 } });
+                patch({ media: { ...layer.media!, assetId: newId, offsetX: 0, offsetY: 0, scale: 1, crop: undefined } });
                 bumpAssets();
               }
             }}

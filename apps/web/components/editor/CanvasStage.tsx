@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { SceneRenderer, plateToBoxDelta, rectToQuad, type Quad } from "@framekit/renderer";
-import { getDevice } from "@framekit/devices";
+import { SceneRenderer } from "@framekit/renderer";
 import { Box, RotateCw } from "lucide-react";
 import { resolveAsset, ingestFile } from "@/lib/assets";
 import { placeAsset } from "@/lib/sceneOps";
 import { measureLayerBoxes } from "@/lib/arrange";
 import { ArrangeBar } from "./ArrangeBar";
+import { AdjustBar, AdjustOverlay } from "./AdjustOverlay";
+import { canAdjust, enterAdjust, exitAdjust } from "@/lib/adjust";
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
 import { useShotBatchStore } from "@/lib/shotBatch";
 
@@ -27,31 +28,13 @@ type Drag =
     }
   | { kind: "scale"; id: string; centerX: number; centerY: number; startDist: number; scale: number; currentScale: number }
   | { kind: "rotate"; id: string; centerX: number; centerY: number; startAngle: number; rotate: number; currentRotate: number }
-  | { kind: "tilt"; id: string; startX: number; startY: number; tiltX: number; tiltY: number; currentTiltX: number; currentTiltY: number }
-  // pan the screenshot INSIDE a photo-scene screen (perspective-correct)
-  | {
-      kind: "media";
-      id: string;
-      startX: number;
-      startY: number;
-      sw: number;
-      sh: number;
-      quad: Quad;
-      scale: number;
-      rotate: number;
-      offsetX: number;
-      offsetY: number;
-      maxX: number;
-      maxY: number;
-      curDX: number;
-      curDY: number;
-    };
+  | { kind: "tilt"; id: string; startX: number; startY: number; tiltX: number; tiltY: number; currentTiltX: number; currentTiltY: number };
 
 export function CanvasStage() {
   const scene = useSceneStore((s) => s.scene);
   const setScene = useSceneStore((s) => s.setScene);
   const updateLayer = useSceneStore((s) => s.updateLayer);
-  const { zoom, pan, selectedIds, setZoom, setPan, select, bumpAssets, threeD, entrance } = useViewStore();
+  const { zoom, pan, selectedIds, setZoom, setPan, select, bumpAssets, threeD, entrance, adjustId } = useViewStore();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<Drag | null>(null);
@@ -280,27 +263,6 @@ export function CanvasStage() {
         setDragStyle(d.id, { "--fk-drag-rotate": `${next - d.rotate}deg` });
         return;
       }
-      if (d.kind === "media") {
-        // client delta → plate-space delta (undo canvas zoom, layer scale + rotate)
-        const s = zoom * d.scale || 1;
-        let px = (e.clientX - d.startX) / s;
-        let py = (e.clientY - d.startY) / s;
-        if (d.rotate) {
-          const r = (-d.rotate * Math.PI) / 180;
-          const cos = Math.cos(r);
-          const sin = Math.sin(r);
-          [px, py] = [px * cos - py * sin, px * sin + py * cos];
-        }
-        // → screen-box (screen-res) delta via the homography Jacobian, then clamp
-        const [bx, by] = plateToBoxDelta(d.sw, d.sh, d.quad, px, py);
-        const clamp = (v: number, m: number) => Math.max(-m, Math.min(m, v));
-        d.curDX = clamp(d.offsetX + bx, d.maxX) - d.offsetX;
-        d.curDY = clamp(d.offsetY + by, d.maxY) - d.offsetY;
-        const content = layerNode(d.id)?.querySelector<HTMLElement>("[data-layer-content]");
-        content?.style.setProperty("--fk-media-dx", `${d.curDX}px`);
-        content?.style.setProperty("--fk-media-dy", `${d.curDY}px`);
-        return;
-      }
       if (d.kind === "tilt") {
         // trackball: horizontal drag → rotateY (tiltY), vertical drag → rotateX (tiltX)
         const k = 0.35;
@@ -335,15 +297,6 @@ export function CanvasStage() {
         } else if (finished.kind === "rotate") {
           updateLayer(finished.id, (l) => ({ ...l, transform: { ...l.transform, rotate: finished.currentRotate } }));
           clearDragStyle(finished.id);
-        } else if (finished.kind === "media") {
-          updateLayer(finished.id, (l) =>
-            l.type === "mockup" && l.media
-              ? { ...l, media: { ...l.media, offsetX: finished.offsetX + finished.curDX, offsetY: finished.offsetY + finished.curDY } }
-              : l
-          );
-          const content = layerNode(finished.id)?.querySelector<HTMLElement>("[data-layer-content]");
-          content?.style.removeProperty("--fk-media-dx");
-          content?.style.removeProperty("--fk-media-dy");
         } else {
           updateLayer(finished.id, (l) => ({ ...l, transform: { ...l.transform, tiltX: finished.currentTiltX, tiltY: finished.currentTiltY } }));
           clearDragStyle(finished.id);
@@ -358,6 +311,8 @@ export function CanvasStage() {
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
+    // clicking away from the screenshot being adjusted finishes adjusting
+    if (adjustId) exitAdjust();
     const layerEl = (e.target as Element).closest?.("[data-layer-id]");
     if (layerEl) {
       const id = layerEl.getAttribute("data-layer-id")!;
@@ -373,43 +328,6 @@ export function CanvasStage() {
       if (e.shiftKey) {
         select(id, { additive: true });
         return;
-      }
-      // photo-scene mockup with a screenshot: plain drag pans the screenshot
-      // inside the screen; ⌘/Ctrl-drag falls through to moving the whole layer
-      if (!e.metaKey && !e.ctrlKey) {
-        const layer = scene.layers.find((l) => l.id === id);
-        if (layer?.type === "mockup" && layer.media) {
-          const dev = layer.deviceId ? getDevice(layer.deviceId) : undefined;
-          const asset = resolveAsset(layer.media.assetId);
-          if (dev?.plate && asset) {
-            if (!selectedIds.includes(id)) select(id);
-            const sw = dev.screen.width;
-            const sh = dev.screen.height;
-            const iw = asset.width || sw;
-            const ih = asset.height || sh;
-            const base = layer.media.fit === "contain" ? Math.min(sw / iw, sh / ih) : Math.max(sw / iw, sh / ih);
-            const pw = layer.media.fit === "fill" ? sw * layer.media.scale : iw * base * layer.media.scale;
-            const ph = layer.media.fit === "fill" ? sh * layer.media.scale : ih * base * layer.media.scale;
-            beginDrag({
-              kind: "media",
-              id,
-              startX: e.clientX,
-              startY: e.clientY,
-              sw,
-              sh,
-              quad: dev.plate.screenQuad ?? rectToQuad(dev.plate.screenRect),
-              scale: layer.transform.scale,
-              rotate: layer.transform.rotate,
-              offsetX: layer.media.offsetX,
-              offsetY: layer.media.offsetY,
-              maxX: Math.max(0, (pw - sw) / 2),
-              maxY: Math.max(0, (ph - sh) / 2),
-              curDX: 0,
-              curDY: 0,
-            });
-            return;
-          }
-        }
       }
       // grouped layers select & move as one: clicking any member grabs the group
       const groupId = scene.layers.find((l) => l.id === id)?.group;
@@ -525,6 +443,12 @@ export function CanvasStage() {
         cursor: threeD ? "grab" : undefined,
       }}
       onPointerDown={onPointerDown}
+      onDoubleClick={(e) => {
+        // double-click a screenshot to adjust it on the canvas
+        const id = (e.target as Element).closest?.("[data-layer-id]")?.getAttribute("data-layer-id");
+        const layer = id ? scene.layers.find((l) => l.id === id) : undefined;
+        if (id && !threeD && canAdjust(layer)) enterAdjust(id);
+      }}
       onDragOver={(e) => {
         e.preventDefault();
         setDropHint(true);
@@ -560,6 +484,8 @@ export function CanvasStage() {
         />
         </div>
 
+        <AdjustOverlay host={containerRef} />
+
         {/* smart guides in canvas space */}
         {guides.xs.map((x) => (
           <div
@@ -576,7 +502,7 @@ export function CanvasStage() {
       </div>
 
       {/* selection chrome — app overlay, never inside the renderer */}
-      {overlayBoxes.map((box) => (
+      {overlayBoxes.filter((box) => box.id !== adjustId).map((box) => (
         <div
           key={box.id}
           data-layer-overlay={box.id}
@@ -607,7 +533,9 @@ export function CanvasStage() {
         </div>
       ))}
 
-      {!dragging && overlayBoxes.length > 0 && (
+      <AdjustBar host={containerRef} />
+
+      {!dragging && !adjustId && overlayBoxes.length > 0 && (
         <ArrangeBar
           boxes={overlayBoxes}
           hostW={containerRef.current?.clientWidth ?? 1200}

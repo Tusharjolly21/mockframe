@@ -11,11 +11,13 @@ import {
   AlignVerticalDistributeCenter,
   BringToFront,
   Copy,
+  Crop,
   Group,
   SendToBack,
   type LucideIcon,
 } from "lucide-react";
 import { runArrange, type ArrangeAction } from "@/lib/arrange";
+import { canAdjust, enterAdjust } from "@/lib/adjust";
 import { duplicateLayer, groupLayers } from "@/lib/sceneOps";
 import { useSceneStore, useViewStore } from "@/lib/store";
 
@@ -39,6 +41,7 @@ export function ArrangeBar({ boxes, hostW, hostH }: { boxes: Box[]; hostW: numbe
   const selectedIds = useViewStore((s) => s.selectedIds);
   const setScene = useSceneStore((s) => s.setScene);
   const many = selectedIds.length > 1;
+  const adjustable = useSceneStore((s) => !many && canAdjust(s.scene.layers.find((l) => l.id === selectedIds[0])));
 
   const l = Math.min(...boxes.map((b) => b.x));
   const r = Math.max(...boxes.map((b) => b.x + b.w));
@@ -68,6 +71,19 @@ export function ArrangeBar({ boxes, hostW, hostH }: { boxes: Box[]; hostW: numbe
       className="fk-card absolute z-20 flex -translate-x-1/2 items-center gap-0.5 rounded-xl bg-white/95 px-1.5 py-1 shadow-[0_8px_28px_rgba(20,20,40,0.16)] backdrop-blur"
       style={{ left, top }}
     >
+      {adjustable && (
+        <>
+          <button
+            data-adjust-open
+            title="Adjust the screenshot: move, zoom, crop (double-click)"
+            onClick={() => enterAdjust(selectedIds[0])}
+            className="fk-press flex h-7 items-center gap-1.5 rounded-lg bg-violet-600 px-2.5 text-[11.5px] font-bold text-white hover:bg-violet-700"
+          >
+            <Crop size={13} /> Adjust
+          </button>
+          {sep("s0")}
+        </>
+      )}
       <span className="px-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#9a9aa4]">{many ? "Align" : "To canvas"}</span>
       {ALIGN.map(([a, Icon, title]) => btn(a, Icon, title, () => runArrange(a)))}
       {many && sep("s1")}

@@ -145,6 +145,8 @@ export const MediaSchema = z.object({
   /** letterbox color behind contain-fit media */
   bg: z.string().optional(),
   trim: z.object({ startMs: z.number(), endMs: z.number() }).optional(),
+  /** non-destructive crop of the source image, as 0..1 fractions of its size */
+  crop: z.object({ x: z.number(), y: z.number(), w: z.number().positive(), h: z.number().positive() }).optional(),
 });
 
 export const MockupLayerSchema = z.object({
