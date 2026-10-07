@@ -32,6 +32,8 @@ import { BrandMark } from "@/components/marketing/BrandMark";
 import { BrandKitPanel } from "./BrandKitPanel";
 import { ingestFile, resolveAsset } from "@/lib/assets";
 import { timeAgo, useDraftsUi } from "@/lib/drafts";
+import { shareSceneShots } from "@/lib/myShots";
+import { useShotBatchStore } from "@/lib/shotBatch";
 import { addAppIcon, addText, duplicateLayer, removeLayer, reorderLayer } from "@/lib/sceneOps";
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
 import { DraftsPanel } from "./DraftsPanel";
@@ -284,6 +286,11 @@ export function LogoChip() {
         href="/templates"
         target="_blank"
         rel="noopener"
+        // the gallery then previews every template with this scene's screenshots
+        onClick={() => {
+          const batch = useShotBatchStore.getState().shots.map((s) => s.scene);
+          void shareSceneShots([useSceneStore.getState().scene, ...batch]);
+        }}
         className="fk-press ml-0.5 rounded-lg px-2.5 py-1.5 text-[12.5px] font-semibold text-[#6b6b76] hover:bg-black/[0.06] hover:text-[#17171c]"
       >
         Templates

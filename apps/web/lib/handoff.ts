@@ -72,3 +72,71 @@ export async function takeParkedScreenshot(): Promise<File | null> {
     db.close();
   }
 }
+
+/* ---------------------------- template previews ---------------------------- */
+
+/**
+ * The screenshots the template gallery shows in every template. Unlike the
+ * one-shot drop above they stay until replaced or cleared, so the gallery
+ * still shows them on the next visit.
+ */
+const SHOTS_KEY = "template-shots";
+export const SHOTS_CHANNEL = "mockframe-template-shots";
+/** this tab, so it can ignore its own announcements */
+export const TAB_ID = Math.random().toString(36).slice(2);
+
+interface ParkedShots {
+  files: { blob: Blob; name: string }[];
+  at: number;
+}
+
+async function withStore<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest | void): Promise<T | undefined> {
+  const db = await openDb();
+  try {
+    return await new Promise<T | undefined>((resolve, reject) => {
+      const tx = db.transaction(STORE, mode);
+      const req = run(tx.objectStore(STORE));
+      tx.oncomplete = () => resolve(req ? (req.result as T) : undefined);
+      tx.onerror = () => reject(tx.error ?? new Error("Storage failed"));
+    });
+  } finally {
+    db.close();
+  }
+}
+
+/** Tell other tabs that the screenshots changed. */
+function announce() {
+  try {
+    const ch = new BroadcastChannel(SHOTS_CHANNEL);
+    ch.postMessage({ tab: TAB_ID });
+    ch.close();
+  } catch {
+    // older browsers: other tabs pick the change up on their next load
+  }
+}
+
+export async function saveTemplateShots(files: File[]): Promise<void> {
+  const entry: ParkedShots = { files: files.map((f) => ({ blob: f, name: f.name || "screenshot.png" })), at: Date.now() };
+  await withStore("readwrite", (store) => void store.put(entry, SHOTS_KEY));
+  announce();
+}
+
+export async function loadTemplateShots(): Promise<File[]> {
+  try {
+    const entry = await withStore<ParkedShots>("readonly", (store) => store.get(SHOTS_KEY));
+    if (!entry || !Array.isArray(entry.files)) return [];
+    return entry.files
+      .filter((f) => f.blob instanceof Blob)
+      .map((f) => new File([f.blob], f.name, { type: f.blob.type || "image/png" }));
+  } catch {
+    return [];
+  }
+}
+
+export async function clearTemplateShots(): Promise<void> {
+  try {
+    await withStore("readwrite", (store) => void store.delete(SHOTS_KEY));
+  } finally {
+    announce();
+  }
+}

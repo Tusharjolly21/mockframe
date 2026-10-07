@@ -2,7 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { notFound, useParams, useSearchParams } from "next/navigation";
-import type { MockupLayer } from "@framekit/scene";
+import type { MockupLayer, SceneDocument } from "@framekit/scene";
+import { track } from "@/lib/analytics";
+import { fillWithMyShots } from "@/lib/myShots";
 import { EditorShell } from "@/components/editor/EditorShell";
 import { decodeScreenAsset, encodeScreenAsset, fitCardScale, type CodeDoc, type SocialPostDoc } from "@/lib/screens";
 import { importPostUrl } from "@/lib/postImport";
@@ -10,6 +12,22 @@ import { useSceneStore } from "@/lib/store";
 import { CARD_LOOKS, makeTemplateScene, templateBySlug } from "@/lib/screenTemplates";
 import { appTemplateBySlug, makeAppScreenScene } from "@/lib/appScreenTemplates";
 import { premiumTemplateBySlug } from "@/lib/premiumTemplates";
+
+const toast = (detail: string) => window.dispatchEvent(new CustomEvent("framekit:toast", { detail }));
+
+/**
+ * ?mine=1 (from the gallery, when it showed your screenshots): put them in
+ * the template's screens once they're loaded, unless you've moved on.
+ */
+function swapInMyShots(scene: SceneDocument, slug: string) {
+  void fillWithMyShots([scene]).then(({ scenes, filled }) => {
+    if (!filled || useSceneStore.getState().scene.id !== scene.id) return;
+    useSceneStore.setState({ scene: scenes[0] });
+    useSceneStore.temporal.getState().clear();
+    track("template_opened_with_shots", { template: slug, filled });
+    setTimeout(() => toast(filled === 1 ? "Your screenshot is in" : "Your screenshots are in"), 400);
+  });
+}
 
 /**
  * /templates/<slug> — opens the editor pre-loaded with one template card
@@ -22,13 +40,16 @@ export default function TemplateSlugPage() {
   const appTemplate = meta ? undefined : appTemplateBySlug(params.slug);
   const premium = meta || appTemplate ? undefined : premiumTemplateBySlug(params.slug);
   const loaded = useRef(false);
+  const mine = search.get("mine") === "1";
 
   // premium layouts: a complete composition (Pro ones are gated at export)
   useEffect(() => {
     if (!premium || loaded.current) return;
     loaded.current = true;
-    useSceneStore.setState({ scene: premium.build() });
+    const scene = premium.build();
+    useSceneStore.setState({ scene });
     useSceneStore.temporal.getState().clear();
+    if (mine) swapInMyShots(scene, premium.slug);
     if (premium.pro) {
       // after the editor has mounted its toast host (no cleanup: the load guard
       // above means a StrictMode re-run would never schedule it again)
@@ -37,7 +58,7 @@ export default function TemplateSlugPage() {
         900
       );
     }
-  }, [premium]);
+  }, [premium, mine]);
 
   // app screenshot templates: a phone + editable app screen + headline
   useEffect(() => {
@@ -64,10 +85,10 @@ export default function TemplateSlugPage() {
     useSceneStore.setState({ scene });
     // start this template's editing session with a clean undo history
     useSceneStore.temporal.getState().clear();
+    if (mine && meta.deviceId) swapInMyShots(scene, meta.slug);
 
     const postUrl = meta.app === "social" ? search.get("url")?.slice(0, 2_000) : undefined;
     if (postUrl) {
-      const toast = (detail: string) => window.dispatchEvent(new CustomEvent("framekit:toast", { detail }));
       const starter = scene.layers.find((item): item is MockupLayer => item.id === "layer-template" && item.type === "mockup");
       const starterId = starter?.media?.assetId;
       setTimeout(() => toast("Importing the post…"), 300);
@@ -103,7 +124,7 @@ export default function TemplateSlugPage() {
         });
       });
     }
-  }, [meta, search]);
+  }, [meta, search, mine]);
 
   if (!meta && !appTemplate && !premium) return notFound();
   return <EditorShell fromTemplate />;

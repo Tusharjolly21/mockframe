@@ -8,6 +8,8 @@
  *   first_media_added                   added their own screenshot
  *   export_completed / first_export     exported an image or video
  *   draft_resumed                       came back to an autosaved scene
+ *   template_shots_added {count, via}   previewed the template gallery with their own screenshots
+ *   template_opened_with_shots {template}   opened a template with those screenshots in it
  *   pack_exported {screens, languages, layout}   exported a store screenshot pack
  *   pack_translated {languages}         AI-translated a pack's captions
  *   upgrade_viewed {reason}             saw the Pro modal, and what they reached for

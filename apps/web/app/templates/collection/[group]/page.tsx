@@ -1,11 +1,15 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { scenesInGroup, sceneGroupById, templatePreviewUrl } from "@/lib/screenTemplates";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { LiveScene } from "@/components/templates/LiveScene";
+import { useShots } from "@/components/templates/TemplateFinder";
+import { sceneTemplateWithShots } from "@/lib/myShots";
 
 /**
  * /templates/collection/<group> — every premium mockup in one device category
@@ -15,6 +19,12 @@ export default function CollectionPage() {
   const params = useParams<{ group: string }>();
   const group = sceneGroupById(params.group);
   const scenes = scenesInGroup(params.group);
+  const shots = useShots();
+  // your screenshot (from the template gallery) on every screen it fits
+  const mine = useMemo(
+    () => Object.fromEntries(scenesInGroup(params.group).map((t) => [t.slug, sceneTemplateWithShots(t, shots)])),
+    [params.group, shots]
+  );
   if (!group) return notFound();
 
   return (
@@ -36,17 +46,20 @@ export default function CollectionPage() {
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {scenes.map((t) => {
               const previewUrl = templatePreviewUrl(t);
+              const live = mine[t.slug];
               return (
                 <Link
                   key={t.slug}
-                  href={`/templates/${t.slug}`}
+                  href={live ? `/templates/${t.slug}?mine=1` : `/templates/${t.slug}`}
                   className="group flex flex-col overflow-hidden rounded-[24px] border border-white/[0.08] bg-white/[0.02] transition-colors hover:border-white/20"
                 >
                   <div
                     className="flex h-72 items-center justify-center overflow-hidden p-8"
                     style={{ background: `radial-gradient(120% 90% at 50% 0%, ${t.accent}2e, transparent 70%)` }}
                   >
-                    {previewUrl && (
+                    {live ? (
+                      <LiveScene scene={live} label={`${t.label} with your screenshot`} className="h-full w-[74%] drop-shadow-[0_16px_36px_rgba(0,0,0,0.55)]" />
+                    ) : previewUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={previewUrl}
