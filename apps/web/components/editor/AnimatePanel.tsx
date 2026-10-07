@@ -14,16 +14,20 @@ import {
   type AnimShot,
 } from "@/lib/screens";
 import { exportSceneVideo } from "@/lib/videoExport";
+import { LOFI_INTERVAL_MS, synthClick, synthLofiChord, synthPop } from "@/lib/replayAudio";
 import { exportSceneGif } from "@/lib/gifExport";
 import { useSceneStore, useViewStore, withTransientHistory } from "@/lib/store";
 import { openUpgrade } from "@/lib/billing/gate";
 import { MotionStudio } from "./MotionStudio";
+import { useVideoSettings, VideoSettingsControl } from "./VideoSettingsControl";
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// Web Audio Synthesizer for typing/pops & ambient music
+// Live preview voice for typing / pops / lo-fi bed. The synth voices are
+// shared with the video exporter (lib/replayAudio), which renders them offline.
 class SoundManager {
   ctx: AudioContext | null = null;
+  out: GainNode | null = null;
   lofiTimer: ReturnType<typeof setInterval> | null = null;
   dest: MediaStreamAudioDestinationNode | null = null;
   isPlayingKeyClick = true;
@@ -33,6 +37,9 @@ class SoundManager {
     if (!this.ctx) {
       this.ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       this.dest = this.ctx.createMediaStreamDestination();
+      this.out = this.ctx.createGain();
+      this.out.connect(this.ctx.destination);
+      this.out.connect(this.dest);
     }
     if (this.ctx.state === "suspended") {
       void this.ctx.resume();
@@ -41,92 +48,24 @@ class SoundManager {
 
   playClick() {
     this.init();
-    if (!this.ctx) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(900, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1400, this.ctx.currentTime + 0.04);
-    
-    gain.gain.setValueAtTime(0.03, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
-    
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    if (this.dest) gain.connect(this.dest);
-    
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.04);
+    if (this.ctx && this.out) synthClick(this.ctx, this.out, this.ctx.currentTime);
   }
 
   playPop() {
     this.init();
-    if (!this.ctx) return;
-    const now = this.ctx.currentTime;
-    
-    const osc1 = this.ctx.createOscillator();
-    const osc2 = this.ctx.createOscillator();
-    const gain1 = this.ctx.createGain();
-    const gain2 = this.ctx.createGain();
-    
-    osc1.frequency.setValueAtTime(550, now);
-    gain1.gain.setValueAtTime(0.06, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-    osc1.connect(gain1);
-    gain1.connect(this.ctx.destination);
-    if (this.dest) gain1.connect(this.dest);
-    osc1.start(now);
-    osc1.stop(now + 0.12);
-    
-    osc2.frequency.setValueAtTime(700, now + 0.06);
-    gain2.gain.setValueAtTime(0.06, now + 0.06);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-    osc2.connect(gain2);
-    gain2.connect(this.ctx.destination);
-    if (this.dest) gain2.connect(this.dest);
-    osc2.start(now + 0.06);
-    osc2.stop(now + 0.2);
+    if (this.ctx && this.out) synthPop(this.ctx, this.out, this.ctx.currentTime);
   }
 
   startLofi() {
     this.init();
     if (!this.ctx) return;
     this.stopLofi();
-    
-    const chords = [
-      [261.63, 329.63, 392.00, 493.88], // Cmaj7
-      [220.00, 261.63, 329.63, 392.00], // Am7
-      [174.61, 220.00, 261.63, 329.63], // Fmaj7
-      [196.00, 246.94, 293.66, 349.23], // G7
-    ];
-    
     let idx = 0;
     const playChord = () => {
-      if (!this.ctx) return;
-      const now = this.ctx.currentTime;
-      const notes = chords[idx % chords.length];
-      notes.forEach((freq) => {
-        const osc = this.ctx!.createOscillator();
-        const gain = this.ctx!.createGain();
-        osc.type = "triangle";
-        osc.frequency.setValueAtTime(freq, now);
-        
-        gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(0.015, now + 0.6);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 3.8);
-        
-        osc.connect(gain);
-        gain.connect(this.ctx!.destination);
-        if (this.dest) gain.connect(this.dest);
-        osc.start(now);
-        osc.stop(now + 4);
-      });
-      idx++;
+      if (this.ctx && this.out) synthLofiChord(this.ctx, this.out, this.ctx.currentTime, idx++);
     };
-    
     playChord();
-    this.lofiTimer = setInterval(playChord, 4000);
+    this.lofiTimer = setInterval(playChord, LOFI_INTERVAL_MS);
   }
 
   stopLofi() {
@@ -165,6 +104,7 @@ export function AnimatePanel() {
   const [musicSound, setMusicSound] = useState(false);
   const [zoomFocus, setZoomFocus] = useState(false);
   const [tiltFloat, setTiltFloat] = useState(false);
+  const [videoSettings] = useVideoSettings();
   
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -387,8 +327,12 @@ export function AnimatePanel() {
         renderState,
         restore,
         onProgress: (pct, label) => setBusy({ pct, label }),
+        settings: videoSettings,
+        sound: { clicks: typingSound, music: musicSound },
       });
-      window.dispatchEvent(new CustomEvent("framekit:toast", { detail: `Saved chat replay video (${fmt.toUpperCase()})` }));
+      window.dispatchEvent(
+        new CustomEvent("framekit:toast", { detail: `Saved chat replay video (${fmt.toUpperCase()} · ${videoSettings.fps} fps)` })
+      );
     } catch (e) {
       restore();
       window.dispatchEvent(
@@ -639,7 +583,8 @@ export function AnimatePanel() {
                       <span className="text-[10px] text-white font-mono">{Math.round(busy.pct * 100)}%</span>
                     </div>
                   ) : (
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
+                      <VideoSettingsControl disabled={!!busy} />
                       <button
                         onClick={exportVideo}
                         className="h-8 px-4 text-[11px] font-bold rounded-lg bg-white/10 hover:bg-white/15 text-white border border-white/10 cursor-pointer flex items-center gap-1.5 transition-all"

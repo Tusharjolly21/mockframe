@@ -8,6 +8,7 @@ import { MOTION_PRESETS, motionPreset, sampleScene, type MotionPreset, type Moti
 import { exportMotionGif, exportMotionVideo } from "@/lib/motionExport";
 import { useSceneStore, useViewStore, withTransientHistory } from "@/lib/store";
 import { openUpgrade } from "@/lib/billing/gate";
+import { useVideoSettings, VideoSettingsControl } from "./VideoSettingsControl";
 
 /** pose every moving layer of `base` at clip time t without touching history */
 function poseScene(base: SceneDocument, preset: MotionPreset, t: number) {
@@ -80,6 +81,7 @@ export function MotionStudio() {
   const baseRef = useRef<SceneDocument | null>(null);
   const rafRef = useRef(0);
   const hasMockup = useSceneStore((s) => s.scene.layers.some((l) => l.type === "mockup"));
+  const [videoSettings] = useVideoSettings();
   const preset = motionPreset(presetId);
 
   const stop = () => {
@@ -132,8 +134,10 @@ export function MotionStudio() {
     };
     try {
       if (kind === "video") {
-        const fmt = await exportMotionVideo(opts);
-        window.dispatchEvent(new CustomEvent("framekit:toast", { detail: `Saved ${preset.label} video (${fmt.toUpperCase()})` }));
+        const fmt = await exportMotionVideo({ ...opts, settings: videoSettings });
+        window.dispatchEvent(
+          new CustomEvent("framekit:toast", { detail: `Saved ${preset.label} video (${fmt.toUpperCase()} · ${videoSettings.fps} fps)` })
+        );
       } else {
         await exportMotionGif(opts);
         window.dispatchEvent(new CustomEvent("framekit:toast", { detail: `Saved ${preset.label} GIF` }));
@@ -191,7 +195,7 @@ export function MotionStudio() {
             {playing ? <Square size={10} className="fill-white" /> : <Play size={11} className="fill-white" />}
             <span>{playing ? "Stop" : `Preview ${preset.label}`}</span>
           </button>
-          <span className="text-[10px] text-white/40">Moves every device{preset.kind === "intro" ? " and caption" : ""}, staggered across layers.</span>
+          <span className="hidden text-[10px] text-white/40 2xl:inline">Moves every device{preset.kind === "intro" ? " and caption" : ""}, staggered across layers.</span>
         </div>
         {busy ? (
           <div className="flex items-center gap-2">
@@ -202,7 +206,8 @@ export function MotionStudio() {
             <span className="font-mono text-[10px] text-white">{Math.round(busy.pct * 100)}%</span>
           </div>
         ) : (
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <VideoSettingsControl />
             <button
               onClick={() => runExport("video")}
               className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-white/10 bg-white/10 px-4 text-[11px] font-bold text-white transition-all hover:bg-white/15"

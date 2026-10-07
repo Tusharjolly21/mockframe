@@ -5,15 +5,17 @@ import { applyPalette, GIFEncoder, quantize } from "gifenc";
 import type { SceneDocument } from "@framekit/scene";
 import { drawDisclosure, loadDisclosure } from "./disclosure";
 import type { MotionPreset } from "./motion";
+import { createVideoWriter, downloadBlob } from "./videoEncode";
+import { DEFAULT_VIDEO_SETTINGS, videoBitrate, videoSize, type VideoSettings } from "./videoSettings";
 
 /**
  * Export a motion preset as MP4/WebM or GIF.
  *
- * Every frame is posed (`renderAt`), rasterized with html-to-image and kept as
- * a compressed JPEG blob (a 4s clip at 1080p would need ~500MB as raw
- * bitmaps). Video playback then decodes a few frames ahead while
- * MediaRecorder captures the canvas on a real clock, the same approach as
- * the chat-replay exporter. Loops play twice so the clip reads as a loop.
+ * Every frame is posed (`renderAt`) and rasterized with html-to-image at the
+ * chosen resolution, then encoded with an exact timestamp (WebCodecs), so 60fps
+ * and 4K come out frame-perfect. Loops play twice so the clip reads as a loop —
+ * the second pass reuses the encoded frames. Browsers without WebCodecs fall
+ * back to recording a canvas playback with MediaRecorder.
  */
 
 export interface MotionExportOpts {
@@ -57,20 +59,49 @@ async function captureFrames(
   }
 }
 
-function download(blob: Blob, name: string) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+const download = downloadBlob;
+
+/** intros hold their final pose a beat before the clip ends */
+const HOLD_S = 0.6;
+
+export async function exportMotionVideo(o: MotionExportOpts & { settings?: VideoSettings }): Promise<"mp4" | "webm"> {
+  const settings = o.settings ?? DEFAULT_VIDEO_SETTINGS;
+  const fps = settings.fps;
+  const { width: W, height: H } = videoSize(o.scene.canvas.width, o.scene.canvas.height, settings.resolution);
+  const count = Math.max(2, Math.round((o.preset.durationMs / 1000) * fps));
+  const disclosure = loadDisclosure();
+
+  const writer = await createVideoWriter(W, H, fps);
+  if (!writer) return recordMotionVideo(o, W, H, fps, count);
+  try {
+    let last: HTMLCanvasElement | null = null;
+    await captureFrames(
+      o,
+      W,
+      H,
+      count,
+      async (cvs) => {
+        drawDisclosure(cvs.getContext("2d")!, W, H, disclosure);
+        await writer.addFrame(cvs);
+        last = cvs;
+      },
+      0.92
+    );
+    if (o.preset.kind === "intro" && last) {
+      for (let i = 0; i < Math.round(fps * HOLD_S); i++) await writer.addFrame(last);
+    }
+    o.onProgress?.(0.96, "Finishing video…");
+    const { blob, ext } = await writer.finish({ repeat: o.preset.kind === "loop" ? 2 : 1 });
+    download(blob, `mockframe-${o.preset.id}-${W}x${H}-${fps}fps.${ext}`);
+    o.onProgress?.(1, "Done");
+    return ext;
+  } finally {
+    writer.close();
+  }
 }
 
-export async function exportMotionVideo(o: MotionExportOpts & { maxWidth?: number; fps?: number }): Promise<"mp4" | "webm"> {
-  const fps = o.fps ?? 30;
-  const scale = Math.min(1, (o.maxWidth ?? 1080) / o.scene.canvas.width);
-  const W = Math.round(o.scene.canvas.width * scale / 2) * 2;
-  const H = Math.round(o.scene.canvas.height * scale / 2) * 2;
-  const count = Math.max(2, Math.round((o.preset.durationMs / 1000) * fps));
+/** Fallback for browsers without WebCodecs: real-time canvas playback recorded by MediaRecorder. */
+async function recordMotionVideo(o: MotionExportOpts, W: number, H: number, fps: number, count: number): Promise<"mp4" | "webm"> {
   const disclosure = loadDisclosure();
 
   const blobs: Blob[] = [];
@@ -89,7 +120,7 @@ export async function exportMotionVideo(o: MotionExportOpts & { maxWidth?: numbe
   );
 
   // loops play twice; intros play once then hold the final pose a beat
-  const order = o.preset.kind === "loop" ? [...blobs.keys(), ...blobs.keys()] : [...blobs.keys(), ...Array(Math.round(fps * 0.6)).fill(count - 1)];
+  const order = o.preset.kind === "loop" ? [...blobs.keys(), ...blobs.keys()] : [...blobs.keys(), ...Array(Math.round(fps * HOLD_S)).fill(count - 1)];
 
   const rec = document.createElement("canvas");
   rec.width = W;
@@ -99,7 +130,7 @@ export async function exportMotionVideo(o: MotionExportOpts & { maxWidth?: numbe
     ["video/mp4;codecs=avc1.42E01E", "video/mp4"].find((t) => MediaRecorder.isTypeSupported(t)) ??
     (MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm");
   const isMp4 = mime.startsWith("video/mp4");
-  const recorder = new MediaRecorder(rec.captureStream(fps), { mimeType: mime, videoBitsPerSecond: 14_000_000 });
+  const recorder = new MediaRecorder(rec.captureStream(fps), { mimeType: mime, videoBitsPerSecond: videoBitrate(W, H, fps) });
   const chunks: Blob[] = [];
   recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
 
@@ -153,7 +184,7 @@ export async function exportMotionVideo(o: MotionExportOpts & { maxWidth?: numbe
 
   const blob = new Blob(chunks, { type: isMp4 ? "video/mp4" : "video/webm" });
   if (!blob.size) throw new Error("Recording produced no data");
-  download(blob, `mockframe-${o.preset.id}-${W}x${H}.${isMp4 ? "mp4" : "webm"}`);
+  download(blob, `mockframe-${o.preset.id}-${W}x${H}-${fps}fps.${isMp4 ? "mp4" : "webm"}`);
   return isMp4 ? "mp4" : "webm";
 }
 
