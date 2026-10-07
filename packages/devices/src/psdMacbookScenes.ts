@@ -5,29 +5,36 @@ type Quad = [[number, number], [number, number], [number, number], [number, numb
 const ROOT = "/psd-templates";
 const SOURCE_SIZE: [number, number] = [2560, 1664];
 
+// Plates are cropped to the laptop (+90px margin) and scaled so the screen is
+// ~1:1 with a 2560-wide screenshot; the source PSDs are 7500 × 5000 with the
+// laptop filling only the middle third, which made it tiny on the canvas.
 const MACBOOKS: Array<{
   id: string;
   name: string;
   folder: string;
+  size: [number, number];
   quad: Quad;
 }> = [
   {
     id: "realistic",
     name: "MacBook Air 13 · Realistic",
     folder: "01---macbook-air-13-mockup",
-    quad: [[2029.3646, 1205.6328], [5473.6354, 1205.6328], [5473.6354, 3448.3672], [2029.3646, 3448.3672]],
+    size: [3733, 2197],
+    quad: [[587.569, 126.542], [3187.569, 126.542], [3187.569, 1819.53], [587.569, 1819.53]],
   },
   {
     id: "clay",
     name: "MacBook Air 13 · Clay",
     folder: "02---macbook-air-13-clay-mockup",
-    quad: [[2029.3646, 1205.6328], [5473.6354, 1205.6328], [5473.6354, 3448.3672], [2029.3646, 3448.3672]],
+    size: [3733, 2196],
+    quad: [[587.569, 126.542], [3187.569, 126.542], [3187.569, 1819.53], [587.569, 1819.53]],
   },
   {
     id: "vector",
     name: "MacBook Air 13 · Vector",
     folder: "03---macbook-air-13-vector-mockup",
-    quad: [[2031, 1208], [5468, 1208], [5468, 3446], [2031, 3446]],
+    size: [3391, 2108],
+    quad: [[396.392, 128.601], [2996.392, 128.601], [2996.392, 1821.589], [396.392, 1821.589]],
   },
 ];
 
@@ -46,8 +53,8 @@ export const PSD_MACBOOK_SCENES: Device[] = MACBOOKS.map((macbook) => {
     released: "2026-07",
     screen: { width: SOURCE_SIZE[0], height: SOURCE_SIZE[1], cornerRadius: 0 },
     frame: {
-      width: 7500,
-      height: 5000,
+      width: macbook.size[0],
+      height: macbook.size[1],
       screenRect: { x: left, y: top, width: right - left, height: bottom - top },
       maskPath: "",
       overlaySelector: "#foreground",
@@ -57,8 +64,8 @@ export const PSD_MACBOOK_SCENES: Device[] = MACBOOKS.map((macbook) => {
     seo: { monthlyQueries: ["macbook air mockup", "laptop mockup"] },
     plate: {
       src: `${base}/device-base.png`,
-      width: 7500,
-      height: 5000,
+      width: macbook.size[0],
+      height: macbook.size[1],
       screenRect: { x: left, y: top, width: right - left, height: bottom - top },
       screenQuad: macbook.quad,
       screenRadius: 0,

@@ -50,7 +50,7 @@ type ShelfItem = {
 };
 
 const LIBRARY: ShelfItem[] = [
-  { id: "macbook-pro-16-mockup", img: "/hero/lib-macbook.webp", name: "MacBook Pro 16″", variant: "Front", fit: { maxWidth: "100%" } },
+  { id: "macbook-pro-16", img: "/hero/lib-macbook.webp", name: "MacBook Pro 16″", variant: "Front", fit: { maxWidth: "100%" } },
   { id: "iphone-16-pro-psd-black-2", img: "/hero/hero-iphone.webp", name: "iPhone 16 Pro", variant: "Black Titanium, leaning", fit: { maxHeight: "86%" } },
   { id: "ipad-pro-2024-psd-space-black-1", img: "/hero/lib-ipad.webp", name: "iPad Pro", variant: "Space Black, angled", fit: { maxWidth: "84%" } },
   { id: "apple-watch-ultra-psd-midnight-3", img: "/hero/lib-watch.webp", name: "Apple Watch Ultra", variant: "Midnight Ocean, side", fit: { maxHeight: "58%" } },
