@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { listDevices } from "@framekit/devices";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
@@ -26,7 +27,7 @@ export default function NotFound() {
           This page doesn&apos;t exist.
         </h1>
         <p className="relative mt-3 max-w-md text-[14.5px] leading-relaxed text-zinc-400">
-          The mockup you&apos;re after might have moved — but there are 63 device frames waiting in the library.
+          The mockup you&apos;re after might have moved — but there are {listDevices().length} device frames waiting in the library.
         </p>
         <div className="relative mt-7 flex items-center gap-4">
           <Link

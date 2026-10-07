@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowRight, Check, MousePointer2 } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_NAME, SITE_URL, socialMeta, metaDescription } from "@/lib/site";
 import { TOOL_PAGES, toolPage } from "@/lib/toolPages";
 
 export function generateStaticParams() {
@@ -16,9 +16,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!tool) return { title: "Tool not found" };
   return {
     title: tool.name,
-    description: tool.description,
+    description: metaDescription(tool.description),
     alternates: { canonical: `/tools/${tool.slug}` },
-    openGraph: { title: `${tool.name} — ${SITE_NAME}`, description: tool.description, url: `/tools/${tool.slug}`, images: [tool.image] },
+    ...socialMeta({ path: `/tools/${tool.slug}`, title: `${tool.name} — ${SITE_NAME}`, description: metaDescription(tool.description), image: tool.image }),
   };
 }
 

@@ -11,7 +11,6 @@ const COMPOSITES: Array<{
 }> = [
   { id: "watch-01", name: "Apple Watch Series 11 · Hand", root: "01-copy", sourceSize: [1664, 1984], quad: [[1772.2628, 1069.117], [2137.7372, 1069.117], [2137.7372, 1506.883], [1772.2628, 1506.883]] },
   { id: "iphone-01", name: "iPhone 17 Pro · Hand", root: "01", sourceSize: [1206, 2622], quad: [[1598.5048, 309], [2399.4952, 309], [2399.4952, 2047], [1599.0681, 2047]] },
-  { id: "watch-02", name: "Apple Watch Series 11 · Angled", root: "02-copy", sourceSize: [1664, 1984], quad: [[1485.6577, 959.7088], [1916.132, 844.5777], [2077.3504, 1373.2912], [1649.8757, 1494.4215]] },
   { id: "iphone-02", name: "iPhone 17 Pro · Angled", root: "02", sourceSize: [1206, 2622], quad: [[1038.3341, 334.1371], [1807.7669, 257.6967], [2132.7598, 2074.4242], [1368.7001, 2192.0743]] },
 ];
 
@@ -22,7 +21,6 @@ const SAMSUNG: Array<{
 }> = [
   { id: "gray", name: "Titanium Gray", folder: "titanium-gray/device-2" },
   { id: "black", name: "Titanium Black", folder: "titanium-black/device-2" },
-  { id: "violet", name: "Titanium Violet", folder: "titanium-violet/device-2" },
   { id: "yellow", name: "Titanium Yellow", folder: "titanium-yellow/device-2" },
 ];
 

@@ -285,7 +285,7 @@ export function CanvasStage() {
           // arrows snap to horizontal/vertical with Shift (user request);
           // everything else keeps the 15° ticks
           const l = useSceneStore.getState().scene.layers.find((x) => x.id === d.id);
-          const isArrow = l?.type === "sticker" && "stickerId" in l && l.stickerId === "annot-arrow";
+          const isArrow = l?.type === "sticker" && "stickerId" in l && l.stickerId.startsWith("annot-arrow");
           const step = isArrow ? 90 : 15;
           next = Math.round(next / step) * step;
         }

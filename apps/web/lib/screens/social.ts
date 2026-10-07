@@ -10,11 +10,13 @@ import {
   SW,
   textBlock as baseTextBlock,
   textWidth,
+  truncate,
   wrapText,
 } from "./common";
+import { BRAND_PATHS } from "./brandMarks";
 import { fontFor } from "./fonts";
 import { renderFramed, type FramedResult } from "./frames";
-import { SOCIAL_LABELS, type SocialPostDoc } from "./types";
+import type { SocialPostDoc } from "./types";
 
 /**
  * Social post — Facebook / LinkedIn / Threads, mobile feed-card style. One
@@ -27,16 +29,91 @@ const GAP = 14;
 const FONT = 16;
 const LINE_H = 22;
 
+/** Accent per network for links, mentions and the verified badge. */
+const NETWORK_ACCENT: Record<string, string> = {
+  x: "#1d9bf0",
+  bluesky: "#1185fe",
+  threads: "#0095f6",
+  linkedin: "#0a66c2",
+  mastodon: "#6364ff",
+  facebook: "#0866ff",
+};
+
+const LINK_TOKEN = /^(?:[@#][\p{L}\p{N}_.]+|https?:\/\/\S+|(?:www\.)?[\w-]+\.(?:com|io|app|dev|ai|co|org|net|so|gg|me|xyz)(?:\/\S*)?)[.,!?:;)]*$/u;
+
+/** One line of post text, with @mentions, #tags and links in the network's accent. */
+function tintedLine(line: string, o: { font: string; x: number; y: number; size: number; color: string; accent: string }): string {
+  const spans = line.split(/(\s+)/).map((tok) => {
+    if (!tok) return "";
+    if (/^\s+$/.test(tok)) return esc(tok);
+    const m = tok.match(/^(.*?)([.,!?:;)]*)$/u)!;
+    return LINK_TOKEN.test(tok) ? `<tspan fill="${o.accent}">${esc(m[1])}</tspan>${esc(m[2])}` : esc(tok);
+  });
+  return `<text font-family="${o.font}" font-size="${o.size}" fill="${o.color}" x="${o.x}" y="${o.y}" xml:space="preserve">${spans.join("")}</text>`;
+}
+
+/** Verified check badge (scalloped seal), 18px. */
+function cardSeal(x: number, y: number, color: string): string {
+  const cx = x + 9;
+  const cy = y + 9;
+  const bumps = Array.from({ length: 8 }, (_, i) => {
+    const a = (i / 8) * Math.PI * 2;
+    return `<circle cx="${(cx + Math.cos(a) * 6.4).toFixed(2)}" cy="${(cy + Math.sin(a) * 6.4).toFixed(2)}" r="3.1" fill="${color}"/>`;
+  }).join("");
+  return `<g>${bumps}<circle cx="${cx}" cy="${cy}" r="7.2" fill="${color}"/><path d="M${cx - 3.6} ${cy + 0.2} l2.5 2.5 l4.9 -5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+}
+
+/** The network's mark, `size`px square, top-left at (x, y). */
+function brandMark(network: string, x: number, y: number, size: number, ink: string): string {
+  if (network === "x") return xBrandMark(x, y, size, ink);
+  if (network === "linkedin") {
+    const r = size * 0.18;
+    return `<g><rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${r}" fill="#0a66c2"/><text x="${x + size * 0.5}" y="${y + size * 0.76}" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="${size * 0.66}" fill="#fff">in</text></g>`;
+  }
+  const path = BRAND_PATHS[network as keyof typeof BRAND_PATHS];
+  if (!path) return "";
+  const color = network === "bluesky" ? "#1185fe" : network === "mastodon" ? "#6364ff" : network === "facebook" ? "#0866ff" : ink;
+  return `<path d="${path}" fill="${color}" transform="translate(${x} ${y}) scale(${size / 24})"/>`;
+}
+
+/** 1–4 photos with rounded outer corners. Returns the grid height. */
+function photoGrid(parts: string[], urls: string[], x: number, y: number, w: number, id: string): number {
+  const gap = 4;
+  const H = urls.length === 1 ? Math.round(w * 0.62) : Math.round(w * 0.56);
+  parts.push(`<defs><clipPath id="${id}"><rect x="${x}" y="${y}" width="${w}" height="${H}" rx="16"/></clipPath></defs><g clip-path="url(#${id})">`);
+  const tile = (u: string, tx: number, ty: number, tw: number, th: number) =>
+    parts.push(`<image href="${u}" x="${tx}" y="${ty}" width="${tw}" height="${th}" preserveAspectRatio="xMidYMid slice"/>`);
+  const cw = (w - gap) / 2;
+  const ch = (H - gap) / 2;
+  if (urls.length === 1) tile(urls[0], x, y, w, H);
+  else if (urls.length === 2) {
+    tile(urls[0], x, y, cw, H);
+    tile(urls[1], x + cw + gap, y, cw, H);
+  } else if (urls.length === 3) {
+    tile(urls[0], x, y, cw, H);
+    tile(urls[1], x + cw + gap, y, cw, ch);
+    tile(urls[2], x + cw + gap, y + ch + gap, cw, ch);
+  } else {
+    tile(urls[0], x, y, cw, ch);
+    tile(urls[1], x + cw + gap, y, cw, ch);
+    tile(urls[2], x, y + ch + gap, cw, ch);
+    tile(urls[3], x + cw + gap, y + ch + gap, cw, ch);
+  }
+  parts.push(`</g><rect x="${x + 0.5}" y="${y + 0.5}" width="${w - 1}" height="${H - 1}" rx="16" fill="none" stroke="rgba(0,0,0,0.08)"/>`);
+  return H;
+}
+
 /** Provider-neutral standalone card. Imported posts should look like a
  * MockFrame composition, not a fragile screenshot of another product's UI. */
-export function renderSocialCard(doc: SocialPostDoc, avatarUrl?: string): FramedResult {
+export function renderSocialCard(doc: SocialPostDoc, avatarUrl?: string, lookupUrl?: (id: string) => string | undefined): FramedResult {
   const dark = !!doc.chrome.dark;
   const font = fontFor("social", doc.chrome.platform ?? "ios");
   const viewportW = Math.max(300, Math.min(620, doc.cardWidth ?? 440));
   const frame = doc.frame ?? "none";
   const c = dark
     ? { card: "#17191f", text: "#f4f4f5", subtle: "#a1a1aa", hairline: "#30323a" }
-    : { card: "#f8fbff", text: "#262a31", subtle: "#858d98", hairline: "#dfe8f2" };
+    : { card: "#f8fbff", text: "#262a31", subtle: "#7c8591", hairline: "#dfe8f2" };
+  const accent = NETWORK_ACCENT[doc.network] ?? "#1d9bf0";
 
   return renderFramed(
     frame,
@@ -47,46 +124,63 @@ export function renderSocialCard(doc: SocialPostDoc, avatarUrl?: string): Framed
       const lineH = Math.round(size * 1.42);
       const inX = x + p;
       const contentW = w - p * 2;
-      const source = doc.sourceLabel || SOCIAL_LABELS[doc.network] || "Post";
       const subtitle = doc.subtitle || (doc.network === "threads" ? `@${doc.name.replace(/^@/, "")}` : "");
       const parts: string[] = [];
       let cy = y + p;
 
-      parts.push(`<rect x="${x}" y="${y}" width="${w}" height="1" fill="${c.hairline}" opacity="0"/>`);
+      // header: avatar · name (+ badge) · handle · network mark
+      const markSize = 28;
+      const nameX = inX + 62;
+      const nameMax = contentW - 62 - markSize - 14 - (doc.verified ? 24 : 0);
+      const name = truncate(doc.name, 18, nameMax);
       parts.push(avatar(doc.name, inX + 24, cy + 24, 24, "mfpost", avatarUrl));
-      parts.push(`<text font-family="${font}" font-size="18" font-weight="750" fill="${c.text}" x="${inX + 62}" y="${cy + 19}">${esc(doc.name)}</text>`);
-      if (subtitle) parts.push(`<text font-family="${font}" font-size="14.5" fill="${c.subtle}" x="${inX + 62}" y="${cy + 42}">${esc(subtitle)}</text>`);
-      if (doc.network === "x") {
-        parts.push(xBrandMark(x + w - p - 34, cy + 7, 34, c.text));
-      } else {
-        const mark = doc.network === "threads" ? "@" : source;
-        const markSize = doc.network === "threads" ? 30 : 14;
-        parts.push(`<text font-family="${font}" font-size="${markSize}" font-weight="750" fill="${c.text}" text-anchor="end" x="${x + w - p}" y="${cy + (markSize > 20 ? 34 : 26)}">${esc(mark)}</text>`);
-      }
-      cy += 84;
+      parts.push(`<text font-family="${font}" font-size="18" font-weight="750" fill="${c.text}" x="${nameX}" y="${cy + 19}">${esc(name)}</text>`);
+      if (doc.verified) parts.push(cardSeal(nameX + textWidth(name, 18) * 1.04 + 6, cy + 5, accent));
+      if (subtitle) parts.push(`<text font-family="${font}" font-size="14.5" fill="${c.subtle}" x="${nameX}" y="${cy + 42}">${esc(truncate(subtitle, 14.5, contentW - 62 - markSize - 14))}</text>`);
+      parts.push(brandMark(doc.network, x + w - p - markSize, cy + 4, markSize, c.text));
+      cy += 76;
 
-      const lines = wrapText(doc.text, size, contentW);
-      parts.push(baseTextBlock(lines, { font, x: inX, y: cy, size, lineHeight: lineH, color: c.text }));
-      cy += lines.length * lineH + 30;
-      if (doc.time) {
-        parts.push(`<text font-family="${font}" font-size="14" fill="${c.subtle}" x="${inX}" y="${cy}">${esc(doc.time)}</text>`);
-        cy += 28;
-      }
-      parts.push(`<rect x="${inX}" y="${cy}" width="${contentW}" height="1" fill="${c.hairline}"/>`);
-      cy += 30;
-
-      const stats = [
-        [compact(doc.shares), doc.network === "x" ? "retweets" : "shares"],
-        [compact(doc.likes), "likes"],
-        [compact(doc.comments), "replies"],
-      ];
-      const colW = contentW / stats.length;
-      stats.forEach(([value, label], i) => {
-        const sx = inX + i * colW;
-        parts.push(`<text font-family="${font}" font-size="16" font-weight="750" fill="${c.text}" x="${sx}" y="${cy}">${esc(value)}</text>`);
-        parts.push(`<text font-family="${font}" font-size="14" fill="${c.subtle}" x="${sx + textWidth(value, 16) + 7}" y="${cy}">${label}</text>`);
+      // body text
+      const lines = wrapText(doc.text, size, contentW, true);
+      lines.forEach((line, i) => {
+        if (line) parts.push(tintedLine(line, { font, x: inX, y: cy + i * lineH + size, size, color: c.text, accent }));
       });
-      cy += p + 4;
+      cy += lines.length * lineH + 12;
+
+      // photos
+      const photos = (doc.images ?? []).map((id) => lookupUrl?.(id)).filter((u): u is string => !!u).slice(0, 4);
+      if (photos.length) {
+        cy += 6;
+        cy += photoGrid(parts, photos, inX, cy, contentW, "mfpostgrid") + 8;
+      }
+
+      if (doc.time) {
+        cy += 18;
+        parts.push(`<text font-family="${font}" font-size="14.5" fill="${c.subtle}" x="${inX}" y="${cy}">${esc(doc.time)}</text>`);
+        cy += 10;
+      }
+
+      if (doc.showMetrics !== false) {
+        cy += 18;
+        parts.push(`<rect x="${inX}" y="${cy}" width="${contentW}" height="1" fill="${c.hairline}"/>`);
+        cy += 32;
+        const shareLabel = doc.network === "x" || doc.network === "bluesky" || doc.network === "threads" ? "Reposts" : doc.network === "mastodon" ? "Boosts" : "Shares";
+        const stats: [number, string][] = [
+          [doc.comments, "Replies"],
+          [doc.shares, shareLabel],
+          [doc.likes, doc.network === "mastodon" ? "Favourites" : "Likes"],
+        ];
+        let sx = inX;
+        for (const [value, label] of stats) {
+          const v = compact(value);
+          parts.push(`<text font-family="${font}" font-size="16" font-weight="750" fill="${c.text}" x="${sx}" y="${cy}">${esc(v)}</text>`);
+          parts.push(`<text font-family="${font}" font-size="14.5" fill="${c.subtle}" x="${sx + textWidth(v, 16) + 6}" y="${cy}">${label}</text>`);
+          sx += textWidth(v, 16) + 6 + textWidth(label, 14.5) + 26;
+        }
+        cy += p - 4;
+      } else {
+        cy += p;
+      }
       return { svg: parts.join("\n"), height: cy - y };
     },
     viewportW,
@@ -156,7 +250,7 @@ export function renderSocial(doc: SocialPostDoc, avatarUrl?: string, lookupUrl?:
   cy = nameY + (net === "linkedin" ? 44 : 30) + GAP;
 
   /* body text */
-  const lines = wrapText(doc.text, FONT, cardW - M * 2);
+  const lines = wrapText(doc.text, FONT, cardW - M * 2, true);
   parts.push(textBlock(lines, { x: inX, y: cy, size: FONT, lineHeight: LINE_H, color: c.text }));
   cy += lines.length * LINE_H + GAP;
 
@@ -216,7 +310,7 @@ export function renderSocial(doc: SocialPostDoc, avatarUrl?: string, lookupUrl?:
     const cm = comments[i];
     const cx = inX;
     parts.push(avatar(cm.user, cx + 16, cy + 4, 16, `soc${i}`, cm.avatar ? lookupUrl?.(cm.avatar) : undefined));
-    const lines = wrapText(cm.text, 14.5, cardW - 44 - M);
+    const lines = wrapText(cm.text, 14.5, cardW - 44 - M, true);
     if (net === "threads") {
       // flat: name + @ then text
       let hx = cx + 42 + textWidth(cm.user, 13.5) + 5;

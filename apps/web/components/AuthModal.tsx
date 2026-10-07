@@ -93,7 +93,7 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
                 <IconifyIcon name="monitor" size={23} color="#7c3aed" />
               </div>
               <p className="mt-7 text-[11px] font-medium uppercase tracking-[0.18em] text-[#a5b4fc]">MockFrame</p>
-              <h1 className="mt-2 max-w-[260px] text-[30px] font-medium leading-[1.06] tracking-[-0.04em]">Your work, wherever you create.</h1>
+              <h2 className="mt-2 max-w-[260px] text-[30px] font-medium leading-[1.06] tracking-[-0.04em]">Your work, wherever you create.</h2>
               <p className="mt-4 max-w-[270px] text-[13px] leading-6 text-zinc-400">Save your scenes, return to your drafts, and keep every mockup ready across devices.</p>
               <div className="mt-9 space-y-3.5">
                 {[

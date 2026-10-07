@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import { socialMeta } from "@/lib/site";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "What MockFrame stores, for how long, and what it never collects.",
+  description: "What MockFrame stores, for how long, where it's processed, and what it never collects — written in plain English, with how to delete your data.",
   alternates: { canonical: "/privacy" },
+  ...socialMeta({ path: "/privacy", title: "Privacy Policy — MockFrame", description: "What MockFrame stores, for how long, where it's processed, and what it never collects — written in plain English, with how to delete your data." }),
 };
 
 /* Written to answer the questions users actually ask: do uploaded images stay

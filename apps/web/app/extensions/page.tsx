@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
+import { socialMeta } from "@/lib/site";
 import { Chrome, Code2, ShieldCheck } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 
-export const metadata: Metadata = { title: "Extensions", description: "Capture a browser tab or send selected code into MockFrame with the Chrome and VS Code extension alphas.", alternates: { canonical: "/extensions" } };
+export const metadata: Metadata = {
+  title: "Chrome & VS Code Extensions",
+  description: "Capture a browser tab or send selected code straight into MockFrame with the Chrome and VS Code extension alphas — no download and re-upload.",
+  alternates: { canonical: "/extensions" },
+  ...socialMeta({ path: "/extensions", title: "Chrome & VS Code Extensions — MockFrame", description: "Capture a browser tab or send selected code straight into MockFrame with the Chrome and VS Code extension alphas — no download and re-upload." }),
+};
 
 const items = [
   { name: "Chrome capture", icon: Chrome, body: "Capture the visible tab and open it as a new MockFrame shot. The image is removed from extension storage after the editor confirms receipt.", status: "Unpacked alpha" },

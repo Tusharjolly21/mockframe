@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import { socialMeta } from "@/lib/site";
 import Link from "next/link";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 
 export const metadata: Metadata = {
   title: "Commercial License",
-  description:
-    "MockFrame Pro includes a commercial license for everything you export — App Store and Google Play listings, ads, websites and client work. No attribution, no royalties.",
+  description: "MockFrame Pro includes a commercial license for every export: store listings, ads, websites and client work. No attribution, no royalties.",
   alternates: { canonical: "/license" },
+  ...socialMeta({ path: "/license", title: "Commercial License — MockFrame", description: "MockFrame Pro includes a commercial license for every export: store listings, ads, websites and client work." }),
 };
 
 /* Plain-English usage terms for exports. Keep every claim TRUE to how the

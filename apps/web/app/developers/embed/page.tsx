@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import { socialMeta } from "@/lib/site";
 import Link from "next/link";
 import { ArrowRight, Check, PanelsTopLeft } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 
 export const metadata: Metadata = {
-  title: "Embed the MockFrame Editor",
-  description: "Add MockFrame's screenshot mockup editor to your product with one script and one web component.",
+  title: "Embeddable Mockup Editor",
+  description: "Add MockFrame's screenshot mockup editor to your own product with one script tag and one web component — no backend work required.",
   alternates: { canonical: "/developers/embed" },
+  ...socialMeta({ path: "/developers/embed", title: "Embeddable Mockup Editor — MockFrame", description: "Add MockFrame's screenshot mockup editor to your own product with one script tag and one web component — no backend work required." }),
 };
 
 const snippet = `<script src="https://mockframe.app/embed.js" defer></script>

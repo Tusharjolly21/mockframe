@@ -273,6 +273,10 @@ export const StickerLayerSchema = z.union([
     placement: z.enum(["background", "foreground"]).optional(),
     /** render as an app icon: squircle mask + subtle shadow, fixed square size */
     iconMask: z.enum(["ios", "android", "square"]).optional(),
+    /** 0..1, defaults to fully opaque */
+    opacity: z.number().min(0).max(1).optional(),
+    /** drop shadow under the sticker's silhouette */
+    shadow: z.enum(["soft", "lifted"]).optional(),
   }),
 ]);
 
@@ -338,6 +342,8 @@ export const SceneDocumentSchema = z.object({
     panoramaBackground: z.boolean().optional(),
   }),
   layers: z.array(LayerSchema), // z-ordered, index 0 = back
+  /** the premium template this scene started from; Pro ones need Pro to export */
+  template: z.object({ id: z.string(), pro: z.boolean().optional() }).optional(),
   timeline: TimelineSchema.optional(),
   connectors: z
     .array(

@@ -3,18 +3,13 @@ import { Rocket } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { LaunchKitWizard } from "@/components/launchkit/LaunchKitWizard";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_NAME, SITE_URL, socialMeta } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "App Launch Kit Generator — Every Launch Asset in One Click",
-  description:
-    "Generate your entire app launch in minutes: Product Hunt gallery + thumbnail, OG card, X/LinkedIn banner, Instagram story, GitHub social preview, AI-written launch copy, and a hosted press page. First kit free.",
+  title: "App Launch Kit Generator",
+  description: "Your whole launch from one form: Product Hunt gallery, OG card, X and LinkedIn banners, story, GitHub preview, launch copy and a press page.",
   alternates: { canonical: "/launch-kit" },
-  openGraph: {
-    title: `App Launch Kit Generator — ${SITE_NAME}`,
-    description: "Every launch-day asset — designed, sized and written — from one form. First kit free.",
-    url: "/launch-kit",
-  },
+  ...socialMeta({ path: "/launch-kit", title: "App Launch Kit Generator — MockFrame", description: "Your whole launch from one form: Product Hunt gallery, OG card, X and LinkedIn banners, story, GitHub preview, launch copy and a press page." }),
 };
 
 const FAQ: [string, string][] = [

@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Store screenshot set",
   robots: { index: false, follow: true },
+  alternates: { canonical: null },
 };
 
 export default function StoreSetLayout({ children }: { children: React.ReactNode }) {

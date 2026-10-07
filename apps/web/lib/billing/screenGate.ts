@@ -81,7 +81,13 @@ export function proScreenLabel(apps: ScreenApp[]): string {
 export function guardProScreens(scene: SceneDocument | SceneDocument[], isPro: boolean): boolean {
   if (isPro) return true;
   const apps = sceneProScreenApps(scene);
-  if (apps.length === 0) return true;
-  openUpgrade(proScreenLabel(apps));
-  return false;
+  if (apps.length > 0) {
+    openUpgrade(proScreenLabel(apps));
+    return false;
+  }
+  if ((Array.isArray(scene) ? scene : [scene]).some((s) => s.template?.pro)) {
+    openUpgrade("Pro templates");
+    return false;
+  }
+  return true;
 }

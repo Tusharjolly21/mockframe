@@ -5,21 +5,13 @@ import { listDevices, previewDataUri } from "@framekit/devices";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
-import { CATEGORY_META, CATEGORY_ORDER, SITE_NAME, SITE_URL, cleanDeviceName } from "@/lib/site";
+import { CATEGORY_META, CATEGORY_ORDER, SITE_URL, cleanDeviceName, socialMeta } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Device Mockup Generators",
-  description:
-    "Free, pixel-accurate mockup generators for iPhone, iPad, MacBook, Apple Watch, Android and browser screenshots. Drop in your screenshot, style the scene, export in seconds.",
+  description: "Free, pixel-accurate mockup generators for iPhone, iPad, MacBook, Apple Watch, Android and browsers. Drop in a screenshot and export in seconds.",
   alternates: { canonical: "/mockups" },
-  openGraph: {
-    title: `Device Mockup Generators — ${SITE_NAME}`,
-    description:
-      "Free, pixel-accurate mockup generators for iPhone, iPad, MacBook, Apple Watch, Android and browser screenshots.",
-    url: "/mockups",
-    type: "website",
-    siteName: SITE_NAME,
-  },
+  ...socialMeta({ path: "/mockups", title: "Device Mockup Generators — MockFrame", description: "Free, pixel-accurate mockup generators for iPhone, iPad, MacBook, Apple Watch, Android and browsers. Drop in a screenshot and export in seconds." }),
 };
 
 export default function MockupsIndexPage() {

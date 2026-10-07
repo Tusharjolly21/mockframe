@@ -14,6 +14,7 @@ const FREE_FEATURES = [
   "Watermark-free exports — always",
   "Personal & non-commercial use",
   "Every device frame + the full editor",
+  "2 premium layouts (Launch Hero, Feature Trio)",
   "WhatsApp & iMessage chat screens",
   "Website capture & app screen templates",
   "Themes, icons, glare & annotations",
@@ -26,6 +27,7 @@ const FREE_FEATURES = [
 // list where the code actually puts it.)
 const PRO_FEATURES = [
   "Commercial license for every export",
+  "Every premium layout — keynote, clay, Product Hunt & more",
   "12 more chat & DM screens",
   "Animated app promo videos (MP4)",
   "Photoreal device renders",
@@ -97,10 +99,10 @@ export function PricingPlans() {
             </div>
           </div>
 
-          {/* Monthly / Annual toggle with a sliding pill */}
+          {/* Annual / Monthly toggle with a sliding pill — annual (the default, best value) first */}
           <div className="mt-7 flex items-center gap-3">
             <div className="relative inline-flex rounded-full border border-white/10 bg-white/[0.04] p-1">
-              {(["monthly", "yearly"] as const).map((b) => (
+              {(["yearly", "monthly"] as const).map((b) => (
                 <button
                   key={b}
                   onClick={() => setBilling(b)}

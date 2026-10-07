@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ArrowUpRight, LayoutGrid, Link2, MonitorSmartphone, Smartphone, Sparkles, Store } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Crown, LayoutGrid, Link2, MonitorSmartphone, Smartphone, Sparkles, Store } from "lucide-react";
 import {
   CARD_LOOKS,
   TEMPLATES,
@@ -17,6 +17,8 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
 import { SocialBrandIcon } from "@/components/SocialBrandIcon";
 import { StoreSetsSection } from "@/components/templates/StoreSetsSection";
+import { PremiumTemplatesSection } from "@/components/templates/PremiumTemplatesSection";
+import { PREMIUM_TEMPLATES } from "@/lib/premiumTemplates";
 import { STORE_SETS } from "@/lib/storeSets";
 import { APP_SCREEN_TEMPLATES, APP_TEMPLATE_CATEGORIES, type AppTemplateCategory } from "@/lib/appScreenTemplates";
 import { encodeScreenAsset, resolveScreenAsset } from "@/lib/screens";
@@ -117,10 +119,11 @@ export default function TemplatesPage() {
               <span className="bg-gradient-to-r from-cyan-200 via-indigo-200 to-fuchsia-200 bg-clip-text text-transparent">already beautiful.</span>
             </h1>
             <p className="relative mt-4 max-w-xl text-[15px] leading-relaxed text-zinc-400">
-              Store listing sets, realistic app screens, data cards and photoreal device scenes. Every template opens fully editable, so you only swap in what is yours.
+              Premium launch layouts, store listing sets, realistic app screens, data cards and photoreal device scenes. Every template opens fully editable, so you only swap in what is yours.
             </p>
-            <nav aria-label="Template sections" className="relative mt-8 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <nav aria-label="Template sections" className="relative mt-8 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
               {[
+                { href: "#premium", icon: Crown, label: "Premium layouts", meta: `${PREMIUM_TEMPLATES.length} layouts · ${PREMIUM_TEMPLATES.filter((t) => !t.pro).length} free` },
                 { href: "#store-sets", icon: Store, label: "Store listing sets", meta: `${STORE_SETS.length} sets · 8 shots each` },
                 { href: "#app-screens", icon: Smartphone, label: "App screens", meta: `${APP_SCREEN_TEMPLATES.length} phones` },
                 { href: "#content-cards", icon: LayoutGrid, label: "Content cards", meta: `${TEMPLATES.length} cards` },
@@ -142,6 +145,8 @@ export default function TemplatesPage() {
             </nav>
           </header>
         </Reveal>
+
+        <PremiumTemplatesSection />
 
         <StoreSetsSection />
 

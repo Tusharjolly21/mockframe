@@ -1,25 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { AiPackForm } from "@/components/ai/AiPackForm";
-import { SITE_URL } from "@/lib/site";
+import { socialMeta } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "AI App Store Screenshot Generator — describe your app, get the pack",
-  description:
-    "AI app screenshot generator: describe your app in a sentence and get a complete App Store & Google Play screenshot pack — narrative, captions and concept screens in every required size. 2 free generations, unlimited with Pro.",
-  keywords: [
-    "ai app screenshot generator",
-    "ai app store screenshot generator",
-    "generate app screenshots",
-    "app screenshot maker",
-    "app store screenshot creator",
-  ],
-  alternates: { canonical: `${SITE_URL}/ai` },
-  openGraph: {
-    title: "AI App Store Screenshot Generator | MockFrame",
-    description: "Describe your app, get a complete store screenshot pack in under a minute — no design skills needed.",
-    url: `${SITE_URL}/ai`,
-  },
+  title: "AI App Store Screenshot Generator",
+  description: "Describe your app in a sentence and get a complete App Store and Google Play screenshot pack — story, captions and concept screens in every size.",
+  keywords: ["ai app screenshot generator", "ai app store screenshot generator", "generate app screenshots", "app screenshot maker", "app store screenshot creator"],
+  alternates: { canonical: "/ai" },
+  ...socialMeta({ path: "/ai", title: "AI App Store Screenshot Generator — MockFrame", description: "Describe your app in a sentence and get a complete App Store and Google Play screenshot pack — story, captions and concept screens in every size." }),
 };
 
 const STEPS = [
@@ -136,6 +126,7 @@ export default function AiPage() {
           }),
         }}
       />
+      <MarketingFooter />
     </main>
   );
 }

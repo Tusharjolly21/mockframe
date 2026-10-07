@@ -12,7 +12,7 @@ import { Popover } from "./ui";
 
 const CATEGORIES: { id: DeviceCategory | "all"; label: string; icon?: React.ComponentType<{ size?: number }> }[] = [
   // real photoreal mockups first — the featured devices
-  { id: "scene", label: "Mockups", icon: Sparkles },
+  { id: "scene", label: "Realistic", icon: Sparkles },
   { id: "all", label: "All" },
   { id: "phone", label: "Phone", icon: Smartphone },
   { id: "tablet", label: "Tablet", icon: Tablet },
@@ -111,7 +111,7 @@ export function DevicePicker({
       setAnchor({ x: r.left, y: r.bottom + 8 });
       // open in the active device's family — but only ONCE per open, so the
       // user can still browse to any other tab afterwards
-      if (current && current.category !== "scene" && cat === "scene") setCat(current.category);
+      if (current && !current.plate && cat === "scene") setCat(current.category);
     }
     setOpen((v) => !v);
   };
@@ -120,13 +120,14 @@ export function DevicePicker({
   // mount effect that runs AFTER this component's first render — a [cat]-only
   // memo would serve the stale pre-registration list forever after a reload
   const devices = useMemo(
-    () => listDevices().filter((d) => cat === "all" || d.category === cat),
+    // "Realistic" = every photo-plate device (PSD scenes of any kind + custom photos)
+    () => listDevices().filter((d) => cat === "all" || (cat === "scene" ? !!d.plate : d.category === cat)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [cat, regBump, open]
   );
   const cats = useMemo(() => {
     const present = new Set(listDevices().map((d) => d.category));
-    return CATEGORIES.filter((c) => c.id === "all" || present.has(c.id as DeviceCategory));
+    return CATEGORIES.filter((c) => c.id === "all" || c.id === "scene" || present.has(c.id as DeviceCategory));
   }, []);
 
   return (
