@@ -43,11 +43,6 @@ export interface PremiumTemplate {
 
 const SHADOW: Shadow = { mode: "adaptive", lightAngle: 90, distance: 60, softness: 110, opacity: 0.3, color: "#0b0b17" };
 
-const lin = (angle: number, colors: string[]): Background => ({
-  type: "linear-gradient",
-  angle,
-  stops: colors.map((color, i) => ({ at: i / (colors.length - 1), color })),
-});
 const radial = (cx: number, cy: number, colors: string[]): Background => ({
   type: "radial-gradient",
   cx,

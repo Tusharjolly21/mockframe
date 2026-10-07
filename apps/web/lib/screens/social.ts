@@ -16,7 +16,7 @@ import {
 import { BRAND_PATHS } from "./brandMarks";
 import { fontFor } from "./fonts";
 import { renderFramed, type FramedResult } from "./frames";
-import { SOCIAL_LABELS, type SocialPostDoc } from "./types";
+import type { SocialPostDoc } from "./types";
 
 /**
  * Social post — Facebook / LinkedIn / Threads, mobile feed-card style. One
