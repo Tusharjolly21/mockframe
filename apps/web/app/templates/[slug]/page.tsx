@@ -4,11 +4,12 @@ import { useEffect, useRef } from "react";
 import { notFound, useParams, useSearchParams } from "next/navigation";
 import type { MockupLayer } from "@framekit/scene";
 import { EditorShell } from "@/components/editor/EditorShell";
-import { decodeScreenAsset, encodeScreenAsset, type CodeDoc, type SocialPostDoc } from "@/lib/screens";
+import { decodeScreenAsset, encodeScreenAsset, fitCardScale, type CodeDoc, type SocialPostDoc } from "@/lib/screens";
 import { importPostUrl } from "@/lib/postImport";
 import { useSceneStore } from "@/lib/store";
-import { makeTemplateScene, templateBySlug } from "@/lib/screenTemplates";
+import { CARD_LOOKS, makeTemplateScene, templateBySlug } from "@/lib/screenTemplates";
 import { appTemplateBySlug, makeAppScreenScene } from "@/lib/appScreenTemplates";
+import { premiumTemplateBySlug } from "@/lib/premiumTemplates";
 
 /**
  * /templates/<slug> — opens the editor pre-loaded with one template card
@@ -19,7 +20,24 @@ export default function TemplateSlugPage() {
   const search = useSearchParams();
   const meta = templateBySlug(params.slug);
   const appTemplate = meta ? undefined : appTemplateBySlug(params.slug);
+  const premium = meta || appTemplate ? undefined : premiumTemplateBySlug(params.slug);
   const loaded = useRef(false);
+
+  // premium layouts: a complete composition (Pro ones are gated at export)
+  useEffect(() => {
+    if (!premium || loaded.current) return;
+    loaded.current = true;
+    useSceneStore.setState({ scene: premium.build() });
+    useSceneStore.temporal.getState().clear();
+    if (premium.pro) {
+      // after the editor has mounted its toast host (no cleanup: the load guard
+      // above means a StrictMode re-run would never schedule it again)
+      setTimeout(
+        () => window.dispatchEvent(new CustomEvent("framekit:toast", { detail: `${premium.name} is a Pro layout — edit freely, export with Pro` })),
+        900
+      );
+    }
+  }, [premium]);
 
   // app screenshot templates: a phone + editable app screen + headline
   useEffect(() => {
@@ -49,27 +67,44 @@ export default function TemplateSlugPage() {
 
     const postUrl = meta.app === "social" ? search.get("url")?.slice(0, 2_000) : undefined;
     if (postUrl) {
+      const toast = (detail: string) => window.dispatchEvent(new CustomEvent("framekit:toast", { detail }));
+      const starter = scene.layers.find((item): item is MockupLayer => item.id === "layer-template" && item.type === "mockup");
+      const starterId = starter?.media?.assetId;
+      setTimeout(() => toast("Importing the post…"), 300);
       void importPostUrl(postUrl).then((fields) => {
-        if (useSceneStore.getState().scene.id !== scene.id) return;
+        const st = useSceneStore.getState();
+        const layer = st.scene.layers.find((item): item is MockupLayer => item.id === "layer-template" && item.type === "mockup");
+        if (st.scene.id !== scene.id || !layer?.media) return;
+        if (layer.media.assetId !== starterId) {
+          // the user started editing while it loaded — don't overwrite their work
+          toast("Post loaded — paste the link in the Post URL panel to apply it");
+          return;
+        }
+        const post = decodeScreenAsset(layer.media.assetId);
+        if (post?.app !== "social") return;
+        const assetId = encodeScreenAsset({ ...post, commentList: [], ...fields, standalone: true } as SocialPostDoc);
+        const look = CARD_LOOKS.social;
+        const scale = fitCardScale(assetId, st.scene.canvas.width, st.scene.canvas.height, look.fill);
+        st.updateLayer("layer-template", (item) =>
+          item.type !== "mockup" || !item.media
+            ? item
+            : { ...item, media: { ...item.media, assetId }, transform: { ...item.transform, scale: scale ?? item.transform.scale } }
+        );
+        toast(fields.name ? `Imported ${fields.name}'s post ✓` : "Imported the post ✓");
+      }).catch((error: unknown) => {
+        // keep the editable starter card, and remember the link so the Post URL
+        // panel is prefilled for a retry
+        toast(error instanceof Error ? error.message : "That post couldn't be imported");
         useSceneStore.getState().updateLayer("layer-template", (item) => {
-          if (item.type !== "mockup" || !item.media) return item;
+          if (item.type !== "mockup" || !item.media || item.media.assetId !== starterId) return item;
           const post = decodeScreenAsset(item.media.assetId);
           if (post?.app !== "social") return item;
-          return {
-            ...item,
-            media: {
-              ...item.media,
-              assetId: encodeScreenAsset({ ...post, ...fields, standalone: true } as SocialPostDoc),
-            },
-          };
+          return { ...item, media: { ...item.media, assetId: encodeScreenAsset({ ...post, sourceUrl: postUrl }) } };
         });
-      }).catch(() => {
-        // Keep the editable starter card visible; the URL remains available in
-        // the Screen Studio importer so the user can retry or correct it.
       });
     }
   }, [meta, search]);
 
-  if (!meta && !appTemplate) return notFound();
+  if (!meta && !appTemplate && !premium) return notFound();
   return <EditorShell fromTemplate />;
 }

@@ -97,7 +97,7 @@ export default async function PressPage({ params }: { params: Promise<{ slug: st
           </div>
           <div className="mt-7 flex flex-wrap gap-3">
             {links.map((l) => (
-              <a key={l.label} href={l.href} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-[13px] font-semibold hover:bg-white/10">
+              <a key={l.label} href={l.href} target="_blank" rel="noopener nofollow ugc" className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-[13px] font-semibold hover:bg-white/10">
                 {l.label} <ArrowUpRight size={13} />
               </a>
             ))}
@@ -134,7 +134,7 @@ export default async function PressPage({ params }: { params: Promise<{ slug: st
                 <p className="text-[13.5px] font-semibold">App icon</p>
                 <p className="text-[11.5px] text-zinc-500">High-resolution PNG</p>
               </div>
-              <a href={doc.icon} download target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-[12px] font-semibold hover:bg-white/10">
+              <a href={doc.icon} download target="_blank" rel="noopener nofollow ugc" className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-[12px] font-semibold hover:bg-white/10">
                 <Download size={13} /> Download
               </a>
             </div>
@@ -142,7 +142,7 @@ export default async function PressPage({ params }: { params: Promise<{ slug: st
           {doc.screenshots.length > 0 && (
             <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
               {doc.screenshots.map((url, i) => (
-                <a key={i} href={url} target="_blank" rel="noopener" className="group overflow-hidden rounded-xl border border-white/10 bg-[#101014]">
+                <a key={i} href={url} target="_blank" rel="noopener nofollow ugc" className="group overflow-hidden rounded-xl border border-white/10 bg-[#101014]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={url} alt={`${doc.appName} screenshot ${i + 1}`} loading="lazy" className="aspect-[9/16] w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
                 </a>

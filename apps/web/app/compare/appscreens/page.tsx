@@ -3,25 +3,14 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
-import { SITE_URL } from "@/lib/site";
+import { socialMeta } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "AppScreens Alternative — Free App Store Screenshot Generator",
-  description:
-    "Comparing AppScreens and MockFrame for App Store screenshots? See how the two generators differ on pricing, AI caption writing, export workflow and what's included free — and which fits your release.",
-  keywords: [
-    "appscreens alternative",
-    "appscreens app store screenshot generator",
-    "app store screenshot generator",
-    "free app store screenshot generator",
-    "appscreens vs mockframe",
-  ],
-  alternates: { canonical: `${SITE_URL}/compare/appscreens` },
-  openGraph: {
-    title: "AppScreens vs MockFrame — App Store screenshot generators compared",
-    description: "Pricing, AI captions, export workflow and free tiers compared side by side.",
-    url: `${SITE_URL}/compare/appscreens`,
-  },
+  title: "AppScreens Alternative: Free Store Screenshots",
+  description: "AppScreens vs MockFrame for App Store screenshots: pricing, AI captions, export workflow and what's free, compared side by side.",
+  keywords: ["appscreens alternative", "appscreens app store screenshot generator", "app store screenshot generator", "free app store screenshot generator", "appscreens vs mockframe"],
+  alternates: { canonical: "/compare/appscreens" },
+  ...socialMeta({ path: "/compare/appscreens", title: "AppScreens Alternative: Free Store Screenshots — MockFrame", description: "AppScreens vs MockFrame for App Store screenshots: pricing, AI captions, export workflow and what's free, compared side by side." }),
 };
 
 /**

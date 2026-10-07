@@ -3,23 +3,34 @@
 import { ingestFile } from "./assets";
 import type { SocialPostDoc } from "./screens";
 
-async function ingestAvatar(url: string) {
+/** Data URL (returned by /api/post) → a local asset id, or undefined. */
+async function ingestDataUrl(dataUrl: string, name: string) {
   try {
-    const response = await fetch(`/api/proxy-image?url=${encodeURIComponent(url)}`);
-    if (!response.ok) return undefined;
-    const blob = await response.blob();
-    return (await ingestFile(new File([blob], "post-avatar.jpg", { type: blob.type || "image/jpeg" }))).id;
+    const blob = await (await fetch(dataUrl)).blob();
+    return (await ingestFile(new File([blob], name, { type: blob.type || "image/jpeg" }))).id;
   } catch {
     return undefined;
   }
 }
 
+/**
+ * Import a public post into the post card's fields. Throws an Error with a
+ * user-facing message when the post can't be read.
+ */
 export async function importPostUrl(url: string): Promise<Partial<SocialPostDoc>> {
-  const response = await fetch(`/api/post?url=${encodeURIComponent(url.trim())}`);
-  const data = await response.json();
-  if (!response.ok) throw new Error(data?.error || "The post could not be imported");
-  const avatar = data.avatar ? await ingestAvatar(data.avatar) : undefined;
-  return {
+  let response: Response;
+  try {
+    response = await fetch(`/api/post?url=${encodeURIComponent(url.trim())}`);
+  } catch {
+    throw new Error("You seem to be offline — check your connection and try again");
+  }
+  const data = await response.json().catch(() => null);
+  if (!response.ok || !data) throw new Error(data?.error || "That post couldn't be imported — check the link and try again");
+  const [avatar, ...images] = await Promise.all([
+    data.avatar ? ingestDataUrl(data.avatar, "post-avatar.jpg") : Promise.resolve(undefined),
+    ...(Array.isArray(data.images) ? data.images : []).slice(0, 4).map((u: string, i: number) => ingestDataUrl(u, `post-photo-${i + 1}.jpg`)),
+  ]);
+  const fields: Partial<SocialPostDoc> = {
     network: data.provider,
     sourceLabel: data.sourceLabel,
     sourceUrl: data.sourceUrl,
@@ -30,8 +41,12 @@ export async function importPostUrl(url: string): Promise<Partial<SocialPostDoc>
     likes: data.likes,
     comments: data.comments,
     shares: data.shares,
-    avatar,
-    verified: false,
+    verified: !!data.verified,
+    showMetrics: data.hasMetrics !== false,
+    images: images.filter((id): id is string => !!id),
     standalone: true,
   };
+  // keep a photo the user already set when the provider gave none
+  if (avatar) fields.avatar = avatar;
+  return fields;
 }

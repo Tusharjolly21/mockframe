@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
+import { socialMeta } from "@/lib/site";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 
-export const metadata: Metadata = { title: "Changelog", description: "New workflows, fixes and platform updates in MockFrame.", alternates: { canonical: "/changelog" } };
+export const metadata: Metadata = {
+  title: "Changelog",
+  description: "Every MockFrame release in one place: new editor workflows, device mockups, templates, export options, fixes and platform updates.",
+  alternates: { canonical: "/changelog" },
+  ...socialMeta({ path: "/changelog", title: "Changelog — MockFrame", description: "Every MockFrame release in one place: new editor workflows, device mockups, templates, export options, fixes and platform updates." }),
+};
 
 const RELEASES = [
   { date: "July 14, 2026", title: "Workflows beyond the editor", items: ["Public screenshot Render API alpha", "Embeddable editor alpha", "Chrome capture and VS Code selection handoffs", "Practical guides and public pricing"] },

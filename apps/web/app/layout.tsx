@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
@@ -15,19 +15,24 @@ export const metadata: Metadata = {
     template: `%s — ${SITE_NAME}`,
   },
   description:
-    "Free device mockup generator. Drop any screenshot into a photoreal iPhone, MacBook or browser frame, add chat and app screens, style the scene, and export a share-ready image in seconds — no design tools, right in your browser.",
+    "Free device mockup generator. Drop any screenshot into a photoreal iPhone, MacBook or browser frame, style the scene and export a share-ready image in seconds.",
   applicationName: SITE_NAME,
   authors: [{ name: SITE_NAME, url: SITE_URL }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
   robots: { index: true, follow: true },
+  // no `url` here: it would be inherited as og:url by every page that doesn't
+  // set its own, pointing them all at the homepage (pages use socialMeta())
   openGraph: {
     siteName: SITE_NAME,
     type: "website",
-    url: SITE_URL,
     locale: "en_US",
   },
   twitter: { card: "summary_large_image" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#09090b",
 };
 
 /** Global Organization + WebSite JSON-LD — establishes the brand as an entity

@@ -41,12 +41,31 @@ export interface TemplateMeta {
 
 /** Premium device mockups, one card each inside their category. */
 export const SCENE_TEMPLATES: TemplateMeta[] = [
+  // iPhone
+  { slug: "iphone-in-hand", deviceId: "psd-composite-iphone-01", group: "iphone", label: "iPhone 17 Pro · In hand", blurb: "A real hand holding iPhone 17 Pro against a soft studio backdrop.", accent: "#c9b8a4" },
+  { slug: "iphone-in-hand-angled", deviceId: "psd-composite-iphone-02", group: "iphone", label: "iPhone 17 Pro · Angled in hand", blurb: "A relaxed, angled in-hand shot with natural light and a plant.", accent: "#c9b8a4" },
+  { slug: "iphone-16-pro-natural", deviceId: "iphone-16-pro-psd-natural-1", group: "iphone", label: "iPhone 16 Pro · Natural Titanium", blurb: "Photoreal front view with real titanium edges and buttons. 1206 × 2622.", accent: "#c9b8a4" },
+  { slug: "iphone-16-pro-desert", deviceId: "iphone-16-pro-psd-desert-2", group: "iphone", label: "iPhone 16 Pro · Desert Titanium", blurb: "A leaning Desert Titanium iPhone 16 Pro, photographed edges.", accent: "#c9b8a4" },
+  { slug: "iphone-16-pro-black", deviceId: "iphone-16-pro-psd-black-1", group: "iphone", label: "iPhone 16 Pro · Black Titanium", blurb: "Black Titanium front view — crisp for dark and light backgrounds.", accent: "#c9b8a4" },
+  { slug: "iphone-16-pro-white", deviceId: "iphone-16-pro-psd-white-2", group: "iphone", label: "iPhone 16 Pro · White Titanium", blurb: "A leaning White Titanium iPhone 16 Pro for bright, airy shots.", accent: "#c9b8a4" },
+  // iPad
   { slug: "ipad-floating", deviceId: "ipad-pro-2024-psd-silver-2", group: "ipad", label: "iPad Pro · Silver Flat", blurb: "A calibrated iPad Pro 2024 PSD scene with exact perspective and screen masking. 2752 × 2064.", accent: "#9fb4c9" },
   { slug: "ipad-angled", deviceId: "ipad-pro-2024-psd-silver-1", group: "ipad", label: "iPad Pro · Silver Angled", blurb: "A calibrated perspective iPad Pro scene extracted from the original PSD. 2752 × 2064.", accent: "#9fb4c9" },
   { slug: "ipad-tilted", deviceId: "ipad-pro-2024-psd-space-black-1", group: "ipad", label: "iPad Pro · Space Black Angled", blurb: "A dark iPad Pro scene with exact screen quadrilateral, mask and foreground. 2752 × 2064.", accent: "#9fb4c9" },
   { slug: "ipad-front-back", deviceId: "ipad-pro-2024-psd-space-black-2", group: "ipad", label: "iPad Pro · Space Black Flat", blurb: "A clean flat iPad Pro scene using the reusable layered PSD template. 2752 × 2064.", accent: "#9fb4c9" },
   // Mac
-  { slug: "macbook-pro-16", deviceId: "macbook-pro-16-mockup", group: "mac", label: "MacBook Pro 16″", blurb: "A clean front-on MacBook Pro 16″ (Space Gray). Drop in a 3456 × 2234 screenshot.", accent: "#c9c2b4" },
+  { slug: "macbook-air-realistic", deviceId: "macbook-air-13-psd-realistic", group: "mac", label: "MacBook Air 13 · Realistic", blurb: "A photoreal MacBook Air front view with a soft floor shadow. 2560 × 1664.", accent: "#c9c2b4" },
+  { slug: "macbook-air-clay", deviceId: "macbook-air-13-psd-clay", group: "mac", label: "MacBook Air 13 · Clay", blurb: "A matte clay MacBook Air — calm, editorial, distraction-free.", accent: "#c9c2b4" },
+  { slug: "macbook-air-vector", deviceId: "macbook-air-13-psd-vector", group: "mac", label: "MacBook Air 13 · Vector", blurb: "A crisp flat-vector MacBook Air for clean, modern layouts.", accent: "#c9c2b4" },
+  // Apple Watch
+  { slug: "watch-ultra-ocean", deviceId: "apple-watch-ultra-psd-midnight-2", group: "watch", label: "Watch Ultra · Midnight Ocean", blurb: "Apple Watch Ultra with the Midnight Ocean band, straight on. 410 × 502.", accent: "#c4b4c9" },
+  { slug: "watch-ultra-alpine", deviceId: "apple-watch-ultra-psd-orange-1", group: "watch", label: "Watch Ultra · Orange Alpine", blurb: "Three-quarter view with the Orange Alpine Loop. 410 × 502.", accent: "#c4b4c9" },
+  { slug: "watch-ultra-trail", deviceId: "apple-watch-ultra-psd-trail-3", group: "watch", label: "Watch Ultra · Yellow Trail", blurb: "Side angle with the Yellow/Beige Trail Loop. 410 × 502.", accent: "#c4b4c9" },
+  { slug: "watch-on-wrist", deviceId: "psd-composite-watch-01", group: "watch", label: "Apple Watch · On wrist", blurb: "A real on-wrist Apple Watch shot in soft daylight.", accent: "#c4b4c9" },
+  // Android
+  { slug: "galaxy-s24-ultra-gray", deviceId: "samsung-s24-ultra-psd-gray", group: "android", label: "Galaxy S24 Ultra · Titanium Gray", blurb: "A floating, angled Galaxy S24 Ultra in Titanium Gray. 1440 × 3120.", accent: "#a9c9b4" },
+  { slug: "galaxy-s24-ultra-black", deviceId: "samsung-s24-ultra-psd-black", group: "android", label: "Galaxy S24 Ultra · Titanium Black", blurb: "Titanium Black S24 Ultra with real photographed edges.", accent: "#a9c9b4" },
+  { slug: "galaxy-s24-ultra-yellow", deviceId: "samsung-s24-ultra-psd-yellow", group: "android", label: "Galaxy S24 Ultra · Titanium Yellow", blurb: "A bright Titanium Yellow S24 Ultra for colourful launches.", accent: "#a9c9b4" },
 ];
 
 /** Content cards (macOS/Safari window etc.), shown in their own row. */
@@ -69,6 +88,8 @@ const ALL = [...SCENE_TEMPLATES, ...TEMPLATES];
 export function templateBySlug(slug: string): TemplateMeta | undefined {
   // Old platform-specific post links now open the unified URL post template.
   if (slug === "x-post" || slug === "bluesky-post") return TEMPLATES.find((template) => template.slug === "post");
+  // the old low-res MacBook Pro 16 scene now opens its replacement
+  if (slug === "macbook-pro-16") return SCENE_TEMPLATES.find((template) => template.slug === "macbook-air-realistic");
   return ALL.find((t) => t.slug === slug);
 }
 
@@ -159,7 +180,8 @@ export const CARD_LOOKS: Record<TemplateApp, CardLook> = {
     css: "linear-gradient(160deg,#eef2ff,#c7d2fe 55%,#a5b4fc)",
   },
   "appstore-promo": {
-    width: 1440, height: 1080, fill: 0.86,
+    // full-bleed: the card is the whole App Store event-card graphic
+    width: 1920, height: 1080, fill: 1,
     background: linBg(160, ["#e9e9f2", "#cfd0e3"]),
     css: "linear-gradient(160deg,#e9e9f2,#cfd0e3)",
   },

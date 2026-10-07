@@ -310,6 +310,30 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
 
   // every setDoc stamps the platform the device dictates (per-app: iMessage
   // stays iOS even on an Android frame — it just isn't offered there)
+  // a promo format sets the card AND the canvas to the target size, so the
+  // export is exactly that format with the card filling it edge to edge
+  const applyPromoFormat = (next: AppStorePromoDoc) => {
+    // inside a phone the card is a screen: change its size only, not the canvas
+    if (layer.deviceId) return setDoc(next);
+    const width = next.cardWidth ?? 1920;
+    const height = next.cardHeight ?? 1080;
+    const assetId = encodeScreenAsset({ ...next, chrome: { ...next.chrome, platform: effectivePlatform(next.app, devPlatform) } });
+    const scale = fitCardScale(assetId, width, height, 1) ?? 1;
+    useSceneStore.getState().setScene((sc) => ({
+      ...sc,
+      canvas: { ...sc.canvas, width, height },
+      layers: sc.layers.map((l) =>
+        l.id !== layer.id || l.type !== "mockup"
+          ? l
+          : {
+              ...l,
+              transform: { ...l.transform, x: 0, y: 0, rotate: 0, tiltX: 0, tiltY: 0, scale },
+              media: { assetId, kind: "image" as const, fit: "cover" as const, offsetX: 0, offsetY: 0, scale: 1 },
+            }
+      ),
+    }));
+  };
+
   const setDoc = (next: ScreenDoc) =>
     updateLayer(layer.id, (l) => ({
       ...l,
@@ -513,7 +537,20 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       {doc.app === "story" && <StoryFields doc={doc} setDoc={setDoc} />}
       {doc.app === "github" && <GithubFields doc={doc} setDoc={setDoc} />}
       {doc.app === "stripe" && <StripeFields doc={doc} setDoc={setDoc} />}
-      {doc.app === "social" && <SocialFields doc={doc} setDoc={setDoc} />}
+      {doc.app === "social" && (
+        <SocialFields
+          doc={doc}
+          setDoc={setDoc}
+          refit={() => {
+            // a freshly imported post is a different size — re-fit the card to the canvas
+            const st = useSceneStore.getState();
+            const l = st.scene.layers.find((x) => x.id === layer.id);
+            if (l?.type !== "mockup" || l.deviceId !== null || !l.media) return;
+            const scale = fitCardScale(l.media.assetId, st.scene.canvas.width, st.scene.canvas.height, 0.8);
+            if (scale) updateLayer(layer.id, (x) => ({ ...x, transform: { ...x.transform, scale } }));
+          }}
+        />
+      )}
       {doc.app === "xpost" && <XPostFields doc={doc} setDoc={setDoc} />}
       {doc.app === "bluesky" && <BlueskyFields doc={doc} setDoc={setDoc} />}
       {doc.app === "testimonial" && <TestimonialFields doc={doc} setDoc={setDoc} />}
@@ -521,7 +558,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       {doc.app === "ios-notification" && <IosNotificationFields doc={doc} setDoc={setDoc} />}
       {doc.app === "spotify" && <SpotifyFields doc={doc} setDoc={setDoc} />}
       {doc.app === "appstore" && <AppStoreFields doc={doc} setDoc={setDoc} />}
-      {doc.app === "appstore-promo" && <AppStorePromoFields doc={doc as AppStorePromoDoc} setDoc={setDoc} />}
+      {doc.app === "appstore-promo" && <AppStorePromoFields doc={doc as AppStorePromoDoc} setDoc={setDoc} applyFormat={applyPromoFormat} />}
       {doc.app === "googlemaps" && <GoogleMapsFields doc={doc} setDoc={setDoc} />}
       {doc.app === "googleplay" && <GooglePlayFields doc={doc} setDoc={setDoc} />}
     </Section>
@@ -2371,19 +2408,26 @@ function CommentRows({ comments, onChange, handles }: { comments: PostComment[];
 /* ------------------------------- Social post --------------------------------- */
 
 const SOCIAL_NETS: SocialNetwork[] = ["facebook", "linkedin", "threads"];
+/** the standalone card draws every network's mark; the phone layout only knows these three */
+const CARD_NETS: SocialNetwork[] = ["x", "bluesky", "threads", "linkedin", "mastodon", "facebook"];
 
-function SocialFields({ doc, setDoc }: { doc: SocialPostDoc; setDoc: (d: ScreenDoc) => void }) {
-  const [importUrl, setImportUrl] = useState("");
+function SocialFields({ doc, setDoc, refit }: { doc: SocialPostDoc; setDoc: (d: ScreenDoc) => void; refit?: () => void }) {
+  const [importUrl, setImportUrl] = useState(doc.sourceUrl ?? "");
   const [importing, setImporting] = useState(false);
-  const networkOptions = Array.from(new Set<SocialNetwork>([doc.network, ...SOCIAL_NETS]));
+  // a link that arrived after mount (e.g. a failed /templates/post?url= import) prefills the box
+  useEffect(() => {
+    if (doc.sourceUrl) setImportUrl((cur) => cur || doc.sourceUrl!);
+  }, [doc.sourceUrl]);
+  const networkOptions = doc.standalone ? CARD_NETS : Array.from(new Set<SocialNetwork>([doc.network, ...SOCIAL_NETS]));
   const runImport = async () => {
     if (!importUrl.trim() || importing) return;
     setImporting(true);
     try {
       const fields = await importPostUrl(importUrl);
-      setDoc({ ...doc, ...fields, standalone: doc.standalone });
-      setImportUrl("");
-      toast("Post imported into a MockFrame card");
+      // drop the starter's sample replies and source label: the card is the imported post now
+      setDoc({ ...doc, commentList: [], ...fields, standalone: doc.standalone });
+      refit?.();
+      toast(fields.name ? `Imported ${fields.name}'s post ✓` : "Imported the post ✓");
     } catch (error) {
       toast(error instanceof Error ? error.message : "Post import failed");
     } finally {
@@ -2412,7 +2456,8 @@ function SocialFields({ doc, setDoc }: { doc: SocialPostDoc; setDoc: (d: ScreenD
         id="so-net"
         options={networkOptions.map((n) => ({ value: n, label: SOCIAL_LABELS[n] }))}
         value={doc.network}
-        onChange={(network) => setDoc({ ...doc, network })}
+        // the provider label follows the network so switching never leaves a stale "X" mark
+        onChange={(network) => setDoc({ ...doc, network, sourceLabel: SOCIAL_LABELS[network] })}
       />
       <div className="flex gap-2">
         <Field label="Name" value={doc.name} onChange={(name) => setDoc({ ...doc, name })} className="flex-1" />
@@ -2446,7 +2491,23 @@ function SocialFields({ doc, setDoc }: { doc: SocialPostDoc; setDoc: (d: ScreenD
           <NumField key={key} label={label} value={doc[key]} onChange={(n) => setDoc({ ...doc, [key]: n })} />
         ))}
       </div>
-      <CommentRows comments={doc.commentList ?? []} onChange={(commentList) => setDoc({ ...doc, commentList })} />
+      {doc.standalone ? (
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-xs text-[#6b6b76]">Likes, reposts & replies row</span>
+          <Toggle label={doc.showMetrics === false ? "Hidden" : "Shown"} on={doc.showMetrics !== false} onClick={() => setDoc({ ...doc, showMetrics: doc.showMetrics === false })} />
+        </div>
+      ) : (
+        <CommentRows comments={doc.commentList ?? []} onChange={(commentList) => setDoc({ ...doc, commentList })} />
+      )}
+      {doc.standalone && (doc.images?.length ?? 0) > 0 && (
+        <button
+          type="button"
+          onClick={() => setDoc({ ...doc, images: [] })}
+          className="fk-press mt-3 w-full rounded-lg border border-[#e4e4ec] bg-white px-2 py-1.5 text-[11px] font-semibold text-[#5a5a66] hover:border-[#17171c]"
+        >
+          Remove {doc.images!.length === 1 ? "the photo" : `the ${doc.images!.length} photos`}
+        </button>
+      )}
     </>
   );
 }
@@ -3383,14 +3444,71 @@ const PROMO_WEB_FRAMES: { value: PromoWebFrame; label: string }[] = [
   { value: "minimal", label: "Minimal" },
 ];
 
-function AppStorePromoFields({ doc, setDoc }: { doc: AppStorePromoDoc; setDoc: (d: ScreenDoc) => void }) {
+export const PROMO_FORMATS: { id: string; label: string; hint: string; width: number; height: number }[] = [
+  { id: "event", label: "App Store event", hint: "16:9", width: 1920, height: 1080 },
+  { id: "feature", label: "Play feature graphic", hint: "1024×500", width: 1024, height: 500 },
+  { id: "story", label: "Story / Reel", hint: "9:16", width: 1080, height: 1920 },
+  { id: "portrait", label: "Instagram post", hint: "4:5", width: 1080, height: 1350 },
+  { id: "square", label: "Square", hint: "1:1", width: 1080, height: 1080 },
+  { id: "producthunt", label: "Product Hunt", hint: "1270×760", width: 1270, height: 760 },
+  { id: "x", label: "X / LinkedIn", hint: "16:9", width: 1600, height: 900 },
+  { id: "classic", label: "Card", hint: "4:3", width: 1200, height: 900 },
+];
+
+function AppStorePromoFields({ doc, setDoc, applyFormat }: { doc: AppStorePromoDoc; setDoc: (d: ScreenDoc) => void; applyFormat: (d: AppStorePromoDoc) => void }) {
   const phoneDevices = listDevices().filter(d => d.category === "phone");
   const showcase = doc.showcase ?? "app";
   const showApp = showcase !== "web";
   const showWeb = showcase !== "app";
+  const stage = doc.layout === "stage";
+  const activeFormat =
+    PROMO_FORMATS.find((f) => f.width === (doc.cardWidth ?? 1200) && f.height === (doc.cardHeight ?? 900) && (!doc.format || doc.format === f.id)) ??
+    PROMO_FORMATS.find((f) => f.width === (doc.cardWidth ?? 1200) && f.height === (doc.cardHeight ?? 900));
 
   return (
     <>
+      <div className="mb-3">
+        <span className="mb-1 block text-xs text-[#6b6b76]">Format</span>
+        <div className="grid grid-cols-2 gap-1.5">
+          {PROMO_FORMATS.map((f) => {
+            const active = activeFormat?.id === f.id;
+            const k = 22 / Math.max(f.width, f.height);
+            return (
+              <button
+                key={f.id}
+                aria-pressed={active}
+                onClick={() => applyFormat({ ...doc, format: f.id, cardWidth: f.width, cardHeight: f.height })}
+                className={`fk-tile flex items-center gap-2 rounded-lg border px-2 py-1.5 text-left ${
+                  active ? "border-[#17171c] bg-[#17171c] text-white" : "border-[#e8e8ef] bg-white text-[#3a3a44] hover:border-[#c9c9d4]"
+                }`}
+              >
+                <span className="grid h-6 w-6 shrink-0 place-items-center">
+                  <span className={`block rounded-[3px] border-[1.5px] ${active ? "border-white" : "border-[#9a9aa4]"}`} style={{ width: f.width * k, height: f.height * k }} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[10.5px] font-semibold leading-tight">{f.label}</span>
+                  <span className={`block text-[9.5px] tabular-nums leading-tight ${active ? "text-white/60" : "text-[#9a9aa4]"}`}>
+                    {f.width} × {f.height} · {f.hint}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-1.5 text-[10px] leading-relaxed text-[#b0b0ba]">Sets the canvas too, so the export is exactly this size.</p>
+      </div>
+      <div className="mb-3">
+        <span className="mb-1 block text-xs text-[#6b6b76]">Style</span>
+        <Seg
+          id="promo-layout"
+          options={[
+            { value: "stage", label: "Launch stage" },
+            { value: "classic", label: "Classic card" },
+          ]}
+          value={stage ? "stage" : "classic"}
+          onChange={(v) => setDoc({ ...doc, layout: v as AppStorePromoDoc["layout"] })}
+        />
+      </div>
       <div className="mb-3">
         <span className="mb-1 block text-xs text-[#6b6b76]">Show</span>
         <Seg id="promo-showcase" options={PROMO_SHOWCASE} value={showcase} onChange={(v) => setDoc({ ...doc, showcase: v as AppStorePromoDoc["showcase"] })} />
@@ -3398,10 +3516,24 @@ function AppStorePromoFields({ doc, setDoc }: { doc: AppStorePromoDoc; setDoc: (
           {showcase === "app" ? "Your app on a phone." : showcase === "web" ? "Your website in a browser window." : "Your website in a browser with the app on a phone in front."}
         </p>
       </div>
-      <div className="flex gap-2">
-        <Field label="App Title" value={doc.title} onChange={(title) => setDoc({ ...doc, title })} className="flex-1" placeholder="MockFrame" />
-        <Field label="Subtitle" value={doc.subtitle} onChange={(subtitle) => setDoc({ ...doc, subtitle })} className="flex-1" placeholder="Screenshot Studio" />
-      </div>
+      {stage && (
+        <>
+          <Field label="Headline" value={doc.subtitle} onChange={(subtitle) => setDoc({ ...doc, subtitle })} placeholder="Mockups that sell your app." />
+          <div className="mt-2 flex gap-2">
+            <Field label="App name" value={doc.title} onChange={(title) => setDoc({ ...doc, title })} className="flex-1" placeholder="MockFrame" />
+            <Field label="Category" value={doc.category ?? ""} onChange={(category) => setDoc({ ...doc, category })} className="flex-1" placeholder="Productivity" />
+          </div>
+          <div className="mt-2">
+            <Field label="Supporting line" value={doc.tagline ?? ""} onChange={(tagline) => setDoc({ ...doc, tagline })} placeholder="Optional — dropped first on small formats" />
+          </div>
+        </>
+      )}
+      {!stage && (
+        <div className="flex gap-2">
+          <Field label="App Title" value={doc.title} onChange={(title) => setDoc({ ...doc, title })} className="flex-1" placeholder="MockFrame" />
+          <Field label="Subtitle" value={doc.subtitle} onChange={(subtitle) => setDoc({ ...doc, subtitle })} className="flex-1" placeholder="Screenshot Studio" />
+        </div>
+      )}
       <div className="mt-2 flex gap-2">
         <Field label="Badge Text" value={doc.badgeText} onChange={(badgeText) => setDoc({ ...doc, badgeText })} className="flex-1" placeholder="App of the Day" />
         <Field label="Reviews Count" value={doc.reviewsCountText} onChange={(reviewsCountText) => setDoc({ ...doc, reviewsCountText })} className="flex-1" placeholder="12.4K ratings" />

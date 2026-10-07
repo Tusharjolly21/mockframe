@@ -512,8 +512,8 @@ BUILTIN_BACKGROUNDS["builtin:set-night"] = {
 };
 
 /* Sample app screens shipped with the store sets: builtin:sample/<app>/<ios|android>-NN */
-const SAMPLE_SIZE = { ios: { width: 1206, height: 2622 }, android: { width: 1277, height: 2852 } } as const;
-const SAMPLE_RE = /^builtin:sample\/([a-z0-9-]+)\/(ios|android)-(\d{2})$/;
+const SAMPLE_SIZE = { ios: { width: 1206, height: 2622 }, android: { width: 1277, height: 2852 }, desktop: { width: 2400, height: 1500 } } as const;
+const SAMPLE_RE = /^builtin:sample\/([a-z0-9-]+)\/(ios|android|desktop)-(\d{2})$/;
 
 function resolveSample(assetId: string): (ResolvedAsset & { label: string }) | undefined {
   const m = SAMPLE_RE.exec(assetId);

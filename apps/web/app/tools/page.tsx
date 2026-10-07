@@ -4,19 +4,14 @@ import { ArrowRight, Wand2 } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Reveal } from "@/components/marketing/Reveal";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_NAME, SITE_URL, socialMeta } from "@/lib/site";
 import { TOOL_PAGES, type ToolPage } from "@/lib/toolPages";
 
 export const metadata: Metadata = {
-  title: "Tools",
-  description:
-    "Every MockFrame generator in one place — website, code, X and Bluesky screenshots, App Store sets, and realistic WhatsApp, iMessage, Instagram, Telegram, Snapchat and Messenger chat mockups.",
+  title: "Free Screenshot & Mockup Tools",
+  description: "Website, code, X and Bluesky screenshots, App Store sets, and realistic WhatsApp, iMessage, Instagram and Telegram chat mockups — free to start.",
   alternates: { canonical: "/tools" },
-  openGraph: {
-    title: `Tools — ${SITE_NAME}`,
-    description: "Screenshot, capture and chat-mockup generators — free to start, no sign-up.",
-    url: "/tools",
-  },
+  ...socialMeta({ path: "/tools", title: "Free Screenshot & Mockup Tools — MockFrame", description: "Website, code, X and Bluesky screenshots, App Store sets, and realistic WhatsApp, iMessage, Instagram and Telegram chat mockups — free to start." }),
 };
 
 // Two clear buckets so the page reads as a browseable hierarchy (the anti-doorway

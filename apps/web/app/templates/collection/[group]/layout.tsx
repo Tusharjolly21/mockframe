@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { metaDescription, socialMeta } from "@/lib/site";
 import { SCENE_GROUPS } from "@/lib/sceneGroups";
 
 // Per-group metadata for the collection listing (the page is client-only). Each
@@ -9,12 +10,12 @@ export async function generateMetadata({ params }: { params: Promise<{ group: st
   const g = SCENE_GROUPS.find((x) => x.id === group);
   if (!g) return { title: "Templates" };
   const title = `${g.label} Mockup Templates`;
-  const description = `${g.blurb} Free ${g.label} mockup templates — drop in your screenshot and export a production-ready image, right in your browser.`;
+  const description = metaDescription(`${g.blurb} Free ${g.label} mockup templates — drop in your screenshot and export a production-ready image.`);
   return {
     title,
     description,
     alternates: { canonical: `/templates/collection/${g.id}` },
-    openGraph: { title: `${title} — MockFrame`, description, url: `/templates/collection/${g.id}` },
+    ...socialMeta({ path: `/templates/collection/${g.id}`, title: `${title} — MockFrame`, description }),
   };
 }
 

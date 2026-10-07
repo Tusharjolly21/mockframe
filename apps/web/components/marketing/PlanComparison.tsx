@@ -10,6 +10,7 @@ const GROUPS: { title: string; rows: [label: string, free: Cell, pro: Cell][] }[
       ["Every device frame and the full editor", true, true],
       ["Custom devices from your own photos", true, true],
       ["Backgrounds", "Core set", "Every collection"],
+      ["Premium layouts", "2 of 8", "All 8"],
       ["Website capture", "Visible area", "Full page"],
       ["Photoreal device renders", false, true],
     ],

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { socialMeta } from "@/lib/site";
 import { Check } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
@@ -8,8 +9,9 @@ import { Reveal } from "@/components/marketing/Reveal";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Start MockFrame free. Upgrade for watermark-free exports, custom branding, realistic renders, video, GIF, 4K and 6K output.",
+  description: "Start free with watermark-free exports. Pro adds the commercial license, premium layouts, 60 fps video up to 4K, realistic renders and team libraries.",
   alternates: { canonical: "/pricing" },
+  ...socialMeta({ path: "/pricing", title: "Pricing — MockFrame", description: "Start free with watermark-free exports. Pro adds the commercial license, premium layouts, 60 fps video up to 4K, realistic renders and team libraries." }),
 };
 
 const REASSURANCE = [

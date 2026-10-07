@@ -11,14 +11,19 @@ import { SCENE_GROUPS } from "@/lib/sceneGroups";
 // entirely. Instead we pin honest, per-content-group dates and bump the one
 // that changed when its content actually changes.
 const UPDATED = {
-  site: new Date("2026-07-16"), // marketing shell / homepage
-  tools: new Date("2026-07-30"), // removed duplicate app-store-screenshot tool page (301 → /app-store-screenshots), refreshed related links
-  packStudio: new Date("2026-07-30"), // "Free" in title + related links refresh
-  ai: new Date("2026-07-17"), // AI pack generator landing page
-  compare: new Date("2026-07-30"), // AppScreens comparison page
-  guides: new Date("2026-06-20"),
-  templates: new Date("2026-06-01"),
-  devices: new Date("2026-07-30"), // + Galaxy S24 Ultra
+  site: new Date("2026-10-07"), // homepage + marketing metadata refresh
+  pricing: new Date("2026-10-07"), // Pro commercial license, premium layouts, team libraries
+  legal: new Date("2026-10-07"), // /license created, privacy covers fonts + teams
+  tools: new Date("2026-10-07"), // tool copy (post import) + metadata refresh
+  launchKit: new Date("2026-10-07"),
+  packStudio: new Date("2026-10-07"), // title/description refresh
+  ai: new Date("2026-10-07"), // title/description refresh
+  compare: new Date("2026-10-07"), // title/description refresh
+  developers: new Date("2026-07-14"),
+  changelog: new Date("2026-07-14"),
+  guides: new Date("2026-10-07"), // rebuilt guides, retitled
+  templates: new Date("2026-10-07"), // premium layouts + photoreal collections
+  devices: new Date("2026-10-07"), // realistic mockups reorganised
   recorder: new Date("2026-10-07"), // auto-zoom screen recorder launch
 } as const;
 
@@ -31,18 +36,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/screen-recorder`, lastModified: UPDATED.recorder, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/compare/appscreens`, lastModified: UPDATED.compare, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/tools`, lastModified: UPDATED.tools, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${SITE_URL}/launch-kit`, lastModified: UPDATED.tools, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${SITE_URL}/chat`, lastModified: UPDATED.tools, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/launch-kit`, lastModified: UPDATED.launchKit, changeFrequency: "weekly", priority: 0.9 },
+    // /chat is intentionally omitted — a noindexed mobile builder (the WhatsApp / iMessage tool pages carry the SEO)
     { url: `${SITE_URL}/templates`, lastModified: UPDATED.templates, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${SITE_URL}/pricing`, lastModified: UPDATED.site, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${SITE_URL}/developers/api`, lastModified: UPDATED.site, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${SITE_URL}/developers/embed`, lastModified: UPDATED.site, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${SITE_URL}/developers/automations`, lastModified: UPDATED.site, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${SITE_URL}/extensions`, lastModified: UPDATED.site, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_URL}/pricing`, lastModified: UPDATED.pricing, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/developers/api`, lastModified: UPDATED.developers, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/developers/embed`, lastModified: UPDATED.developers, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/developers/automations`, lastModified: UPDATED.developers, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_URL}/extensions`, lastModified: UPDATED.developers, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/guides`, lastModified: UPDATED.guides, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${SITE_URL}/changelog`, lastModified: UPDATED.site, changeFrequency: "weekly", priority: 0.5 },
-    { url: `${SITE_URL}/privacy`, lastModified: UPDATED.site, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${SITE_URL}/license`, lastModified: UPDATED.site, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${SITE_URL}/changelog`, lastModified: UPDATED.changelog, changeFrequency: "weekly", priority: 0.5 },
+    { url: `${SITE_URL}/privacy`, lastModified: UPDATED.legal, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${SITE_URL}/license`, lastModified: UPDATED.legal, changeFrequency: "yearly", priority: 0.4 },
     // NOTE: /editor is intentionally omitted — it's noindex (an app screen).
   ];
 

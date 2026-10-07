@@ -1,28 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { PackStudio } from "@/components/pack/PackStudio";
-import { SITE_URL } from "@/lib/site";
+import { socialMeta } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Free App Store Screenshot Generator — every required size in one zip",
-  description:
-    "Free app screenshot generator and maker. Upload your app screenshots once and export App Store 6.9″ & 6.5″, Google Play phone screenshots and the feature graphic — framed, captioned, submission-ready. First pack free.",
-  keywords: [
-    "app store screenshot generator",
-    "app screenshot generator",
-    "app screenshot maker",
-    "ios app screenshot generator",
-    "app store screenshot creator",
-    "generate app screenshots",
-    "google play screenshot generator",
-    "app store screenshot sizes",
-  ],
-  alternates: { canonical: `${SITE_URL}/app-store-screenshots` },
-  openGraph: {
-    title: "App Store Screenshot Generator | MockFrame",
-    description: "Drop 3–10 screenshots, pick a style, download a submission-ready zip for both stores.",
-    url: `${SITE_URL}/app-store-screenshots`,
-  },
+  title: "Free App Store Screenshot Generator",
+  description: "Upload your screenshots once and export App Store 6.9″ and 6.5″, Google Play and feature graphic sizes — framed, captioned and ready to submit.",
+  keywords: ["app store screenshot generator", "app screenshot generator", "app screenshot maker", "ios app screenshot generator", "app store screenshot creator", "generate app screenshots", "google play screenshot generator", "app store screenshot sizes"],
+  alternates: { canonical: "/app-store-screenshots" },
+  ...socialMeta({ path: "/app-store-screenshots", title: "Free App Store Screenshot Generator — MockFrame", description: "Upload your screenshots once and export App Store 6.9″ and 6.5″, Google Play and feature graphic sizes — framed, captioned and ready to submit." }),
 };
 
 /** Required store sizes, kept in one place so copy and schema stay in sync. */
@@ -190,6 +177,7 @@ export default function AppStoreScreenshotsPage() {
           }),
         }}
       />
+      <MarketingFooter />
     </main>
   );
 }

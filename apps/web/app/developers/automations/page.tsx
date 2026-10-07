@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { socialMeta } from "@/lib/site";
 import Link from "next/link";
 import { ArrowRight, Workflow } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
@@ -6,8 +7,9 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 
 export const metadata: Metadata = {
   title: "Zapier and Make Automations",
-  description: "Connect MockFrame's render endpoint to Zapier Webhooks, Make HTTP modules and other automation tools.",
+  description: "Connect MockFrame's render endpoint to Zapier Webhooks, Make HTTP modules and other no-code tools to generate screenshot images automatically.",
   alternates: { canonical: "/developers/automations" },
+  ...socialMeta({ path: "/developers/automations", title: "Zapier and Make Automations — MockFrame", description: "Connect MockFrame's render endpoint to Zapier Webhooks, Make HTTP modules and other no-code tools to generate screenshot images automatically." }),
 };
 
 const tools = [

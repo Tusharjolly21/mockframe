@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import { socialMeta } from "@/lib/site";
 import Link from "next/link";
 import { ArrowRight, Braces, Check, TerminalSquare } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 
 export const metadata: Metadata = {
-  title: "Screenshot Render API Alpha",
-  description: "Generate styled screenshot cards from scripts, CI and automation using MockFrame's public SVG render API alpha.",
+  title: "Screenshot Render API (Alpha)",
+  description: "Generate styled screenshot cards from scripts, CI and automations with MockFrame's public SVG render API alpha — one HTTP request per image.",
   alternates: { canonical: "/developers/api" },
+  ...socialMeta({ path: "/developers/api", title: "Screenshot Render API (Alpha) — MockFrame", description: "Generate styled screenshot cards from scripts, CI and automations with MockFrame's public SVG render API alpha — one HTTP request per image." }),
 };
 
 const example = `const response = await fetch("https://mockframe.app/api/v1/render", {

@@ -26,6 +26,7 @@ import { TextAnimationControls } from "./TextAnimationControls";
 import { ClayControls, supportsClay } from "./ClayControls";
 import { isItalicOnly, nearestWeight, weightLabel, weightsFor } from "@/lib/fonts";
 import { ExportStep, StepFooter, StepNav } from "./StepFlow";
+import { AnnotationControls, AssetStickerControls, LayerHeader } from "./AnnotationInspector";
 
 
 /** Warn when a dropped screenshot's aspect badly mismatches the device screen —
@@ -94,6 +95,8 @@ export function LeftPanel() {
           <AnnotationControls layer={selected} />
         ) : selected?.type === "sticker" && "iconMask" in selected && selected.iconMask ? (
           <AppIconControls layer={selected} />
+        ) : selected?.type === "sticker" && "assetId" in selected ? (
+          <AssetStickerControls layer={selected} />
         ) : target ? (
           <>
             <PhoneSlots layers={mockups} activeId={target.id} onSelect={select} />
@@ -980,13 +983,14 @@ function TransformControls({ layer }: { layer: MockupLayer }) {
 /* ------------------------------ app-icon controls --------------------------- */
 
 type AppIconLayer = Extract<StickerLayer, { assetId: string }>;
-type AnnotationLayer = Extract<StickerLayer, { stickerId: string }>;
 
 function AppIconControls({ layer }: { layer: AppIconLayer }) {
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const set = (iconMask: "ios" | "android" | "square") =>
     updateLayer(layer.id, (l) => ({ ...(l as AppIconLayer), iconMask }));
   return (
+    <>
+    <LayerHeader layerId={layer.id} kind="Sticker" title="App icon" />
     <Section title="App icon">
       <p className="mb-3 text-[11px] leading-relaxed text-[#9a9aa4]">
         Your uploaded icon, masked for the store. Drag, scale &amp; rotate it right on the canvas.
@@ -1003,74 +1007,7 @@ function AppIconControls({ layer }: { layer: AppIconLayer }) {
         onChange={(v) => set(v as "ios" | "android" | "square")}
       />
     </Section>
-  );
-}
-
-function annotationLabel(id: string) {
-  if (id === "annot-arrow") return "Arrow";
-  if (id === "annot-highlight") return "Highlight";
-  if (id === "annot-redact") return "Redaction";
-  if (id === "annot-blur") return "Blur patch";
-  if (id.startsWith("annot-step-")) return "Step marker";
-  if (id.startsWith("annot-kbd-")) return "Shortcut bubble";
-  return "Annotation";
-}
-
-function AnnotationControls({ layer }: { layer: AnnotationLayer }) {
-  const updateLayer = useSceneStore((s) => s.updateLayer);
-  const patch = (p: Partial<AnnotationLayer>) => updateLayer(layer.id, (l) => ({ ...(l as AnnotationLayer), ...p }));
-  const tint = layer.tint ?? (layer.stickerId === "annot-redact" ? "#111111" : layer.stickerId === "annot-highlight" ? "#ffe066" : "#7c3aed");
-  return (
-    <Section title="Annotation">
-      <p className="mb-3 text-[11px] leading-relaxed text-[#9a9aa4]">
-        {annotationLabel(layer.stickerId)} layer. Drag it on the canvas; use the corner handles for size and the top handle for rotation.
-      </p>
-      <ColorRow label="Color" value={tint} onChange={(v) => patch({ tint: v })} />
-      {layer.stickerId.startsWith("annot-step-") && (
-        <>
-          <span className="mb-1.5 block text-xs text-[#6b6b76]">Number</span>
-          <div className="flex items-center gap-2">
-            {(() => {
-              const n = parseInt(layer.stickerId.slice("annot-step-".length), 10) || 1;
-              return (
-                <>
-                  <button
-                    onClick={() => patch({ stickerId: `annot-step-${Math.max(1, n - 1)}` })}
-                    className="fk-press grid h-8 w-8 place-items-center rounded-lg border border-[#e4e4ec] bg-white text-sm font-bold text-[#17171c] hover:border-[#17171c]"
-                  >
-                    −
-                  </button>
-                  <span className="min-w-8 text-center text-[13px] font-bold tabular-nums text-[#17171c]">{n}</span>
-                  <button
-                    onClick={() => patch({ stickerId: `annot-step-${Math.min(99, n + 1)}` })}
-                    className="fk-press grid h-8 w-8 place-items-center rounded-lg border border-[#e4e4ec] bg-white text-sm font-bold text-[#17171c] hover:border-[#17171c]"
-                  >
-                    +
-                  </button>
-                </>
-              );
-            })()}
-          </div>
-        </>
-      )}
-      {layer.stickerId.startsWith("annot-kbd-") && (
-        <>
-          <span className="mb-1.5 block text-xs text-[#6b6b76]">Keys — separate with +</span>
-          <input
-            value={layer.stickerId.slice("annot-kbd-".length)}
-            onChange={(e) => patch({ stickerId: `annot-kbd-${e.target.value}` })}
-            placeholder="⌘+K"
-            className="w-full rounded-xl border border-[#e4e4ec] bg-white px-3 py-2 text-sm text-[#17171c] focus:border-[#17171c] focus:outline-none"
-          />
-        </>
-      )}
-      {layer.stickerId === "annot-blur" && (
-        <>
-          <SliderRow label="Width" value={layer.size?.width ?? 360} min={80} max={900} onChange={(width) => patch({ size: { width, height: layer.size?.height ?? 118 } })} />
-          <SliderRow label="Height" value={layer.size?.height ?? 118} min={40} max={500} onChange={(height) => patch({ size: { width: layer.size?.width ?? 360, height } })} />
-        </>
-      )}
-    </Section>
+    </>
   );
 }
 
@@ -1084,6 +1021,7 @@ function TextControls({ layer }: { layer: TextLayer }) {
 
   return (
     <>
+    <LayerHeader layerId={layer.id} kind="Text" title={layer.content.split("\n")[0].trim().slice(0, 28) || "Text layer"} />
     <Section title="Text">
       <textarea
         value={layer.content}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { socialMeta } from "@/lib/site";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Clock, ListOrdered } from "lucide-react";
 import { GuideShot } from "@/components/marketing/GuideShot";
@@ -9,8 +10,9 @@ import { GUIDES } from "@/lib/guides";
 
 export const metadata: Metadata = {
   title: "Guides",
-  description: "Practical MockFrame guides: store listing sets, device mockups, content cards, website capture, batch exports and shared themes.",
+  description: "Step-by-step MockFrame guides: store listing sets, device mockups, content cards, full-page website capture, replay videos and team themes.",
   alternates: { canonical: "/guides" },
+  ...socialMeta({ path: "/guides", title: "Guides — MockFrame", description: "Step-by-step MockFrame guides: store listing sets, device mockups, content cards, full-page website capture, replay videos and team themes." }),
 };
 
 const minutes = (readTime: string) => Number.parseInt(readTime, 10) || 0;

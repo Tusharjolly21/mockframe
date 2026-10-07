@@ -39,18 +39,48 @@ const DEVICES: Device[] = [
 
 const byId = new Map(DEVICES.map((d) => [d.id, d]));
 
-// Legacy iPad scene IDs used simplified raster plates. Keep old drafts working
-// by resolving them to the calibrated PSD equivalents, while hiding the old
-// cards from every picker and gallery.
+// Retired device ids (simplified iPad plates, weak photo scenes). Keep old
+// drafts working by resolving them to the closest calibrated PSD scene, while
+// hiding the old cards from every picker and gallery.
 const LEGACY_DEVICE_REPLACEMENTS: Record<string, string> = {
   "ipad-floating": "ipad-pro-2024-psd-silver-2",
   "ipad-angle": "ipad-pro-2024-psd-silver-1",
   "ipad-duo": "ipad-pro-2024-psd-space-black-2",
   "ipad-tilt": "ipad-pro-2024-psd-space-black-1",
+  // retired photo scenes: low-res plate, a broken composite, and a "violet"
+  // plate that was a byte-identical copy of the gray one
+  "macbook-pro-16-mockup": "macbook-air-13-psd-realistic",
+  "psd-composite-watch-02": "psd-composite-watch-01",
+  "samsung-s24-ultra-psd-violet": "samsung-s24-ultra-psd-gray",
 };
+// A replacement with a different screen size is resolved as a scaled copy, so
+// a saved layer keeps the on-canvas size it had with the retired device.
+const LEGACY_SCREEN_WIDTH: Record<string, number> = {
+  "macbook-pro-16-mockup": 1496,
+};
+
+function scaledDevice(d: Device, k: number): Device {
+  const rect = (r: { x: number; y: number; width: number; height: number }) => ({ x: r.x * k, y: r.y * k, width: r.width * k, height: r.height * k });
+  return {
+    ...d,
+    frame: { ...d.frame, width: d.frame.width * k, height: d.frame.height * k, screenRect: rect(d.frame.screenRect) },
+    plate: d.plate
+      ? {
+          ...d.plate,
+          width: d.plate.width * k,
+          height: d.plate.height * k,
+          screenRect: rect(d.plate.screenRect),
+          screenQuad: d.plate.screenQuad?.map(([x, y]) => [x * k, y * k]) as typeof d.plate.screenQuad,
+        }
+      : d.plate,
+  };
+}
+
 for (const [legacyId, replacementId] of Object.entries(LEGACY_DEVICE_REPLACEMENTS)) {
   const replacement = byId.get(replacementId);
-  if (replacement) byId.set(legacyId, replacement);
+  if (!replacement) continue;
+  const targetW = LEGACY_SCREEN_WIDTH[legacyId];
+  byId.set(legacyId, targetW ? scaledDevice(replacement, targetW / replacement.frame.screenRect.width) : replacement);
 }
 
 /**
