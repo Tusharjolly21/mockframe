@@ -60,23 +60,13 @@ export function renderIMessage(
 
   const parts: string[] = [`<rect width="${SW}" height="${SH}" fill="${c.bg}"/>`];
 
-  /* header */
-  const HEADER_H = 128;
-  parts.push(
-    `<rect width="${SW}" height="${HEADER_H}" fill="${c.headerBg}"/>`,
-    `<rect y="${HEADER_H - 0.5}" width="${SW}" height="0.5" fill="${c.hairline}"/>`,
-    statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.text, platform }),
-    // back chevron
-    `<path d="M28 76 l-10 11 10 11" fill="none" stroke="${c.blue}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`,
-    avatar(doc.contact, SW / 2, 84, 23, "im", avatarUrl),
-    textBlock([doc.contact], { x: SW / 2 - 4, y: 121, size: 11.5, lineHeight: 13, color: c.text, weight: 500, anchor: "middle" }),
-    `<path d="M${SW / 2 + textWidth(doc.contact, 11.5) / 2 + 3} 113 l4.5 4.5 -4.5 4.5" fill="none" stroke="${c.subtle}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`,
-    videoIcon(SW - 37, 84, 26, c.blue)
-  );
+  /* header — iOS 26: no bar; the thread scrolls under a soft fade, with glass
+     buttons either side of the contact photo and a name capsule beneath it */
+  const HEADER_H = 146;
 
   /* conversation (scrolls to bottom when taller than the band) */
   const bodyStart = parts.length;
-  let y = HEADER_H + 18;
+  let y = HEADER_H + 10;
   if (doc.showHeader) {
     parts.push(
       `<text font-family="${font}" font-size="11" text-anchor="middle" x="${SW / 2}" y="${y}"><tspan font-weight="600" fill="${c.subtle}">iMessage</tspan></text>`,
@@ -184,7 +174,27 @@ export function renderIMessage(
   }
 
   const body = parts.splice(bodyStart);
-  parts.push(scrollBody(body.join("\n"), { top: HEADER_H, bottom: SH - 94, contentBottom: y }));
+  parts.push(scrollBody(body.join("\n"), { top: 0, bottom: SH - 94, contentBottom: y }));
+
+  // scroll-edge fade, then the floating header controls on top
+  const fadeId = "imfade";
+  parts.push(
+    `<defs><linearGradient id="${fadeId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.bg}" stop-opacity="1"/><stop offset="0.86" stop-color="${c.bg}" stop-opacity="1"/><stop offset="1" stop-color="${c.bg}" stop-opacity="0"/></linearGradient></defs>`,
+    `<rect width="${SW}" height="${HEADER_H + 14}" fill="url(#${fadeId})"/>`,
+    statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.text, platform }),
+    glassCircle(38, 84, 22, dark),
+    `<path d="M${41.5} 75 l-9 9 9 9" fill="none" stroke="${c.text}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`,
+    glassCircle(SW - 38, 84, 22, dark),
+    videoIcon(SW - 37, 84, 21, c.text),
+    avatarUrl ? avatar(doc.contact, SW / 2, 82, 27, "im", avatarUrl) : monogram(doc.contact, SW / 2, 82, 27)
+  );
+  const nameW = textWidth(doc.contact, 12.5);
+  const capW = nameW + 34;
+  parts.push(
+    glassCapsule(SW / 2 - capW / 2, 116, capW, 24, dark),
+    textBlock([doc.contact], { x: SW / 2 - 6, y: 132.5, size: 12.5, lineHeight: 14, color: c.text, weight: 600, anchor: "middle" }),
+    `<path d="M${(SW / 2 + nameW / 2 + 2).toFixed(1)} 124.5 l4 3.8 -4 3.8" fill="none" stroke="${c.subtle}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`
+  );
 
   /* input bar — iOS 26 liquid glass: floating pill, + button, mic in-field */
   const iy = SH - 70;
@@ -205,4 +215,28 @@ function bubbleTail(mine: boolean, x: number, bottom: number, fill: string): str
   return mine
     ? `<path d="M${x - 6} ${bottom - 14} c 1.5 8 5 11 10 13 c -7 1.5 -13 -1 -16 -5 Z" fill="${fill}"/>`
     : `<path d="M${x + 6} ${bottom - 14} c -1.5 8 -5 11 -10 13 c 7 1.5 13 -1 16 -5 Z" fill="${fill}"/>`;
+}
+
+/* ------------------------------ iOS 26 chrome -------------------------------- */
+
+function glassCircle(cx: number, cy: number, r: number, dark: boolean): string {
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${dark ? "rgba(44,44,48,0.82)" : "rgba(255,255,255,0.86)"}" stroke="${dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.05)"}" stroke-width="0.8" style="filter:drop-shadow(0 3px 10px ${dark ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.12)"})"/>`;
+}
+
+function glassCapsule(x: number, y: number, w: number, h: number, dark: boolean): string {
+  return `<rect x="${x.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="${h / 2}" fill="${dark ? "rgba(44,44,48,0.82)" : "rgba(255,255,255,0.86)"}" stroke="${dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.05)"}" stroke-width="0.8" style="filter:drop-shadow(0 3px 10px ${dark ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.1)"})"/>`;
+}
+
+/** Contacts with no photo: Apple's grey gradient disc with white letters
+ *  (letters only, so "Jordan 🎭" reads "J", never "J🎭"). */
+function monogram(name: string, cx: number, cy: number, r: number): string {
+  const words = name.split(/\s+/).filter((w) => /^\p{L}/u.test(w));
+  const letters = ((words[0] ? [...words[0]][0] : "") + (words.length > 1 ? [...words[words.length - 1]][0] : "")).toUpperCase();
+  return (
+    `<defs><linearGradient id="immono" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a5aab7"/><stop offset="1" stop-color="#858a96"/></linearGradient></defs>` +
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#immono)"/>` +
+    (letters
+      ? `<text font-family="ui-rounded,'SF Pro Rounded',-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="${(r * 0.86).toFixed(1)}" font-weight="500" fill="#ffffff" text-anchor="middle" x="${cx}" y="${(cy + r * 0.31).toFixed(1)}">${esc(letters)}</text>`
+      : `<circle cx="${cx}" cy="${(cy - r * 0.2).toFixed(1)}" r="${(r * 0.34).toFixed(1)}" fill="#ffffff"/><path d="M${cx - r * 0.6} ${cy + r * 0.62} a${r * 0.6} ${r * 0.5} 0 0 1 ${r * 1.2} 0" fill="#ffffff"/>`)
+  );
 }

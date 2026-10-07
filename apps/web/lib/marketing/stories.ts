@@ -3,8 +3,8 @@ import type { ScreenDoc } from "@/lib/screens";
 /**
  * Original fictional scripts for the marketing homepage — each a different app
  * so the row reads as real screenshots of real apps: WhatsApp (Android /
- * Samsung), Tinder, iMessage. Chat docs play live via <LiveChatStory>; the
- * Tinder card is a static profile. All fiction, written from scratch.
+ * Samsung), Tinder, iMessage. All three play live via <LiveChatStory>. All
+ * fiction, written from scratch.
  */
 
 export interface HomeStory {
@@ -48,21 +48,28 @@ export const HOME_STORIES: HomeStory[] = [
   {
     id: "the-match",
     eyebrow: "Tinder",
-    title: "The perfect match",
+    title: "The park date",
     blurb:
-      "Style a dating-app profile down to the bio and the swipe row — one of dozens of pixel-accurate app screens you can fake in seconds.",
+      "Two matches skip the small talk and plan a first date around the one thing they agree on: a golden retriever called Biscuit.",
     notch: "island",
     doc: {
       app: "dating",
+      mode: "chat",
       chrome: { time: "9:41", battery: 100 },
       brand: "tinder",
       name: "Priya",
       age: 27,
       verified: true,
-      job: "Product Designer",
-      distance: "2 miles away",
-      bio: "Designs by day, climbs by weekend. Will judge your coffee order (lovingly). Dog is non-negotiable 🐕",
-      interests: ["Design", "Climbing", "Coffee", "Travel", "Dogs"],
+      messages: [
+        { from: "them", text: "ok your third photo. is that a golden retriever or a small bear" },
+        { from: "me", text: "That's Biscuit. He's both" },
+        { from: "them", text: "I'm going to need to meet Biscuit" },
+        { from: "me", text: "He doesn't do dinners. Strictly park walks" },
+        { from: "them", text: "Saturday 10am, the park by the lake?" },
+        { from: "me", text: "Biscuit has accepted 🐾" },
+        { from: "them", text: "and you?" },
+        { from: "me", text: "Obviously. I'm his ride" },
+      ],
     },
   },
   {

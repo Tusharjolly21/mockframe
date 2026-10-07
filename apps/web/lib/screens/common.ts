@@ -153,7 +153,7 @@ export function statusBar(opts: { time: string; battery: number; color: string; 
 
   if (platform === "android") {
     // time top-left, smaller; filled wifi fan; Material vertical battery
-    const wx = SW - 68;
+    const wx = SW - 84;
     const wifi = `<path d="M${wx} ${B - 1} L${wx - 8.5} ${B - 10.5} A 12.5 12.5 0 0 1 ${wx + 8.5} ${B - 10.5} Z" fill="${color}"/>`;
     const bxx = SW - 34, byy = B - 14;
     const bh = 15, fillH = Math.max(2, (bh - 3) * Math.min(100, Math.max(0, battery)) / 100);
@@ -161,10 +161,13 @@ export function statusBar(opts: { time: string; battery: number; color: string; 
       `<rect x="${bxx + 2.5}" y="${byy - 2}" width="4" height="2.4" rx="1" fill="${color}"/>` +
       `<rect x="${bxx}" y="${byy}" width="9" height="${bh}" rx="2.2" fill="none" stroke="${color}" stroke-width="1.3" stroke-opacity="0.55"/>` +
       `<rect x="${bxx + 1.5}" y="${byy + bh - 1.5 - fillH}" width="6" height="${fillH}" rx="1.2" fill="${dim}"/>`;
+    // cellular: a solid right triangle (Material), not iOS's stepped bars
+    const sx = SW - 66;
+    const signal = `<path d="M${sx + 14} ${B - 15} V${B - 1} H${sx} Z" fill="${color}"/>`;
     return `
 <text font-family="${ANDROID_FONT}" font-size="14.5" font-weight="500" fill="${color}" x="22" y="${B - 1}">${time}</text>
-<g fill="${color}">${bars}</g>
 ${wifi}
+${signal}
 ${bat}`;
   }
 
@@ -226,6 +229,13 @@ export function homeIndicator(color: string, platform: Platform = "ios"): string
   return platform === "android"
     ? `<rect x="${SW / 2 - 54}" y="${SH - 11}" width="108" height="4" rx="2" fill="${color}"/>`
     : `<rect x="${SW / 2 - 67}" y="${SH - 12}" width="134" height="5" rx="2.5" fill="${color}"/>`;
+}
+
+/** A 24-unit icon path (Material Symbols geometry) centered at cx,cy. */
+export function glyph(path: string, cx: number, cy: number, size: number, color: string, rotate = 0): string {
+  const s = size / 24;
+  const rot = rotate ? ` rotate(${rotate} 12 12)` : "";
+  return `<path d="${path}" fill="${color}" transform="translate(${(cx - size / 2).toFixed(1)} ${(cy - size / 2).toFixed(1)}) scale(${s.toFixed(3)})${rot}"/>`;
 }
 
 /* --------------------------------- avatars ----------------------------------- */

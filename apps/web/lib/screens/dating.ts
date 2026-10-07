@@ -1,6 +1,6 @@
 "use client";
 
-import { esc, homeIndicator, initials, SH, statusBar, SW, textWidth, wrapText, avatar, scrollBody, bubbleBaseline, textBlock as baseTextBlock } from "./common";
+import { esc, homeIndicator, initials, SH, statusBar, SW, textWidth, typingDots, wrapText, avatar, scrollBody, bubbleBaseline, textBlock as baseTextBlock } from "./common";
 import { fontFor } from "./fonts";
 import type { DatingBrand, DatingDoc } from "./types";
 
@@ -278,10 +278,10 @@ function rewindIcon(cx: number, cy: number, r: number, color: string): string {
 }
 
 function renderDatingChat(doc: DatingDoc, avatarUrl?: string): string {
+  if (doc.brand === "tinder") return renderTinderChat(doc, avatarUrl);
   const platform = doc.chrome.platform ?? "ios";
   const font = fontFor("dating", platform);
   const dark = !!doc.chrome.dark;
-  const brand = doc.brand;
   
   const c = {
     bg: dark ? "#000000" : "#ffffff",
@@ -292,85 +292,50 @@ function renderDatingChat(doc: DatingDoc, avatarUrl?: string): string {
     textTertiary: dark ? "rgba(255,255,255,0.4)" : "rgba(17,24,39,0.4)",
     incoming: dark ? "#212124" : "#f1f1f7",
     incomingText: dark ? "#ffffff" : "#111827",
-    accent: brand === "tinder" ? "#fd267a" : "#ffb800",
+    accent: "#ffb800",
   };
 
   const parts: string[] = [`<rect width="${SW}" height="${SH}" fill="${c.bg}"/>`];
-  parts.push(statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.textPrimary, platform }));
 
-  // Header area
+  // Header area (status bar drawn on top of it, not under)
   const HEADER_H = 120;
   parts.push(`<rect width="${SW}" height="${HEADER_H}" fill="${c.headerBg}"/>`);
   parts.push(`<rect y="${HEADER_H - 0.5}" width="${SW}" height="0.5" fill="${c.hairline}"/>`);
+  parts.push(statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.textPrimary, platform }));
 
   // Back chevron
-  if (brand === "tinder") {
-    parts.push(`<path d="M22 78 l-8 8 l8 8" fill="none" stroke="#8e8e93" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`);
-  } else {
-    parts.push(`<path d="M22 75 l-8 8 l8 8" fill="none" stroke="${c.accent}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`);
+  parts.push(`<path d="M22 75 l-8 8 l8 8" fill="none" stroke="${c.accent}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`);
+
+  // Bumble style: Left-aligned avatar, name and status subtitle next to it
+  const avatarX = 54;
+  const avatarY = 82;
+  parts.push(avatar(doc.name, avatarX, avatarY, 20, "dt", avatarUrl));
+
+  // Name + Verified
+  const nameX = 86;
+  const nameY = 78;
+  parts.push(
+    `<text font-family="${font}" font-size="15" font-weight="700" fill="${c.textPrimary}" x="${nameX}" y="${nameY}">${esc(doc.name)}</text>`
+  );
+  if (doc.verified) {
+    const nameWidth = textWidth(doc.name, 15);
+    parts.push(verifiedBadge(nameX + nameWidth + 4, nameY - 14));
   }
+  // Subtitle
+  parts.push(
+    `<text font-family="${font}" font-size="11.5" font-weight="500" fill="#00e2a0" x="${nameX}" y="${nameY + 16}">Active today</text>`
+  );
 
-  if (brand === "tinder") {
-    // Tinder style: Center-aligned avatar, name below it
-    const avatarX = SW / 2;
-    const avatarY = 66;
-    parts.push(avatar(doc.name, avatarX, avatarY, 20, "dt", avatarUrl));
-    
-    // Verified badge
-    const nameWidth = textWidth(doc.name, 12);
-    const nameY = 100;
-    parts.push(
-      `<text font-family="${font}" font-size="12" font-weight="600" fill="${c.textPrimary}" text-anchor="middle" x="${avatarX}">${esc(doc.name)}</text>`
-    );
-    if (doc.verified) {
-      parts.push(verifiedBadge(avatarX + nameWidth / 2 + 4, nameY - 10));
-    }
-
-    // Header Right controls: Blue shield, video icon
-    const iconColor = "#007aff";
-    parts.push(`
-      <g transform="translate(${SW - 44}, 62)" stroke="${iconColor}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      </g>
-    `);
-    parts.push(`
-      <g transform="translate(${SW - 88}, 62)" stroke="${iconColor}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M23 7l-7 5 7 5V7z"/>
-        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-      </g>
-    `);
-  } else {
-    // Bumble style: Left-aligned avatar, name and status subtitle next to it
-    const avatarX = 54;
-    const avatarY = 82;
-    parts.push(avatar(doc.name, avatarX, avatarY, 20, "dt", avatarUrl));
-
-    // Name + Verified
-    const nameX = 86;
-    const nameY = 78;
-    parts.push(
-      `<text font-family="${font}" font-size="15" font-weight="700" fill="${c.textPrimary}" x="${nameX}" y="${nameY}">${esc(doc.name)}</text>`
-    );
-    if (doc.verified) {
-      const nameWidth = textWidth(doc.name, 15);
-      parts.push(verifiedBadge(nameX + nameWidth + 4, nameY - 14));
-    }
-    // Subtitle
-    parts.push(
-      `<text font-family="${font}" font-size="11.5" font-weight="500" fill="#00e2a0" x="${nameX}" y="${nameY + 16}">Active today</text>`
-    );
-
-    // Call controls (Video and Phone) on the right
-    parts.push(`
-      <g transform="translate(${SW - 44}, 68)" stroke="${c.accent}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-      </g>
-      <g transform="translate(${SW - 88}, 68)" stroke="${c.accent}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M23 7l-7 5 7 5V7z"/>
-        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-      </g>
-    `);
-  }
+  // Call controls (Video and Phone) on the right
+  parts.push(`
+    <g transform="translate(${SW - 44}, 68)" stroke="${c.accent}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+    </g>
+    <g transform="translate(${SW - 88}, 68)" stroke="${c.accent}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M23 7l-7 5 7 5V7z"/>
+      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+    </g>
+  `);
 
   // Render Messages
   const bodyStart = parts.length;
@@ -387,7 +352,7 @@ function renderDatingChat(doc: DatingDoc, avatarUrl?: string): string {
   for (let i = 0; i < msgs.length; i++) {
     const m = msgs[i];
     const mine = m.from === "me";
-    const availableWidth = brand === "tinder" && !mine ? BUBBLE_MAX - 52 : BUBBLE_MAX;
+    const availableWidth = BUBBLE_MAX;
     const lines = wrapText(m.text || " ", FONT_SIZE, availableWidth - PAD_X * 2);
     const w = Math.min(
       availableWidth,
@@ -395,34 +360,10 @@ function renderDatingChat(doc: DatingDoc, avatarUrl?: string): string {
     );
     const h = lines.length * LINE_H + PAD_Y * 2;
     
-    let x = MARGIN;
-    if (mine) {
-      x = SW - MARGIN - w;
-    } else if (brand === "tinder") {
-      x = 52;
-    }
+    const x = mine ? SW - MARGIN - w : MARGIN;
 
-    // Bubbles styling
-    let bubbleFill = "";
-    let textColor = "";
-
-    if (mine) {
-      if (brand === "tinder") {
-        bubbleFill = "#1eb8ff"; // Tinder reference screenshot solid cyan-blue
-        textColor = "#ffffff";
-      } else {
-        bubbleFill = "#ffce34"; // Bumble yellow
-        textColor = "#1e1e24";
-      }
-    } else {
-      bubbleFill = c.incoming;
-      textColor = c.incomingText;
-    }
-
-    // Render small circular avatar for Tinder incoming messages
-    if (brand === "tinder" && !mine) {
-      parts.push(avatar(doc.name, 28, y + h - 14, 14, "dt", avatarUrl));
-    }
+    const bubbleFill = mine ? "#ffce34" : c.incoming; // Bumble yellow
+    const textColor = mine ? "#1e1e24" : c.incomingText;
 
     const isGroupEnd = i === msgs.length - 1 || msgs[i + 1].from !== m.from;
 
@@ -442,7 +383,7 @@ function renderDatingChat(doc: DatingDoc, avatarUrl?: string): string {
   }
 
   const body = parts.splice(bodyStart);
-  const inputHeight = brand === "tinder" ? 120 : 80;
+  const inputHeight = 80;
   parts.push(scrollBody(body.join("\n"), { top: HEADER_H, bottom: SH - inputHeight, contentBottom: y }));
 
   // Input area
@@ -450,79 +391,149 @@ function renderDatingChat(doc: DatingDoc, avatarUrl?: string): string {
   parts.push(`<rect y="${inputY}" width="${SW}" height="${inputHeight}" fill="${c.headerBg}"/>`);
   parts.push(`<rect y="${inputY}" width="${SW}" height="0.5" fill="${c.hairline}"/>`);
 
-  if (brand === "tinder") {
-    // Tinder Style Input with bottom icon bar
-    parts.push(`
-      <rect x="16" y="${inputY + 12}" width="${SW - 32}" height="44" rx="22" fill="${dark ? "#1c1c1e" : "#f1f1f7"}" stroke="none"/>
-      <text font-family="${font}" font-size="15" fill="${c.textTertiary}" x="36" y="${inputY + 39}">Type a message...</text>
-      <text font-family="${font}" font-size="16" font-weight="600" fill="${dark ? "#48484a" : "#c8c8cd"}" x="${SW - 62}" y="${inputY + 39}">Send</text>
-    `);
-
-    // Bottom icons bar distribution
-    const iconY = inputY + 70;
+  parts.push(`
+    <circle cx="34" cy="${inputY + 32}" r="16" fill="${c.accent}"/>
+    <path d="M34 ${inputY + 25} v14 M27 ${inputY + 32} h14" stroke="#1e1e24" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="62" y="${inputY + 12}" width="${SW - 78}" height="40" rx="20" fill="${dark ? "#212124" : "#f1f1f7"}"/>
+    <text font-family="${font}" font-size="14.5" fill="${c.textTertiary}" x="80" y="${inputY + 36}">Send a message...</text>
     
-    // 1. Contact Card Icon
-    parts.push(`
-      <g transform="translate(${SW / 6 * 1 - 12}, ${iconY})" stroke="${c.textSecondary}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="2" width="20" height="16" rx="2" ry="2"/>
-        <circle cx="8" cy="10" r="3"/>
-        <line x1="15" y1="8" x2="20" y2="8"/>
-        <line x1="15" y1="12" x2="20" y2="12"/>
-      </g>
-    `);
-
-    // 2. Sticker Icon
-    parts.push(`
-      <g transform="translate(${SW / 6 * 2 - 12}, ${iconY})" stroke="${c.textSecondary}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="2" width="20" height="20" rx="3" ry="3"/>
-        <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
-        <circle cx="15.5" cy="8.5" r="1.5" fill="currentColor"/>
-        <path d="M7 14.5 C 7 14.5, 9 17, 12 17 C 15 17, 17 14.5, 17 14.5"/>
-      </g>
-    `);
-
-    // 3. GIF Icon
-    parts.push(`
-      <g transform="translate(${SW / 6 * 3 - 12}, ${iconY})">
-        <circle cx="12" cy="11" r="11" fill="${dark ? "#26262b" : "#f1f1f7"}"/>
-        <text font-family="${font}" font-size="9" font-weight="900" fill="${c.textSecondary}" text-anchor="middle" x="12" y="14.5">GIF</text>
-      </g>
-    `);
-
-    // 4. Music/Notes Icon
-    parts.push(`
-      <g transform="translate(${SW / 6 * 4 - 10}, ${iconY})" stroke="${c.textSecondary}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 18V5l12-2v13"/>
-        <circle cx="6" cy="18" r="3"/>
-        <circle cx="18" cy="16" r="3"/>
-      </g>
-    `);
-
-    // 5. Blue Search circle Icon
-    parts.push(`
-      <g transform="translate(${SW / 6 * 5 - 12}, ${iconY})">
-        <circle cx="12" cy="11" r="11" fill="none" stroke="#00b0ff" stroke-width="2.5"/>
-        <circle cx="12" cy="11" r="5" fill="#00b0ff"/>
-      </g>
-    `);
-  } else {
-    parts.push(`
-      <circle cx="34" cy="${inputY + 32}" r="16" fill="${c.accent}"/>
-      <path d="M34 ${inputY + 25} v14 M27 ${inputY + 32} h14" stroke="#1e1e24" stroke-width="2.5" stroke-linecap="round"/>
-      <rect x="62" y="${inputY + 12}" width="${SW - 78}" height="40" rx="20" fill="${dark ? "#212124" : "#f1f1f7"}"/>
-      <text font-family="${font}" font-size="14.5" fill="${c.textTertiary}" x="80" y="${inputY + 36}">Send a message...</text>
-      
-      <!-- Microphone icon -->
-      <g transform="translate(${SW - 46}, ${inputY + 20})" stroke="${c.textSecondary}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-        <line x1="12" y1="19" x2="12" y2="23"/>
-        <line x1="8" y1="23" x2="16" y2="23"/>
-      </g>
-    `);
-  }
+    <!-- Microphone icon -->
+    <g transform="translate(${SW - 46}, ${inputY + 20})" stroke="${c.textSecondary}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+      <line x1="12" y1="19" x2="12" y2="23"/>
+      <line x1="8" y1="23" x2="16" y2="23"/>
+    </g>
+  `);
 
   parts.push(homeIndicator(c.textPrimary, platform));
 
+  return parts.join("\n");
+}
+
+/* ------------------------------ Tinder chat ---------------------------------- */
+/* Tinder's conversation view: centered photo + name header with the video and
+   Safety Toolkit shield, a "You matched" opener, grey incoming bubbles with the
+   match's photo beside each run, blue outgoing bubbles, "Sent" under your last
+   message, and the GIF · field · Send composer. */
+
+function renderTinderChat(doc: DatingDoc, avatarUrl?: string): string {
+  const platform = doc.chrome.platform ?? "ios";
+  const font = fontFor("dating", platform);
+  const dark = !!doc.chrome.dark;
+  const c = {
+    bg: dark ? "#111418" : "#ffffff",
+    line: dark ? "#2a2f36" : "#e9ecef",
+    ink: dark ? "#f5f6f7" : "#21262e",
+    muted: dark ? "#8d96a1" : "#7c8591",
+    faint: dark ? "#5c6570" : "#b9bfc8",
+    incoming: dark ? "#2a2f36" : "#f0f2f4",
+    outgoing: "#1eb8ff",
+    blue: "#1786f8",
+    field: dark ? "#1c2026" : "#f0f2f4",
+  };
+  const FONT = 16, LINE = 21, PX = 14, PY = 9.5, MAXW = 246, M = 14;
+  const AV_X = 30; // incoming avatar column
+  const IN_X = 52; // incoming bubble left edge
+
+  const parts: string[] = [`<rect width="${SW}" height="${SH}" fill="${c.bg}"/>`];
+  const msgs = doc.messages ?? [];
+
+  /* conversation */
+  const HEADER_H = 122;
+  const bodyStart = parts.length;
+  let y = HEADER_H + 26;
+  // the match opener: photo, then "You matched with … on …"
+  parts.push(avatar(doc.name, SW / 2, y + 34, 34, "tm", avatarUrl));
+  y += 86;
+  parts.push(
+    `<text font-family="${font}" font-size="12.5" fill="${c.muted}" text-anchor="middle" x="${SW / 2}" y="${y}">You matched with ${esc(doc.name)} on 10/7/26</text>`
+  );
+  y += 26;
+
+  let lastMineBottom: number | null = null;
+  for (let i = 0; i < msgs.length; i++) {
+    const m = msgs[i];
+    const mine = m.from === "me";
+    const maxW = mine ? MAXW : MAXW - 10;
+    const lines = wrapText(m.text || " ", FONT, maxW - PX * 2);
+    const w = Math.min(maxW, Math.max(...lines.map((l) => textWidth(l, FONT))) + PX * 2);
+    const h = lines.length * LINE + PY * 2;
+    const x = mine ? SW - M - w : IN_X;
+    const runEnd = i === msgs.length - 1 || msgs[i + 1].from !== m.from;
+    parts.push(`<rect x="${x.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="${Math.min(20, h / 2)}" fill="${mine ? c.outgoing : c.incoming}"/>`);
+    parts.push(
+      baseTextBlock(lines, {
+        font,
+        x: x + PX,
+        y: bubbleBaseline(y, h, lines.length, LINE, FONT),
+        size: FONT,
+        lineHeight: LINE,
+        color: mine ? "#ffffff" : c.ink,
+      })
+    );
+    if (!mine && runEnd) parts.push(avatar(doc.name, AV_X, y + h - 14, 14, `tc${i}`, avatarUrl));
+    if (mine) lastMineBottom = y + h;
+    y += h + (runEnd ? 14 : 4);
+  }
+
+  // "Sent" under your latest message when it's the newest thing in the thread
+  if (lastMineBottom !== null && msgs[msgs.length - 1]?.from === "me" && !doc.chrome._anim?.typing) {
+    parts.push(`<text font-family="${font}" font-size="11.5" fill="${c.muted}" text-anchor="end" x="${SW - M - 2}" y="${lastMineBottom + 15}">Sent</text>`);
+    y += 16;
+  }
+
+  // their typing bubble during the replay
+  if (doc.chrome._anim?.typing) {
+    const tw = 62, th = 38;
+    parts.push(
+      `<rect x="${IN_X}" y="${y}" width="${tw}" height="${th}" rx="19" fill="${c.incoming}"/>`,
+      typingDots(IN_X + 19, y + th / 2, c.muted, doc.chrome._anim?.dotPhase ?? 0, 3.6, 12),
+      avatar(doc.name, AV_X, y + th - 14, 14, "tct", avatarUrl)
+    );
+    y += th + 14;
+  }
+
+  const COMPOSER_H = 96;
+  const body = parts.splice(bodyStart);
+  parts.push(scrollBody(body.join("\n"), { top: HEADER_H, bottom: SH - COMPOSER_H - 6, contentBottom: y }));
+
+  /* header (painted over the scrolled body) */
+  const hy = 74;
+  parts.push(
+    `<rect width="${SW}" height="${HEADER_H}" fill="${c.bg}"/>`,
+    `<rect y="${HEADER_H - 0.5}" width="${SW}" height="0.5" fill="${c.line}"/>`,
+    statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.ink, platform }),
+    `<path d="M25 ${hy - 9} l-9 9 9 9" fill="none" stroke="${c.muted}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`,
+    avatar(doc.name, SW / 2, hy - 2, 21, "th", avatarUrl)
+  );
+  const nameW = textWidth(doc.name, 13);
+  parts.push(
+    `<text font-family="${font}" font-size="13" font-weight="600" fill="${c.ink}" text-anchor="middle" x="${SW / 2 - (doc.verified ? 8 : 0)}" y="${hy + 34}">${esc(doc.name)}</text>`
+  );
+  if (doc.verified) {
+    parts.push(
+      `<circle cx="${(SW / 2 + nameW / 2 + 1).toFixed(1)}" cy="${hy + 29.5}" r="6.5" fill="${c.blue}"/>` +
+        `<path d="M${(SW / 2 + nameW / 2 - 2).toFixed(1)} ${hy + 29.7} l2 2 3.6 -4" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`
+    );
+  }
+  // video chat + Safety Toolkit shield
+  parts.push(
+    `<g transform="translate(${SW - 92} ${hy - 12})" fill="none" stroke="${c.blue}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="15" height="14" rx="3"/><path d="M16 10.5 23 6.5v11l-7-4"/></g>`,
+    `<g transform="translate(${SW - 46} ${hy - 13})" fill="none" stroke="${c.blue}" stroke-width="2" stroke-linejoin="round"><path d="M12 2.5 4 5.6v6.1c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10V5.6L12 2.5z"/><path d="m8.6 12 2.4 2.4 4.4-4.6" stroke-linecap="round"/></g>`
+  );
+
+  /* composer: GIF · Type a message · Send */
+  const cy = SH - COMPOSER_H + 32;
+  parts.push(
+    `<rect y="${SH - COMPOSER_H}" width="${SW}" height="${COMPOSER_H}" fill="${c.bg}"/>`,
+    `<rect y="${SH - COMPOSER_H}" width="${SW}" height="0.5" fill="${c.line}"/>`,
+    `<rect x="${M}" y="${cy - 17}" width="44" height="34" rx="17" fill="${c.field}"/>`,
+    `<text font-family="${font}" font-size="12.5" font-weight="800" letter-spacing="0.3" fill="${c.muted}" text-anchor="middle" x="${M + 22}" y="${cy + 4.5}">GIF</text>`,
+    `<rect x="${M + 54}" y="${cy - 20}" width="${SW - M * 2 - 54}" height="40" rx="20" fill="${c.bg}" stroke="${c.line}" stroke-width="1.2"/>`,
+    `<text font-family="${font}" font-size="16" fill="${c.faint}" x="${M + 72}" y="${cy + 5.5}">Type a message</text>`,
+    `<text font-family="${font}" font-size="15" font-weight="700" fill="${c.faint}" text-anchor="end" x="${SW - M - 16}" y="${cy + 5}">Send</text>`,
+    homeIndicator(c.ink, platform)
+  );
   return parts.join("\n");
 }
