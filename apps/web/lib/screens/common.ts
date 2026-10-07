@@ -88,8 +88,19 @@ export function wrapText(text: string, size: number, maxW: number): string[] {
     let cur = "";
     for (const word of words) {
       const t = cur ? `${cur} ${word}` : word;
-      if (textWidth(t, size) <= maxW || !cur) cur = t;
-      else {
+      if (textWidth(t, size) <= maxW || (!cur && textWidth(word, size) <= maxW)) cur = t;
+      else if (textWidth(word, size) > maxW) {
+        // a token wider than the whole line (long URL, CJK run): break it by characters
+        if (cur) out.push(cur);
+        let chunk = "";
+        for (const ch of word) {
+          if (chunk && textWidth(chunk + ch, size) > maxW) {
+            out.push(chunk);
+            chunk = ch;
+          } else chunk += ch;
+        }
+        cur = chunk;
+      } else {
         out.push(cur);
         cur = word;
       }

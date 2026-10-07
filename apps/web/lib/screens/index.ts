@@ -215,7 +215,10 @@ function referencedAssetIds(doc: ScreenDoc): string[] {
     for (const im of doc.images ?? []) ids.push(im);
   }
   if (doc.app === "bluesky" && doc.link?.image) ids.push(doc.link.image);
-  if (doc.app === "social") for (const cm of doc.commentList ?? []) if (cm.avatar) ids.push(cm.avatar);
+  if (doc.app === "social") {
+    for (const cm of doc.commentList ?? []) if (cm.avatar) ids.push(cm.avatar);
+    for (const im of doc.images ?? []) ids.push(im);
+  }
   if (doc.app === "slack" || doc.app === "discord") for (const m of doc.messages) if (m.avatar) ids.push(m.avatar);
   if (doc.app === "appstore-promo") {
     if (doc.screenshot) ids.push(doc.screenshot);
@@ -299,7 +302,7 @@ export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): {
       return flat(renderTestimonial(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
     case "social":
       if (doc.standalone) {
-        const r = renderSocialCard(doc, dp);
+        const r = renderSocialCard(doc, dp, lookupUrl);
         return { url: svgDataUri(r.svg, r.totalH, r.totalW), logicalH: r.totalH, logicalW: r.totalW };
       }
       return flat(renderSocial(doc, dp, lookupUrl));

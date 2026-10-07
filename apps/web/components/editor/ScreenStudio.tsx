@@ -513,7 +513,20 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       {doc.app === "story" && <StoryFields doc={doc} setDoc={setDoc} />}
       {doc.app === "github" && <GithubFields doc={doc} setDoc={setDoc} />}
       {doc.app === "stripe" && <StripeFields doc={doc} setDoc={setDoc} />}
-      {doc.app === "social" && <SocialFields doc={doc} setDoc={setDoc} />}
+      {doc.app === "social" && (
+        <SocialFields
+          doc={doc}
+          setDoc={setDoc}
+          refit={() => {
+            // a freshly imported post is a different size — re-fit the card to the canvas
+            const st = useSceneStore.getState();
+            const l = st.scene.layers.find((x) => x.id === layer.id);
+            if (l?.type !== "mockup" || l.deviceId !== null || !l.media) return;
+            const scale = fitCardScale(l.media.assetId, st.scene.canvas.width, st.scene.canvas.height, 0.8);
+            if (scale) updateLayer(layer.id, (x) => ({ ...x, transform: { ...x.transform, scale } }));
+          }}
+        />
+      )}
       {doc.app === "xpost" && <XPostFields doc={doc} setDoc={setDoc} />}
       {doc.app === "bluesky" && <BlueskyFields doc={doc} setDoc={setDoc} />}
       {doc.app === "testimonial" && <TestimonialFields doc={doc} setDoc={setDoc} />}
@@ -2371,19 +2384,26 @@ function CommentRows({ comments, onChange, handles }: { comments: PostComment[];
 /* ------------------------------- Social post --------------------------------- */
 
 const SOCIAL_NETS: SocialNetwork[] = ["facebook", "linkedin", "threads"];
+/** the standalone card draws every network's mark; the phone layout only knows these three */
+const CARD_NETS: SocialNetwork[] = ["x", "bluesky", "threads", "linkedin", "mastodon", "facebook"];
 
-function SocialFields({ doc, setDoc }: { doc: SocialPostDoc; setDoc: (d: ScreenDoc) => void }) {
-  const [importUrl, setImportUrl] = useState("");
+function SocialFields({ doc, setDoc, refit }: { doc: SocialPostDoc; setDoc: (d: ScreenDoc) => void; refit?: () => void }) {
+  const [importUrl, setImportUrl] = useState(doc.sourceUrl ?? "");
   const [importing, setImporting] = useState(false);
-  const networkOptions = Array.from(new Set<SocialNetwork>([doc.network, ...SOCIAL_NETS]));
+  // a link that arrived after mount (e.g. a failed /templates/post?url= import) prefills the box
+  useEffect(() => {
+    if (doc.sourceUrl) setImportUrl((cur) => cur || doc.sourceUrl!);
+  }, [doc.sourceUrl]);
+  const networkOptions = doc.standalone ? CARD_NETS : Array.from(new Set<SocialNetwork>([doc.network, ...SOCIAL_NETS]));
   const runImport = async () => {
     if (!importUrl.trim() || importing) return;
     setImporting(true);
     try {
       const fields = await importPostUrl(importUrl);
-      setDoc({ ...doc, ...fields, standalone: doc.standalone });
-      setImportUrl("");
-      toast("Post imported into a MockFrame card");
+      // drop the starter's sample replies and source label: the card is the imported post now
+      setDoc({ ...doc, commentList: [], ...fields, standalone: doc.standalone });
+      refit?.();
+      toast(fields.name ? `Imported ${fields.name}'s post ✓` : "Imported the post ✓");
     } catch (error) {
       toast(error instanceof Error ? error.message : "Post import failed");
     } finally {
@@ -2412,7 +2432,8 @@ function SocialFields({ doc, setDoc }: { doc: SocialPostDoc; setDoc: (d: ScreenD
         id="so-net"
         options={networkOptions.map((n) => ({ value: n, label: SOCIAL_LABELS[n] }))}
         value={doc.network}
-        onChange={(network) => setDoc({ ...doc, network })}
+        // the provider label follows the network so switching never leaves a stale "X" mark
+        onChange={(network) => setDoc({ ...doc, network, sourceLabel: SOCIAL_LABELS[network] })}
       />
       <div className="flex gap-2">
         <Field label="Name" value={doc.name} onChange={(name) => setDoc({ ...doc, name })} className="flex-1" />
@@ -2446,7 +2467,23 @@ function SocialFields({ doc, setDoc }: { doc: SocialPostDoc; setDoc: (d: ScreenD
           <NumField key={key} label={label} value={doc[key]} onChange={(n) => setDoc({ ...doc, [key]: n })} />
         ))}
       </div>
-      <CommentRows comments={doc.commentList ?? []} onChange={(commentList) => setDoc({ ...doc, commentList })} />
+      {doc.standalone ? (
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-xs text-[#6b6b76]">Likes, reposts & replies row</span>
+          <Toggle label={doc.showMetrics === false ? "Hidden" : "Shown"} on={doc.showMetrics !== false} onClick={() => setDoc({ ...doc, showMetrics: doc.showMetrics === false })} />
+        </div>
+      ) : (
+        <CommentRows comments={doc.commentList ?? []} onChange={(commentList) => setDoc({ ...doc, commentList })} />
+      )}
+      {doc.standalone && (doc.images?.length ?? 0) > 0 && (
+        <button
+          type="button"
+          onClick={() => setDoc({ ...doc, images: [] })}
+          className="fk-press mt-3 w-full rounded-lg border border-[#e4e4ec] bg-white px-2 py-1.5 text-[11px] font-semibold text-[#5a5a66] hover:border-[#17171c]"
+        >
+          Remove {doc.images!.length === 1 ? "the photo" : `the ${doc.images!.length} photos`}
+        </button>
+      )}
     </>
   );
 }

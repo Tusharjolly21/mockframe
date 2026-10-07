@@ -482,6 +482,10 @@ export interface SocialPostDoc {
   comments: number;
   shares: number;
   avatar?: string;
+  /** post photos (asset ids), shown as a 1–4 image grid on the standalone card */
+  images?: string[];
+  /** standalone card: show the likes / reposts / replies row (default on) */
+  showMetrics?: boolean;
   commentList?: PostComment[];
   /** Imported provider name and canonical source URL. The standalone renderer
    * uses these as quiet provenance rather than imitating the provider UI. */
