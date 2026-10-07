@@ -21,22 +21,12 @@ import { DevicePicker } from "./DevicePicker";
 import { MediaEditor } from "./MediaEditor";
 import { ScreenStudio, isTemplateCard } from "./ScreenStudio";
 import { FrameControls } from "./FramePanel";
+import { FontPicker, useCustomFamilies } from "./FontPicker";
+import { TextAnimationControls } from "./TextAnimationControls";
+import { ClayControls, supportsClay } from "./ClayControls";
+import { isItalicOnly, nearestWeight, weightLabel, weightsFor } from "@/lib/fonts";
 import { ExportStep, StepFooter, StepNav } from "./StepFlow";
 
-const FONTS = [
-  "Inter",
-  "DM Sans",
-  "Manrope",
-  "Outfit",
-  "Sora",
-  "Plus Jakarta Sans",
-  "Space Grotesk",
-  "IBM Plex Sans",
-  "Playfair Display",
-  "Lora",
-  "Merriweather",
-  "JetBrains Mono",
-];
 
 /** Warn when a dropped screenshot's aspect badly mismatches the device screen —
  *  e.g. a tall phone shot on a Watch — so the user picks a device it actually fits.
@@ -666,6 +656,8 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
         </Section>
       )}
 
+      {tab === "device" && supportsClay(layer) && <ClayControls layer={layer} />}
+
       {tab === "device" && !device && !isTemplate && (
         <Section title="Style">
           <Seg
@@ -1088,8 +1080,10 @@ function TextControls({ layer }: { layer: TextLayer }) {
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const patch = (p: Partial<TextLayer>) => updateLayer(layer.id, (l) => ({ ...(l as TextLayer), ...p }));
   const patchFont = (p: Partial<TextLayer["font"]>) => patch({ font: { ...layer.font, ...p } });
+  useCustomFamilies(); // weightsFor() reads uploaded fonts — re-render when they change
 
   return (
+    <>
     <Section title="Text">
       <textarea
         value={layer.content}
@@ -1097,27 +1091,33 @@ function TextControls({ layer }: { layer: TextLayer }) {
         onChange={(e) => patch({ content: e.target.value })}
         className="mb-3 w-full resize-y rounded-xl border border-[#e4e4ec] bg-white px-3 py-2 text-sm text-[#17171c] focus:border-[#17171c] focus:outline-none"
       />
-      <div className="mb-3 flex gap-2">
-        <select
+      <div className="mb-3">
+        <FontPicker
           value={layer.font.family}
-          onChange={(e) => patchFont({ family: e.target.value })}
-          className="fk-press flex-1 rounded-xl border border-[#e4e4ec] bg-white px-2 py-2 text-xs"
-        >
-          {FONTS.map((f) => (
-            <option key={f}>{f}</option>
-          ))}
-        </select>
-        <select
-          value={layer.font.weight}
-          onChange={(e) => patchFont({ weight: Number(e.target.value) })}
-          className="fk-press w-20 rounded-xl border border-[#e4e4ec] bg-white px-2 py-2 text-xs"
-        >
-          {[400, 500, 600, 700, 800].map((w) => (
-            <option key={w} value={w}>
-              {w}
-            </option>
-          ))}
-        </select>
+          // keep the look close: snap to the new family's nearest real weight
+          // instead of letting the browser fake a bold it doesn't have
+          onChange={(family) =>
+            patch({
+              font: { ...layer.font, family, weight: nearestWeight(layer.font.weight, weightsFor(family)) },
+              // an italic-only upload has no upright face — show it as uploaded
+              ...(isItalicOnly(family) ? { italic: true } : {}),
+            })
+          }
+          trailing={
+            <select
+              value={layer.font.weight}
+              aria-label="Font weight"
+              onChange={(e) => patchFont({ weight: Number(e.target.value) })}
+              className="fk-press w-[118px] shrink-0 rounded-xl border border-[#e4e4ec] bg-white px-2 text-xs"
+            >
+              {[...new Set([...weightsFor(layer.font.family), layer.font.weight])].sort((a, b) => a - b).map((w) => (
+                <option key={w} value={w}>
+                  {w} {weightLabel(w)}
+                </option>
+              ))}
+            </select>
+          }
+        />
       </div>
       <Seg
         id="text-align"
@@ -1215,6 +1215,8 @@ function TextControls({ layer }: { layer: TextLayer }) {
         </TxBlock>
       </div>
     </Section>
+    <TextAnimationControls key={layer.id} layer={layer} onChange={(animation) => patch({ animation })} />
+    </>
   );
 }
 

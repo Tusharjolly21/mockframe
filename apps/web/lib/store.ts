@@ -108,6 +108,9 @@ interface ViewState {
   setActiveLayout: (id: string | null) => void;
   setLayoutMods: (m: { spread: number; angle: number; tilt: number; scale: number }) => void;
   triggerEntrance: (layerId: string) => void;
+  /** clip time (ms) while text animations preview or export; null = text shown finished */
+  textTime: number | null;
+  setTextTime: (t: number | null) => void;
   fitToView: (viewport: { width: number; height: number }, canvas: { width: number; height: number }) => void;
 }
 
@@ -150,6 +153,8 @@ export const useViewStore = create<ViewState>()((set) => ({
     set({ activeLayoutId, layoutMods: { spread: 1, angle: 0, tilt: 0, scale: 1 } }),
   setLayoutMods: (layoutMods) => set({ layoutMods }),
   triggerEntrance: (layerId) => set((s) => ({ entrance: { layerId, nonce: s.entrance.nonce + 1 } })),
+  textTime: null,
+  setTextTime: (textTime) => set({ textTime }),
   fitToView: (viewport, canvas) => {
     const zoom = Math.min(
       (viewport.width - 96) / canvas.width,

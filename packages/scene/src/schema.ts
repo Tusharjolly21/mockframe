@@ -187,6 +187,8 @@ export const MockupLayerSchema = z.object({
       inset: z.number().min(0),
     })
     .optional(),
+  /** matte single-colour "clay" finish over the device frame (framed devices only) */
+  clay: z.object({ color: z.string().regex(/^#[0-9a-fA-F]{6}$/) }).optional(),
   /** diagonal light streak across the screen glass */
   glare: z
     .object({
@@ -206,6 +208,17 @@ export const MockupLayerSchema = z.object({
       })
     )
     .optional(),
+});
+
+/** Entrance animations for text, played in motion previews and video/GIF exports. */
+export const TEXT_ANIMATIONS = ["fade-up", "blur-in", "pop", "slide", "typewriter", "words", "letters"] as const;
+export type TextAnimationType = (typeof TEXT_ANIMATIONS)[number];
+
+export const TextAnimationSchema = z.object({
+  type: z.enum(TEXT_ANIMATIONS),
+  /** when it starts, from the beginning of the clip */
+  delayMs: z.number().min(0).max(10_000),
+  durationMs: z.number().min(100).max(10_000),
 });
 
 export const TextLayerSchema = z.object({
@@ -236,6 +249,8 @@ export const TextLayerSchema = z.object({
   shadow: z.object({ x: z.number(), y: z.number(), blur: z.number().min(0), color: z.string() }).optional(),
   /** highlight pill behind the text */
   highlight: z.object({ color: z.string(), radius: z.number().min(0), padX: z.number().min(0), padY: z.number().min(0) }).optional(),
+  /** entrance animation (static images always show the finished text) */
+  animation: TextAnimationSchema.optional(),
 });
 
 export const StickerLayerSchema = z.union([
@@ -350,6 +365,7 @@ export type Shadow = z.infer<typeof ShadowSchema>;
 export type Media = z.infer<typeof MediaSchema>;
 export type MockupLayer = z.infer<typeof MockupLayerSchema>;
 export type TextLayer = z.infer<typeof TextLayerSchema>;
+export type TextAnimation = z.infer<typeof TextAnimationSchema>;
 export type StickerLayer = z.infer<typeof StickerLayerSchema>;
 export type Layer = z.infer<typeof LayerSchema>;
 export type Timeline = z.infer<typeof TimelineSchema>;

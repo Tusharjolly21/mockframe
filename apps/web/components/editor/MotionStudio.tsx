@@ -4,13 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { ImageIcon, Play, Square, Video } from "lucide-react";
 import type { SceneDocument } from "@framekit/scene";
-import { MOTION_PRESETS, motionPreset, sampleScene, type MotionPreset, type MotionPresetId } from "@/lib/motion";
+import { MOTION_PRESETS, motionPreset, presetForScene, sampleScene, type MotionPreset, type MotionPresetId } from "@/lib/motion";
 import { exportMotionGif, exportMotionVideo } from "@/lib/motionExport";
 import { useSceneStore, useViewStore, withTransientHistory } from "@/lib/store";
 import { openUpgrade } from "@/lib/billing/gate";
+import { useVideoSettings, VideoSettingsControl } from "./VideoSettingsControl";
 
 /** pose every moving layer of `base` at clip time t without touching history */
 function poseScene(base: SceneDocument, preset: MotionPreset, t: number) {
+  // text animations run on the same clock (view state, so history is untouched)
+  useViewStore.getState().setTextTime(t * preset.durationMs);
   const poses = sampleScene(base, preset, t);
   withTransientHistory(() =>
     useSceneStore.setState((st) => ({
@@ -26,6 +29,7 @@ function poseScene(base: SceneDocument, preset: MotionPreset, t: number) {
 }
 
 function restoreScene(base: SceneDocument) {
+  useViewStore.getState().setTextTime(null);
   const byId = new Map(base.layers.map((l) => [l.id, l.transform]));
   withTransientHistory(() =>
     useSceneStore.setState((st) => ({
@@ -79,7 +83,9 @@ export function MotionStudio() {
   const [playing, setPlaying] = useState(false);
   const baseRef = useRef<SceneDocument | null>(null);
   const rafRef = useRef(0);
-  const hasMockup = useSceneStore((s) => s.scene.layers.some((l) => l.type === "mockup"));
+  const hasMockup = useSceneStore((s) => s.scene.layers.some((l) => l.type === "mockup" || (l.type === "text" && !!l.animation)));
+  const hasTextAnim = useSceneStore((s) => s.scene.layers.some((l) => l.type === "text" && !!l.animation));
+  const [videoSettings] = useVideoSettings();
   const preset = motionPreset(presetId);
 
   const stop = () => {
@@ -91,10 +97,11 @@ export function MotionStudio() {
   // never leave the canvas mid-pose if the panel closes during a preview
   useEffect(() => () => stop(), []);
 
-  const play = (p = preset) => {
+  const play = (picked = preset) => {
     if (busy) return;
     if (baseRef.current) stop();
     const base = useSceneStore.getState().scene;
+    const p = presetForScene(picked, base);
     baseRef.current = base;
     setPlaying(true);
     const t0 = performance.now();
@@ -121,19 +128,22 @@ export function MotionStudio() {
     const node = document.querySelector<HTMLElement>("#scene-canvas [data-scene-id]");
     if (!node) return;
     const base = useSceneStore.getState().scene;
+    const clip = presetForScene(preset, base);
     setBusy({ pct: 0, label: "Preparing…" });
     const opts = {
       node,
       scene: base,
-      preset,
-      renderAt: (t: number) => poseScene(base, preset, t),
+      preset: clip,
+      renderAt: (t: number) => poseScene(base, clip, t),
       restore: () => restoreScene(base),
       onProgress: (pct: number, label: string) => setBusy({ pct, label }),
     };
     try {
       if (kind === "video") {
-        const fmt = await exportMotionVideo(opts);
-        window.dispatchEvent(new CustomEvent("framekit:toast", { detail: `Saved ${preset.label} video (${fmt.toUpperCase()})` }));
+        const fmt = await exportMotionVideo({ ...opts, settings: videoSettings });
+        window.dispatchEvent(
+          new CustomEvent("framekit:toast", { detail: `Saved ${preset.label} video (${fmt.toUpperCase()} · ${videoSettings.fps} fps)` })
+        );
       } else {
         await exportMotionGif(opts);
         window.dispatchEvent(new CustomEvent("framekit:toast", { detail: `Saved ${preset.label} GIF` }));
@@ -147,7 +157,7 @@ export function MotionStudio() {
   };
 
   if (!hasMockup) {
-    return <p className="py-8 text-center text-[12px] text-white/40">Add a device mockup to animate it.</p>;
+    return <p className="py-8 text-center text-[12px] text-white/40">Add a device mockup, or give a text layer an animation, to animate the scene.</p>;
   }
 
   return (
@@ -191,7 +201,7 @@ export function MotionStudio() {
             {playing ? <Square size={10} className="fill-white" /> : <Play size={11} className="fill-white" />}
             <span>{playing ? "Stop" : `Preview ${preset.label}`}</span>
           </button>
-          <span className="text-[10px] text-white/40">Moves every device{preset.kind === "intro" ? " and caption" : ""}, staggered across layers.</span>
+          <span className="hidden text-[10px] text-white/40 2xl:inline">Moves every device{preset.kind === "intro" ? " and caption" : ""}, staggered across layers{hasTextAnim ? " · text animations play too" : ""}.</span>
         </div>
         {busy ? (
           <div className="flex items-center gap-2">
@@ -202,7 +212,8 @@ export function MotionStudio() {
             <span className="font-mono text-[10px] text-white">{Math.round(busy.pct * 100)}%</span>
           </div>
         ) : (
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <VideoSettingsControl />
             <button
               onClick={() => runExport("video")}
               className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-white/10 bg-white/10 px-4 text-[11px] font-bold text-white transition-all hover:bg-white/15"

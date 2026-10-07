@@ -1,9 +1,10 @@
 import type { Layer, SceneDocument } from "@framekit/scene";
-import { memo, type CSSProperties } from "react";
+import { memo, type CSSProperties, type ReactNode } from "react";
 import { backgroundToCss } from "./background";
 import { backdropFilterCss, overlayStyle, patternStyle, portraitBlur, stageStyle } from "./backdrop";
 import { MockupLayerViewMemo } from "./MockupLayerView";
 import type { ResolveAsset } from "./types";
+import { blockAnimStyle, pieceAnimStyle, splitPieces, textAnimProgress, typewriterCount } from "./textAnim";
 
 /**
  * The one renderer. A pure function of the scene document — it runs in the
@@ -27,6 +28,7 @@ function SceneRendererImpl({
   panoramaIdx,
   panoramaTotal,
   onBlurZonesChange,
+  textTime,
 }: {
   scene: SceneDocument;
   resolveAsset: ResolveAsset;
@@ -40,6 +42,8 @@ function SceneRendererImpl({
   panoramaIdx?: number;
   panoramaTotal?: number;
   onBlurZonesChange?: (layerId: string, zones: Array<{ x: number; y: number; w: number; h: number }>) => void;
+  /** clip time (ms) for text animations; omitted = every text shown finished */
+  textTime?: number | null;
 }) {
   const { canvas } = scene;
   const bg = canvas.background;
@@ -139,6 +143,7 @@ function SceneRendererImpl({
           resolveAsset={resolveAsset}
           entrance={animateLayerId === layer.id}
           onBlurZonesChange={onBlurZonesChange}
+          textTime={layer.type === "text" && layer.animation ? textTime : undefined}
         />
       ))}
 
@@ -312,10 +317,12 @@ const LayerView = memo(function LayerView({
   resolveAsset,
   entrance,
   onBlurZonesChange,
+  textTime,
 }: {
   layer: Layer;
   resolveAsset: ResolveAsset;
   entrance?: boolean;
+  textTime?: number | null;
   onBlurZonesChange?: (layerId: string, zones: Array<{ x: number; y: number; w: number; h: number }>) => void;
 }) {
   const t = layer.transform;
@@ -379,19 +386,80 @@ const LayerView = memo(function LayerView({
           }
         : {}),
     };
+    // text animation (only while a clip time is given: previews and video frames)
+    const anim = textTime != null ? layer.animation : undefined;
+    const p = textAnimProgress(anim, textTime);
+    let body: ReactNode = layer.content;
+    let animStyle: CSSProperties | null = null;
+    let pieceGradient = false;
+    if (anim) {
+      if (anim.type === "typewriter") {
+        const chars = Array.from(layer.content);
+        const shown = typewriterCount(layer.content, p);
+        // the unrevealed rest keeps its space so centred / wrapped text never reflows
+        body = shown >= chars.length ? layer.content : (
+          <>
+            {chars.slice(0, shown).join("")}
+            <span style={{ opacity: 0 }}>{chars.slice(shown).join("")}</span>
+          </>
+        );
+      } else if (anim.type === "words" || anim.type === "letters") {
+        // gradient fills can't reach through animated pieces from the parent: each piece carries it
+        pieceGradient = !!grad;
+        const pieces = splitPieces(layer.content, anim.type);
+        const total = pieces.filter((x) => x.animated).length;
+        let n = -1;
+        const piece = (x: { text: string; animated: boolean }, key: number) => {
+          if (!x.animated) return x.text;
+          n += 1;
+          return (
+            <span
+              key={key}
+              style={{
+                display: "inline-block",
+                ...(pieceGradient ? { backgroundImage: grad, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" } : {}),
+                ...pieceAnimStyle(p, n, total),
+              }}
+            >
+              {x.text}
+            </span>
+          );
+        };
+        if (anim.type === "letters") {
+          // letters of one word stay together so the line breaks exactly as the static text does
+          const words = layer.content.split(/(\s+)/).filter((w) => w.length > 0);
+          let k = 0;
+          body = words.map((w, wi) =>
+            /^\s+$/.test(w) ? w : (
+              <span key={`w${wi}`} style={{ display: "inline-block", whiteSpace: "nowrap" }}>
+                {splitPieces(w, "letters").map((x) => piece(x, k++))}
+              </span>
+            )
+          );
+        } else {
+          body = pieces.map(piece);
+        }
+      } else {
+        animStyle = blockAnimStyle(anim.type, p);
+      }
+    }
+    const baseText: CSSProperties = pieceGradient
+      ? { ...textStyle, color: undefined, backgroundImage: undefined, WebkitBackgroundClip: undefined, backgroundClip: undefined }
+      : textStyle;
+    const innerStyle: CSSProperties = animStyle ? { ...baseText, ...animStyle } : baseText;
     // gradient text + highlight can't share `background`; wrap the highlight box
     if (grad && hl) {
       return (
         <div data-layer-id={layer.id} style={wrapper}>
-          <div style={{ background: hl.color, padding: `${hl.padY}px ${hl.padX}px`, borderRadius: hl.radius, display: "inline-block" }}>
-            <div style={{ ...textStyle, background: undefined, padding: undefined, borderRadius: undefined }}>{layer.content}</div>
+          <div style={{ background: hl.color, padding: `${hl.padY}px ${hl.padX}px`, borderRadius: hl.radius, display: "inline-block", ...animStyle }}>
+            <div style={{ ...baseText, background: undefined, padding: undefined, borderRadius: undefined }}>{body}</div>
           </div>
         </div>
       );
     }
     return (
       <div data-layer-id={layer.id} style={wrapper}>
-        <div style={textStyle}>{layer.content}</div>
+        <div style={innerStyle}>{body}</div>
       </div>
     );
   }

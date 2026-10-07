@@ -1,4 +1,5 @@
 import { getDevice, getVariant, type Device } from "@framekit/devices";
+import { clayMatrix } from "./clay";
 import type { MockupLayer } from "@framekit/scene";
 import { memo, type CSSProperties } from "react";
 import { shadowToFilter } from "./shadow";
@@ -598,7 +599,17 @@ export function MockupLayerView({
         height={frame.height}
         style={{ display: "block" }}
       >
-        <g dangerouslySetInnerHTML={{ __html: browserUrlOverlay(variant.body, layer.browserUrl) }} />
+        {layer.clay && (
+          <defs>
+            <filter id={`${clipId}_clay`} colorInterpolationFilters="sRGB">
+              <feColorMatrix type="matrix" values={clayMatrix(layer.clay.color)} />
+            </filter>
+          </defs>
+        )}
+        <g
+          filter={layer.clay ? `url(#${clipId}_clay)` : undefined}
+          dangerouslySetInnerHTML={{ __html: browserUrlOverlay(variant.body, layer.browserUrl) }}
+        />
         <clipPath id={clipId}>
           <path d={frame.maskPath} />
         </clipPath>
@@ -650,7 +661,12 @@ export function MockupLayerView({
             </>
           )}
         </g>
-        <g dangerouslySetInnerHTML={{ __html: browserUrlOverlay(variant.overlay, layer.browserUrl) }} />
+        {/* cutouts (island, notch, punch-hole) stay dark over the screen like on real clay renders;
+            browser toolbars are part of the frame and take the finish */}
+        <g
+          filter={layer.clay && device.category === "browser" ? `url(#${clipId}_clay)` : undefined}
+          dangerouslySetInnerHTML={{ __html: browserUrlOverlay(variant.overlay, layer.browserUrl) }}
+        />
       </svg>
       {layer.blurZones?.map((zone, i) => (
         <InteractiveBlurZone

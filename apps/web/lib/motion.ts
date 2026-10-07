@@ -131,9 +131,20 @@ export const MOTION_PRESETS: MotionPreset[] = [
 
 export const motionPreset = (id: MotionPresetId) => MOTION_PRESETS.find((m) => m.id === id)!;
 
-/** layers that move: mockups always, plus text/stickers for intros */
+/** layers that move: mockups always, plus text/stickers for intros (text with its own animation keeps it) */
 export function motionTargets(scene: SceneDocument, preset: MotionPreset): Layer[] {
-  return scene.layers.filter((l) => l.type === "mockup" || preset.kind === "intro");
+  return scene.layers.filter((l) => l.type === "mockup" || (preset.kind === "intro" && !(l.type === "text" && l.animation)));
+}
+
+/** When the last text animation finishes (ms), 0 if none. */
+export function textAnimationsEnd(scene: SceneDocument): number {
+  return scene.layers.reduce((end, l) => (l.type === "text" && l.animation ? Math.max(end, l.animation.delayMs + l.animation.durationMs) : end), 0);
+}
+
+/** The preset, lengthened when needed so every text animation finishes (plus a beat to read it). */
+export function presetForScene(preset: MotionPreset, scene: SceneDocument): MotionPreset {
+  const needed = textAnimationsEnd(scene) + 500;
+  return needed > preset.durationMs ? { ...preset, durationMs: Math.ceil(needed / 100) * 100 } : preset;
 }
 
 /**

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SceneRenderer } from "@framekit/renderer";
 import { resolveAsset } from "@/lib/assets";
+import { ensureGoogleFont, loadCustomFonts } from "@/lib/fonts";
 import { compileFeatureGraphic, compileLaunchScene, compilePackScene } from "@/lib/pack/compile";
 import {
   PACK_LAUNCH_SURFACE_IDS,
@@ -20,6 +21,14 @@ export function PackPreview() {
   const { pack, activeScreenId, activeTarget, setActiveTarget } = usePackStore();
   const paneRef = useRef<HTMLDivElement>(null);
   const [pane, setPane] = useState({ w: 800, h: 600 });
+
+  // the pack's brand font may be a catalog or uploaded family
+  useEffect(() => {
+    void loadCustomFonts();
+  }, []);
+  useEffect(() => {
+    void ensureGoogleFont(pack.style.fontFamily);
+  }, [pack.style.fontFamily]);
 
   useEffect(() => {
     const el = paneRef.current;

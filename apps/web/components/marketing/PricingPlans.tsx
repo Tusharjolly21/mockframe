@@ -12,10 +12,12 @@ import { formatPrice, perMonthPrice, yearlySavingsPct } from "@/lib/billing/plan
 // worth more than hiding it as a Pro bullet.
 const FREE_FEATURES = [
   "Watermark-free exports — always",
+  "Personal & non-commercial use",
   "Every device frame + the full editor",
   "WhatsApp & iMessage chat screens",
   "Website capture & app screen templates",
   "Themes, icons, glare & annotations",
+  "50+ fonts, your own font uploads & clay finishes",
   "Custom devices, drafts & cloud sync",
 ];
 
@@ -23,15 +25,18 @@ const FREE_FEATURES = [
 // isn't gated in /api/custom-devices, so it isn't Pro — it sits in the free
 // list where the code actually puts it.)
 const PRO_FEATURES = [
+  "Commercial license for every export",
   "12 more chat & DM screens",
   "Animated app promo videos (MP4)",
   "Photoreal device renders",
   "Premium background collections",
-  "Video & GIF export",
+  "Video & GIF export — 60 fps, up to 4K",
+  "Text animations in video",
   "4K & 6K output",
   "Full-page website capture",
   "Custom-brand watermark",
   "Saved templates in your account",
+  "Team library — share templates with your team",
 ];
 
 type Billing = "monthly" | "yearly";

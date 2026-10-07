@@ -9,6 +9,7 @@ import { ingestFile } from "@/lib/assets";
 import { loadCustomDevices, syncCustomDevicesFromServer } from "@/lib/customDevices";
 import { buildDeviceScene, buildScreenScene, isScreenApp } from "@/lib/deviceScene";
 import { saveCurrentDraft } from "@/lib/drafts";
+import { ensureGoogleFont, loadCustomFonts } from "@/lib/fonts";
 import { ShotStrip } from "./ShotStrip";
 import { useShotBatchStore } from "@/lib/shotBatch";
 import { duplicateLayer, groupLayers, placeAsset, removeLayer, reorderLayer, ungroupLayers } from "@/lib/sceneOps";
@@ -62,6 +63,19 @@ export function EditorShell({
   const [toast, setToast] = useState<string | null>(null);
   const [promoOpen, setPromoOpen] = useState(false);
   const extensionCaptures = useRef(new Set<string>());
+
+  // Fonts: this browser's uploads (+ the account's), and every catalog family
+  // the scene's text uses — drafts, templates and remixes arrive with fonts
+  // the root stylesheet doesn't load. A joined string keeps the selector stable.
+  const textFamilies = useSceneStore((s) =>
+    [...new Set(s.scene.layers.flatMap((l) => (l.type === "text" ? [l.font.family] : [])))].sort().join("\n")
+  );
+  useEffect(() => {
+    void loadCustomFonts();
+  }, []);
+  useEffect(() => {
+    for (const family of textFamilies.split("\n")) if (family) void ensureGoogleFont(family);
+  }, [textFamilies]);
 
   // Promo video flow opens from the toolbar button (framekit:promo-open) or the
   // /editor?promo=1 deep link used by the landing page.

@@ -59,6 +59,7 @@ const COLS: { title: string; links: [string, string][] }[] = [
       ["/guides", "Guides"],
       ["/changelog", "Changelog"],
       ["/developers/automations", "Automations"],
+      ["/license", "Commercial license"],
       ["/privacy", "Privacy policy"],
     ],
   },
@@ -79,6 +80,11 @@ export function MarketingFooter() {
           <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-zinc-500">
             The free screenshot mockup studio. Pixel-accurate device frames, gorgeous scenes, one-click export.
           </p>
+          {/* directory listing badge — the listing stays live only while this badge is on the site */}
+          <a href="https://www.microsaasexamples.com" className="mt-5 inline-block opacity-90 transition-opacity hover:opacity-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="https://www.microsaasexamples.com/badge/msx-badge-light.svg" alt="Listed on Micro SaaS Examples" className="h-10 w-auto" loading="lazy" />
+          </a>
         </div>
         {COLS.map((col) => (
           <div key={col.title}>

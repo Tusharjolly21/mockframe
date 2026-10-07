@@ -1,0 +1,600 @@
+# Pages — dependency trees
+
+Local imports traced recursively (node_modules and `packages/*` workspace libs skipped; each file listed once at first sight). The editor tree is depth-limited to 3 because it reaches most of `lib/`. These are CANDIDATE context files; select under the payload budget.
+
+## / (Marketing home)
+Entry: `apps/web/app/page.tsx`
+Dependencies:
+- apps/web/components/marketing/ChatStoriesSection.tsx
+  - apps/web/lib/marketing/stories.ts
+    - apps/web/lib/screens/index.ts
+      - apps/web/lib/screens/common.ts
+      - apps/web/lib/screens/aiapp.ts
+        - apps/web/lib/screens/types.ts
+          - apps/web/lib/screens/frames.ts
+      - apps/web/lib/screens/aichat.ts
+        - apps/web/lib/screens/fonts.ts
+      - apps/web/lib/screens/bluesky.ts
+      - apps/web/lib/screens/code.ts
+      - apps/web/lib/screens/dating.ts
+      - apps/web/lib/screens/discord.ts
+      - apps/web/lib/screens/email.ts
+      - apps/web/lib/screens/github.ts
+      - apps/web/lib/screens/hinge.ts
+      - apps/web/lib/screens/line.ts
+      - apps/web/lib/screens/stripe.ts
+      - apps/web/lib/screens/story.ts
+      - apps/web/lib/screens/teams.ts
+      - apps/web/lib/screens/testimonial.ts
+      - apps/web/lib/screens/youtube.ts
+      - apps/web/lib/screens/imessage.ts
+      - apps/web/lib/screens/reddit.ts
+      - apps/web/lib/screens/signal.ts
+      - apps/web/lib/screens/gmessages.ts
+      - apps/web/lib/screens/wechat.ts
+      - apps/web/lib/screens/slack.ts
+      - apps/web/lib/screens/social.ts
+      - apps/web/lib/screens/instagram.ts
+      - apps/web/lib/screens/messenger.ts
+      - apps/web/lib/screens/snapchat.ts
+      - apps/web/lib/screens/telegram.ts
+        - apps/web/lib/screens/wallpapers.ts
+      - apps/web/lib/screens/tiktok.ts
+      - apps/web/lib/screens/whatsapp.ts
+      - apps/web/lib/screens/xpost.ts
+      - apps/web/lib/screens/iosnotification.ts
+      - apps/web/lib/screens/spotify.ts
+      - apps/web/lib/screens/appstore.ts
+      - apps/web/lib/screens/appstore-promo.ts
+      - apps/web/lib/screens/googlemaps.ts
+      - apps/web/lib/screens/googleplay.ts
+  - apps/web/components/marketing/AppIconMarquee.tsx
+  - apps/web/components/marketing/LiveChatStory.tsx
+- apps/web/components/marketing/HeroSection.tsx
+  - apps/web/components/marketing/DemoVideo.tsx
+- apps/web/components/marketing/MarketingFooter.tsx
+  - apps/web/lib/site.ts
+  - apps/web/components/marketing/BrandMark.tsx
+  - apps/web/components/marketing/FeedbackButton.tsx
+    - apps/web/lib/analytics.ts
+- apps/web/components/marketing/MarketingNav.tsx
+- apps/web/components/marketing/home/FormatsRow.tsx
+  - apps/web/lib/canvasSizes.ts
+- apps/web/components/marketing/home/GalleryWall.tsx
+- apps/web/components/marketing/home/StyleSwitcher.tsx
+  - apps/web/lib/backgrounds.ts
+
+## /templates (Template library)
+Entry: `apps/web/app/templates/page.tsx`
+Dependencies:
+- apps/web/lib/screenTemplates.ts
+  - apps/web/lib/screens/index.ts
+    - apps/web/lib/screens/common.ts
+    - apps/web/lib/screens/aiapp.ts
+      - apps/web/lib/screens/types.ts
+        - apps/web/lib/screens/frames.ts
+    - apps/web/lib/screens/aichat.ts
+      - apps/web/lib/screens/fonts.ts
+    - apps/web/lib/screens/bluesky.ts
+    - apps/web/lib/screens/code.ts
+    - apps/web/lib/screens/dating.ts
+    - apps/web/lib/screens/discord.ts
+    - apps/web/lib/screens/email.ts
+    - apps/web/lib/screens/github.ts
+    - apps/web/lib/screens/hinge.ts
+    - apps/web/lib/screens/line.ts
+    - apps/web/lib/screens/stripe.ts
+    - apps/web/lib/screens/story.ts
+    - apps/web/lib/screens/teams.ts
+    - apps/web/lib/screens/testimonial.ts
+    - apps/web/lib/screens/youtube.ts
+    - apps/web/lib/screens/imessage.ts
+    - apps/web/lib/screens/reddit.ts
+    - apps/web/lib/screens/signal.ts
+    - apps/web/lib/screens/gmessages.ts
+    - apps/web/lib/screens/wechat.ts
+    - apps/web/lib/screens/slack.ts
+    - apps/web/lib/screens/social.ts
+    - apps/web/lib/screens/instagram.ts
+    - apps/web/lib/screens/messenger.ts
+    - apps/web/lib/screens/snapchat.ts
+    - apps/web/lib/screens/telegram.ts
+      - apps/web/lib/screens/wallpapers.ts
+    - apps/web/lib/screens/tiktok.ts
+    - apps/web/lib/screens/whatsapp.ts
+    - apps/web/lib/screens/xpost.ts
+    - apps/web/lib/screens/iosnotification.ts
+    - apps/web/lib/screens/spotify.ts
+    - apps/web/lib/screens/appstore.ts
+    - apps/web/lib/screens/appstore-promo.ts
+    - apps/web/lib/screens/googlemaps.ts
+    - apps/web/lib/screens/googleplay.ts
+  - apps/web/lib/sceneGroups.ts
+- apps/web/components/marketing/MarketingFooter.tsx
+  - apps/web/lib/site.ts
+  - apps/web/components/marketing/BrandMark.tsx
+  - apps/web/components/marketing/FeedbackButton.tsx
+    - apps/web/lib/analytics.ts
+- apps/web/components/marketing/MarketingNav.tsx
+- apps/web/components/marketing/Reveal.tsx
+- apps/web/components/SocialBrandIcon.tsx
+- apps/web/components/templates/StoreSetsSection.tsx
+  - apps/web/lib/storeSets.ts
+- apps/web/lib/appScreenTemplates.ts
+
+## /guides (Guides index)
+Entry: `apps/web/app/guides/page.tsx`
+Dependencies:
+- apps/web/components/marketing/GuideShot.tsx
+- apps/web/components/marketing/MarketingFooter.tsx
+  - apps/web/lib/site.ts
+  - apps/web/components/marketing/BrandMark.tsx
+  - apps/web/components/marketing/FeedbackButton.tsx
+    - apps/web/lib/analytics.ts
+- apps/web/components/marketing/MarketingNav.tsx
+- apps/web/components/marketing/Reveal.tsx
+- apps/web/lib/guides.ts
+
+## /guides/[slug] (Guide article)
+Entry: `apps/web/app/guides/[slug]/page.tsx`
+Dependencies:
+- apps/web/components/marketing/GuideShot.tsx
+- apps/web/components/marketing/MarketingFooter.tsx
+  - apps/web/lib/site.ts
+  - apps/web/components/marketing/BrandMark.tsx
+  - apps/web/components/marketing/FeedbackButton.tsx
+    - apps/web/lib/analytics.ts
+- apps/web/components/marketing/MarketingNav.tsx
+- apps/web/lib/guides.ts
+
+## /pricing (Pricing)
+Entry: `apps/web/app/pricing/page.tsx`
+Dependencies:
+- apps/web/components/marketing/MarketingFooter.tsx
+  - apps/web/lib/site.ts
+  - apps/web/components/marketing/BrandMark.tsx
+  - apps/web/components/marketing/FeedbackButton.tsx
+    - apps/web/lib/analytics.ts
+- apps/web/components/marketing/MarketingNav.tsx
+- apps/web/components/marketing/PricingPlans.tsx
+  - apps/web/components/marketing/SolarIcon.tsx
+    - apps/web/lib/generated/solarIconBodies.ts
+  - apps/web/lib/billing/plans.ts
+- apps/web/components/marketing/Reveal.tsx
+
+## /app-store-screenshots (Pack Studio + SEO page)
+Entry: `apps/web/app/app-store-screenshots/page.tsx`
+Dependencies:
+- apps/web/components/pack/PackStudio.tsx
+  - apps/web/components/AuthModal.tsx
+    - apps/web/lib/auth.tsx
+      - apps/web/lib/firebaseClient.ts
+    - apps/web/lib/iconStickers.ts
+      - apps/web/lib/generated/solarIconBodies.ts
+  - apps/web/components/editor/UpgradeModal.tsx
+    - apps/web/lib/billing/client.ts
+      - apps/web/lib/store.ts
+        - apps/web/lib/deviceScene.ts
+          - apps/web/lib/screens/index.ts
+            - apps/web/lib/screens/common.ts
+            - apps/web/lib/screens/aiapp.ts
+            - apps/web/lib/screens/aichat.ts
+            - apps/web/lib/screens/bluesky.ts
+            - apps/web/lib/screens/code.ts
+            - apps/web/lib/screens/dating.ts
+            - apps/web/lib/screens/discord.ts
+            - apps/web/lib/screens/email.ts
+            - apps/web/lib/screens/github.ts
+            - apps/web/lib/screens/hinge.ts
+            - apps/web/lib/screens/line.ts
+            - apps/web/lib/screens/stripe.ts
+            - apps/web/lib/screens/story.ts
+            - apps/web/lib/screens/teams.ts
+            - apps/web/lib/screens/testimonial.ts
+            - apps/web/lib/screens/youtube.ts
+            - apps/web/lib/screens/imessage.ts
+            - apps/web/lib/screens/reddit.ts
+            - apps/web/lib/screens/signal.ts
+            - apps/web/lib/screens/gmessages.ts
+            - apps/web/lib/screens/wechat.ts
+            - apps/web/lib/screens/slack.ts
+            - apps/web/lib/screens/social.ts
+            - apps/web/lib/screens/instagram.ts
+            - apps/web/lib/screens/messenger.ts
+            - apps/web/lib/screens/snapchat.ts
+            - apps/web/lib/screens/telegram.ts
+            - apps/web/lib/screens/tiktok.ts
+            - apps/web/lib/screens/whatsapp.ts
+            - apps/web/lib/screens/xpost.ts
+            - apps/web/lib/screens/iosnotification.ts
+            - apps/web/lib/screens/spotify.ts
+            - apps/web/lib/screens/appstore.ts
+            - apps/web/lib/screens/appstore-promo.ts
+            - apps/web/lib/screens/googlemaps.ts
+            - apps/web/lib/screens/googleplay.ts
+            - apps/web/lib/screens/types.ts
+      - apps/web/lib/billing/plans.ts
+    - apps/web/components/editor/Toolbar.tsx
+      - apps/web/components/AccountButton.tsx
+      - apps/web/components/marketing/BrandMark.tsx
+        - apps/web/lib/site.ts
+      - apps/web/components/editor/BrandKitPanel.tsx
+        - apps/web/lib/assets.ts
+          - apps/web/lib/builtinBackgrounds.ts
+        - apps/web/lib/brand.ts
+          - apps/web/lib/themes.ts
+        - apps/web/lib/sceneOps.ts
+      - apps/web/lib/drafts.ts
+      - apps/web/components/editor/DraftsPanel.tsx
+      - apps/web/components/editor/ShotBatchPanel.tsx
+        - apps/web/lib/bulkExport.tsx
+          - apps/web/lib/watermark.ts
+          - apps/web/lib/customWatermark.ts
+            - apps/web/lib/disclosure.ts
+          - apps/web/lib/zip.ts
+        - apps/web/lib/billing/gate.ts
+        - apps/web/lib/billing/screenGate.ts
+        - apps/web/lib/shotBatch.ts
+        - apps/web/components/editor/StaticScenePreview.tsx
+      - apps/web/components/editor/RealisticRenderPanel.tsx
+        - apps/web/lib/mockuuups.ts
+      - apps/web/components/editor/ui.tsx
+  - apps/web/lib/pack/export.ts
+    - apps/web/lib/pack/compile.ts
+      - apps/web/lib/pack/schema.ts
+      - apps/web/lib/pack/styles.ts
+    - apps/web/lib/pack/gate.ts
+  - apps/web/lib/pack/store.ts
+    - apps/web/lib/pack/ops.ts
+    - apps/web/lib/pack/persist.ts
+      - apps/web/lib/pack/persistShape.ts
+  - apps/web/components/pack/PackInspector.tsx
+    - apps/web/components/ai/LaunchCopyPanel.tsx
+    - apps/web/components/pack/StyleThumb.tsx
+  - apps/web/components/pack/PackPreview.tsx
+  - apps/web/components/pack/ScreenStrip.tsx
+
+## /editor (Editor (EditorShell))
+Entry: `apps/web/app/editor/page.tsx`
+Dependencies:
+- apps/web/components/editor/EditorShell.tsx
+  - apps/web/lib/analytics.ts
+  - apps/web/lib/billing/client.ts
+    - apps/web/lib/firebaseClient.ts
+    - apps/web/lib/store.ts
+      - apps/web/lib/deviceScene.ts
+    - apps/web/lib/auth.tsx
+    - apps/web/lib/billing/plans.ts
+  - apps/web/lib/assets.ts
+    - apps/web/lib/builtinBackgrounds.ts
+    - apps/web/lib/screens/index.ts
+      - apps/web/lib/screens/common.ts
+      - apps/web/lib/screens/aiapp.ts
+      - apps/web/lib/screens/aichat.ts
+      - apps/web/lib/screens/bluesky.ts
+      - apps/web/lib/screens/code.ts
+      - apps/web/lib/screens/dating.ts
+      - apps/web/lib/screens/discord.ts
+      - apps/web/lib/screens/email.ts
+      - apps/web/lib/screens/github.ts
+      - apps/web/lib/screens/hinge.ts
+      - apps/web/lib/screens/line.ts
+      - apps/web/lib/screens/stripe.ts
+      - apps/web/lib/screens/story.ts
+      - apps/web/lib/screens/teams.ts
+      - apps/web/lib/screens/testimonial.ts
+      - apps/web/lib/screens/youtube.ts
+      - apps/web/lib/screens/imessage.ts
+      - apps/web/lib/screens/reddit.ts
+      - apps/web/lib/screens/signal.ts
+      - apps/web/lib/screens/gmessages.ts
+      - apps/web/lib/screens/wechat.ts
+      - apps/web/lib/screens/slack.ts
+      - apps/web/lib/screens/social.ts
+      - apps/web/lib/screens/instagram.ts
+      - apps/web/lib/screens/messenger.ts
+      - apps/web/lib/screens/snapchat.ts
+      - apps/web/lib/screens/telegram.ts
+      - apps/web/lib/screens/tiktok.ts
+      - apps/web/lib/screens/whatsapp.ts
+      - apps/web/lib/screens/xpost.ts
+      - apps/web/lib/screens/iosnotification.ts
+      - apps/web/lib/screens/spotify.ts
+      - apps/web/lib/screens/appstore.ts
+      - apps/web/lib/screens/appstore-promo.ts
+      - apps/web/lib/screens/googlemaps.ts
+      - apps/web/lib/screens/googleplay.ts
+      - apps/web/lib/screens/types.ts
+  - apps/web/lib/customDevices.ts
+  - apps/web/lib/drafts.ts
+  - apps/web/components/editor/ShotStrip.tsx
+    - apps/web/lib/storeSets.ts
+    - apps/web/lib/shotBatch.ts
+    - apps/web/components/editor/Toolbar.tsx
+      - apps/web/components/AccountButton.tsx
+      - apps/web/components/marketing/BrandMark.tsx
+      - apps/web/components/editor/BrandKitPanel.tsx
+      - apps/web/lib/sceneOps.ts
+      - apps/web/components/editor/DraftsPanel.tsx
+      - apps/web/components/editor/ShotBatchPanel.tsx
+      - apps/web/components/editor/RealisticRenderPanel.tsx
+      - apps/web/components/editor/ui.tsx
+  - apps/web/lib/arrange.ts
+  - apps/web/components/editor/AnimatePanel.tsx
+    - apps/web/lib/videoExport.ts
+      - apps/web/lib/disclosure.ts
+    - apps/web/lib/gifExport.ts
+    - apps/web/lib/billing/gate.ts
+    - apps/web/components/editor/MotionStudio.tsx
+      - apps/web/lib/motion.ts
+      - apps/web/lib/motionExport.ts
+  - apps/web/components/editor/BottomBar.tsx
+    - apps/web/lib/iconStickers.ts
+      - apps/web/lib/generated/solarIconBodies.ts
+    - apps/web/lib/storeBadges.tsx
+    - apps/web/lib/themes.ts
+  - apps/web/components/editor/CanvasStage.tsx
+    - apps/web/components/editor/ArrangeBar.tsx
+      - apps/web/lib/adjust.ts
+    - apps/web/components/editor/AdjustOverlay.tsx
+  - apps/web/components/editor/LeftPanel.tsx
+    - apps/web/lib/mockuuups.ts
+    - apps/web/lib/layouts.ts
+    - apps/web/components/editor/CaptureUrlDialog.tsx
+    - apps/web/components/editor/DevicePicker.tsx
+      - apps/web/components/editor/CustomMockupModal.tsx
+    - apps/web/components/editor/MediaEditor.tsx
+      - apps/web/lib/perspective.ts
+    - apps/web/components/editor/ScreenStudio.tsx
+      - apps/web/lib/screens/wallpapers.ts
+      - apps/web/lib/blueskyImport.ts
+      - apps/web/lib/xpostImport.ts
+      - apps/web/lib/postImport.ts
+      - apps/web/lib/githubImport.ts
+      - apps/web/lib/screens/frames.ts
+      - apps/web/lib/screens/fonts.ts
+      - apps/web/components/SocialBrandIcon.tsx
+    - apps/web/components/editor/FramePanel.tsx
+      - apps/web/lib/canvasSizes.ts
+      - apps/web/lib/backgrounds.ts
+      - apps/web/lib/palette.ts
+    - apps/web/components/editor/StepFlow.tsx
+  - apps/web/components/editor/RightPanel.tsx
+    - apps/web/lib/export.ts
+      - apps/web/lib/watermark.ts
+      - apps/web/lib/customWatermark.ts
+    - apps/web/lib/bulkExport.tsx
+      - apps/web/lib/zip.ts
+    - apps/web/lib/variations.ts
+    - apps/web/lib/combos.ts
+    - apps/web/lib/billing/screenGate.ts
+    - apps/web/lib/userTemplates.ts
+    - apps/web/components/editor/UpgradeModal.tsx
+      - apps/web/components/AuthModal.tsx
+    - apps/web/components/editor/WatermarkPanel.tsx
+    - apps/web/components/editor/StaticScenePreview.tsx
+  - apps/web/components/editor/ExportNextSteps.tsx
+  - apps/web/components/editor/MobileGate.tsx
+  - apps/web/components/editor/StarterModal.tsx
+  - apps/web/components/editor/ShortcutsSheet.tsx
+
+## /templates/sets/[set] (Store set in the editor)
+Entry: `apps/web/app/templates/sets/[set]/page.tsx`
+Dependencies:
+- apps/web/components/editor/EditorShell.tsx
+  - apps/web/lib/analytics.ts
+  - apps/web/lib/billing/client.ts
+    - apps/web/lib/firebaseClient.ts
+    - apps/web/lib/store.ts
+      - apps/web/lib/deviceScene.ts
+    - apps/web/lib/auth.tsx
+    - apps/web/lib/billing/plans.ts
+  - apps/web/lib/assets.ts
+    - apps/web/lib/builtinBackgrounds.ts
+    - apps/web/lib/screens/index.ts
+      - apps/web/lib/screens/common.ts
+      - apps/web/lib/screens/aiapp.ts
+      - apps/web/lib/screens/aichat.ts
+      - apps/web/lib/screens/bluesky.ts
+      - apps/web/lib/screens/code.ts
+      - apps/web/lib/screens/dating.ts
+      - apps/web/lib/screens/discord.ts
+      - apps/web/lib/screens/email.ts
+      - apps/web/lib/screens/github.ts
+      - apps/web/lib/screens/hinge.ts
+      - apps/web/lib/screens/line.ts
+      - apps/web/lib/screens/stripe.ts
+      - apps/web/lib/screens/story.ts
+      - apps/web/lib/screens/teams.ts
+      - apps/web/lib/screens/testimonial.ts
+      - apps/web/lib/screens/youtube.ts
+      - apps/web/lib/screens/imessage.ts
+      - apps/web/lib/screens/reddit.ts
+      - apps/web/lib/screens/signal.ts
+      - apps/web/lib/screens/gmessages.ts
+      - apps/web/lib/screens/wechat.ts
+      - apps/web/lib/screens/slack.ts
+      - apps/web/lib/screens/social.ts
+      - apps/web/lib/screens/instagram.ts
+      - apps/web/lib/screens/messenger.ts
+      - apps/web/lib/screens/snapchat.ts
+      - apps/web/lib/screens/telegram.ts
+      - apps/web/lib/screens/tiktok.ts
+      - apps/web/lib/screens/whatsapp.ts
+      - apps/web/lib/screens/xpost.ts
+      - apps/web/lib/screens/iosnotification.ts
+      - apps/web/lib/screens/spotify.ts
+      - apps/web/lib/screens/appstore.ts
+      - apps/web/lib/screens/appstore-promo.ts
+      - apps/web/lib/screens/googlemaps.ts
+      - apps/web/lib/screens/googleplay.ts
+      - apps/web/lib/screens/types.ts
+  - apps/web/lib/customDevices.ts
+  - apps/web/lib/drafts.ts
+  - apps/web/components/editor/ShotStrip.tsx
+    - apps/web/lib/storeSets.ts
+    - apps/web/lib/shotBatch.ts
+    - apps/web/components/editor/Toolbar.tsx
+      - apps/web/components/AccountButton.tsx
+      - apps/web/components/marketing/BrandMark.tsx
+      - apps/web/components/editor/BrandKitPanel.tsx
+      - apps/web/lib/sceneOps.ts
+      - apps/web/components/editor/DraftsPanel.tsx
+      - apps/web/components/editor/ShotBatchPanel.tsx
+      - apps/web/components/editor/RealisticRenderPanel.tsx
+      - apps/web/components/editor/ui.tsx
+  - apps/web/lib/arrange.ts
+  - apps/web/components/editor/AnimatePanel.tsx
+    - apps/web/lib/videoExport.ts
+      - apps/web/lib/disclosure.ts
+    - apps/web/lib/gifExport.ts
+    - apps/web/lib/billing/gate.ts
+    - apps/web/components/editor/MotionStudio.tsx
+      - apps/web/lib/motion.ts
+      - apps/web/lib/motionExport.ts
+  - apps/web/components/editor/BottomBar.tsx
+    - apps/web/lib/iconStickers.ts
+      - apps/web/lib/generated/solarIconBodies.ts
+    - apps/web/lib/storeBadges.tsx
+    - apps/web/lib/themes.ts
+  - apps/web/components/editor/CanvasStage.tsx
+    - apps/web/components/editor/ArrangeBar.tsx
+      - apps/web/lib/adjust.ts
+    - apps/web/components/editor/AdjustOverlay.tsx
+  - apps/web/components/editor/LeftPanel.tsx
+    - apps/web/lib/mockuuups.ts
+    - apps/web/lib/layouts.ts
+    - apps/web/components/editor/CaptureUrlDialog.tsx
+    - apps/web/components/editor/DevicePicker.tsx
+      - apps/web/components/editor/CustomMockupModal.tsx
+    - apps/web/components/editor/MediaEditor.tsx
+      - apps/web/lib/perspective.ts
+    - apps/web/components/editor/ScreenStudio.tsx
+      - apps/web/lib/screens/wallpapers.ts
+      - apps/web/lib/blueskyImport.ts
+      - apps/web/lib/xpostImport.ts
+      - apps/web/lib/postImport.ts
+      - apps/web/lib/githubImport.ts
+      - apps/web/lib/screens/frames.ts
+      - apps/web/lib/screens/fonts.ts
+      - apps/web/components/SocialBrandIcon.tsx
+    - apps/web/components/editor/FramePanel.tsx
+      - apps/web/lib/canvasSizes.ts
+      - apps/web/lib/backgrounds.ts
+      - apps/web/lib/palette.ts
+    - apps/web/components/editor/StepFlow.tsx
+  - apps/web/components/editor/RightPanel.tsx
+    - apps/web/lib/export.ts
+      - apps/web/lib/watermark.ts
+      - apps/web/lib/customWatermark.ts
+    - apps/web/lib/bulkExport.tsx
+      - apps/web/lib/zip.ts
+    - apps/web/lib/variations.ts
+    - apps/web/lib/combos.ts
+    - apps/web/lib/billing/screenGate.ts
+    - apps/web/lib/userTemplates.ts
+    - apps/web/components/editor/UpgradeModal.tsx
+      - apps/web/components/AuthModal.tsx
+    - apps/web/components/editor/WatermarkPanel.tsx
+    - apps/web/components/editor/StaticScenePreview.tsx
+  - apps/web/components/editor/ExportNextSteps.tsx
+  - apps/web/components/editor/MobileGate.tsx
+  - apps/web/components/editor/StarterModal.tsx
+  - apps/web/components/editor/ShortcutsSheet.tsx
+
+## /mockups (Device mockups index)
+Entry: `apps/web/app/mockups/page.tsx`
+Dependencies:
+- apps/web/components/marketing/MarketingFooter.tsx
+  - apps/web/lib/site.ts
+  - apps/web/components/marketing/BrandMark.tsx
+  - apps/web/components/marketing/FeedbackButton.tsx
+    - apps/web/lib/analytics.ts
+- apps/web/components/marketing/MarketingNav.tsx
+- apps/web/components/marketing/Reveal.tsx
+
+## /ai (AI screenshot generator)
+Entry: `apps/web/app/ai/page.tsx`
+Dependencies:
+- apps/web/components/ai/AiPackForm.tsx
+  - apps/web/lib/firebaseClient.ts
+  - apps/web/lib/pack/persist.ts
+    - apps/web/lib/assets.ts
+      - apps/web/lib/builtinBackgrounds.ts
+      - apps/web/lib/screens/index.ts
+        - apps/web/lib/screens/common.ts
+        - apps/web/lib/screens/aiapp.ts
+          - apps/web/lib/screens/types.ts
+            - apps/web/lib/screens/frames.ts
+        - apps/web/lib/screens/aichat.ts
+          - apps/web/lib/screens/fonts.ts
+        - apps/web/lib/screens/bluesky.ts
+        - apps/web/lib/screens/code.ts
+        - apps/web/lib/screens/dating.ts
+        - apps/web/lib/screens/discord.ts
+        - apps/web/lib/screens/email.ts
+        - apps/web/lib/screens/github.ts
+        - apps/web/lib/screens/hinge.ts
+        - apps/web/lib/screens/line.ts
+        - apps/web/lib/screens/stripe.ts
+        - apps/web/lib/screens/story.ts
+        - apps/web/lib/screens/teams.ts
+        - apps/web/lib/screens/testimonial.ts
+        - apps/web/lib/screens/youtube.ts
+        - apps/web/lib/screens/imessage.ts
+        - apps/web/lib/screens/reddit.ts
+        - apps/web/lib/screens/signal.ts
+        - apps/web/lib/screens/gmessages.ts
+        - apps/web/lib/screens/wechat.ts
+        - apps/web/lib/screens/slack.ts
+        - apps/web/lib/screens/social.ts
+        - apps/web/lib/screens/instagram.ts
+        - apps/web/lib/screens/messenger.ts
+        - apps/web/lib/screens/snapchat.ts
+        - apps/web/lib/screens/telegram.ts
+          - apps/web/lib/screens/wallpapers.ts
+        - apps/web/lib/screens/tiktok.ts
+        - apps/web/lib/screens/whatsapp.ts
+        - apps/web/lib/screens/xpost.ts
+        - apps/web/lib/screens/iosnotification.ts
+        - apps/web/lib/screens/spotify.ts
+        - apps/web/lib/screens/appstore.ts
+        - apps/web/lib/screens/appstore-promo.ts
+        - apps/web/lib/screens/googlemaps.ts
+        - apps/web/lib/screens/googleplay.ts
+    - apps/web/lib/pack/persistShape.ts
+      - apps/web/lib/pack/schema.ts
+  - apps/web/components/AuthModal.tsx
+    - apps/web/lib/auth.tsx
+    - apps/web/lib/iconStickers.ts
+      - apps/web/lib/generated/solarIconBodies.ts
+  - apps/web/components/editor/UpgradeModal.tsx
+    - apps/web/lib/billing/client.ts
+      - apps/web/lib/store.ts
+        - apps/web/lib/deviceScene.ts
+      - apps/web/lib/billing/plans.ts
+    - apps/web/components/editor/Toolbar.tsx
+      - apps/web/components/AccountButton.tsx
+      - apps/web/components/marketing/BrandMark.tsx
+        - apps/web/lib/site.ts
+      - apps/web/components/editor/BrandKitPanel.tsx
+        - apps/web/lib/brand.ts
+          - apps/web/lib/themes.ts
+        - apps/web/lib/sceneOps.ts
+      - apps/web/lib/drafts.ts
+      - apps/web/components/editor/DraftsPanel.tsx
+      - apps/web/components/editor/ShotBatchPanel.tsx
+        - apps/web/lib/bulkExport.tsx
+          - apps/web/lib/watermark.ts
+          - apps/web/lib/customWatermark.ts
+            - apps/web/lib/disclosure.ts
+          - apps/web/lib/zip.ts
+        - apps/web/lib/billing/gate.ts
+        - apps/web/lib/billing/screenGate.ts
+        - apps/web/lib/shotBatch.ts
+        - apps/web/components/editor/StaticScenePreview.tsx
+      - apps/web/components/editor/RealisticRenderPanel.tsx
+        - apps/web/lib/mockuuups.ts
+      - apps/web/components/editor/ui.tsx
+  - apps/web/lib/ai/clientImages.ts
+  - apps/web/components/ai/LaunchCopyPanel.tsx

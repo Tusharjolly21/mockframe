@@ -26,6 +26,7 @@ import { WatermarkPanel } from "./WatermarkPanel";
 import { Popover, Seg, SliderRow } from "./ui";
 import { toast } from "./Toolbar";
 import { StaticScenePreview } from "./StaticScenePreview";
+import { TeamLibrary } from "./TeamLibrary";
 
 function ScenePreview({ scene, className }: { scene: SceneDocument; className?: string }) {
   return <StaticScenePreview scene={scene} className={`pointer-events-none w-full rounded-xl ${className ?? ""}`} />;
@@ -421,6 +422,14 @@ export function RightPanel() {
             <Sparkles size={12} /> Pro — stamp your own brand
           </button>
         )}
+        {!removeWatermark && (
+          <p className="mt-1.5 text-center text-[10px] leading-snug text-[#9a9aa4]">
+            Free exports are for personal use ·{" "}
+            <a href="/license" target="_blank" rel="noopener" className="font-semibold text-[#6b6b76] underline underline-offset-2 hover:text-[#17171c]">
+              commercial license with Pro
+            </a>
+          </p>
+        )}
       </div>
       {upgradeOpen && <UpgradeModal initialPlan={upgradePlan} reason={upgradeReason} onClose={() => setUpgradeOpen(false)} />}
       {watermarkOpen && (
@@ -472,6 +481,7 @@ export function RightPanel() {
       )}
 
       <MyTemplates />
+      <TeamLibrary />
       <ConnectorsPanel />
       </>}
     </div>

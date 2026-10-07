@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { SceneRenderer } from "@framekit/renderer";
 import type { SceneDocument } from "@framekit/scene";
 import { resolveAsset, restoreAssets, type GuestAsset } from "@/lib/assets";
+import { ensureSceneFonts } from "@/lib/fonts";
 
 /** Read-only, scaled-to-fit render of a shared scene. Hydrates the asset
  *  registry from the share doc's hosted URLs, then uses the app's normal
@@ -17,6 +18,10 @@ export function SharedSceneView({ scene, assets }: { scene: SceneDocument; asset
     restoreAssets(assets);
     setReady(true);
   }, [assets]);
+
+  useEffect(() => {
+    void ensureSceneFonts(scene);
+  }, [scene]);
 
   useEffect(() => {
     const el = wrapRef.current;
