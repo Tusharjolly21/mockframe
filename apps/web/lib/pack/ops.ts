@@ -1,4 +1,4 @@
-import { isStoreLocale, MAX_PACK_LOCALES, SOURCE_LOCALE } from "./locales";
+import { DEFAULT_SOURCE_STORE_LOCALE, isStoreLocale, MAX_PACK_LOCALES, SOURCE_LOCALE } from "./locales";
 import { createPackScreen, type PackDocument } from "./schema";
 
 /** Pure pack mutations — the zustand store wraps these; tests hit them directly. */
@@ -104,11 +104,22 @@ export function setCaption(
 export function addLocales(pack: PackDocument, ids: string[]): PackDocument {
   const next = [...(pack.locales ?? [])];
   for (const id of ids) {
-    if (id === SOURCE_LOCALE || !isStoreLocale(id) || next.includes(id)) continue;
+    if (id === SOURCE_LOCALE || id === packSourceLocale(pack) || !isStoreLocale(id) || next.includes(id)) continue;
     if (next.length >= MAX_PACK_LOCALES) break;
     next.push(id);
   }
   return { ...pack, locales: next };
+}
+
+/** The store locale the pack's source captions are written in. */
+export function packSourceLocale(pack: PackDocument): string {
+  return pack.sourceLocale && isStoreLocale(pack.sourceLocale) ? pack.sourceLocale : DEFAULT_SOURCE_STORE_LOCALE;
+}
+
+/** Set the source captions' language; it can't also be a translation target. */
+export function setSourceLocale(pack: PackDocument, id: string): PackDocument {
+  if (!isStoreLocale(id)) return pack;
+  return removeLocale({ ...pack, sourceLocale: id }, id);
 }
 
 /** Drop a language and its translated captions. */

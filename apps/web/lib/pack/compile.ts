@@ -17,7 +17,8 @@ import {
   type PackDocument,
   type PackTargetId,
 } from "./schema";
-import { SOURCE_LOCALE } from "./locales";
+import { SOURCE_LOCALE, storeLocale } from "./locales";
+import { packSourceLocale } from "./ops";
 import { PACK_STYLES, type PackStyle } from "./styles";
 
 /**
@@ -269,6 +270,7 @@ export function compilePack(pack: PackDocument): CompiledEntry[] {
   const entries: CompiledEntry[] = [];
   const locales = packLocales(pack);
   const localized = locales.length > 1;
+  const fastlane = pack.exportLayout === "fastlane";
   for (const locale of locales) {
     const prefix = localized ? `${localeFolder(locale)}/` : "";
     for (const targetId of PACK_TARGET_IDS) {
@@ -276,7 +278,7 @@ export function compilePack(pack: PackDocument): CompiledEntry[] {
       const folder = PACK_TARGETS[targetId].folder;
       pack.screens.forEach((_, i) => {
         entries.push({
-          path: `${prefix}${folder}/${String(i + 1).padStart(2, "0")}.png`,
+          path: fastlane ? fastlanePath(pack, locale, targetId, i) : `${prefix}${folder}/${String(i + 1).padStart(2, "0")}.png`,
           scene: compilePackScene(pack, i, targetId, locale),
           ...(style.panorama ? { panoramaIdx: i, panoramaTotal: pack.screens.length } : {}),
         });
@@ -284,7 +286,12 @@ export function compilePack(pack: PackDocument): CompiledEntry[] {
     }
   }
   if (pack.targets["play-feature"]) {
-    entries.push({ path: "Play Store/feature-graphic-1024x500.png", scene: compileFeatureGraphic(pack) });
+    entries.push({
+      path: fastlane
+        ? `fastlane/metadata/android/${playCode(packSourceLocale(pack))}/images/featureGraphic.png`
+        : "Play Store/feature-graphic-1024x500.png",
+      scene: compileFeatureGraphic(pack),
+    });
   }
   const launch = pack.launch;
   if (launch) {
@@ -294,6 +301,26 @@ export function compilePack(pack: PackDocument): CompiledEntry[] {
     }
   }
   return entries;
+}
+
+/* fastlane: `deliver` reads fastlane/screenshots/<App Store locale>/ and works
+   out each image's display type from its pixel size; `supply` reads
+   fastlane/metadata/android/<Play locale>/images/. */
+const FASTLANE_DEVICE: Partial<Record<PackTargetId, string>> = {
+  "appstore-69": "iPhone69",
+  "appstore-65": "iPhone65",
+  "appstore-ipad13": "iPadPro13",
+};
+
+function playCode(locale: string): string {
+  return storeLocale(locale)?.play ?? locale;
+}
+
+function fastlanePath(pack: PackDocument, locale: string, targetId: PackTargetId, i: number): string {
+  const store = locale === SOURCE_LOCALE ? packSourceLocale(pack) : locale;
+  const n = String(i + 1).padStart(2, "0");
+  if (targetId === "play-phone") return `fastlane/metadata/android/${playCode(store)}/images/phoneScreenshots/${n}.png`;
+  return `fastlane/screenshots/${store}/${n}_${FASTLANE_DEVICE[targetId] ?? targetId}.png`;
 }
 
 /** Zip folder for a language: the store locale id, or "source" for the pack's own captions. */
@@ -309,6 +336,7 @@ const LAUNCH_SURFACE_DESCRIPTIONS: Record<LaunchSurfaceId, string> = {
 };
 
 export function packReadme(pack: PackDocument, failed: string[] = []): string {
+  if (pack.exportLayout === "fastlane") return fastlaneReadme(pack, failed);
   const lines: string[] = [
     `${pack.appName.trim() || "Your app"} — store screenshot pack`,
     "Generated with MockFrame · https://mockframe.app/app-store-screenshots",
@@ -351,5 +379,46 @@ export function packReadme(pack: PackDocument, failed: string[] = []): string {
     for (const f of failed) lines.push(f);
     lines.push("Re-run the export from MockFrame to retry these files.");
   }
+  return lines.join("\n");
+}
+
+function failedSection(failed: string[]): string[] {
+  if (!failed.length) return [];
+  return ["", "FAILED TO RENDER", "----------------", ...failed, "Re-run the export from MockFrame to retry these files."];
+}
+
+function fastlaneReadme(pack: PackDocument, failed: string[]): string {
+  const ios = pack.targets["appstore-69"] || pack.targets["appstore-65"] || pack.targets["appstore-ipad13"];
+  const android = pack.targets["play-phone"] || pack.targets["play-feature"];
+  const locales = packLocales(pack).map((l) => (l === SOURCE_LOCALE ? packSourceLocale(pack) : l));
+  const lines: string[] = [
+    `${pack.appName.trim() || "Your app"} — store screenshots, fastlane layout`,
+    "Generated with MockFrame · https://mockframe.app/app-store-screenshots",
+    "",
+    "Unzip this into your project root (it merges into your existing fastlane/ folder), then:",
+    "",
+  ];
+  if (ios) {
+    lines.push(
+      "App Store (fastlane deliver):",
+      "  fastlane deliver --skip_binary_upload --skip_metadata --overwrite_screenshots",
+      "  deliver picks each image's display size from its resolution.",
+      ""
+    );
+  }
+  if (android) {
+    lines.push(
+      "Google Play (fastlane supply):",
+      "  fastlane supply --skip_upload_apk --skip_upload_aab --skip_upload_metadata --skip_upload_changelogs",
+      ""
+    );
+  }
+  lines.push(`Languages: ${locales.join(", ")}`);
+  if (locales.length > 1) lines.push("Screens without a translation use the original caption.");
+  const launch = pack.launch;
+  if (launch && PACK_LAUNCH_SURFACE_IDS.some((id) => launch.surfaces[id])) {
+    lines.push("", "Launch Kit/ isn't used by fastlane: those are images for Product Hunt, social posts and stories.");
+  }
+  lines.push(...failedSection(failed));
   return lines.join("\n");
 }

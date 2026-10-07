@@ -105,3 +105,26 @@ describe("translation request", () => {
     expect(out["ar-SA"]).toHaveLength(2);
   });
 });
+
+describe("fastlane layout", () => {
+  it("writes deliver and supply folders per language", async () => {
+    const { setSourceLocale } = await import("../ops");
+    let p = addLocales(pack(), ["de-DE", "ja"]);
+    p = { ...p, exportLayout: "fastlane", targets: { ...p.targets, "play-phone": true } };
+    const paths = compilePack(p).map((e) => e.path);
+    expect(paths).toContain("fastlane/screenshots/en-US/01_iPhone69.png");
+    expect(paths).toContain("fastlane/screenshots/de-DE/02_iPhone69.png");
+    expect(paths).toContain("fastlane/metadata/android/ja-JP/images/phoneScreenshots/01.png");
+    expect(paths).toContain("fastlane/metadata/android/en-US/images/featureGraphic.png");
+    expect(packReadme(p)).toContain("fastlane deliver");
+    expect(packReadme(p)).toContain("en-US, de-DE, ja");
+
+    // a German-first app: source folders are de-DE, and German can't also be a target
+    p = setSourceLocale(p, "de-DE");
+    expect(p.locales).toEqual(["ja"]);
+    expect(addLocales(p, ["de-DE"]).locales).toEqual(["ja"]);
+    const de = compilePack(p).map((e) => e.path);
+    expect(de).toContain("fastlane/screenshots/de-DE/01_iPhone69.png");
+    expect(de.some((x) => x.includes("/en-US/"))).toBe(false);
+  });
+});

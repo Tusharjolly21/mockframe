@@ -6,7 +6,7 @@ import { AuthModal } from "@/components/AuthModal";
 import { UpgradeModal } from "@/components/editor/UpgradeModal";
 import { useIsPro } from "@/lib/billing/gate";
 import { POPULAR_LOCALES, SOURCE_LOCALE, STORE_LOCALES, MAX_PACK_LOCALES, storeLocale } from "@/lib/pack/locales";
-import { addLocales, applyTranslation, missingTranslations, removeLocale } from "@/lib/pack/ops";
+import { addLocales, applyTranslation, missingTranslations, packSourceLocale, removeLocale, setSourceLocale } from "@/lib/pack/ops";
 import { usePackStore } from "@/lib/pack/store";
 import { TranslateError, translatePack } from "@/lib/pack/translate";
 
@@ -84,6 +84,18 @@ export function PackLanguages() {
 
   return (
     <div>
+      <label className="mb-2.5 flex items-center justify-between gap-2 text-[12px] text-white/55">
+        Captions written in
+        <select
+          value={packSourceLocale(pack)}
+          onChange={(e) => update((p) => setSourceLocale(p, e.target.value))}
+          className="min-w-0 flex-1 rounded-md border border-white/10 bg-black/30 px-2 py-1 text-[12px] text-white/80"
+        >
+          {STORE_LOCALES.map((l) => (
+            <option key={l.id} value={l.id}>{l.label}</option>
+          ))}
+        </select>
+      </label>
       <div className="flex flex-wrap gap-1.5">
         {chip(SOURCE_LOCALE, "Original", 0)}
         {locales.map((id) => chip(id, storeLocale(id)?.label ?? id, missingTranslations(pack, id)))}
@@ -118,7 +130,7 @@ export function PackLanguages() {
             />
           </label>
           <div className="max-h-48 overflow-y-auto">
-            {filtered.map((l) => {
+            {filtered.filter((l) => l.id !== packSourceLocale(pack)).map((l) => {
               const on = locales.includes(l.id);
               return (
                 <button

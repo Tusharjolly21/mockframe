@@ -228,6 +228,11 @@ export const PackDocumentSchema = z.object({
   /** extra store languages to export, as store locale ids; the source
    *  captions always export too. Optional: packs before localization parse. */
   locales: z.array(z.string().max(16)).max(MAX_PACK_LOCALES).optional(),
+  /** store locale the source captions are written in (default en-US); used to
+   *  name the source folders in the fastlane layout */
+  sourceLocale: z.string().max(16).optional(),
+  /** zip layout: store-named folders (default) or fastlane deliver/supply */
+  exportLayout: z.enum(["standard", "fastlane"]).optional(),
 });
 
 export type PackScreen = z.infer<typeof PackScreenSchema>;

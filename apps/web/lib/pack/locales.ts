@@ -18,6 +18,8 @@ export interface StoreLocale {
 }
 
 export const SOURCE_LOCALE = "en";
+/** what the source captions are assumed to be when the pack doesn't say */
+export const DEFAULT_SOURCE_STORE_LOCALE = "en-US";
 
 export const STORE_LOCALES: StoreLocale[] = [
   { id: "en-US", label: "English (US)", native: "English", play: "en-US" },

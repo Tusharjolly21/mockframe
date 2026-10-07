@@ -224,6 +224,29 @@ export function PackInspector() {
       </Section>
 
       <Section title="Export sizes">
+        <div className="mb-3 flex gap-1 rounded-lg bg-black/30 p-1 text-[12px]" role="radiogroup" aria-label="Zip layout">
+          {([
+            ["standard", "Store folders"],
+            ["fastlane", "fastlane"],
+          ] as const).map(([id, label]) => (
+            <button
+              key={id}
+              role="radio"
+              aria-checked={(pack.exportLayout ?? "standard") === id}
+              onClick={() => update((p) => ({ ...p, exportLayout: id }))}
+              className={`flex-1 rounded-md py-1 transition ${
+                (pack.exportLayout ?? "standard") === id ? "bg-violet-600 text-white" : "text-white/60"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {pack.exportLayout === "fastlane" && (
+          <p className="mb-3 text-[11px] leading-4 text-white/40">
+            Zip matches fastlane&apos;s folders. Unzip it in your project, then run deliver (App Store) or supply (Play). The README has the commands.
+          </p>
+        )}
         {PACK_TARGET_IDS.map((id) => (
           <label key={id} className="mb-1.5 flex items-center gap-2 text-[12px] text-white/70">
             <input
