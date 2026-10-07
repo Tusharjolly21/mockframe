@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { History, Image as ImageIcon, X } from "lucide-react";
+import { track } from "@/lib/analytics";
 import { openDraftInEditor } from "@/lib/autosave";
 import { latestSceneDraft, timeAgo, useDraftsUi, type DraftRecord } from "@/lib/drafts";
 import { sceneTemporal, useSceneStore } from "@/lib/store";
@@ -52,6 +53,7 @@ export function ResumeDraftCard({ deepLinked, embedded }: { deepLinked: boolean;
   const open = () => {
     if (!draft) return;
     const ok = openDraftInEditor(draft);
+    if (ok) track("draft_resumed", { from: "resume_card" });
     setDraft(null);
     window.dispatchEvent(
       new CustomEvent("framekit:toast", { detail: ok ? `Opened “${draft.name}”` : "That draft couldn't be opened — it may be from a newer version." })

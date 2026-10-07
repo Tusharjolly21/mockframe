@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Check, Languages, Plus, Search, Sparkles, X } from "lucide-react";
 import { AuthModal } from "@/components/AuthModal";
 import { UpgradeModal } from "@/components/editor/UpgradeModal";
+import { track } from "@/lib/analytics";
 import { useIsPro } from "@/lib/billing/gate";
 import { POPULAR_LOCALES, SOURCE_LOCALE, STORE_LOCALES, MAX_PACK_LOCALES, storeLocale } from "@/lib/pack/locales";
 import { addLocales, applyTranslation, missingTranslations, packSourceLocale, removeLocale, setSourceLocale } from "@/lib/pack/ops";
@@ -48,8 +49,10 @@ export function PackLanguages() {
         update((p) => Object.entries(translations).reduce((acc, [locale, caps]) => applyTranslation(acc, locale, caps), p));
         setBusy({ done, total });
       });
+      track("pack_translated", { languages: targets.length, screens: pack.screens.length });
       setMessage({ tone: "ok", text: `Translated into ${targets.length} language${targets.length === 1 ? "" : "s"}. Edit any caption by picking its language.` });
     } catch (e) {
+      track("pack_translate_failed", { reason: e instanceof TranslateError ? e.reason : "failed" });
       if (e instanceof TranslateError && e.reason === "signin") setAuthOpen(true);
       else if (e instanceof TranslateError && e.reason === "pro") setUpgradeOpen(true);
       setMessage({ tone: "error", text: e instanceof Error ? e.message : "Translation failed — please retry." });

@@ -196,6 +196,7 @@ export function EditorShell({
     window.history.replaceState({}, "", "/editor");
     const say = (detail: string) => window.dispatchEvent(new CustomEvent("framekit:toast", { detail }));
     if (checkoutStatus === "failed" || checkoutStatus === "cancelled") {
+      track("purchase_cancelled", { status: checkoutStatus });
       const t = setTimeout(() => say("Payment was not completed — you have not been charged"), 0);
       return () => clearTimeout(t);
     }
@@ -205,6 +206,7 @@ export function EditorShell({
       say("Confirming your payment…");
       confirmCheckoutReturn(checkoutSubId ?? null).then((active) => {
         if (cancelled) return;
+        track(active ? "purchase_confirmed" : "purchase_pending");
         if (active) {
           useViewStore.getState().setRemoveWatermark(true);
           say("You're Pro - welcome aboard");

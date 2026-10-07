@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AuthModal } from "@/components/AuthModal";
 import { UpgradeModal } from "@/components/editor/UpgradeModal";
+import { track, trackOnce } from "@/lib/analytics";
 import { useEntitlementSync } from "@/lib/billing/client";
 import { exportPackZip, requestPackExport } from "@/lib/pack/export";
 import { usePackStore } from "@/lib/pack/store";
@@ -42,6 +43,7 @@ export function PackStudio() {
     try {
       const verdict = await requestPackExport();
       if (!verdict.allowed) {
+        track("pack_export_blocked", { reason: verdict.reason });
         if (verdict.reason === "signin") setAuthOpen(true);
         else setUpgradeOpen(true);
         return;
@@ -51,6 +53,9 @@ export function PackStudio() {
         clean: verdict.clean,
         onProgress: (d, t) => setExporting(true, { done: d, total: t }),
       });
+      const stats = { screens: pack.screens.length, languages: 1 + (pack.locales?.length ?? 0), layout: pack.exportLayout ?? "standard", failed: failed.length };
+      track("pack_exported", stats);
+      trackOnce("first_pack_export", stats);
       setDone(
         failed.length
           ? `Pack exported — ${failed.length} file(s) failed and are listed in README.txt.`

@@ -8,6 +8,7 @@ import { AuthModal } from "@/components/AuthModal";
 import { purchasePlan } from "@/lib/billing/client";
 import { formatPrice, perMonthPrice, PLANS, yearlySavingsPct, type PlanDef, type PlanId } from "@/lib/billing/plans";
 import { iconBody, ICON_VIEWBOX } from "@/lib/iconStickers";
+import { track } from "@/lib/analytics";
 import { toast } from "./Toolbar";
 
 // Two rules here:
@@ -57,8 +58,15 @@ export function UpgradeModal({
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    track("upgrade_viewed", { reason: reason ?? "general", plan: initialPlan, signed_in: !!account });
+    // once per opening
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const savings = yearlySavingsPct(plans);
   const pay = async () => {
+    track("checkout_started", { plan, reason: reason ?? "general" });
     setBusy(true);
     try {
       // opens Dodo's checkout over the page; after payment Dodo returns to the
@@ -202,7 +210,7 @@ export function UpgradeModal({
                 {busy ? "Opening secure checkout..." : `Continue with ${plan === "yearly" ? "Annual" : plans[plan].label}`}
               </button>
             ) : (
-              <button onClick={() => setAuthOpen(true)} className="fk-press mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-white py-3.5 text-[13px] font-semibold text-zinc-900 shadow-[0_8px_20px_rgba(0,0,0,0.18)] hover:bg-zinc-200">
+              <button onClick={() => { track("upgrade_signin", { plan }); setAuthOpen(true); }} className="fk-press mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-white py-3.5 text-[13px] font-semibold text-zinc-900 shadow-[0_8px_20px_rgba(0,0,0,0.18)] hover:bg-zinc-200">
                 <IconifyIcon name="login-2" size={16} color="#ffffff" /> Sign in to continue
               </button>
             )}

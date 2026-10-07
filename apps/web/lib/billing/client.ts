@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { firebaseFetch } from "../firebaseClient";
 import { useViewStore } from "../store";
 import { useAuth } from "../auth";
+import { track } from "../analytics";
 import type { PlanId } from "./plans";
 
 /* ------------------------- entitlement → view store ------------------------- */
@@ -54,6 +55,7 @@ export async function purchasePlan(plan: PlanId, expectedPrice: number): Promise
   const mode = j.mode === "live" ? "live" : "test";
 
   const redirect = async (): Promise<never> => {
+    track("checkout_opened", { plan, display: "page" });
     window.location.assign(checkoutUrl);
     // keep the caller's busy state until the page unloads
     return new Promise<never>(() => {});
@@ -73,6 +75,9 @@ export async function purchasePlan(plan: PlanId, expectedPrice: number): Promise
         mode,
         displayType: "overlay",
         onEvent: (event) => {
+          if (event.event_type === "checkout.opened") track("checkout_opened", { plan, display: "overlay" });
+          if (event.event_type === "checkout.pay_button_clicked") track("checkout_pay_clicked", { plan });
+          if (event.event_type === "checkout.redirect" && !navigating) track("checkout_finished", { plan });
           if (event.event_type === "checkout.redirect") navigating = true; // the SDK navigates to the return URL
           if (event.event_type === "checkout.error" && !navigating) resolve("failed");
           if (event.event_type === "checkout.closed" && !navigating) resolve("closed");
@@ -83,6 +88,7 @@ export async function purchasePlan(plan: PlanId, expectedPrice: number): Promise
       resolve("failed");
     }
   });
+  track(outcome === "failed" ? "checkout_failed" : "checkout_closed", { plan });
   if (outcome === "failed") {
     try {
       DodoPayments.Checkout.close();
