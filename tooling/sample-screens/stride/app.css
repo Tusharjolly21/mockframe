@@ -1,0 +1,6 @@
+:root { --bg: #f4f4f6; --accent: #ff4f5a; --accent2: #ff8a4c; --green: #22c55e; --blue: #3b82f6; }
+.grad { background: linear-gradient(135deg, #ff8a4c, #ff4f5a 55%, #f0306a); color: #fff; }
+.nav { height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+.nav .iconbtn { box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.nav .title { font-size: 17px; font-weight: 650; }
+.av { width: 36px; height: 36px; font-size: 13px; }

@@ -1,0 +1,32 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../lib/base.css"><link rel="stylesheet" href="app.css">
+<script src="../lib/icons.js"></script><script src="../lib/base.js"></script>
+<style>
+  body { background: #fff8e4; }
+  .timer { position: relative; width: 270px; height: 270px; margin: 22px auto 0; }
+  .timer .c { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+  .snd { display: flex; gap: 8px; justify-content: center; margin-top: 26px; }
+  .snd .chip { height: 34px; padding: 0 14px; font-size: 13px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .snd .on { background: var(--ink); color: #fff; }
+  .ctrl { display: flex; align-items: center; justify-content: center; gap: 26px; margin-top: 30px; }
+  .ctrl .s { width: 54px; height: 54px; border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .ctrl .p { width: 84px; height: 84px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; box-shadow: 0 12px 28px rgba(22,22,29,.25); }
+  .sess { display: flex; gap: 8px; justify-content: center; margin-top: 26px; }
+  .sess i { width: 34px; height: 8px; border-radius: 99px; background: rgba(22,22,29,.12); display: block; }
+  .sess .d { background: #f0b429; }
+</style></head><body>
+<div class="screen">
+  <div class="nav"><div class="iconbtn"><i data-i="chevron-left" style="font-size:20px"></i></div><div class="title">Focus</div><div class="iconbtn"><i data-i="settings" style="font-size:18px"></i></div></div>
+  <div style="text-align:center;margin-top:10px"><span class="chip" style="background:var(--butter);height:30px;font-size:13px"><i data-i="pen-line" style="font-size:14px"></i> Deep work · Thesis chapter 3</span></div>
+  <div class="timer">
+    <svg viewBox="0 0 270 270" style="transform:rotate(-90deg)"><defs><linearGradient id="t" x1="0" x2="1"><stop offset="0" stop-color="#ffd25e"/><stop offset="1" stop-color="#f08c29"/></linearGradient></defs><circle cx="135" cy="135" r="118" fill="#fff" stroke="#f3ead2" stroke-width="16"/><circle cx="135" cy="135" r="118" fill="none" stroke="url(#t)" stroke-width="16" stroke-linecap="round" stroke-dasharray="497 742"/>
+      <g stroke="#e8dcc0" stroke-width="2"><line x1="231.0" y1="135.0" x2="237.0" y2="135.0"/><line x1="230.5" y1="145.0" x2="236.4" y2="145.7"/><line x1="228.9" y1="155.0" x2="234.8" y2="156.2"/><line x1="226.3" y1="164.7" x2="232.0" y2="166.5"/><line x1="222.7" y1="174.0" x2="228.2" y2="176.5"/><line x1="218.1" y1="183.0" x2="223.3" y2="186.0"/><line x1="212.7" y1="191.4" x2="217.5" y2="195.0"/><line x1="206.3" y1="199.2" x2="210.8" y2="203.3"/><line x1="199.2" y1="206.3" x2="203.3" y2="210.8"/><line x1="191.4" y1="212.7" x2="195.0" y2="217.5"/><line x1="183.0" y1="218.1" x2="186.0" y2="223.3"/><line x1="174.0" y1="222.7" x2="176.5" y2="228.2"/><line x1="164.7" y1="226.3" x2="166.5" y2="232.0"/><line x1="155.0" y1="228.9" x2="156.2" y2="234.8"/><line x1="145.0" y1="230.5" x2="145.7" y2="236.4"/><line x1="135.0" y1="231.0" x2="135.0" y2="237.0"/><line x1="125.0" y1="230.5" x2="124.3" y2="236.4"/><line x1="115.0" y1="228.9" x2="113.8" y2="234.8"/><line x1="105.3" y1="226.3" x2="103.5" y2="232.0"/><line x1="96.0" y1="222.7" x2="93.5" y2="228.2"/><line x1="87.0" y1="218.1" x2="84.0" y2="223.3"/><line x1="78.6" y1="212.7" x2="75.0" y2="217.5"/><line x1="70.8" y1="206.3" x2="66.7" y2="210.8"/><line x1="63.7" y1="199.2" x2="59.2" y2="203.3"/><line x1="57.3" y1="191.4" x2="52.5" y2="195.0"/><line x1="51.9" y1="183.0" x2="46.7" y2="186.0"/><line x1="47.3" y1="174.0" x2="41.8" y2="176.5"/><line x1="43.7" y1="164.7" x2="38.0" y2="166.5"/><line x1="41.1" y1="155.0" x2="35.2" y2="156.2"/><line x1="39.5" y1="145.0" x2="33.6" y2="145.7"/><line x1="39.0" y1="135.0" x2="33.0" y2="135.0"/><line x1="39.5" y1="125.0" x2="33.6" y2="124.3"/><line x1="41.1" y1="115.0" x2="35.2" y2="113.8"/><line x1="43.7" y1="105.3" x2="38.0" y2="103.5"/><line x1="47.3" y1="96.0" x2="41.8" y2="93.5"/><line x1="51.9" y1="87.0" x2="46.7" y2="84.0"/><line x1="57.3" y1="78.6" x2="52.5" y2="75.0"/><line x1="63.7" y1="70.8" x2="59.2" y2="66.7"/><line x1="70.8" y1="63.7" x2="66.7" y2="59.2"/><line x1="78.6" y1="57.3" x2="75.0" y2="52.5"/><line x1="87.0" y1="51.9" x2="84.0" y2="46.7"/><line x1="96.0" y1="47.3" x2="93.5" y2="41.8"/><line x1="105.3" y1="43.7" x2="103.5" y2="38.0"/><line x1="115.0" y1="41.1" x2="113.8" y2="35.2"/><line x1="125.0" y1="39.5" x2="124.3" y2="33.6"/><line x1="135.0" y1="39.0" x2="135.0" y2="33.0"/><line x1="145.0" y1="39.5" x2="145.7" y2="33.6"/><line x1="155.0" y1="41.1" x2="156.2" y2="35.2"/><line x1="164.7" y1="43.7" x2="166.5" y2="38.0"/><line x1="174.0" y1="47.3" x2="176.5" y2="41.8"/><line x1="183.0" y1="51.9" x2="186.0" y2="46.7"/><line x1="191.4" y1="57.3" x2="195.0" y2="52.5"/><line x1="199.2" y1="63.7" x2="203.3" y2="59.2"/><line x1="206.3" y1="70.8" x2="210.8" y2="66.7"/><line x1="212.7" y1="78.6" x2="217.5" y2="75.0"/><line x1="218.1" y1="87.0" x2="223.3" y2="84.0"/><line x1="222.7" y1="96.0" x2="228.2" y2="93.5"/><line x1="226.3" y1="105.3" x2="232.0" y2="103.5"/><line x1="228.9" y1="115.0" x2="234.8" y2="113.8"/><line x1="230.5" y1="125.0" x2="236.4" y2="124.3"/></g></svg>
+    <div class="c"><div><div class="num" style="font-size:58px;font-weight:700">16:42</div><div class="muted" style="font-size:13px;font-weight:600;margin-top:2px">of 25 min · stay with it</div></div></div>
+  </div>
+  <div class="snd"><span class="chip on"><i data-i="waves" style="font-size:14px"></i> Rain</span><span class="chip"><i data-i="coffee" style="font-size:14px"></i> Café</span><span class="chip"><i data-i="leaf" style="font-size:14px"></i> Forest</span><span class="chip"><i data-i="volume-x" style="font-size:14px"></i> Off</span></div>
+  <div class="ctrl"><div class="s"><i data-i="refresh-cw" style="font-size:20px"></i></div><div class="p"><i data-i="pause" style="font-size:32px" data-s="2.4"></i></div><div class="s"><i data-i="skip-forward" style="font-size:20px"></i></div></div>
+  <div class="sess"><i class="d"></i><i class="d"></i><i class="d"></i><i></i></div>
+  <div class="muted" style="text-align:center;font-size:12.5px;font-weight:600;margin-top:10px">3 of 4 sessions today · 1h 15m focused</div>
+</div>
+</body></html>

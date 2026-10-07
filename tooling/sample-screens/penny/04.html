@@ -1,0 +1,25 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../lib/base.css"><link rel="stylesheet" href="app.css">
+<script src="../lib/icons.js"></script><script src="../lib/base.js"></script>
+<style>
+  .sum { margin: 6px 16px 0; padding: 18px; }
+  .b { padding: 14px 16px; margin: 10px 16px 0; }
+  .b .row.top { gap: 12px; }
+  .warn { color: #d97706; }
+</style></head>
+<body>
+<div class="screen">
+  <div class="nav"><div><div class="eyebrow">October</div><div class="h1" style="margin-top:2px">Budgets</div></div><div class="iconbtn"><i data-i="plus" style="font-size:20px"></i></div></div>
+  <div class="card sum">
+    <div class="row between"><div><div class="muted" style="font-size:12.5px;font-weight:600">Left to spend</div><div class="num" style="font-size:34px;margin-top:2px">€640<span class="muted" style="font-size:16px;font-weight:700"> of €2,400</span></div></div>
+      <svg width="70" height="70" viewBox="0 0 70 70" style="transform:rotate(-90deg)"><circle cx="35" cy="35" r="28" fill="none" stroke="#e7eceb" stroke-width="9"/><circle cx="35" cy="35" r="28" fill="none" stroke="#0e8f74" stroke-width="9" stroke-linecap="round" stroke-dasharray="129 176"/></svg></div>
+    <div class="row" style="gap:6px;margin-top:10px"><span class="chip" style="background:var(--mint);color:var(--accent)"><i data-i="calendar-check" style="font-size:13px"></i> 9 days left</span><span class="chip" style="background:#f1f4f3;color:var(--sub)">€71 a day</span></div>
+  </div>
+  <div class="card b"><div class="row top"><div class="ico" style="background:var(--mint);color:var(--accent)"><i data-i="shopping-cart" style="font-size:19px"></i></div><div class="grow"><div class="row between"><b style="font-weight:650">Groceries</b><span class="amt">€482 <span class="muted" style="font-size:12.5px;font-weight:600">/ €600</span></span></div><div class="track" style="margin-top:8px;height:8px"><i style="width:80%"></i></div><div class="muted" style="font-size:12px;margin-top:6px">€118 left · on track</div></div></div></div>
+  <div class="card b"><div class="row top"><div class="ico" style="background:#fff3dc;color:#d97706"><i data-i="utensils" style="font-size:19px"></i></div><div class="grow"><div class="row between"><b style="font-weight:650">Eating out</b><span class="amt">€368 <span class="muted" style="font-size:12.5px;font-weight:600">/ €400</span></span></div><div class="track" style="margin-top:8px;height:8px"><i style="width:92%;background:#f59e0b"></i></div><div class="warn" style="font-size:12px;margin-top:6px;font-weight:600">Almost there · €32 left</div></div></div></div>
+  <div class="card b"><div class="row top"><div class="ico" style="background:#ecebff;color:#6366f1"><i data-i="train-front" style="font-size:19px"></i></div><div class="grow"><div class="row between"><b style="font-weight:650">Transport</b><span class="amt">€96 <span class="muted" style="font-size:12.5px;font-weight:600">/ €180</span></span></div><div class="track" style="margin-top:8px;height:8px"><i style="width:53%;background:#6366f1"></i></div><div class="muted" style="font-size:12px;margin-top:6px">€84 left · on track</div></div></div></div>
+  <div class="card b"><div class="row top"><div class="ico" style="background:#fde7f3;color:#db2777"><i data-i="gift" style="font-size:19px"></i></div><div class="grow"><div class="row between"><b style="font-weight:650">Fun money</b><span class="amt">€104 <span class="muted" style="font-size:12.5px;font-weight:600">/ €220</span></span></div><div class="track" style="margin-top:8px;height:8px"><i style="width:47%;background:#ec4899"></i></div><div class="muted" style="font-size:12px;margin-top:6px">€116 left · on track</div></div></div></div>
+</div>
+<div class="tabs"><div><i data-i="house"></i>Home</div><div class="on"><i data-i="chart-pie"></i>Spending</div><div><i data-i="credit-card"></i>Cards</div><div><i data-i="piggy-bank"></i>Savings</div><div><i data-i="user"></i>Profile</div></div>
+</body></html>

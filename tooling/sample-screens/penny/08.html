@@ -1,0 +1,33 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../lib/base.css"><link rel="stylesheet" href="app.css">
+<script src="../lib/icons.js"></script><script src="../lib/base.js"></script>
+<style>
+  .ins { margin: 10px 16px 0; padding: 16px; }
+  .bars { display: flex; align-items: flex-end; gap: 10px; height: 110px; margin-top: 14px; }
+  .bars div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--faint); }
+  .bars span { width: 100%; border-radius: 10px; background: #e3ebe8; }
+  .bars .on span { background: linear-gradient(180deg, #14b892, #0e8f74); }
+  .bars .on { color: var(--ink); }
+</style></head>
+<body>
+<div class="screen">
+  <div class="nav"><div><div class="eyebrow">October</div><div class="h1" style="margin-top:2px">Insights</div></div><div class="iconbtn"><i data-i="sparkles" style="font-size:18px;color:var(--accent)"></i></div></div>
+  <div class="card ins" style="background:linear-gradient(150deg,#0e8f74,#0b3b3f);color:#fff;box-shadow:none">
+    <div class="row" style="gap:8px;font-size:12px;font-weight:700;letter-spacing:.06em;opacity:.9"><i data-i="trending-up" style="font-size:15px"></i> GOOD NEWS</div>
+    <div style="font-family:Manrope;font-size:21px;font-weight:800;letter-spacing:-.02em;margin-top:8px;line-height:1.25">You spent 18% less on eating out than in September.</div>
+    <div style="font-size:13px;opacity:.85;margin-top:6px">That's €84 more for Summer in Lisbon.</div>
+  </div>
+  <div class="card ins">
+    <div class="row between"><div style="font-weight:650">Monthly spending</div><span class="chip" style="background:var(--mint);color:var(--accent)">−12% vs avg</span></div>
+    <div class="bars"><div><span style="height:70px"></span>May</div><div><span style="height:84px"></span>Jun</div><div><span style="height:96px"></span>Jul</div><div><span style="height:78px"></span>Aug</div><div><span style="height:88px"></span>Sep</div><div class="on"><span style="height:66px"></span>Oct</div></div>
+  </div>
+  <div class="card ins">
+    <div class="row" style="gap:12px"><div class="ico" style="background:#fff3dc;color:#d97706"><i data-i="triangle-alert" style="font-size:19px"></i></div><div class="grow"><div style="font-weight:650;font-size:14.5px">2 subscriptions you don't use</div><div class="muted" style="font-size:12px">Cancel them and save €23 a month</div></div><span class="chip" style="background:var(--deep);color:#fff">Review</span></div>
+  </div>
+  <div class="card ins">
+    <div class="row" style="gap:12px"><div class="ico" style="background:#ecebff;color:#6366f1"><i data-i="chart-line" style="font-size:19px"></i></div><div class="grow"><div style="font-weight:650;font-size:14.5px">Net worth up €1,120</div><div class="muted" style="font-size:12px">Your best month since March</div></div><i data-i="chevron-right" style="font-size:18px;color:var(--faint)"></i></div>
+  </div>
+</div>
+<div class="tabs"><div><i data-i="house"></i>Home</div><div class="on"><i data-i="chart-pie"></i>Spending</div><div><i data-i="credit-card"></i>Cards</div><div><i data-i="piggy-bank"></i>Savings</div><div><i data-i="user"></i>Profile</div></div>
+</body></html>

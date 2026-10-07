@@ -1,0 +1,31 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../lib/base.css"><link rel="stylesheet" href="app.css">
+<script src="../lib/icons.js"></script><script src="../lib/base.js"></script>
+<style>
+  /* the weekly card spans y 130–360 in page px */
+  .wk { position: absolute; top: calc(var(--bar) + 82px); left: 22px; right: 22px; height: 220px; border-radius: 26px; padding: 16px 18px; background: var(--lilac); box-shadow: none; }
+  .bars { display: flex; align-items: flex-end; gap: 9px; height: 104px; margin-top: 12px; }
+  .bars div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; font-weight: 650; color: rgba(22,22,29,.5); }
+  .bars span { width: 100%; border-radius: 10px; background: rgba(255,255,255,.65); }
+  .bars .on span { background: #16161d; } .bars .on { color: #16161d; }
+  .rate { display: flex; align-items: center; gap: 12px; padding: 11px 0; }
+  .rate + .rate { border-top: 1px solid var(--line); }
+  .rate .em { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; }
+</style></head><body>
+<div class="screen"><div class="nav"><div class="h1">Stats</div><div class="row" style="gap:6px;background:#fff;border-radius:99px;padding:4px;box-shadow:0 1px 3px rgba(0,0,0,.06)"><span class="chip" style="background:var(--ink);color:#fff">Week</span><span class="chip" style="color:var(--sub)">Month</span></div></div></div>
+<div class="card wk">
+  <div class="row between"><div><div style="font-size:12px;font-weight:650;color:rgba(22,22,29,.6)">Completion this week</div><div class="num" style="font-size:34px;margin-top:2px">87%</div></div><span class="chip" style="background:rgba(255,255,255,.7)"><i data-i="trending-up" style="font-size:13px;color:#16a34a"></i> +12%</span></div>
+  <div class="bars"><div><span style="height:62px"></span>M</div><div><span style="height:84px"></span>T</div><div class="on"><span style="height:96px"></span>W</div><div><span style="height:70px"></span>T</div><div><span style="height:88px"></span>F</div><div><span style="height:54px"></span>S</div><div><span style="height:76px"></span>S</div></div>
+</div>
+<div class="screen" style="top:calc(var(--bar) + 318px)">
+  <div class="row between pad"><div class="h2" style="font-size:17px">By habit</div><div class="muted" style="font-size:12.5px;font-weight:600">Last 30 days</div></div>
+  <div class="card" style="margin:8px 16px 0;padding:2px 16px;border-radius:22px">
+    <div class="rate"><div class="em" style="background:var(--mint);color:#13795b"><i data-i="footprints" style="font-size:19px"></i></div><div class="grow"><div class="row between"><b style="font-weight:650;font-size:14.5px">Morning walk</b><span class="num" style="font-size:15px">96%</span></div><div class="track" style="margin-top:7px"><i style="width:96%;background:#34c38f"></i></div></div></div>
+    <div class="rate"><div class="em" style="background:var(--lilac);color:#6d4ad6"><i data-i="book-open" style="font-size:19px"></i></div><div class="grow"><div class="row between"><b style="font-weight:650;font-size:14.5px">Read 20 pages</b><span class="num" style="font-size:15px">83%</span></div><div class="track" style="margin-top:7px"><i style="width:83%;background:#8b6cf0"></i></div></div></div>
+    <div class="rate"><div class="em" style="background:var(--sky);color:#1d6fd1"><i data-i="droplet" style="font-size:19px"></i></div><div class="grow"><div class="row between"><b style="font-weight:650;font-size:14.5px">Drink water</b><span class="num" style="font-size:15px">74%</span></div><div class="track" style="margin-top:7px"><i style="width:74%;background:#4f9ef0"></i></div></div></div>
+    <div class="rate"><div class="em" style="background:var(--peach);color:#c2410c"><i data-i="brain" style="font-size:19px"></i></div><div class="grow"><div class="row between"><b style="font-weight:650;font-size:14.5px">Meditate</b><span class="num" style="font-size:15px">61%</span></div><div class="track" style="margin-top:7px"><i style="width:61%;background:#fb8a55"></i></div></div></div>
+  </div>
+</div>
+<div class="tabs"><div><i data-i="circle-check"></i>Today</div><div><i data-i="layout-grid"></i>Habits</div><div class="on"><i data-i="chart-column"></i>Stats</div><div><i data-i="user"></i>Me</div></div>
+</body></html>

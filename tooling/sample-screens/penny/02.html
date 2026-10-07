@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../lib/base.css"><link rel="stylesheet" href="app.css">
+<script src="../lib/icons.js"></script><script src="../lib/base.js"></script>
+<style>
+  .donut { position: relative; width: 210px; height: 210px; margin: 6px auto 0; }
+  .donut .c { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+  .cat { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+  .cat + .cat { border-top: 1px solid var(--line); }
+  .seg { display: flex; background: #e7eceb; border-radius: 99px; padding: 4px; margin: 8px 16px 0; }
+  .seg div { flex: 1; text-align: center; padding: 7px 0; border-radius: 99px; font-size: 13px; font-weight: 650; color: var(--sub); }
+  .seg .on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+</style></head>
+<body>
+<div class="screen">
+  <div class="nav"><div class="h1">Spending</div><div class="iconbtn"><i data-i="calendar" style="font-size:18px"></i></div></div>
+  <div class="seg"><div>Week</div><div class="on">October</div><div>Year</div></div>
+  <div class="donut">
+    <svg viewBox="0 0 210 210" style="transform:rotate(-90deg)"><g fill="none" stroke-width="22" stroke-linecap="round">
+      <circle cx="105" cy="105" r="86" stroke="#eef2f1"/>
+      <circle cx="105" cy="105" r="86" stroke="#0e8f74" stroke-dasharray="170 540" stroke-dashoffset="0"/>
+      <circle cx="105" cy="105" r="86" stroke="#f59e0b" stroke-dasharray="96 540" stroke-dashoffset="-180"/>
+      <circle cx="105" cy="105" r="86" stroke="#6366f1" stroke-dasharray="70 540" stroke-dashoffset="-286"/>
+      <circle cx="105" cy="105" r="86" stroke="#ec4899" stroke-dasharray="58 540" stroke-dashoffset="-366"/>
+      <circle cx="105" cy="105" r="86" stroke="#38bdf8" stroke-dasharray="66 540" stroke-dashoffset="-434"/>
+    </g></svg>
+    <div class="c"><div><div class="muted" style="font-size:12.5px;font-weight:600">Spent in October</div><div class="num" style="font-size:32px;margin-top:2px">€2,184</div><div style="font-size:12px;font-weight:650;color:#0e9f6e;margin-top:2px">€316 under budget</div></div></div>
+  </div>
+  <div class="card" style="margin:14px 16px 0;padding:4px 16px">
+    <div class="cat"><div class="ico" style="background:var(--mint);color:var(--accent)"><i data-i="shopping-cart" style="font-size:19px"></i></div><div class="grow"><div class="row between"><b style="font-size:14.5px;font-weight:650">Groceries</b><span class="amt">€682</span></div><div class="track" style="margin-top:7px"><i style="width:78%"></i></div></div></div>
+    <div class="cat"><div class="ico" style="background:#fff3dc;color:#d97706"><i data-i="utensils" style="font-size:19px"></i></div><div class="grow"><div class="row between"><b style="font-size:14.5px;font-weight:650">Eating out</b><span class="amt">€388</span></div><div class="track" style="margin-top:7px"><i style="width:52%;background:#f59e0b"></i></div></div></div>
+    <div class="cat"><div class="ico" style="background:#ecebff;color:#6366f1"><i data-i="train-front" style="font-size:19px"></i></div><div class="grow"><div class="row between"><b style="font-size:14.5px;font-weight:650">Transport</b><span class="amt">€284</span></div><div class="track" style="margin-top:7px"><i style="width:40%;background:#6366f1"></i></div></div></div>
+    <div class="cat"><div class="ico" style="background:#fde7f3;color:#db2777"><i data-i="shirt" style="font-size:19px"></i></div><div class="grow"><div class="row between"><b style="font-size:14.5px;font-weight:650">Shopping</b><span class="amt">€236</span></div><div class="track" style="margin-top:7px"><i style="width:33%;background:#ec4899"></i></div></div></div>
+    <div class="cat"><div class="ico" style="background:#e0f4fe;color:#0284c7"><i data-i="tv" style="font-size:19px"></i></div><div class="grow"><div class="row between"><b style="font-size:14.5px;font-weight:650">Subscriptions</b><span class="amt">€64</span></div><div class="track" style="margin-top:7px"><i style="width:14%;background:#38bdf8"></i></div></div></div>
+  </div>
+</div>
+<div class="tabs"><div><i data-i="house"></i>Home</div><div class="on"><i data-i="chart-pie"></i>Spending</div><div><i data-i="credit-card"></i>Cards</div><div><i data-i="piggy-bank"></i>Savings</div><div><i data-i="user"></i>Profile</div></div>
+</body></html>

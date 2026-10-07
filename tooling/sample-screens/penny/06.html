@@ -1,0 +1,32 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../lib/base.css"><link rel="stylesheet" href="app.css">
+<script src="../lib/icons.js"></script><script src="../lib/base.js"></script>
+<style>
+  .people { display: flex; gap: 14px; padding: 4px 16px 0; }
+  .people > div { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+  .people .avatar { width: 52px; height: 52px; font-size: 16px; }
+  .people .sel .avatar { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5.5px var(--accent); }
+  .amount { text-align: center; margin-top: 30px; }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 0; margin: 10px 26px 0; text-align: center; font-family: Manrope; font-size: 27px; font-weight: 650; }
+  .keys div { height: 68px; display: grid; place-items: center; }
+</style></head>
+<body>
+<div class="screen">
+  <div class="nav"><div class="iconbtn"><i data-i="x" style="font-size:19px"></i></div><div class="title">Send money</div><div class="iconbtn"><i data-i="qr-code" style="font-size:18px"></i></div></div>
+  <div class="people">
+    <div class="sel"><div class="avatar" style="background:linear-gradient(150deg,#f9a8d4,#db2777)">LB</div>Lena</div>
+    <div><div class="avatar" style="background:linear-gradient(150deg,#93c5fd,#2563eb)">TK</div>Tomás</div>
+    <div><div class="avatar" style="background:linear-gradient(150deg,#fcd34d,#d97706)">AN</div>Aiko</div>
+    <div><div class="avatar" style="background:linear-gradient(150deg,#86efac,#16a34a)">RS</div>Ravi</div>
+    <div><div class="avatar" style="background:#e5ebe9;color:var(--sub)"><i data-i="search" style="font-size:20px"></i></div>Search</div>
+  </div>
+  <div class="amount">
+    <div class="muted" style="font-size:13px;font-weight:600">Sending to Lena Brandt</div>
+    <div class="num" style="font-size:58px;margin-top:4px">€48<span style="color:var(--faint)">.50</span></div>
+    <div class="row" style="justify-content:center;gap:8px;margin-top:8px"><span class="chip" style="background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)"><i data-i="utensils" style="font-size:13px;color:#d97706"></i> Dinner at Tasca</span><span class="chip" style="background:var(--mint);color:var(--accent)"><i data-i="zap" style="font-size:13px"></i> Instant · free</span></div>
+  </div>
+  <div class="keys"><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>.</div><div>0</div><div><i data-i="arrow-left" style="font-size:24px"></i></div></div>
+  <div class="btn" style="margin:22px 16px 0;background:var(--deep)"><i data-i="send" style="font-size:18px"></i> Send €48.50</div>
+</div>
+</body></html>
