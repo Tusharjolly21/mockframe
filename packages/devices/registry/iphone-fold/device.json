@@ -1,0 +1,52 @@
+{
+  "id": "iphone-fold",
+  "name": "iPhone Fold (concept)",
+  "brand": "apple",
+  "category": "phone",
+  "released": "2026-09",
+  "screen": {
+    "width": 2713,
+    "height": 1920,
+    "cornerRadius": 110
+  },
+  "aliases": [
+    "apple iphone fold",
+    "foldable iphone",
+    "iphone flip"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "iphone fold mockup",
+      "foldable iphone mockup"
+    ]
+  },
+  "wallpaper": [
+    "#6d28d9",
+    "#1e3a8a",
+    "#f0abfc"
+  ],
+  "frame": {
+    "width": 2825,
+    "height": 2032,
+    "screenRect": {
+      "x": 56,
+      "y": 56,
+      "width": 2713,
+      "height": 1920
+    },
+    "maskPath": "M166 56 H2659 A110 110 0 0 1 2769 166 V1866 A110 110 0 0 1 2659 1976 H166 A110 110 0 0 1 56 1866 V166 A110 110 0 0 1 166 56 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "space-black",
+      "label": "Space Black",
+      "svg": "frame-space-black.svg"
+    },
+    {
+      "id": "silver",
+      "label": "Silver",
+      "svg": "frame-silver.svg"
+    }
+  ]
+}

@@ -5,9 +5,8 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { useAuth } from "@/lib/auth";
 import { AuthModal } from "@/components/AuthModal";
-import { useViewStore } from "@/lib/store";
-import { CheckoutCancelled, defaultCurrency, purchasePlan } from "@/lib/billing/client";
-import { formatPrice, perMonthPrice, PLANS, yearlySavingsPct, type Currency, type PlanDef, type PlanId } from "@/lib/billing/plans";
+import { purchasePlan } from "@/lib/billing/client";
+import { formatPrice, perMonthPrice, PLANS, yearlySavingsPct, type PlanDef, type PlanId } from "@/lib/billing/plans";
 import { iconBody, ICON_VIEWBOX } from "@/lib/iconStickers";
 import { toast } from "./Toolbar";
 
@@ -31,7 +30,7 @@ function IconifyIcon({ name, size = 20, color = "#17171c", className = "" }: { n
   );
 }
 
-/** Pro upgrade — clean, spacious pricing surface backed by the existing Razorpay flow. */
+/** Pro upgrade — clean, spacious pricing surface backed by Dodo Payments hosted checkout. */
 export function UpgradeModal({
   initialPlan = "yearly",
   reason,
@@ -45,9 +44,7 @@ export function UpgradeModal({
   onClose: () => void;
 }) {
   const { account } = useAuth();
-  const setRemoveWatermark = useViewStore((s) => s.setRemoveWatermark);
   const [plan, setPlan] = useState<PlanId>(initialPlan);
-  const [currency, setCurrency] = useState<Currency>(() => defaultCurrency());
   const [busy, setBusy] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [plans, setPlans] = useState<Record<PlanId, PlanDef>>(PLANS);
@@ -55,21 +52,19 @@ export function UpgradeModal({
   useEffect(() => {
     fetch("/api/billing/plans")
       .then((r) => (r.ok ? r.json() : null))
-      .then((j) => j?.plans && setPlans(j.plans))
+      // ignore a catalog from an older server shape (pre-USD-only price map)
+      .then((j) => j?.plans && typeof j.plans.monthly?.price === "number" && setPlans(j.plans))
       .catch(() => {});
   }, []);
 
-  const savings = yearlySavingsPct(currency, plans);
+  const savings = yearlySavingsPct(plans);
   const pay = async () => {
     setBusy(true);
     try {
-      await purchasePlan(plan, currency, plans[plan].price[currency]);
-      setRemoveWatermark(true);
-      toast("You're Pro - welcome aboard");
-      onClose();
+      // navigates to Dodo's hosted checkout; the editor confirms Pro on return
+      await purchasePlan(plan, plans[plan].price);
     } catch (err) {
-      if (!(err instanceof CheckoutCancelled)) toast(err instanceof Error ? err.message : "Payment failed");
-    } finally {
+      toast(err instanceof Error ? err.message : "Checkout failed");
       setBusy(false);
     }
   };
@@ -132,18 +127,9 @@ export function UpgradeModal({
           </section>
 
           <section className="bg-[#0f1014] px-5 py-7 text-white md:px-8 md:py-9">
-            <div className="flex items-start justify-between gap-4 pr-10">
-              <div>
-                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-violet-400">Choose your access</p>
-                <h3 className="mt-1 text-[23px] font-medium tracking-[-0.035em] text-white">Upgrade your workspace</h3>
-              </div>
-              <div className="flex rounded-lg border border-white/10 bg-white/[0.04] p-1 text-[11px] font-semibold">
-                {(["INR", "USD"] as const).map((c) => (
-                  <button key={c} onClick={() => setCurrency(c)} className={`rounded-md px-2.5 py-1.5 ${currency === c ? "bg-white text-zinc-900" : "text-zinc-500 hover:text-white"}`}>
-                    {c === "INR" ? "₹" : "$"} {c}
-                  </button>
-                ))}
-              </div>
+            <div className="pr-10">
+              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-violet-400">Choose your access</p>
+              <h3 className="mt-1 text-[23px] font-medium tracking-[-0.035em] text-white">Upgrade your workspace</h3>
             </div>
 
             {/* Monthly / Annual toggle with a sliding pill — matches the pricing page */}
@@ -181,7 +167,7 @@ export function UpgradeModal({
             <div className="mt-5 flex h-[50px] items-end overflow-hidden">
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.div
-                  key={plan + currency}
+                  key={plan}
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -20, opacity: 0 }}
@@ -190,8 +176,8 @@ export function UpgradeModal({
                 >
                   <span className="text-[40px] font-semibold leading-none tracking-[-0.03em] text-white">
                     {plan === "yearly"
-                      ? perMonthPrice("yearly", currency, plans)
-                      : formatPrice("monthly", currency, plans)}
+                      ? perMonthPrice("yearly", plans)
+                      : formatPrice("monthly", plans)}
                   </span>
                   <span className="pb-1 text-[13px] font-medium text-zinc-500">/ month</span>
                 </motion.div>
@@ -201,7 +187,7 @@ export function UpgradeModal({
               <AnimatePresence mode="wait" initial={false}>
                 <motion.p key={plan} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="text-[11px] text-zinc-500">
                   {plan === "yearly"
-                    ? `${formatPrice("yearly", currency, plans)} billed yearly`
+                    ? `${formatPrice("yearly", plans)} billed yearly`
                     : "billed monthly · cancel anytime"}
                 </motion.p>
               </AnimatePresence>
@@ -219,7 +205,7 @@ export function UpgradeModal({
               </button>
             )}
             <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[10px] text-[#9a9aa4]">
-              <IconifyIcon name="card" size={13} color="#71717a" /> {currency === "INR" ? "UPI, cards and netbanking via Razorpay" : "International cards via Razorpay"}
+              <IconifyIcon name="card" size={13} color="#71717a" /> Secure checkout by Dodo Payments · prices in USD, local taxes calculated at checkout
             </p>
           </section>
         </div>

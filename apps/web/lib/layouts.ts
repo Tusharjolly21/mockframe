@@ -34,26 +34,24 @@ const slot = (p: Partial<LayoutSlot>): LayoutSlot => ({
 export const LAYOUT_PRESETS: LayoutPreset[] = [
   /* ---------------------------------- solo ---------------------------------- */
   { id: "solo-center", label: "Centered", arity: 1, slots: [slot({})] },
-  { id: "solo-tilt", label: "Floating", arity: 1, slots: [slot({ y: 0.03, scale: 1.02, rotate: -7, tiltY: -20 })] },
-  { id: "solo-lean", label: "Leaning", arity: 1, slots: [slot({ x: -0.02, y: 0.04, scale: 1.08, rotate: -13, tiltX: 6, tiltY: 12 })] },
-  { id: "solo-hero", label: "Hero crop", arity: 1, slots: [slot({ x: 0.16, y: 0.2, scale: 1.55, rotate: -10 })] },
-  { id: "solo-peek", label: "Peek", arity: 1, slots: [slot({ y: 0.34, scale: 1.35 })] },
-  { id: "solo-flat", label: "Flat lay", arity: 1, slots: [slot({ y: 0.02, scale: 0.98, rotate: 90, tiltX: -28, tiltY: 8 })] },
-  { id: "solo-float-r", label: "Floating right", arity: 1, slots: [slot({ y: 0.03, scale: 1.02, rotate: 7, tiltY: 20 })] },
-  { id: "solo-iso", label: "Isometric", arity: 1, slots: [slot({ y: 0.02, scale: 1.0, rotate: 10, tiltX: 18, tiltY: -26 })] },
-  { id: "solo-edge", label: "Edge crop", arity: 1, slots: [slot({ x: -0.32, y: 0.06, scale: 1.3, rotate: 8, tiltY: 14 })] },
+  { id: "solo-turn", label: "3D turn", arity: 1, slots: [slot({ x: 0.02, scale: 0.98, tiltX: 5, tiltY: -30 })] },
+  { id: "solo-lean", label: "Leaning", arity: 1, slots: [slot({ x: 0.01, y: 0.02, scale: 0.96, rotate: -10, tiltX: 4, tiltY: 10 })] },
+  { id: "solo-recline", label: "Tilted back", arity: 1, slots: [slot({ y: 0.02, scale: 1.0, tiltX: 32 })] },
+  { id: "solo-peek", label: "Rising", arity: 1, slots: [slot({ y: 0.3, scale: 1.3 })] },
+  { id: "solo-hero", label: "Hero crop", arity: 1, slots: [slot({ x: 0.12, y: 0.22, scale: 1.45, rotate: -9 })] },
   { id: "solo-small", label: "Minimal", arity: 1, slots: [slot({ scale: 0.72 })] },
+  { id: "solo-showcase", label: "Showcase", arity: 1, slots: [slot({ x: -0.02, y: 0.03, scale: 1.04, rotate: 6, tiltX: 10, tiltY: 16 })] },
 
   /* ---------------------------------- duo ----------------------------------- */
   {
     id: "duo-side", label: "Side by side", arity: 2,
-    slots: [slot({ x: -0.13 }), slot({ x: 0.13, y: 0.02 })],
+    slots: [slot({ x: -0.17, scale: 0.9 }), slot({ x: 0.17, y: 0.02, scale: 0.9 })],
   },
   {
-    id: "duo-perspective", label: "Perspective", arity: 2,
+    id: "duo-perspective", label: "Facing in", arity: 2,
     slots: [
-      slot({ x: -0.14, y: 0.02, rotate: -5, tiltY: 16 }),
-      slot({ x: 0.14, y: -0.02, rotate: 5, tiltY: -16 }),
+      slot({ x: -0.17, y: 0.01, scale: 0.92, tiltY: 30 }),
+      slot({ x: 0.17, y: 0.01, scale: 0.92, tiltY: -30 }),
     ],
   },
   {
@@ -66,8 +64,15 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
   {
     id: "duo-lean", label: "Leaning pair", arity: 2,
     slots: [
-      slot({ x: -0.16, y: 0.03, rotate: -9, tiltY: 14, scale: 0.98 }),
-      slot({ x: 0.15, y: -0.03, rotate: -9, tiltY: 14, scale: 0.98 }),
+      slot({ x: -0.16, y: 0.03, rotate: -9, tiltY: 14, scale: 0.92 }),
+      slot({ x: 0.15, y: -0.03, rotate: -9, tiltY: 14, scale: 0.92 }),
+    ],
+  },
+  {
+    id: "duo-depth", label: "3D depth", arity: 2,
+    slots: [
+      slot({ x: 0.13, y: -0.04, scale: 0.86, tiltX: 6, tiltY: -30 }),
+      slot({ x: -0.1, y: 0.04, scale: 0.98, tiltX: 6, tiltY: -30, z: 1 }),
     ],
   },
   {
@@ -78,78 +83,56 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     ],
   },
   {
-    id: "duo-stack", label: "Stacked", arity: 2,
-    slots: [
-      slot({ y: -0.16, x: -0.05, scale: 0.8, rotate: -4 }),
-      slot({ y: 0.16, x: 0.05, scale: 0.8, rotate: 4, z: 1 }),
-    ],
-  },
-  {
-    id: "duo-iso", label: "Isometric pair", arity: 2,
-    slots: [
-      slot({ x: -0.14, y: 0.05, rotate: 10, tiltX: 16, tiltY: -24, scale: 0.94 }),
-      slot({ x: 0.15, y: -0.05, rotate: 10, tiltX: 16, tiltY: -24, scale: 0.94, z: 1 }),
-    ],
-  },
-  {
     id: "duo-diagonal", label: "Diagonal", arity: 2,
     slots: [
-      slot({ x: -0.22, y: -0.14, scale: 0.72, rotate: -10 }),
-      slot({ x: 0.14, y: 0.14, scale: 1.05, rotate: 6, z: 1 }),
+      slot({ x: -0.2, y: -0.12, scale: 0.74, rotate: -10 }),
+      slot({ x: 0.13, y: 0.12, scale: 1.0, rotate: 6, z: 1 }),
     ],
   },
 
   /* ---------------------------------- trio ---------------------------------- */
   {
     id: "trio-row", label: "Row of three", arity: 3,
-    slots: [slot({ x: -0.24, scale: 0.92 }), slot({ z: 1, scale: 0.98 }), slot({ x: 0.24, scale: 0.92 })],
+    slots: [slot({ x: -0.25, scale: 0.84 }), slot({ z: 1, scale: 0.92 }), slot({ x: 0.25, scale: 0.84 })],
   },
   {
     id: "trio-fan", label: "Fan", arity: 3,
     slots: [
-      slot({ x: -0.22, y: 0.05, rotate: -12, scale: 0.9 }),
-      slot({ y: -0.01, z: 1, scale: 0.98 }),
-      slot({ x: 0.22, y: 0.05, rotate: 12, scale: 0.9 }),
+      slot({ x: -0.22, y: 0.05, rotate: -12, scale: 0.88 }),
+      slot({ y: -0.01, z: 1, scale: 0.96 }),
+      slot({ x: 0.22, y: 0.05, rotate: 12, scale: 0.88 }),
+    ],
+  },
+  {
+    id: "trio-showcase", label: "Spotlight", arity: 3,
+    slots: [
+      slot({ x: -0.27, y: 0.03, scale: 0.8, tiltY: 34 }),
+      slot({ scale: 1.0, z: 2 }),
+      slot({ x: 0.27, y: 0.03, scale: 0.8, tiltY: -34 }),
     ],
   },
   {
     id: "trio-cascade", label: "Cascade", arity: 3,
     slots: [
-      slot({ x: -0.26, y: -0.1, scale: 0.88, rotate: -6 }),
-      slot({ y: 0, scale: 0.94, z: 1 }),
-      slot({ x: 0.26, y: 0.1, scale: 0.88, rotate: 6, z: 2 }),
+      slot({ x: -0.26, y: -0.1, scale: 0.84, rotate: -6 }),
+      slot({ y: 0, scale: 0.9, z: 1 }),
+      slot({ x: 0.26, y: 0.1, scale: 0.84, rotate: 6, z: 2 }),
     ],
   },
   {
-    id: "trio-showcase", label: "Showcase", arity: 3,
+    id: "trio-depth", label: "3D wave", arity: 3,
     slots: [
-      slot({ x: -0.27, y: 0.03, scale: 0.84, tiltY: 24, rotate: -3 }),
-      slot({ scale: 1.04, z: 2 }),
-      slot({ x: 0.27, y: 0.03, scale: 0.84, tiltY: -24, rotate: 3 }),
-    ],
-  },
-  {
-    id: "trio-deck", label: "Deck", arity: 3,
-    slots: [
-      slot({ x: -0.1, y: -0.02, scale: 0.88, rotate: -14 }),
-      slot({ x: 0, y: 0.02, scale: 0.92, rotate: -4, z: 1 }),
-      slot({ x: 0.11, y: 0.06, scale: 0.96, rotate: 7, z: 2 }),
-    ],
-  },
-  {
-    id: "trio-stair", label: "Stairs", arity: 3,
-    slots: [
-      slot({ x: -0.26, y: 0.14, scale: 0.82, rotate: -6, tiltY: 10 }),
-      slot({ y: 0, scale: 0.9, z: 1, tiltY: 10, rotate: -6 }),
-      slot({ x: 0.26, y: -0.14, scale: 0.98, rotate: -6, tiltY: 10, z: 2 }),
+      slot({ x: -0.24, y: 0.02, scale: 0.84, tiltX: 6, tiltY: -30 }),
+      slot({ x: 0, y: 0, scale: 0.88, tiltX: 6, tiltY: -30, z: 1 }),
+      slot({ x: 0.24, y: -0.02, scale: 0.92, tiltX: 6, tiltY: -30, z: 2 }),
     ],
   },
   {
     id: "trio-hero", label: "Hero + pair", arity: 3,
     slots: [
-      slot({ x: -0.16, y: 0.06, scale: 1.15, rotate: -6, z: 2 }),
-      slot({ x: 0.14, y: -0.1, scale: 0.72, rotate: 4 }),
-      slot({ x: 0.3, y: 0.14, scale: 0.72, rotate: 8, z: 1 }),
+      slot({ x: -0.16, y: 0.06, scale: 1.12, rotate: -6, z: 2 }),
+      slot({ x: 0.15, y: -0.1, scale: 0.7, rotate: 4 }),
+      slot({ x: 0.3, y: 0.14, scale: 0.7, rotate: 8, z: 1 }),
     ],
   },
 ];
@@ -187,6 +170,17 @@ export function modifyPreset(preset: LayoutPreset, mods: LayoutMods): LayoutPres
       scale: s.scale * mods.scale,
     })),
   };
+}
+
+/**
+ * A long lens for 3D tilts: perspective is in the device's own pixels, so a
+ * fixed 1200px warps a 2700px-tall phone like a fisheye. ~2× the frame's
+ * long side reads like a product shot.
+ */
+export function cameraFor(layer: MockupLayer): number {
+  const device = layer.deviceId ? getDevice(layer.deviceId) : undefined;
+  const long = device ? Math.max(device.frame.width, device.frame.height) : 0;
+  return long ? Math.round(long * 2.1) : layer.transform.perspective;
 }
 
 function baseScale(layer: MockupLayer, canvasHeight: number): number {
@@ -227,6 +221,7 @@ export function applyLayout(scene: SceneDocument, preset: LayoutPreset): SceneDo
         rotate: s.rotate,
         tiltX: s.tiltX,
         tiltY: s.tiltY,
+        perspective: cameraFor(layer),
       },
     };
   });

@@ -32,6 +32,10 @@ export const PRO_BG_CATEGORY_IDS = new Set([
   "bokeh",
   "topographic",
   "grid",
+  "silk",
+  "liquid",
+  "holo",
+  "beams",
 ]);
 
 export function isProBgCategory(categoryId: string): boolean {
@@ -101,6 +105,31 @@ export const BG_CATEGORIES: BgCategory[] = [
       lin("g-royal", 145, ["#1e3a8a", "#6d28d9", "#c026d3"]),
       lin("g-steel", 170, ["#e2e8f0", "#64748b", "#1e293b"]),
     ],
+  },
+  {
+    id: "studio",
+    label: "Studio",
+    swatches: [img("st-white"), img("st-graphite"), img("st-sand"), img("st-blush"), img("st-ocean"), img("st-lilac")],
+  },
+  {
+    id: "silk",
+    label: "Silk",
+    swatches: [img("silk-champagne"), img("silk-rose"), img("silk-midnight"), img("silk-emerald"), img("silk-pearl")],
+  },
+  {
+    id: "liquid",
+    label: "Liquid",
+    swatches: [img("lq-iris"), img("lq-candy"), img("lq-chrome"), img("lq-lime")],
+  },
+  {
+    id: "holo",
+    label: "Holo",
+    swatches: [img("holo-opal"), img("holo-night"), img("holo-pastel"), img("holo-sunset")],
+  },
+  {
+    id: "beams",
+    label: "Beams",
+    swatches: [img("bm-violet"), img("bm-ice"), img("bm-gold"), img("bm-mint")],
   },
   {
     id: "glass",

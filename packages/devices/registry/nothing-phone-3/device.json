@@ -1,0 +1,49 @@
+{
+  "id": "nothing-phone-3",
+  "name": "Nothing Phone (3)",
+  "brand": "nothing",
+  "category": "phone",
+  "released": "2025-07",
+  "screen": {
+    "width": 1260,
+    "height": 2800,
+    "cornerRadius": 130
+  },
+  "aliases": [
+    "nothing phone 3"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "nothing phone 3 mockup"
+    ]
+  },
+  "wallpaper": [
+    "#3f3f46",
+    "#111113",
+    "#e4e4e7"
+  ],
+  "frame": {
+    "width": 1352,
+    "height": 2892,
+    "screenRect": {
+      "x": 46,
+      "y": 46,
+      "width": 1260,
+      "height": 2800
+    },
+    "maskPath": "M176 46 H1176 A130 130 0 0 1 1306 176 V2716 A130 130 0 0 1 1176 2846 H176 A130 130 0 0 1 46 2716 V176 A130 130 0 0 1 176 46 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "white",
+      "label": "White",
+      "svg": "frame-white.svg"
+    },
+    {
+      "id": "black",
+      "label": "Black",
+      "svg": "frame-black.svg"
+    }
+  ]
+}

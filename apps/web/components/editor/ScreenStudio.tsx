@@ -41,6 +41,7 @@ import {
   defaultSnapchatAd,
   effectivePlatform,
   encodeScreenAsset,
+  fitCardScale,
   isScreenAsset,
   defaultSocialDoc,
   DATING_LABELS,
@@ -92,6 +93,7 @@ import {
   type SpotifyDoc,
   type AppStoreDoc,
   type AppStorePromoDoc,
+  type PromoWebFrame,
   type GoogleMapsDoc,
   type GooglePlayDoc,
   defaultTemplateDoc,
@@ -275,11 +277,17 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
     updateLayer(layer.id, (l) => {
       if (l.type !== "mockup") return l;
       const d = defaultTemplateDoc(app);
+      const assetId = encodeScreenAsset({ ...d, chrome: { ...d.chrome, platform: effectivePlatform(d.app, devPlatform) } });
+      const { width, height } = useSceneStore.getState().scene.canvas;
+      // fit the whole card inside the canvas (wide cards would otherwise spill
+      // past the edges and get cropped) and center it
+      const scale = fitCardScale(assetId, width, height) ?? l.transform.scale;
       return {
         ...l,
         deviceId: null,
+        transform: { ...l.transform, scale, x: 0, y: 0, rotate: 0, tiltX: 0, tiltY: 0 },
         media: {
-          assetId: encodeScreenAsset({ ...d, chrome: { ...d.chrome, platform: effectivePlatform(d.app, devPlatform) } }),
+          assetId,
           kind: "image" as const,
           fit: "cover" as const,
           offsetX: 0,
@@ -383,8 +391,8 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       }`}
       action={removeBtn}
     >
-      {/* shared status-bar chrome */}
-      {doc.app !== "testimonial" && (
+      {/* shared status-bar chrome (the promo card draws no status bar) */}
+      {doc.app !== "testimonial" && doc.app !== "appstore-promo" && (
         <div className="mb-3 flex gap-2">
           <Field label="Time" value={doc.chrome.time} onChange={(time) => setDoc({ ...doc, chrome: { ...doc.chrome, time } })} className="w-20" />
           <div className="flex-1">
@@ -423,7 +431,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
 
       {/* device frame on/off — "None" exports just the screen/card, no phone.
           The code template is always a card, so it skips this toggle. */}
-      {doc.app !== "code" && doc.app !== "testimonial" && (
+      {doc.app !== "code" && doc.app !== "testimonial" && doc.app !== "appstore-promo" && (
         <div className="mt-3">
           <span className="mb-1 block text-xs text-[#6b6b76]">Frame</span>
           <Seg
@@ -444,7 +452,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       )}
 
       {/* window frame for the standalone Template cards (Code / Bluesky / X) */}
-      {isTemplateCard(doc) && (
+      {isTemplateCard(doc) && doc.app !== "appstore-promo" && (
         <FrameField value={(doc as { frame?: FrameStyle }).frame ?? "none"} onChange={(frame) => setDoc({ ...doc, frame } as ScreenDoc)} />
       )}
 
@@ -3353,17 +3361,38 @@ function GooglePlayFields({ doc, setDoc }: { doc: GooglePlayDoc; setDoc: (d: Scr
   );
 }
 
+const PROMO_SHOWCASE: { value: "app" | "web" | "both"; label: string }[] = [
+  { value: "app", label: "App" },
+  { value: "web", label: "Website" },
+  { value: "both", label: "App + Web" },
+];
+const PROMO_WEB_FRAMES: { value: PromoWebFrame; label: string }[] = [
+  { value: "safari", label: "Safari" },
+  { value: "chrome", label: "Chrome" },
+  { value: "minimal", label: "Minimal" },
+];
+
 function AppStorePromoFields({ doc, setDoc }: { doc: AppStorePromoDoc; setDoc: (d: ScreenDoc) => void }) {
   const phoneDevices = listDevices().filter(d => d.category === "phone");
+  const showcase = doc.showcase ?? "app";
+  const showApp = showcase !== "web";
+  const showWeb = showcase !== "app";
 
   return (
     <>
+      <div className="mb-3">
+        <span className="mb-1 block text-xs text-[#6b6b76]">Show</span>
+        <Seg id="promo-showcase" options={PROMO_SHOWCASE} value={showcase} onChange={(v) => setDoc({ ...doc, showcase: v as AppStorePromoDoc["showcase"] })} />
+        <p className="mt-1.5 text-[10px] leading-relaxed text-[#b0b0ba]">
+          {showcase === "app" ? "Your app on a phone." : showcase === "web" ? "Your website in a browser window." : "Your website in a browser with the app on a phone in front."}
+        </p>
+      </div>
       <div className="flex gap-2">
         <Field label="App Title" value={doc.title} onChange={(title) => setDoc({ ...doc, title })} className="flex-1" placeholder="MockFrame" />
         <Field label="Subtitle" value={doc.subtitle} onChange={(subtitle) => setDoc({ ...doc, subtitle })} className="flex-1" placeholder="Screenshot Studio" />
       </div>
       <div className="mt-2 flex gap-2">
-        <Field label="Badge Text" value={doc.badgeText} onChange={(badgeText) => setDoc({ ...doc, badgeText })} className="flex-1" placeholder="APP OF THE DAY" />
+        <Field label="Badge Text" value={doc.badgeText} onChange={(badgeText) => setDoc({ ...doc, badgeText })} className="flex-1" placeholder="App of the Day" />
         <Field label="Reviews Count" value={doc.reviewsCountText} onChange={(reviewsCountText) => setDoc({ ...doc, reviewsCountText })} className="flex-1" placeholder="12.4K ratings" />
       </div>
       <div className="mt-2 flex gap-2">
@@ -3374,27 +3403,51 @@ function AppStorePromoFields({ doc, setDoc }: { doc: AppStorePromoDoc; setDoc: (
           <input type="color" value={doc.accentColor ?? "#6366f1"} onChange={(e) => setDoc({ ...doc, accentColor: e.target.value })} className="h-9 w-full cursor-pointer rounded-lg border border-[#e4e4ec]" />
         </label>
       </div>
-      <div className="mt-2">
-        <label className="block text-xs font-semibold text-[#6b6b76] mb-1">Mockup Device</label>
-        <select
-          value={doc.deviceId || "iphone-16-pro"}
-          onChange={(e) => setDoc({ ...doc, deviceId: e.target.value })}
-          className="w-full bg-white border border-[#e4e4ec] rounded-lg px-2.5 py-1.5 text-xs text-[#17171c] focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        >
-          {phoneDevices.map(d => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="mt-4">
-        <AvatarField label="App Screenshot" value={doc.screenshot} onChange={(screenshot) => setDoc({ ...doc, screenshot })} />
-      </div>
-      <div className="mt-2 flex items-center gap-2">
-        <input type="checkbox" id="promo-dark" checked={!!doc.dark} onChange={(e) => setDoc({ ...doc, dark: e.target.checked })} className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-        <label htmlFor="promo-dark" className="text-xs text-[#6b6b76]">Dark Mode</label>
-      </div>
+
+      {showWeb && (
+        <div className="mt-4 border-t border-[#eeeef3] pt-3">
+          <span className="mb-1.5 block text-xs font-semibold text-[#6b6b76]">Website</span>
+          <span className="mb-1 block text-xs text-[#6b6b76]">Browser window</span>
+          <div className="mb-2 grid grid-cols-3 gap-1.5">
+            {PROMO_WEB_FRAMES.map((f) => (
+              <button
+                key={f.value}
+                onClick={() => setDoc({ ...doc, webFrame: f.value })}
+                className={`fk-tile rounded-lg border px-1 py-2 text-[10px] font-semibold ${
+                  (doc.webFrame ?? "safari") === f.value ? "border-[#17171c] bg-[#17171c] text-white" : "border-[#e8e8ef] bg-white text-[#6b6b76] hover:border-[#c9c9d4]"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <Field label="Website address" value={doc.webUrl ?? ""} onChange={(webUrl) => setDoc({ ...doc, webUrl })} placeholder="yourapp.com" />
+          <div className="mt-2">
+            <AvatarField label="Website screenshot" value={doc.webScreenshot} onChange={(webScreenshot) => setDoc({ ...doc, webScreenshot })} />
+          </div>
+        </div>
+      )}
+
+      {showApp && (
+        <div className={showWeb ? "mt-1 border-t border-[#eeeef3] pt-3" : "mt-4"}>
+          {showWeb && <span className="mb-1.5 block text-xs font-semibold text-[#6b6b76]">App</span>}
+          <label className="block text-xs text-[#6b6b76] mb-1">Phone</label>
+          <select
+            value={doc.deviceId || "iphone-17-pro"}
+            onChange={(e) => setDoc({ ...doc, deviceId: e.target.value })}
+            className="w-full bg-white border border-[#e4e4ec] rounded-lg px-2.5 py-1.5 text-xs text-[#17171c] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          >
+            {phoneDevices.map(d => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+          <div className="mt-3">
+            <AvatarField label="App screenshot" value={doc.screenshot} onChange={(screenshot) => setDoc({ ...doc, screenshot })} />
+          </div>
+        </div>
+      )}
     </>
   );
 }

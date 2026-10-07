@@ -5,9 +5,9 @@
   "category": "browser",
   "released": "2026-01",
   "screen": {
-    "width": 2560,
-    "height": 1600,
-    "cornerRadius": 0
+    "width": 2528,
+    "height": 1688,
+    "cornerRadius": 16
   },
   "aliases": [
     "arc browser mockup",

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 602 1212">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_pixel-watch-3_polished-silver_case" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3f4f6"/><stop offset="0.5" stop-color="#b9bcc3"/><stop offset="1" stop-color="#e5e7eb"/></linearGradient>
+<linearGradient id="fk_pixel-watch-3_polished-silver_band" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e7e2d8"/><stop offset="0.5" stop-color="#f3efe7"/><stop offset="1" stop-color="#e0dacf"/></linearGradient>
+<radialGradient id="fk_pixel-watch-3_polished-silver_dome" cx="0.35" cy="0.25" r="0.9">
+  <stop offset="0" stop-color="#fff" stop-opacity="0.12"/><stop offset="0.6" stop-color="#fff" stop-opacity="0.02"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="fk_pixel-watch-3_polished-silver_rimShade" cx="0.5" cy="0.5" r="0.5">
+  <stop offset="0.86" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.45"/>
+</radialGradient>
+<linearGradient id="fk_pixel-watch-3_polished-silver_bandShade" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#000" stop-opacity="0.15"/><stop offset="0.7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+</linearGradient>
+</defs>
+<path d="M152 16 H416 A34 34 0 0 1 450 50 V606 H118 V50 A34 34 0 0 1 152 16 Z" fill="url(#fk_pixel-watch-3_polished-silver_band)"/>
+<path d="M152 16 H416 A34 34 0 0 1 450 50 V606 H118 V50 A34 34 0 0 1 152 16 Z" fill="url(#fk_pixel-watch-3_polished-silver_bandShade)"/>
+<path d="M118 606 H450 V1162 A34 34 0 0 1 416 1196 H152 A34 34 0 0 1 118 1162 V606 Z" fill="url(#fk_pixel-watch-3_polished-silver_band)"/>
+<path d="M118 606 H450 V1162 A34 34 0 0 1 416 1196 H152 A34 34 0 0 1 118 1162 V606 Z" fill="url(#fk_pixel-watch-3_polished-silver_bandShade)"/>
+<rect x="538" y="560" width="48" height="92" rx="20" fill="url(#fk_pixel-watch-3_polished-silver_case)"/>
+<rect x="574" y="566" width="8" height="80" rx="4" fill="#000" opacity="0.25"/>
+
+<path d="M16 606 A268 268 0 1 0 552 606 A268 268 0 1 0 16 606 Z" fill="url(#fk_pixel-watch-3_polished-silver_case)"/>
+<path d="M17.5 606 A266.5 266.5 0 1 0 550.5 606 A266.5 266.5 0 1 0 17.5 606 Z" fill="none" stroke="#000" stroke-opacity="0.45" stroke-width="3"/>
+<path d="M21 606 A263 263 0 1 0 547 606 A263 263 0 1 0 21 606 Z" fill="none" stroke="#fff" stroke-opacity="0.4" stroke-width="2"/>
+
+<path d="M38 606 A246 246 0 1 0 530 606 A246 246 0 1 0 38 606 Z" fill="#050506"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_pixel-watch-3_polished-silver_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1e293b"/><stop offset="1" stop-color="#020617"/></linearGradient>
+<radialGradient id="fk_scr_pixel-watch-3_polished-silver_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#94a3b8" stop-opacity="0.95"/><stop offset="1" stop-color="#94a3b8" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_pixel-watch-3_polished-silver_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M56 606 A228 228 0 1 0 512 606 A228 228 0 1 0 56 606 Z" fill="url(#fk_scr_pixel-watch-3_polished-silver_a)"/>
+<path d="M56 606 A228 228 0 1 0 512 606 A228 228 0 1 0 56 606 Z" fill="url(#fk_scr_pixel-watch-3_polished-silver_b)"/>
+<path d="M56 606 A228 228 0 1 0 512 606 A228 228 0 1 0 56 606 Z" fill="url(#fk_scr_pixel-watch-3_polished-silver_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<path d="M56 606 A228 228 0 1 0 512 606 A228 228 0 1 0 56 606 Z" fill="none" stroke="#000" stroke-opacity="0.5" stroke-width="5"/>
+<path d="M38 606 A246 246 0 1 0 530 606 A246 246 0 1 0 38 606 Z" fill="url(#fk_pixel-watch-3_polished-silver_dome)"/>
+<path d="M56 606 A228 228 0 1 0 512 606 A228 228 0 1 0 56 606 Z" fill="url(#fk_pixel-watch-3_polished-silver_rimShade)"/><!--/OVERLAY-->
+</svg>

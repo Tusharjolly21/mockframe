@@ -8,6 +8,7 @@ import { decodeScreenAsset, encodeScreenAsset, type CodeDoc, type SocialPostDoc 
 import { importPostUrl } from "@/lib/postImport";
 import { useSceneStore } from "@/lib/store";
 import { makeTemplateScene, templateBySlug } from "@/lib/screenTemplates";
+import { appTemplateBySlug, makeAppScreenScene } from "@/lib/appScreenTemplates";
 
 /**
  * /templates/<slug> — opens the editor pre-loaded with one template card
@@ -17,7 +18,16 @@ export default function TemplateSlugPage() {
   const params = useParams<{ slug: string }>();
   const search = useSearchParams();
   const meta = templateBySlug(params.slug);
+  const appTemplate = meta ? undefined : appTemplateBySlug(params.slug);
   const loaded = useRef(false);
+
+  // app screenshot templates: a phone + editable app screen + headline
+  useEffect(() => {
+    if (!appTemplate || loaded.current) return;
+    loaded.current = true;
+    useSceneStore.setState({ scene: makeAppScreenScene(appTemplate) });
+    useSceneStore.temporal.getState().clear();
+  }, [appTemplate]);
 
   useEffect(() => {
     if (!meta || loaded.current) return;
@@ -60,6 +70,6 @@ export default function TemplateSlugPage() {
     }
   }, [meta, search]);
 
-  if (!meta) return notFound();
-  return <EditorShell />;
+  if (!meta && !appTemplate) return notFound();
+  return <EditorShell fromTemplate />;
 }

@@ -1,0 +1,49 @@
+{
+  "id": "pixel-tablet",
+  "name": "Pixel Tablet",
+  "brand": "google",
+  "category": "tablet",
+  "released": "2023-06",
+  "screen": {
+    "width": 2560,
+    "height": 1600,
+    "cornerRadius": 40
+  },
+  "aliases": [
+    "google pixel tablet"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "pixel tablet mockup"
+    ]
+  },
+  "wallpaper": [
+    "#0f766e",
+    "#0f172a",
+    "#99f6e4"
+  ],
+  "frame": {
+    "width": 2804,
+    "height": 1844,
+    "screenRect": {
+      "x": 122,
+      "y": 122,
+      "width": 2560,
+      "height": 1600
+    },
+    "maskPath": "M162 122 H2642 A40 40 0 0 1 2682 162 V1682 A40 40 0 0 1 2642 1722 H162 A40 40 0 0 1 122 1682 V162 A40 40 0 0 1 162 122 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "porcelain",
+      "label": "Porcelain",
+      "svg": "frame-porcelain.svg"
+    },
+    {
+      "id": "hazel",
+      "label": "Hazel",
+      "svg": "frame-hazel.svg"
+    }
+  ]
+}

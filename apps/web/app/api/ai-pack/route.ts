@@ -6,7 +6,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import type { Firestore } from "firebase-admin/firestore";
 import { FirebaseConfigError, firestoreDb } from "@/lib/server/firebaseAdmin";
 import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
-import { isBillingActive, readBilling } from "@/lib/server/razorpay";
+import { isBillingActive, readBilling } from "@/lib/server/billing";
 import { consumeDailyQuota, quotaSubject } from "@/lib/server/quota";
 import { aiGenerationDecision } from "@/lib/ai/gate";
 import {

@@ -219,6 +219,7 @@ function referencedAssetIds(doc: ScreenDoc): string[] {
   if (doc.app === "slack" || doc.app === "discord") for (const m of doc.messages) if (m.avatar) ids.push(m.avatar);
   if (doc.app === "appstore-promo") {
     if (doc.screenshot) ids.push(doc.screenshot);
+    if (doc.webScreenshot) ids.push(doc.webScreenshot);
   }
   return ids;
 }
@@ -283,7 +284,8 @@ export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): {
       return flat(renderAppStore(doc, dp), screenLogicalHeight(doc), screenLogicalWidth(doc));
     case "appstore-promo": {
       const screenshotUrl = doc.screenshot ? lookupUrl?.(doc.screenshot) : undefined;
-      return flat(renderAppStorePromo(doc, dp, screenshotUrl), screenLogicalHeight(doc), screenLogicalWidth(doc));
+      const webShotUrl = doc.webScreenshot ? lookupUrl?.(doc.webScreenshot) : undefined;
+      return flat(renderAppStorePromo(doc, dp, screenshotUrl, webShotUrl), screenLogicalHeight(doc), screenLogicalWidth(doc));
     }
     case "googlemaps":
       return flat(renderGoogleMaps(doc), screenLogicalHeight(doc), screenLogicalWidth(doc));
@@ -331,6 +333,17 @@ export function renderScreen(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): string
    keystroke) can't grow memory unchecked. */
 const cache = new Map<string, ResolvedAsset & { id: string; name: string }>();
 const CACHE_MAX = 128;
+
+/**
+ * Scale a frameless card layer so the whole card sits inside the canvas with a
+ * margin (cards resolve at 3x logical px, so a wide card at a phone-sized
+ * scale would spill past the canvas edges and get cropped).
+ */
+export function fitCardScale(assetId: string, canvasW: number, canvasH: number, fill = 0.86): number | undefined {
+  const a = resolveScreenAsset(assetId);
+  if (!a?.width || !a?.height) return undefined;
+  return Math.round(Math.min((canvasW * fill) / a.width, (canvasH * fill) / a.height) * 1000) / 1000;
+}
 
 export function resolveScreenAsset(
   assetId: string,

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, Check } from "lucide-react";
 import { SolarIcon } from "./SolarIcon";
-import { formatPrice, perMonthPrice, yearlySavingsPct, type Currency } from "@/lib/billing/plans";
+import { formatPrice, perMonthPrice, yearlySavingsPct } from "@/lib/billing/plans";
 
 // Clean exports lead the free list on purpose — it's the first objection a
 // visitor has about any tool in this category, and answering it up front is
@@ -38,13 +38,12 @@ type Billing = "monthly" | "yearly";
 
 export function PricingPlans() {
   const [billing, setBilling] = useState<Billing>("yearly");
-  const [currency, setCurrency] = useState<Currency>("INR");
   const isYearly = billing === "yearly";
-  const savings = yearlySavingsPct(currency);
+  const savings = yearlySavingsPct();
   // annual is framed as its per-month equivalent; monthly is the raw price
-  const perMonth = isYearly ? perMonthPrice("yearly", currency)! : formatPrice("monthly", currency);
+  const perMonth = isYearly ? perMonthPrice("yearly")! : formatPrice("monthly");
   const subline = isYearly
-    ? `${formatPrice("yearly", currency)} billed yearly`
+    ? `${formatPrice("yearly")} billed yearly`
     : "billed monthly · cancel anytime";
 
   return (
@@ -61,7 +60,7 @@ export function PricingPlans() {
           </div>
         </div>
         <p className="mt-7 text-[40px] font-semibold leading-none">
-          {currency === "INR" ? "₹0" : "$0"}
+          $0
         </p>
         <p className="mt-2 text-[13px] text-zinc-500">No watermark · no account required</p>
         <ul className="mt-8 space-y-3">
@@ -83,27 +82,13 @@ export function PricingPlans() {
       <div className="relative overflow-hidden bg-[#111217] p-8 lg:p-10">
         <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-violet-600/20 blur-3xl" />
         <div className="relative">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-violet-600">
-                <SolarIcon name="crown-star-bold-duotone" size={21} />
-              </span>
-              <div>
-                <p className="text-[12px] text-violet-300">For polished, production work</p>
-                <h2 className="text-[21px] font-semibold">MockFrame Pro</h2>
-              </div>
-            </div>
-            {/* currency */}
-            <div className="flex rounded-lg border border-white/10 bg-white/[0.04] p-0.5 text-[11px] font-semibold">
-              {(["INR", "USD"] as const).map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCurrency(c)}
-                  className={`rounded-md px-2 py-1 transition-colors ${currency === c ? "bg-white text-zinc-900" : "text-zinc-500 hover:text-white"}`}
-                >
-                  {c === "INR" ? "₹" : "$"}
-                </button>
-              ))}
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-violet-600">
+              <SolarIcon name="crown-star-bold-duotone" size={21} />
+            </span>
+            <div>
+              <p className="text-[12px] text-violet-300">For polished, production work</p>
+              <h2 className="text-[21px] font-semibold">MockFrame Pro</h2>
             </div>
           </div>
 
@@ -146,7 +131,7 @@ export function PricingPlans() {
           <div className="mt-6 flex h-[58px] items-end overflow-hidden">
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.div
-                key={billing + currency}
+                key={billing}
                 initial={{ y: 22, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -22, opacity: 0 }}
@@ -192,7 +177,7 @@ export function PricingPlans() {
           </Link>
 
           <p className="mt-4 text-center text-[11px] text-zinc-600">
-            {currency === "INR" ? "UPI, cards & netbanking" : "International cards"} · secured by Razorpay
+            Prices in USD · local taxes calculated at checkout · secured by Dodo Payments
           </p>
         </div>
       </div>

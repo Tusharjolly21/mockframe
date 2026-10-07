@@ -4,12 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "motion/react";
 import { track, trackOnce } from "@/lib/analytics";
+import { confirmCheckoutReturn } from "@/lib/billing/client";
 import { ingestFile } from "@/lib/assets";
 import { loadCustomDevices, syncCustomDevicesFromServer } from "@/lib/customDevices";
 import { buildDeviceScene, buildScreenScene, isScreenApp } from "@/lib/deviceScene";
 import { saveCurrentDraft } from "@/lib/drafts";
 import { useShotBatchStore } from "@/lib/shotBatch";
-import { duplicateLayer, groupLayers, placeAsset, removeLayer, ungroupLayers } from "@/lib/sceneOps";
+import { duplicateLayer, groupLayers, placeAsset, removeLayer, reorderLayer, ungroupLayers } from "@/lib/sceneOps";
+import { copyLayers, hasCopiedLayers, pasteLayers, runArrange, type ArrangeAction } from "@/lib/arrange";
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
 import { AnimatePanel } from "./AnimatePanel";
 import { BottomBar } from "./BottomBar";
@@ -19,6 +21,7 @@ import { RightPanel } from "./RightPanel";
 import { ExportNextSteps } from "./ExportNextSteps";
 import { MobileGate } from "./MobileGate";
 import { StarterModal } from "./StarterModal";
+import { ShortcutsSheet } from "./ShortcutsSheet";
 import { LogoChip, Toolbar } from "./Toolbar";
 
 // Heavy (@remotion/player) + client-only — load it only when the promo flow opens.
@@ -30,10 +33,12 @@ export function EditorShell({
   openCalibrate = false,
   openUpgradeOnLoad = false,
   upgradePlan,
+  checkoutReturn,
   openCaptureOnLoad = false,
   openPromoOnLoad = false,
   openReplayOnLoad = false,
   remixId,
+  fromTemplate = false,
   embedded = false,
 }: {
   initialDeviceId?: string;
@@ -41,10 +46,14 @@ export function EditorShell({
   openCalibrate?: boolean;
   openUpgradeOnLoad?: boolean;
   upgradePlan?: string;
+  /** set when Dodo's hosted checkout redirected back here */
+  checkoutReturn?: { subscriptionId?: string; status?: string };
   openCaptureOnLoad?: boolean;
   openPromoOnLoad?: boolean;
   openReplayOnLoad?: boolean;
   remixId?: string;
+  /** a template page already loaded a scene, so skip the first-run picker */
+  fromTemplate?: boolean;
   embedded?: boolean;
 }) {
   const setScene = useSceneStore((s) => s.setScene);
@@ -157,6 +166,39 @@ export function EditorShell({
     return () => clearTimeout(timer);
   }, [openCaptureOnLoad, openUpgradeOnLoad, upgradePlan]);
 
+  // Back from Dodo Payments' hosted checkout: confirm the subscription (verify
+  // by id, then poll status while the webhook lands) and unlock Pro.
+  const checkoutSubId = checkoutReturn?.subscriptionId;
+  const checkoutStatus = checkoutReturn?.status;
+  const isCheckoutReturn = !!checkoutReturn;
+  useEffect(() => {
+    if (!isCheckoutReturn) return;
+    window.history.replaceState({}, "", "/editor");
+    const say = (detail: string) => window.dispatchEvent(new CustomEvent("framekit:toast", { detail }));
+    if (checkoutStatus === "failed" || checkoutStatus === "cancelled") {
+      const t = setTimeout(() => say("Payment was not completed — you have not been charged"), 0);
+      return () => clearTimeout(t);
+    }
+    let cancelled = false;
+    // deferred so the toast listener (registered further down) is mounted
+    const t = setTimeout(() => {
+      say("Confirming your payment…");
+      confirmCheckoutReturn(checkoutSubId ?? null).then((active) => {
+        if (cancelled) return;
+        if (active) {
+          useViewStore.getState().setRemoveWatermark(true);
+          say("You're Pro - welcome aboard");
+        } else {
+          say("Payment received — Pro unlocks as soon as it's confirmed. Refresh in a minute if it hasn't.");
+        }
+      });
+    }, 0);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [isCheckoutReturn, checkoutSubId, checkoutStatus]);
+
   // The batch is a list of independent scene documents. Keep the active shot
   // current without making the editor shell re-render for every control tweak.
   useEffect(() => {
@@ -170,7 +212,16 @@ export function EditorShell({
     const onPaste = async (e: ClipboardEvent) => {
       const item = [...(e.clipboardData?.items ?? [])].find((i) => i.type.startsWith("image/"));
       const file = item?.getAsFile();
-      if (!file) return;
+      if (!file) {
+        // no image on the clipboard: paste layers copied with ⌘C, if any
+        const t = e.target as HTMLElement | null;
+        if (t?.matches?.("input, textarea, select, [contenteditable]") || !hasCopiedLayers()) return;
+        e.preventDefault();
+        const r = pasteLayers(useSceneStore.getState().scene);
+        setScene(() => r.scene);
+        useViewStore.setState({ selectedIds: r.ids });
+        return;
+      }
       const asset = await ingestFile(file);
       useViewStore.getState().bumpAssets();
       const r = placeAsset(useSceneStore.getState().scene, asset, {
@@ -207,6 +258,48 @@ export function EditorShell({
         e.preventDefault();
         if (e.shiftKey) sceneTemporal.getState().redo();
         else sceneTemporal.getState().undo();
+        return;
+      }
+      if (mod && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        useViewStore.setState({ selectedIds: useSceneStore.getState().scene.layers.map((l) => l.id) });
+        return;
+      }
+      if (mod && (e.key.toLowerCase() === "c" || e.key.toLowerCase() === "x") && selectedIds.length) {
+        // a text selection on the page keeps the browser's own copy
+        if (window.getSelection()?.toString()) return;
+        e.preventDefault();
+        const n = copyLayers(useSceneStore.getState().scene, selectedIds);
+        // replace whatever image sits on the system clipboard so ⌘V pastes these layers
+        navigator.clipboard?.writeText("").catch(() => {});
+        if (e.key.toLowerCase() === "x") {
+          const removable = selectedIds.filter((id) => useSceneStore.getState().scene.layers.find((l) => l.id === id)?.type !== "mockup");
+          setScene((s) => ({ ...s, layers: s.layers.filter((l) => !removable.includes(l.id)) }));
+          useViewStore.setState({ selectedIds: selectedIds.filter((id) => !removable.includes(id)) });
+        }
+        window.dispatchEvent(new CustomEvent("framekit:toast", { detail: `${e.key.toLowerCase() === "x" ? "Cut" : "Copied"} ${n} element${n === 1 ? "" : "s"} · ⌘V to paste` }));
+        return;
+      }
+      // ⌘] / ⌘[ step forward/back; with ⌥ jump to front/back
+      if (mod && (e.key === "]" || e.key === "[" || e.code === "BracketRight" || e.code === "BracketLeft") && selectedIds.length) {
+        e.preventDefault();
+        const fwd = e.code === "BracketRight" || e.key === "]";
+        if (e.altKey) runArrange(fwd ? "front" : "back");
+        else setScene((s) => selectedIds.reduce((acc, id) => reorderLayer(acc, id, fwd ? 1 : -1), s));
+        return;
+      }
+      // ⌥A/D/W/S align left/right/top/bottom, ⌥H/V center (Figma's keys)
+      if (e.altKey && !mod && selectedIds.length) {
+        const a = ({ KeyA: "left", KeyD: "right", KeyW: "top", KeyS: "bottom", KeyH: "center", KeyV: "middle" } as Record<string, ArrangeAction>)[e.code];
+        if (a) {
+          e.preventDefault();
+          runArrange(e.shiftKey && (a === "center" || a === "middle") ? (a === "center" ? "dist-h" : "dist-v") : a);
+          return;
+        }
+      }
+      if (!mod && e.key === "?") {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent("framekit:shortcuts"));
         return;
       }
       if (mod && e.key.toLowerCase() === "d" && primary) {
@@ -382,9 +475,10 @@ export function EditorShell({
       {promoOpen && <PromoPanel onClose={() => setPromoOpen(false)} />}
       <MobileGate embedded={embedded} />
       <ExportNextSteps />
+      <ShortcutsSheet />
       <StarterModal
         embedded={embedded}
-        deepLinked={Boolean(initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad || remixId)}
+        deepLinked={Boolean(initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad || remixId || fromTemplate)}
       />
     </div>
   );

@@ -48,7 +48,7 @@ const SECTIONS: { title: string; body: (string | { list: string[] })[] }[] = [
     title: "Account & payments",
     body: [
       "Sign-in runs on Firebase Authentication (Google sign-in, email link, or email + password). We store your email, display name, and your plan status.",
-      "Payments are processed by Razorpay. Your card, UPI, or bank details go directly to Razorpay and never touch our servers; we store only your plan, its status, and payment references.",
+      "Payments are processed by Dodo Payments, which acts as our merchant of record. Your card and payment details go directly to Dodo Payments and never touch our servers; Dodo Payments also processes your email, billing country, and address as needed to charge you and calculate tax. We store only your plan, its status, its renewal date, and payment references.",
     ],
   },
   {

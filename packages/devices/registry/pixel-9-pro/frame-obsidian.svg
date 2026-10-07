@@ -2,18 +2,61 @@
 <!--BODY-->
 <defs>
 <linearGradient id="fk_pixel-9-pro_obsidian_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4d5156"/><stop offset="0.5" stop-color="#26282b"/><stop offset="1" stop-color="#3f4347"/></linearGradient>
-<linearGradient id="fk_pixel-9-pro_obsidian_btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4d5156"/><stop offset="1" stop-color="#3f4347"/></linearGradient>
+
+<linearGradient id="fk_pixel-9-pro_obsidian_edgeH" x1="0" y1="0" x2="1" y2="0">
+  <stop offset="0" stop-color="#000" stop-opacity="0.55"/>
+  <stop offset="0.004" stop-color="#fff" stop-opacity="0.05"/>
+  <stop offset="0.009" stop-color="#fff" stop-opacity="0.55"/>
+  <stop offset="0.018" stop-color="#fff" stop-opacity="0.06"/>
+  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+  <stop offset="0.982" stop-color="#fff" stop-opacity="0.04"/>
+  <stop offset="0.991" stop-color="#fff" stop-opacity="0.38"/>
+  <stop offset="0.996" stop-color="#000" stop-opacity="0.1"/>
+  <stop offset="1" stop-color="#000" stop-opacity="0.6"/>
+</linearGradient>
+<linearGradient id="fk_pixel-9-pro_obsidian_edgeV" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+  <stop offset="0.006" stop-color="#fff" stop-opacity="0.08"/>
+  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+  <stop offset="0.994" stop-color="#000" stop-opacity="0.12"/>
+  <stop offset="1" stop-color="#000" stop-opacity="0.5"/>
+</linearGradient>
+<linearGradient id="fk_pixel-9-pro_obsidian_btn_left" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000"/><stop offset="0.25" stop-color="#4d5156"/><stop offset="0.6" stop-color="#26282b"/><stop offset="1" stop-color="#3f4347"/></linearGradient>
+<linearGradient id="fk_pixel-9-pro_obsidian_btn_right" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3f4347"/><stop offset="0.4" stop-color="#26282b"/><stop offset="0.75" stop-color="#4d5156"/><stop offset="1" stop-color="#000"/></linearGradient>
+<linearGradient id="fk_pixel-9-pro_obsidian_glass" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.07"/>
+  <stop offset="0.35" stop-color="#ffffff" stop-opacity="0.015"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</linearGradient>
 <radialGradient id="fk_pixel-9-pro_obsidian_sheen" cx="0.25" cy="0.05" r="1.4">
   <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
   <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
   <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
 </radialGradient>
 </defs>
-<rect x="1382" y="572" width="16" height="210" rx="7" fill="url(#fk_pixel-9-pro_obsidian_btn)"/>
-<rect x="1382" y="832" width="16" height="330" rx="7" fill="url(#fk_pixel-9-pro_obsidian_btn)"/>
+<rect x="1382" y="575" width="16" height="210" rx="7" fill="#000" opacity="0.28"/>
+<rect x="1382" y="572" width="16" height="210" rx="7" fill="url(#fk_pixel-9-pro_obsidian_btn_right)"/>
+<rect x="1393" y="578" width="2" height="198" rx="1" fill="#fff" opacity="0.35"/>
+<rect x="1382" y="835" width="16" height="330" rx="7" fill="#000" opacity="0.28"/>
+<rect x="1382" y="832" width="16" height="330" rx="7" fill="url(#fk_pixel-9-pro_obsidian_btn_right)"/>
+<rect x="1393" y="838" width="2" height="318" rx="1" fill="#fff" opacity="0.35"/>
 <path d="M162 12 H1238 A150 150 0 0 1 1388 162 V2814 A150 150 0 0 1 1238 2964 H162 A150 150 0 0 1 12 2814 V162 A150 150 0 0 1 162 12 Z" fill="url(#fk_pixel-9-pro_obsidian_rail)"/>
-<path d="M162 19 H1238 A143 143 0 0 1 1381 162 V2814 A143 143 0 0 1 1238 2957 H162 A143 143 0 0 1 19 2814 V162 A143 143 0 0 1 162 19 Z" fill="#0b0b0d"/>
-<path d="M162 19 H1238 A143 143 0 0 1 1381 162 V2814 A143 143 0 0 1 1238 2957 H162 A143 143 0 0 1 19 2814 V162 A143 143 0 0 1 162 19 Z" fill="url(#fk_pixel-9-pro_obsidian_sheen)"/>
+<path d="M162 12 H1238 A150 150 0 0 1 1388 162 V2814 A150 150 0 0 1 1238 2964 H162 A150 150 0 0 1 12 2814 V162 A150 150 0 0 1 162 12 Z" fill="url(#fk_pixel-9-pro_obsidian_edgeH)"/>
+<path d="M162 12 H1238 A150 150 0 0 1 1388 162 V2814 A150 150 0 0 1 1238 2964 H162 A150 150 0 0 1 12 2814 V162 A150 150 0 0 1 162 12 Z" fill="url(#fk_pixel-9-pro_obsidian_edgeV)"/>
+<rect x="12" y="135" width="17" height="7" fill="#26282b" opacity="0.9"/><rect x="12" y="135" width="17" height="7" fill="#000" opacity="0.22"/>
+<rect x="1371" y="135" width="17" height="7" fill="#26282b" opacity="0.9"/><rect x="1371" y="135" width="17" height="7" fill="#000" opacity="0.22"/>
+<rect x="12" y="2841" width="17" height="7" fill="#26282b" opacity="0.9"/><rect x="12" y="2841" width="17" height="7" fill="#000" opacity="0.22"/>
+<rect x="1371" y="2841" width="17" height="7" fill="#26282b" opacity="0.9"/><rect x="1371" y="2841" width="17" height="7" fill="#000" opacity="0.22"/>
+<rect x="1085.28" y="12" width="7" height="17" fill="#26282b" opacity="0.9"/><rect x="1085.28" y="12" width="7" height="17" fill="#000" opacity="0.22"/>
+<rect x="314.72" y="2947" width="7" height="17" fill="#26282b" opacity="0.9"/><rect x="314.72" y="2947" width="7" height="17" fill="#000" opacity="0.22"/>
+<path d="M162 12.75 H1238 A149.25 149.25 0 0 1 1387.25 162 V2814 A149.25 149.25 0 0 1 1238 2963.25 H162 A149.25 149.25 0 0 1 12.75 2814 V162 A149.25 149.25 0 0 1 162 12.75 Z" fill="none" stroke="#000" stroke-opacity="0.55" stroke-width="1.5"/>
+<path d="M162 15 H1238 A147 147 0 0 1 1385 162 V2814 A147 147 0 0 1 1238 2961 H162 A147 147 0 0 1 15 2814 V162 A147 147 0 0 1 162 15 Z" fill="none" stroke="#fff" stroke-opacity="0.32" stroke-width="1.4"/>
+<path d="M162 27 H1238 A135 135 0 0 1 1373 162 V2814 A135 135 0 0 1 1238 2949 H162 A135 135 0 0 1 27 2814 V162 A135 135 0 0 1 162 27 Z" fill="#000" fill-opacity="0.65"/>
+<path d="M162 29 H1238 A133 133 0 0 1 1371 162 V2814 A133 133 0 0 1 1238 2947 H162 A133 133 0 0 1 29 2814 V162 A133 133 0 0 1 162 29 Z" fill="#0b0b0d"/>
+<path d="M162 29 H1238 A133 133 0 0 1 1371 162 V2814 A133 133 0 0 1 1238 2947 H162 A133 133 0 0 1 29 2814 V162 A133 133 0 0 1 162 29 Z" fill="url(#fk_pixel-9-pro_obsidian_glass)"/>
+<path d="M162 29 H1238 A133 133 0 0 1 1371 162 V2814 A133 133 0 0 1 1238 2947 H162 A133 133 0 0 1 29 2814 V162 A133 133 0 0 1 162 29 Z" fill="url(#fk_pixel-9-pro_obsidian_sheen)"/>
+<path d="M162 30 H1238 A132 132 0 0 1 1370 162 V2814 A132 132 0 0 1 1238 2946 H162 A132 132 0 0 1 30 2814 V162 A132 132 0 0 1 162 30 Z" fill="none" stroke="#fff" stroke-opacity="0.07" stroke-width="2"/>
+<path d="M156 57 H1244 A99 99 0 0 1 1343 156 V2820 A99 99 0 0 1 1244 2919 H156 A99 99 0 0 1 57 2820 V156 A99 99 0 0 1 156 57 Z" fill="#000"/>
 <!--/BODY-->
 <!--SCREEN--><defs>
 <linearGradient id="fk_scr_pixel-9-pro_obsidian_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f766e"/><stop offset="1" stop-color="#134e4a"/></linearGradient>
@@ -24,7 +67,10 @@
 <path d="M156 60 H1244 A96 96 0 0 1 1340 156 V2820 A96 96 0 0 1 1244 2916 H156 A96 96 0 0 1 60 2820 V156 A96 96 0 0 1 156 60 Z" fill="url(#fk_scr_pixel-9-pro_obsidian_b)"/>
 <path d="M156 60 H1244 A96 96 0 0 1 1340 156 V2820 A96 96 0 0 1 1244 2916 H156 A96 96 0 0 1 60 2820 V156 A96 96 0 0 1 156 60 Z" fill="url(#fk_scr_pixel-9-pro_obsidian_c)"/><!--/SCREEN-->
 <!--OVERLAY-->
+<circle cx="700" cy="160" r="44" fill="#000" opacity="0.5"/>
 <circle cx="700" cy="160" r="42" fill="#020204"/>
-<circle cx="700" cy="160" r="23.1" fill="#0c0e16"/>
-<circle cx="690.76" cy="149.5" r="6.72" fill="#28304a" opacity="0.9"/><!--/OVERLAY-->
+<circle cx="700" cy="160" r="26.04" fill="#0b0e18" stroke="#1b2134" stroke-width="2"/>
+<circle cx="700" cy="160" r="12.6" fill="#141c30"/>
+<circle cx="690.76" cy="149.5" r="5.880000000000001" fill="#5a6ea0" opacity="0.75"/>
+<path d="M156 60 H1244 A96 96 0 0 1 1340 156 V2820 A96 96 0 0 1 1244 2916 H156 A96 96 0 0 1 60 2820 V156 A96 96 0 0 1 156 60 Z" fill="none" stroke="#000" stroke-opacity="0.45" stroke-width="4"/><!--/OVERLAY-->
 </svg>

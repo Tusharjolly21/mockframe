@@ -1,0 +1,55 @@
+{
+  "id": "macbook-air-15",
+  "name": "MacBook Air 15″",
+  "brand": "apple",
+  "category": "laptop",
+  "released": "2025-03",
+  "screen": {
+    "width": 2880,
+    "height": 1864,
+    "cornerRadius": 26
+  },
+  "aliases": [
+    "apple macbook air 15",
+    "macbook air m4"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "macbook air 15 mockup"
+    ]
+  },
+  "wallpaper": [
+    "#0ea5e9",
+    "#1e3a8a",
+    "#bae6fd"
+  ],
+  "frame": {
+    "width": 3684,
+    "height": 2180,
+    "screenRect": {
+      "x": 402,
+      "y": 84,
+      "width": 2880,
+      "height": 1864
+    },
+    "maskPath": "M428 84 H3256 A26 26 0 0 1 3282 110 V1948 H402 V110 A26 26 0 0 1 428 84 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "sky-blue",
+      "label": "Sky Blue",
+      "svg": "frame-sky-blue.svg"
+    },
+    {
+      "id": "midnight",
+      "label": "Midnight",
+      "svg": "frame-midnight.svg"
+    },
+    {
+      "id": "starlight",
+      "label": "Starlight",
+      "svg": "frame-starlight.svg"
+    }
+  ]
+}

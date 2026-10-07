@@ -2,7 +2,7 @@
 
 import { getDevice, listDevices } from "@framekit/devices";
 import { createMockupLayer, createScene, type SceneDocument } from "@framekit/scene";
-import { defaultTemplateDoc, encodeScreenAsset, resolveScreenAsset } from "./screens";
+import { defaultTemplateDoc, encodeScreenAsset, fitCardScale, resolveScreenAsset } from "./screens";
 
 /**
  * /templates has two kinds of entry:
@@ -150,6 +150,12 @@ export function makeTemplateScene(meta: TemplateMeta): SceneDocument {
           height: 1080,
           background: { type: "linear-gradient", angle: 135, stops: [{ at: 0, color: "#01875f" }, { at: 1, color: "#004d34" }] },
         })
+    : meta.app === "appstore-promo"
+      ? createScene({
+          width: 1440,
+          height: 1080,
+          background: { type: "linear-gradient", angle: 160, stops: [{ at: 0, color: "#e9e9f2" }, { at: 1, color: "#cfd0e3" }] },
+        })
     : createScene({ width: 1920, height: 1080 });
   const iphone = getDevice("iphone-16-pro") ?? listDevices()[0];
   const layer = createMockupLayer({ deviceId: null, frameHeight: iphone.frame.height, canvasHeight: scene.canvas.height });
@@ -173,6 +179,9 @@ export function makeTemplateScene(meta: TemplateMeta): SceneDocument {
   else if (meta.app === "googlemaps") initialScale = 0.52;
   else if (meta.app === "googleplay") initialScale = 0.45;
 
+  // never larger than the canvas: a card that spills past the edges is cropped
+  const fit = fitCardScale(layer.media.assetId, scene.canvas.width, scene.canvas.height, 0.88);
+  if (fit !== undefined) initialScale = Math.min(initialScale, fit);
   layer.transform = {
     ...layer.transform,
     scale: initialScale,

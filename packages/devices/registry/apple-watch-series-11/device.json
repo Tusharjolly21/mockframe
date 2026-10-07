@@ -1,0 +1,57 @@
+{
+  "id": "apple-watch-series-11",
+  "name": "Apple Watch Series 11",
+  "brand": "apple",
+  "category": "watch",
+  "released": "2025-09",
+  "screen": {
+    "width": 416,
+    "height": 496,
+    "cornerRadius": 96
+  },
+  "aliases": [
+    "apple watch",
+    "apple watch series 11",
+    "apple watch 46mm"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "apple watch mockup",
+      "apple watch series 11 mockup"
+    ]
+  },
+  "wallpaper": [
+    "#1e293b",
+    "#020617",
+    "#94a3b8"
+  ],
+  "frame": {
+    "width": 570,
+    "height": 1266,
+    "screenRect": {
+      "x": 62,
+      "y": 385,
+      "width": 416,
+      "height": 496
+    },
+    "maskPath": "M158 385 H382 A96 96 0 0 1 478 481 V785 A96 96 0 0 1 382 881 H158 A96 96 0 0 1 62 785 V481 A96 96 0 0 1 158 385 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "jet-black",
+      "label": "Jet Black · Black Band",
+      "svg": "frame-jet-black.svg"
+    },
+    {
+      "id": "silver",
+      "label": "Silver · Light Blush",
+      "svg": "frame-silver.svg"
+    },
+    {
+      "id": "rose-gold",
+      "label": "Rose Gold · Plum",
+      "svg": "frame-rose-gold.svg"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "id": "studio-display",
+  "name": "Studio Display",
+  "brand": "apple",
+  "category": "desktop",
+  "released": "2022-03",
+  "screen": {
+    "width": 5120,
+    "height": 2880,
+    "cornerRadius": 0
+  },
+  "aliases": [
+    "apple studio display",
+    "monitor mockup",
+    "pro display"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "studio display mockup",
+      "monitor mockup"
+    ]
+  },
+  "wallpaper": [
+    "#4338ca",
+    "#0f172a",
+    "#a5b4fc"
+  ],
+  "frame": {
+    "width": 5444,
+    "height": 4001,
+    "screenRect": {
+      "x": 162,
+      "y": 162,
+      "width": 5120,
+      "height": 2880
+    },
+    "maskPath": "M162 162 H5282 V3042 H162 V162 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "silver",
+      "label": "Silver",
+      "svg": "frame-silver.svg"
+    },
+    {
+      "id": "space-black",
+      "label": "Space Black",
+      "svg": "frame-space-black.svg"
+    }
+  ]
+}

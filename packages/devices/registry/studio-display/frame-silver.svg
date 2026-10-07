@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5444 4001">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_studio-display_silver_frame" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e8eaee"/><stop offset="1" stop-color="#b2b6be"/></linearGradient>
+<linearGradient id="fk_studio-display_silver_chin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8eaee"/><stop offset="1" stop-color="#b2b6be"/></linearGradient>
+<linearGradient id="fk_studio-display_silver_stand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8eaee"/><stop offset="1" stop-color="#b2b6be"/></linearGradient>
+<linearGradient id="fk_studio-display_silver_standSide" x1="0" y1="0" x2="1" y2="0">
+  <stop offset="0" stop-color="#000" stop-opacity="0.35"/><stop offset="0.08" stop-color="#000" stop-opacity="0"/><stop offset="0.92" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+</linearGradient>
+<linearGradient id="fk_studio-display_silver_glass" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#fff" stop-opacity="0.08"/><stop offset="0.4" stop-color="#fff" stop-opacity="0"/>
+</linearGradient>
+</defs>
+<path d="M2078.28 3182 H3365.7200000000003 L3453.5 3955 H1990.5 Z" fill="url(#fk_studio-display_silver_stand)"/>
+<path d="M2078.28 3182 H3365.7200000000003 L3453.5 3955 H1990.5 Z" fill="url(#fk_studio-display_silver_standSide)"/>
+<rect x="1990.5" y="3192" width="1463" height="14" fill="#000" opacity="0.18"/>
+<path d="M1988.5 3953 H3455.5 A4 4 0 0 1 3459.5 3957 V3973 A14 14 0 0 1 3445.5 3987 H1998.5 A14 14 0 0 1 1984.5 3973 V3957 A4 4 0 0 1 1988.5 3953 Z" fill="url(#fk_studio-display_silver_stand)"/>
+<rect x="1984.5" y="3953" width="1475" height="3" fill="#fff" opacity="0.4"/>
+<path d="M42 12 H5402 A30 30 0 0 1 5432 42 V3162 A30 30 0 0 1 5402 3192 H42 A30 30 0 0 1 12 3162 V42 A30 30 0 0 1 42 12 Z" fill="url(#fk_studio-display_silver_frame)"/>
+<path d="M42.75 12.75 H5401.25 A30 30 0 0 1 5431.25 42.75 V3161.25 A30 30 0 0 1 5401.25 3191.25 H42.75 A30 30 0 0 1 12.75 3161.25 V42.75 A30 30 0 0 1 42.75 12.75 Z" fill="none" stroke="#000" stroke-opacity="0.35" stroke-width="1.5"/>
+
+<path d="M42 32 H5402 A10 10 0 0 1 5412 42 V3162 A10 10 0 0 1 5402 3172 H42 A10 10 0 0 1 32 3162 V42 A10 10 0 0 1 42 32 Z" fill="#050506"/>
+<path d="M42 32 H5402 A10 10 0 0 1 5412 42 V3162 A10 10 0 0 1 5402 3172 H42 A10 10 0 0 1 32 3162 V42 A10 10 0 0 1 42 32 Z" fill="url(#fk_studio-display_silver_glass)"/>
+<rect x="160" y="160" width="5124" height="2884" fill="#000"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_studio-display_silver_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4338ca"/><stop offset="1" stop-color="#0f172a"/></linearGradient>
+<radialGradient id="fk_scr_studio-display_silver_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#a5b4fc" stop-opacity="0.95"/><stop offset="1" stop-color="#a5b4fc" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_studio-display_silver_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M162 162 H5282 V3042 H162 V162 Z" fill="url(#fk_scr_studio-display_silver_a)"/>
+<path d="M162 162 H5282 V3042 H162 V162 Z" fill="url(#fk_scr_studio-display_silver_b)"/>
+<path d="M162 162 H5282 V3042 H162 V162 Z" fill="url(#fk_scr_studio-display_silver_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<circle cx="2722" cy="97" r="7" fill="#1a1d26"/>
+<rect x="162" y="162" width="5120" height="2880" fill="none" stroke="#000" stroke-opacity="0.35" stroke-width="3"/><!--/OVERLAY-->
+</svg>

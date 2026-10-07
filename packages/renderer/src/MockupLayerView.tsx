@@ -5,13 +5,31 @@ import { shadowToFilter } from "./shadow";
 import { quadMatrix3d, rectToQuad } from "./quad";
 import type { ResolvedAsset } from "./types";
 
-function mediaPlacement(
+type MediaCrop = { x: number; y: number; w: number; h: number };
+const FULL_CROP: MediaCrop = { x: 0, y: 0, w: 1, h: 1 };
+
+/** the media's crop window (0..1 of the source), full image when unset */
+export function mediaCrop(media: Pick<NonNullable<MockupLayer["media"]>, "crop"> | null | undefined): MediaCrop {
+  const c = media?.crop;
+  return c && c.w > 0 && c.h > 0 ? c : FULL_CROP;
+}
+
+const isFullCrop = (c: MediaCrop) => c.x <= 0 && c.y <= 0 && c.w >= 1 && c.h >= 1;
+
+/**
+ * Where the (cropped) screenshot sits inside a screen rect: Fill/Fit size it,
+ * then the freehand zoom (scale) and pan (offset) from on-canvas adjusting
+ * apply on top. Returns the VISIBLE image box; the editor overlay uses the same
+ * math so its handles line up exactly with what renders.
+ */
+export function mediaPlacement(
   rect: { x: number; y: number; width: number; height: number },
   asset: ResolvedAsset,
   media: NonNullable<MockupLayer["media"]>
 ) {
-  const iw = asset.width || rect.width;
-  const ih = asset.height || rect.height;
+  const c = mediaCrop(media);
+  const iw = (asset.width || rect.width) * c.w;
+  const ih = (asset.height || rect.height) * c.h;
   if (media.fit === "fill") {
     // STRETCH fills the screen exactly, corner-to-corner, ignoring aspect ratio.
     // Pan/zoom (offset/scale) are meaningless here — they'd only leave a gap or
@@ -32,6 +50,95 @@ function mediaPlacement(
     w,
     h,
   };
+}
+
+/** the whole source image's box, given the visible (cropped) box it fills */
+export function uncroppedBox(placed: { x: number; y: number; w: number; h: number }, c: MediaCrop) {
+  const w = placed.w / c.w;
+  const h = placed.h / c.h;
+  return { x: placed.x - c.x * w, y: placed.y - c.y * h, w, h };
+}
+
+/**
+ * A photo-scene device's warp: the screen-res box the screenshot is laid out
+ * in, the plate quad it's warped onto, and the visible hole within that box.
+ * Shared by the renderer and the editor's adjust overlay.
+ */
+export function plateWarp(device: Device) {
+  const plate = device.plate!;
+  const quad = plate.screenQuad ?? rectToQuad(plate.screenRect);
+  const sw = device.screen.width;
+  const sh = device.screen.height;
+  const scx = (quad[0][0] + quad[1][0] + quad[2][0] + quad[3][0]) / 4;
+  const scy = (quad[0][1] + quad[1][1] + quad[2][1] + quad[3][1]) / 4;
+  // see the renderer: bodied plates outset the box and let the body mask it
+  const bezelMask = plate.mode !== "under" && !!plate.bezelMask;
+  const outset = bezelMask ? 0.06 : 0;
+  const warpQuad = (outset
+    ? quad.map(([x, y]) => [x + (x - scx) * outset, y + (y - scy) * outset])
+    : quad) as typeof quad;
+  const mx = (sw - sw / (1 + outset)) / 2;
+  const my = (sh - sh / (1 + outset)) / 2;
+  return { quad, warpQuad, sw, sh, scx, scy, bezelMask, outset, hole: { x: mx, y: my, width: sw - mx * 2, height: sh - my * 2 } };
+}
+
+/** A frameless screenshot showing only its crop window (natural px size). */
+function CroppedShot({
+  asset,
+  crop,
+  radius,
+  opacity,
+  onLoad,
+}: {
+  asset: ResolvedAsset;
+  crop: MediaCrop;
+  radius: number;
+  opacity?: number;
+  onLoad?: () => void;
+}) {
+  if (isFullCrop(crop)) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={asset.url}
+        alt=""
+        width={asset.width}
+        height={asset.height}
+        style={{ display: "block", borderRadius: radius, maxWidth: "none", opacity }}
+        onLoad={onLoad}
+        crossOrigin="anonymous"
+      />
+    );
+  }
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: asset.width * crop.w,
+        height: asset.height * crop.h,
+        borderRadius: radius,
+        overflow: "hidden",
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={asset.url}
+        alt=""
+        width={asset.width}
+        height={asset.height}
+        style={{
+          position: "absolute",
+          left: -crop.x * asset.width,
+          top: -crop.y * asset.height,
+          display: "block",
+          maxWidth: "none",
+          opacity,
+        }}
+        onLoad={onLoad}
+        crossOrigin="anonymous"
+      />
+    </div>
+  );
 }
 
 /** Empty screens show wallpaper art (not black glass) so even a fresh scene
@@ -158,21 +265,7 @@ export function MockupLayerView({
             }}
           >
             <div style={{ position: "relative", borderRadius: radius, overflow: "hidden" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={asset.url}
-                alt=""
-                width={asset.width}
-                height={asset.height}
-                style={{
-                  display: "block",
-                  borderRadius: radius,
-                  maxWidth: "none",
-                  opacity: glassDark ? 0.62 : 0.68,
-                }}
-                onLoad={onMediaLoad}
-                crossOrigin="anonymous"
-              />
+              <CroppedShot asset={asset} crop={mediaCrop(layer.media)} radius={radius} opacity={glassDark ? 0.62 : 0.68} onLoad={onMediaLoad} />
               <div
                 style={{
                   position: "absolute",
@@ -242,16 +335,7 @@ export function MockupLayerView({
           }}
         >
           <div style={{ position: "relative" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={asset.url}
-              alt=""
-              width={asset.width}
-              height={asset.height}
-              style={{ display: "block", borderRadius: radius, maxWidth: "none" }}
-              onLoad={onMediaLoad}
-              crossOrigin="anonymous"
-            />
+            <CroppedShot asset={asset} crop={mediaCrop(layer.media)} radius={radius} onLoad={onMediaLoad} />
             {layer.glare && layer.glare.intensity > 0 && (
               <div
                 style={{
@@ -300,18 +384,9 @@ export function MockupLayerView({
   if (device.plate) {
     const plate = device.plate;
     const asset = layer.media ? resolveAsset(layer.media.assetId) : undefined;
-    const quad = plate.screenQuad ?? rectToQuad(plate.screenRect);
     // size the warp source box to the SCREEN's aspect (not the foreshortened quad
     // edge lengths) so a screen-res screenshot maps corner-to-corner with no crop
-    // or aspect distortion, even under steep perspective
-    const sw = device.screen.width;
-    const sh = device.screen.height;
-    // corner radius in screen-res space (the box is now screen-sized)
-    const rad = device.screen.cornerRadius;
-    // screen centre in plate coords — the editor's ⊕ anchors here (NOT the layer
-    // box centre, which on an off-centre screen would put the button on the body)
-    const scx = (quad[0][0] + quad[1][0] + quad[2][0] + quad[3][0]) / 4;
-    const scy = (quad[0][1] + quad[1][1] + quad[2][1] + quad[3][1]) / 4;
+    // or aspect distortion, even under steep perspective.
     // Coverage strategy depends on plate type:
     // • bezelMask (bodied: watch/mac/ipad-duo/hand) — an opaque body surrounds the
     //   hole, so OUTSET generously + SQUARE corners: content fills the full glass
@@ -320,12 +395,12 @@ export function MockupLayerView({
     // • frame-edge "hole" plates (thin outline, no masking body) — EXACT box; any
     //   outset would spill past the device edge onto the page.
     // • "under" (custom opaque photos) — EXACT, no masking plate at all.
-    const bezelMask = plate.mode !== "under" && plate.bezelMask;
-    const OUTSET = bezelMask ? 0.06 : 0;
+    // The screen centre (scx/scy, plate coords) anchors the editor's ⊕ — NOT the
+    // layer box centre, which on an off-centre screen would put it on the body.
+    const { sw, sh, scx, scy, bezelMask, warpQuad } = plateWarp(device);
+    // corner radius in screen-res space (the box is now screen-sized)
+    const rad = device.screen.cornerRadius;
     const boxRadius = bezelMask ? 0 : rad;
-    const warpQuad = (OUTSET
-      ? quad.map(([x, y]) => [x + (x - scx) * OUTSET, y + (y - scy) * OUTSET])
-      : quad) as typeof quad;
     // "hole" plates (extracted PSDs) sit ON TOP — their transparent screen hole
     // masks the screenshot and bakes occlusion. "under" plates are ordinary
     // opaque photos (user-calibrated customs) — they sit BELOW and the warped
@@ -371,23 +446,39 @@ export function MockupLayerView({
                 {layer.media.bg && (
                   <div style={{ position: "absolute", inset: 0, background: layer.media.bg }} />
                 )}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={asset.url}
-                  alt=""
-                  onLoad={onMediaLoad}
-                  crossOrigin="anonymous"
+                <div
                   style={{
                     position: "absolute",
                     left: `calc(${placed.x}px + var(--fk-media-dx, 0px))`,
                     top: `calc(${placed.y}px + var(--fk-media-dy, 0px))`,
                     width: placed.w,
                     height: placed.h,
-                    maxWidth: "none",
-                    display: "block",
-                    filter: "saturate(0.98) contrast(1.02)",
+                    overflow: "hidden",
                   }}
-                />
+                >
+                  {(() => {
+                    const full = uncroppedBox({ x: 0, y: 0, w: placed.w, h: placed.h }, mediaCrop(layer.media));
+                    return (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={asset.url}
+                        alt=""
+                        onLoad={onMediaLoad}
+                        crossOrigin="anonymous"
+                        style={{
+                          position: "absolute",
+                          left: full.x,
+                          top: full.y,
+                          width: full.w,
+                          height: full.h,
+                          maxWidth: "none",
+                          display: "block",
+                          filter: "saturate(0.98) contrast(1.02)",
+                        }}
+                      />
+                    );
+                  })()}
+                </div>
               </>
             );
           })()
@@ -482,6 +573,7 @@ export function MockupLayerView({
   const clipId = `fkclip_${device.id}_${layer.id}`;
   const asset = layer.media ? resolveAsset(layer.media.assetId) : undefined;
   const placed = asset && layer.media ? mediaPlacement(rect, asset, layer.media) : null;
+  const crop = layer.media ? mediaCrop(layer.media) : null;
 
   // decorative ring around the frame (border feature); radius approximates the
   // device body radius from bezel + screen corner radius
@@ -517,15 +609,29 @@ export function MockupLayerView({
               {layer.media?.bg && (
                 <rect x={rect.x} y={rect.y} width={rect.width} height={rect.height} fill={layer.media.bg} />
               )}
-              <image
-                href={asset.url}
-                x={placed.x}
-                y={placed.y}
-                width={placed.w}
-                height={placed.h}
-                preserveAspectRatio="none"
-                onLoad={onMediaLoad}
-              />
+              {crop && !isFullCrop(crop) ? (
+                // cropped: a nested viewport shows just the crop window of the source
+                <svg
+                  x={placed.x}
+                  y={placed.y}
+                  width={placed.w}
+                  height={placed.h}
+                  viewBox={`${crop.x * asset.width} ${crop.y * asset.height} ${crop.w * asset.width} ${crop.h * asset.height}`}
+                  preserveAspectRatio="none"
+                >
+                  <image href={asset.url} width={asset.width} height={asset.height} preserveAspectRatio="none" onLoad={onMediaLoad} />
+                </svg>
+              ) : (
+                <image
+                  href={asset.url}
+                  x={placed.x}
+                  y={placed.y}
+                  width={placed.w}
+                  height={placed.h}
+                  preserveAspectRatio="none"
+                  onLoad={onMediaLoad}
+                />
+              )}
             </>
           ) : (
             <ScreenPlaceholder device={device} layerId={layer.id} />

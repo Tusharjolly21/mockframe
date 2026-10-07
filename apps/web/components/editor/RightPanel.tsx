@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from "motion/react";
 import { getDevice } from "@framekit/devices";
 import type { MockupLayer, SceneDocument } from "@framekit/scene";
 import { Check, Copy, Dices, Download, Link2, Loader2, Lock, Plus, RotateCcw, Settings2, Share2, Sparkles, Stamp, Trash2, Upload } from "lucide-react";
-import { resolveAsset } from "@/lib/assets";
 import { track, trackOnce } from "@/lib/analytics";
 import { exportScene, type ExportFormat, type ExportQuality } from "@/lib/export";
 import { isScreenAsset, type CodeDoc } from "@/lib/screens";
@@ -14,6 +13,7 @@ import { applyTheme, BUILTIN_THEMES, createSharedTheme, deleteTheme, exportTheme
 import { bulkExportZip, type BulkItem } from "@/lib/bulkExport";
 import { applyVariation, VARIATIONS } from "@/lib/variations";
 import { applyLayout, DEFAULT_MODS, LAYOUT_PRESETS, modifyPreset, type LayoutMods } from "@/lib/layouts";
+import { applyCombo, COMBOS, isComboScene, isWideLayer } from "@/lib/combos";
 import { useSceneStore, useViewStore } from "@/lib/store";
 import { useEntitlementSync } from "@/lib/billing/client";
 import { openUpgrade } from "@/lib/billing/gate";
@@ -34,7 +34,7 @@ function ScenePreview({ scene, className }: { scene: SceneDocument; className?: 
 export function RightPanel() {
   const scene = useSceneStore((s) => s.scene);
   const setScene = useSceneStore((s) => s.setScene);
-  const { selectedIds, activeLayoutId, setActiveLayout, select, layoutMods, setLayoutMods } = useViewStore();
+  const { activeLayoutId, setActiveLayout, select, layoutMods, setLayoutMods } = useViewStore();
 
   const [format, setFormat] = useState<ExportFormat>("png");
   const [scale, setScale] = useState(1);
@@ -54,17 +54,14 @@ export function RightPanel() {
   }, [settingsOpen]);
 
   const mockups = scene.layers.filter((l): l is MockupLayer => l.type === "mockup");
-  const arity = (Math.min(3, Math.max(1, mockups.length)) as 1 | 2 | 3) ?? 1;
-  const hideLayouts = mockups.some((layer) => {
+  const arity = (Math.min(3, Math.max(1, mockups.filter((l) => !isWideLayer(l)).length)) as 1 | 2 | 3) ?? 1;
+  // standalone cards (tweets, code, promo) aren't devices, so layouts don't apply
+  const hideLayouts = mockups.some((layer) => !layer.deviceId && !!layer.media && isScreenAsset(layer.media.assetId));
+  // 1 / 2 / 3 phone layouts clone the phone, so they need a plain (non-photo) device
+  const countsEnabled = mockups.some((layer) => {
     const device = layer.deviceId ? getDevice(layer.deviceId) : undefined;
-    const category = device?.category;
-    const standaloneCard = !layer.deviceId && !!layer.media && isScreenAsset(layer.media.assetId);
-    return !!device?.plate || category === "laptop" || category === "desktop" || standaloneCard;
+    return !device?.plate && !isWideLayer(layer);
   });
-  const presets = LAYOUT_PRESETS.filter((p) => p.arity === arity);
-  const selectedMockups = selectedIds
-    .map((id) => scene.layers.find((l) => l.id === id))
-    .filter((l): l is MockupLayer => l?.type === "mockup");
 
   const exportNode = () =>
     document.querySelector<HTMLElement>("#scene-canvas [data-scene-id]");
@@ -436,98 +433,26 @@ export function RightPanel() {
       )}
 
       {!hideLayouts && <>
-      {/* mockup count */}
-      <div className="px-3 pt-3">
-        <Seg
-          id="count"
-          options={[
-            { value: "1", label: <CountGlyph n={1} /> },
-            { value: "2", label: <CountGlyph n={2} /> },
-            { value: "3", label: <CountGlyph n={3} /> },
-          ]}
-          value={String(arity) as "1" | "2" | "3"}
-          onChange={(v) => {
-            const preset = LAYOUT_PRESETS.find((p) => p.arity === Number(v));
-            if (!preset) return;
-            setScene((s) => applyLayout(s, preset));
-            setActiveLayout(preset.id);
-            select(null);
-          }}
-        />
-      </div>
+      <LayoutPicker
+        scene={scene}
+        activeLayoutId={activeLayoutId}
+        countsEnabled={countsEnabled}
+        onApply={(next, id) => {
+          setScene(() => next);
+          setActiveLayout(id);
+          select(null);
+        }}
+      />
 
-      {/* all composition choices live on the right; canvas stays unobstructed */}
-      <div className="px-3 pt-1">
-        <h3 className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">
-          Quick layouts
-        </h3>
-        <div className="grid grid-cols-2 gap-2">
-          {VARIATIONS.map((variation) => {
-            const previewScene = applyVariation(scene, variation);
-            return (
-              <button
-                key={variation.id}
-                onClick={() => {
-                  setScene((current) => applyVariation(current, variation));
-                  setActiveLayout(variation.presetId);
-                  select(null);
-                }}
-                className="fk-press overflow-hidden rounded-lg border border-[#e4e4ec] bg-white p-1 text-left hover:border-[#17171c]"
-                title={variation.label}
-              >
-                <ScenePreview scene={previewScene} />
-                <span className="block truncate px-1 pt-1 text-[10px] font-semibold text-[#5a5a66]">{variation.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <MyTemplates />
-      <ConnectorsPanel />
-
-      <div className="px-3 pt-4">
-        <h3 className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">
-          Layout presets
-        </h3>
-      </div>
-
-      <div className="px-3 pt-1">
-        <div className="flex flex-col gap-3">
-          {presets.map((p) => {
-            const previewScene = applyLayout(scene, p);
-            const active = activeLayoutId === p.id;
-            return (
-              <motion.button
-                key={p.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                onClick={() => {
-                  setScene((s) => applyLayout(s, p));
-                  setActiveLayout(p.id);
-                }}
-                className={`cursor-pointer rounded-2xl border-2 p-1 ${
-                  active ? "border-[#17171c]" : "border-transparent hover:border-[#c9c9d4]"
-                }`}
-                title={p.label}
-              >
-                <ScenePreview scene={previewScene} />
-              </motion.button>
-            );
-          })}
-        </div>
-
-        {selectedMockups.length > 0 ? (
-          <SelectionCustomize key={selectedMockups.map((l) => l.id).join(",")} layers={selectedMockups} />
-        ) : (
+      {!isComboScene(scene) && (
+      <div className="px-3">
         <CustomizeLayout
-          activeLayoutId={activeLayoutId}
+          activeLayoutId={activeLayoutId && LAYOUT_PRESETS.some((p) => p.id === activeLayoutId) ? activeLayoutId : null}
           mods={layoutMods}
           onMods={(mods) => {
             setLayoutMods(mods);
             const preset = LAYOUT_PRESETS.find((p) => p.id === activeLayoutId);
-            if (preset) setScene((s) => applyLayout(s, modifyPreset(preset, mods)));
+            if (preset) setScene((s) => applyLayout(phonesOnly(s), modifyPreset(preset, mods)));
           }}
           onRandomize={() => {
             const pool = LAYOUT_PRESETS.filter((p) => p.arity === arity);
@@ -538,104 +463,20 @@ export function RightPanel() {
               tilt: Math.round((Math.random() - 0.5) * 26),
               scale: Math.round((0.88 + Math.random() * 0.3) * 100) / 100,
             };
-            setScene((s) => applyLayout(s, modifyPreset(preset, mods)));
+            setScene((s) => applyLayout(phonesOnly(s), modifyPreset(preset, mods)));
             setActiveLayout(preset.id);
             setLayoutMods(mods);
           }}
         />
-        )}
       </div>
+      )}
+
+      <MyTemplates />
+      <ConnectorsPanel />
       </>}
     </div>
   );
 }
-
-/* --------------------------- selection customization -------------------------- */
-/* When device(s) are selected, the sliders edit only those layers. */
-
-function baseScaleFor(layer: MockupLayer, canvasHeight: number): number {
-  const device = layer.deviceId ? getDevice(layer.deviceId) : undefined;
-  if (device) return (canvasHeight * 0.78) / device.frame.height;
-  const asset = layer.media ? resolveAsset(layer.media.assetId) : undefined;
-  return asset ? (canvasHeight * 0.78) / asset.height : layer.transform.scale || 1;
-}
-
-function SelectionCustomize({ layers }: { layers: MockupLayer[] }) {
-  const scene = useSceneStore((s) => s.scene);
-  const setScene = useSceneStore((s) => s.setScene);
-  // spread baseline: positions captured when this selection was made
-  const baseRef = useRef<Record<string, { x: number; y: number }>>(
-    Object.fromEntries(layers.map((l) => [l.id, { x: l.transform.x, y: l.transform.y }]))
-  );
-  const [spread, setSpread] = useState(100);
-
-  const ids = layers.map((l) => l.id);
-  const first = layers[0];
-  const setAll = (patch: (l: MockupLayer) => Partial<MockupLayer["transform"]>) =>
-    setScene((s) => ({
-      ...s,
-      layers: s.layers.map((l) =>
-        ids.includes(l.id) && l.type === "mockup"
-          ? { ...l, transform: { ...l.transform, ...patch(l) } }
-          : l
-      ),
-    }));
-
-  return (
-    <div className="mt-4 border-t border-[#ececf2] pt-3 pb-2">
-      <h3 className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">
-        Customize · {layers.length} selected
-      </h3>
-      <SliderRow
-        label="Spread"
-        value={spread}
-        min={20}
-        max={250}
-        format={(v) => `${Math.round(v)}%`}
-        onChange={(v) => {
-          setSpread(v);
-          setAll((l) => {
-            const b = baseRef.current[l.id];
-            return b ? { x: Math.round((b.x * v) / 100), y: Math.round((b.y * v) / 100) } : {};
-          });
-        }}
-      />
-      <SliderRow
-        label="Angle"
-        value={first.transform.rotate}
-        min={-180}
-        max={180}
-        format={(v) => `${Math.round(v)}°`}
-        onChange={(rotate) => setAll(() => ({ rotate }))}
-      />
-      <SliderRow
-        label="Tilt"
-        value={first.transform.tiltY}
-        min={-45}
-        max={45}
-        format={(v) => `${Math.round(v)}°`}
-        onChange={(tiltY) => setAll(() => ({ tiltY }))}
-      />
-      <SliderRow
-        label="Size"
-        value={Math.round((first.transform.scale / baseScaleFor(first, scene.canvas.height)) * 100)}
-        min={25}
-        max={280}
-        format={(v) => `${Math.round(v)}%`}
-        onChange={(pct) =>
-          setAll((l) => ({
-            scale: Math.round(baseScaleFor(l, scene.canvas.height) * pct * 10) / 1000,
-          }))
-        }
-      />
-      <p className="text-[10.5px] text-[#9a9aa4]">Editing only the selected device{layers.length > 1 ? "s" : ""} — ⇧click to add more.</p>
-    </div>
-  );
-}
-
-/* ---------------------------- layout customization --------------------------- */
-/* Modifiers re-apply the active preset with tweaked slots; the document only
-   ever stores plain transforms, so everything stays hand-editable. */
 
 function CustomizeLayout({
   activeLayoutId,
@@ -1231,6 +1072,148 @@ function SyntaxThemeGallery({ doc, onPick }: { doc: CodeDoc; onPick: (theme: str
         })}
       </div>
     </div>
+  );
+}
+
+/* --------------------------------- layouts ---------------------------------- */
+
+/** phone layouts work on the phone shots only: drop a combo's laptop / browser */
+function phonesOnly(scene: SceneDocument): SceneDocument {
+  const keep = scene.layers.filter((l) => !isWideLayer(l));
+  if (!keep.some((l) => l.type === "mockup")) return scene;
+  // back to the phone stage the scene had before the combo widened it
+  const wasCombo = keep.length !== scene.layers.length;
+  return {
+    ...scene,
+    canvas: wasCombo && scene.canvas.width > scene.canvas.height ? { ...scene.canvas, width: 1080, height: 1350 } : scene.canvas,
+    layers: keep,
+  };
+}
+
+function restage(scene: SceneDocument, presetId: string): SceneDocument {
+  const preset = LAYOUT_PRESETS.find((p) => p.id === presetId);
+  if (!preset) return scene;
+  const phones = phonesOnly(scene);
+  // going down in count keeps the first shots, so a solo layout is solo
+  const keep = new Set(phones.layers.filter((l) => l.type === "mockup").slice(0, preset.slots.length).map((l) => l.id));
+  const trimmed = { ...phones, layers: phones.layers.filter((l) => l.type !== "mockup" || keep.has(l.id)) };
+  return applyLayout(trimmed, preset);
+}
+
+type LayoutTab = "1" | "2" | "3" | "web";
+
+function TabGlyph({ tab }: { tab: LayoutTab }) {
+  if (tab === "web") {
+    return (
+      <span className="flex items-end justify-center gap-[3px] py-0.5" aria-hidden>
+        <span className="relative h-[11px] w-[17px] rounded-[2px] border-[1.75px] border-current">
+          <span className="absolute -bottom-[4px] -left-[3px] -right-[3px] h-[1.75px] rounded-full bg-current" />
+        </span>
+        <span className="h-3.5 w-[7px] rounded-[2.5px] bg-current" />
+      </span>
+    );
+  }
+  return <CountGlyph n={Number(tab)} />;
+}
+
+/**
+ * One place to stage the devices: pick how many phones (or a web + phone
+ * combo), then a composition. Every card is a live preview of YOUR scene.
+ */
+function LayoutPicker({
+  scene,
+  activeLayoutId,
+  countsEnabled,
+  onApply,
+}: {
+  scene: SceneDocument;
+  activeLayoutId: string | null;
+  countsEnabled: boolean;
+  onApply: (next: SceneDocument, id: string) => void;
+}) {
+  const combo = isComboScene(scene);
+  const phoneCount = Math.min(3, Math.max(1, scene.layers.filter((l) => l.type === "mockup" && !isWideLayer(l)).length));
+  const current: LayoutTab = combo || !countsEnabled ? "web" : (String(phoneCount) as LayoutTab);
+  const [tab, setTab] = useState<LayoutTab>(current);
+  // follow the scene when it changes underneath (undo, templates, device picks)
+  const sceneKey = `${combo}-${phoneCount}-${countsEnabled}`;
+  const lastKey = useRef(sceneKey);
+  useEffect(() => {
+    if (lastKey.current !== sceneKey) {
+      lastKey.current = sceneKey;
+      setTab(current);
+    }
+  }, [sceneKey, current]);
+
+  const items: { id: string; label: string; build: () => SceneDocument }[] =
+    tab === "web"
+      ? COMBOS.map((c) => ({ id: c.id, label: c.label, build: () => applyCombo(scene, c) }))
+      : LAYOUT_PRESETS.filter((p) => String(p.arity) === tab).map((p) => ({ id: p.id, label: p.label, build: () => restage(scene, p.id) }));
+
+  const tabs: { id: LayoutTab; label: string; disabled?: boolean }[] = [
+    { id: "1", label: "One phone", disabled: !countsEnabled },
+    { id: "2", label: "Two phones", disabled: !countsEnabled },
+    { id: "3", label: "Three phones", disabled: !countsEnabled },
+    { id: "web", label: "Web + phone" },
+  ];
+
+  return (
+    <section className="px-3 pt-3" data-layout-picker>
+      <div className="mb-2 flex items-baseline justify-between">
+        <h3 className="text-[13px] font-bold text-[#17171c]">Layouts</h3>
+        <span className="text-[10.5px] text-[#9a9aa4]">{tabs.find((t) => t.id === tab)?.label}</span>
+      </div>
+      <div className="mb-3 grid grid-cols-4 gap-0.5 rounded-xl bg-[#ececf2] p-1" role="tablist">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={tab === t.id}
+            title={t.disabled ? `${t.label}: switch to a plain phone in the device picker first` : t.label}
+            disabled={t.disabled}
+            data-layout-tab={t.id}
+            onClick={() => {
+              setTab(t.id);
+              const first = t.id === "web" ? COMBOS[0] : LAYOUT_PRESETS.find((p) => String(p.arity) === t.id);
+              if (!first) return;
+              if (t.id === "web") onApply(applyCombo(scene, first as (typeof COMBOS)[number]), first.id);
+              else onApply(restage(scene, first.id), first.id);
+            }}
+            className={`fk-press grid h-8 place-items-center rounded-lg transition-colors disabled:opacity-30 ${
+              tab === t.id ? "bg-white text-[#17171c] shadow-[0_1px_3px_rgba(20,20,40,0.14)]" : "text-[#8a8a94] hover:text-[#17171c]"
+            }`}
+          >
+            <TabGlyph tab={t.id} />
+          </button>
+        ))}
+      </div>
+      {tab === "web" && !scene.layers.some(isWideLayer) && (
+        <p className="mb-2 text-[10.5px] leading-snug text-[#8a8a94]">
+          Pick one to add a laptop, browser or desktop next to your phone. Your phone screenshot stays; add the website shot with the + on its screen.
+        </p>
+      )}
+      <div className="grid grid-cols-2 gap-2">
+        {items.map((it) => {
+          const active = activeLayoutId === it.id;
+          return (
+            <button
+              key={it.id}
+              data-layout={it.id}
+              onClick={() => onApply(it.build(), it.id)}
+              className={`fk-press group overflow-hidden rounded-xl border bg-white p-1 text-left transition-colors ${
+                active ? "border-[#17171c] shadow-[0_0_0_1px_#17171c]" : "border-[#e4e4ec] hover:border-[#9a9aa4]"
+              }`}
+              title={it.label}
+            >
+              <ScenePreview scene={it.build()} className="rounded-lg" />
+              <span className={`block truncate px-1 pb-0.5 pt-1 text-[10.5px] font-semibold ${active ? "text-[#17171c]" : "text-[#5a5a66]"}`}>
+                {it.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

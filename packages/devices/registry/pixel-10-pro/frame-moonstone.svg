@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1396 2972">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_pixel-10-pro_moonstone_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b7c2d0"/><stop offset="0.5" stop-color="#7d8a9b"/><stop offset="1" stop-color="#a8b4c3"/></linearGradient>
+
+<linearGradient id="fk_pixel-10-pro_moonstone_edgeH" x1="0" y1="0" x2="1" y2="0">
+  <stop offset="0" stop-color="#000" stop-opacity="0.55"/>
+  <stop offset="0.004" stop-color="#fff" stop-opacity="0.05"/>
+  <stop offset="0.009" stop-color="#fff" stop-opacity="0.55"/>
+  <stop offset="0.018" stop-color="#fff" stop-opacity="0.06"/>
+  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+  <stop offset="0.982" stop-color="#fff" stop-opacity="0.04"/>
+  <stop offset="0.991" stop-color="#fff" stop-opacity="0.38"/>
+  <stop offset="0.996" stop-color="#000" stop-opacity="0.1"/>
+  <stop offset="1" stop-color="#000" stop-opacity="0.6"/>
+</linearGradient>
+<linearGradient id="fk_pixel-10-pro_moonstone_edgeV" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+  <stop offset="0.006" stop-color="#fff" stop-opacity="0.08"/>
+  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+  <stop offset="0.994" stop-color="#000" stop-opacity="0.12"/>
+  <stop offset="1" stop-color="#000" stop-opacity="0.5"/>
+</linearGradient>
+<linearGradient id="fk_pixel-10-pro_moonstone_btn_left" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000"/><stop offset="0.25" stop-color="#b7c2d0"/><stop offset="0.6" stop-color="#7d8a9b"/><stop offset="1" stop-color="#a8b4c3"/></linearGradient>
+<linearGradient id="fk_pixel-10-pro_moonstone_btn_right" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a8b4c3"/><stop offset="0.4" stop-color="#7d8a9b"/><stop offset="0.75" stop-color="#b7c2d0"/><stop offset="1" stop-color="#000"/></linearGradient>
+<linearGradient id="fk_pixel-10-pro_moonstone_glass" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.07"/>
+  <stop offset="0.35" stop-color="#ffffff" stop-opacity="0.015"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</linearGradient>
+<radialGradient id="fk_pixel-10-pro_moonstone_sheen" cx="0.25" cy="0.05" r="1.4">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
+  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect x="1378" y="575" width="16" height="210" rx="7" fill="#000" opacity="0.28"/>
+<rect x="1378" y="572" width="16" height="210" rx="7" fill="url(#fk_pixel-10-pro_moonstone_btn_right)"/>
+<rect x="1389" y="578" width="2" height="198" rx="1" fill="#fff" opacity="0.35"/>
+<rect x="1378" y="835" width="16" height="330" rx="7" fill="#000" opacity="0.28"/>
+<rect x="1378" y="832" width="16" height="330" rx="7" fill="url(#fk_pixel-10-pro_moonstone_btn_right)"/>
+<rect x="1389" y="838" width="2" height="318" rx="1" fill="#fff" opacity="0.35"/>
+<path d="M182 12 H1214 A170 170 0 0 1 1384 182 V2790 A170 170 0 0 1 1214 2960 H182 A170 170 0 0 1 12 2790 V182 A170 170 0 0 1 182 12 Z" fill="url(#fk_pixel-10-pro_moonstone_rail)"/>
+<path d="M182 12 H1214 A170 170 0 0 1 1384 182 V2790 A170 170 0 0 1 1214 2960 H182 A170 170 0 0 1 12 2790 V182 A170 170 0 0 1 182 12 Z" fill="url(#fk_pixel-10-pro_moonstone_edgeH)"/>
+<path d="M182 12 H1214 A170 170 0 0 1 1384 182 V2790 A170 170 0 0 1 1214 2960 H182 A170 170 0 0 1 12 2790 V182 A170 170 0 0 1 182 12 Z" fill="url(#fk_pixel-10-pro_moonstone_edgeV)"/>
+<rect x="12" y="151.4" width="17" height="7" fill="#7d8a9b" opacity="0.9"/><rect x="12" y="151.4" width="17" height="7" fill="#000" opacity="0.22"/>
+<rect x="1367" y="151.4" width="17" height="7" fill="#7d8a9b" opacity="0.9"/><rect x="1367" y="151.4" width="17" height="7" fill="#000" opacity="0.22"/>
+<rect x="12" y="2820.6" width="17" height="7" fill="#7d8a9b" opacity="0.9"/><rect x="12" y="2820.6" width="17" height="7" fill="#000" opacity="0.22"/>
+<rect x="1367" y="2820.6" width="17" height="7" fill="#7d8a9b" opacity="0.9"/><rect x="1367" y="2820.6" width="17" height="7" fill="#000" opacity="0.22"/>
+<rect x="1082.16" y="12" width="7" height="17" fill="#7d8a9b" opacity="0.9"/><rect x="1082.16" y="12" width="7" height="17" fill="#000" opacity="0.22"/>
+<rect x="313.84" y="2943" width="7" height="17" fill="#7d8a9b" opacity="0.9"/><rect x="313.84" y="2943" width="7" height="17" fill="#000" opacity="0.22"/>
+<path d="M182 12.75 H1214 A169.25 169.25 0 0 1 1383.25 182 V2790 A169.25 169.25 0 0 1 1214 2959.25 H182 A169.25 169.25 0 0 1 12.75 2790 V182 A169.25 169.25 0 0 1 182 12.75 Z" fill="none" stroke="#000" stroke-opacity="0.55" stroke-width="1.5"/>
+<path d="M182 15 H1214 A167 167 0 0 1 1381 182 V2790 A167 167 0 0 1 1214 2957 H182 A167 167 0 0 1 15 2790 V182 A167 167 0 0 1 182 15 Z" fill="none" stroke="#fff" stroke-opacity="0.32" stroke-width="1.4"/>
+<path d="M182 27 H1214 A155 155 0 0 1 1369 182 V2790 A155 155 0 0 1 1214 2945 H182 A155 155 0 0 1 27 2790 V182 A155 155 0 0 1 182 27 Z" fill="#000" fill-opacity="0.65"/>
+<path d="M182 29 H1214 A153 153 0 0 1 1367 182 V2790 A153 153 0 0 1 1214 2943 H182 A153 153 0 0 1 29 2790 V182 A153 153 0 0 1 182 29 Z" fill="#0c0e12"/>
+<path d="M182 29 H1214 A153 153 0 0 1 1367 182 V2790 A153 153 0 0 1 1214 2943 H182 A153 153 0 0 1 29 2790 V182 A153 153 0 0 1 182 29 Z" fill="url(#fk_pixel-10-pro_moonstone_glass)"/>
+<path d="M182 29 H1214 A153 153 0 0 1 1367 182 V2790 A153 153 0 0 1 1214 2943 H182 A153 153 0 0 1 29 2790 V182 A153 153 0 0 1 182 29 Z" fill="url(#fk_pixel-10-pro_moonstone_sheen)"/>
+<path d="M182 30 H1214 A152 152 0 0 1 1366 182 V2790 A152 152 0 0 1 1214 2942 H182 A152 152 0 0 1 30 2790 V182 A152 152 0 0 1 182 30 Z" fill="none" stroke="#fff" stroke-opacity="0.07" stroke-width="2"/>
+<path d="M178 55 H1218 A123 123 0 0 1 1341 178 V2794 A123 123 0 0 1 1218 2917 H178 A123 123 0 0 1 55 2794 V178 A123 123 0 0 1 178 55 Z" fill="#000"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_pixel-10-pro_moonstone_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4338ca"/><stop offset="1" stop-color="#0f172a"/></linearGradient>
+<radialGradient id="fk_scr_pixel-10-pro_moonstone_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#a5b4fc" stop-opacity="0.95"/><stop offset="1" stop-color="#a5b4fc" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_pixel-10-pro_moonstone_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M178 58 H1218 A120 120 0 0 1 1338 178 V2794 A120 120 0 0 1 1218 2914 H178 A120 120 0 0 1 58 2794 V178 A120 120 0 0 1 178 58 Z" fill="url(#fk_scr_pixel-10-pro_moonstone_a)"/>
+<path d="M178 58 H1218 A120 120 0 0 1 1338 178 V2794 A120 120 0 0 1 1218 2914 H178 A120 120 0 0 1 58 2794 V178 A120 120 0 0 1 178 58 Z" fill="url(#fk_scr_pixel-10-pro_moonstone_b)"/>
+<path d="M178 58 H1218 A120 120 0 0 1 1338 178 V2794 A120 120 0 0 1 1218 2914 H178 A120 120 0 0 1 58 2794 V178 A120 120 0 0 1 178 58 Z" fill="url(#fk_scr_pixel-10-pro_moonstone_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<circle cx="698" cy="154" r="42" fill="#000" opacity="0.5"/>
+<circle cx="698" cy="154" r="40" fill="#020204"/>
+<circle cx="698" cy="154" r="24.8" fill="#0b0e18" stroke="#1b2134" stroke-width="2"/>
+<circle cx="698" cy="154" r="12" fill="#141c30"/>
+<circle cx="689.2" cy="144" r="5.6000000000000005" fill="#5a6ea0" opacity="0.75"/>
+<path d="M178 58 H1218 A120 120 0 0 1 1338 178 V2794 A120 120 0 0 1 1218 2914 H178 A120 120 0 0 1 58 2794 V178 A120 120 0 0 1 178 58 Z" fill="none" stroke="#000" stroke-opacity="0.45" stroke-width="4"/><!--/OVERLAY-->
+</svg>

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 610 1356">
+<!--BODY-->
+<defs>
+<linearGradient id="fk_apple-watch-ultra-3_natural-orange_case" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e3e0da"/><stop offset="0.5" stop-color="#9d9a93"/><stop offset="1" stop-color="#d1cec7"/></linearGradient>
+<linearGradient id="fk_apple-watch-ultra-3_natural-orange_band" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9531e"/><stop offset="0.5" stop-color="#f26b2b"/><stop offset="1" stop-color="#d9531e"/></linearGradient>
+
+<linearGradient id="fk_apple-watch-ultra-3_natural-orange_edgeH" x1="0" y1="0" x2="1" y2="0">
+  <stop offset="0" stop-color="#000" stop-opacity="0.55"/>
+  <stop offset="0.004" stop-color="#fff" stop-opacity="0.05"/>
+  <stop offset="0.009" stop-color="#fff" stop-opacity="0.55"/>
+  <stop offset="0.018" stop-color="#fff" stop-opacity="0.06"/>
+  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+  <stop offset="0.982" stop-color="#fff" stop-opacity="0.04"/>
+  <stop offset="0.991" stop-color="#fff" stop-opacity="0.38"/>
+  <stop offset="0.996" stop-color="#000" stop-opacity="0.1"/>
+  <stop offset="1" stop-color="#000" stop-opacity="0.6"/>
+</linearGradient>
+<linearGradient id="fk_apple-watch-ultra-3_natural-orange_edgeV" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+  <stop offset="0.006" stop-color="#fff" stop-opacity="0.08"/>
+  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+  <stop offset="0.994" stop-color="#000" stop-opacity="0.12"/>
+  <stop offset="1" stop-color="#000" stop-opacity="0.5"/>
+</linearGradient>
+<linearGradient id="fk_apple-watch-ultra-3_natural-orange_crown" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d1cec7"/><stop offset="0.5" stop-color="#e3e0da"/><stop offset="1" stop-color="#000"/></linearGradient>
+<linearGradient id="fk_apple-watch-ultra-3_natural-orange_bandShade" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#000" stop-opacity="0.15"/><stop offset="0.7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+</linearGradient>
+<radialGradient id="fk_apple-watch-ultra-3_natural-orange_glass" cx="0.3" cy="0.15" r="1">
+  <stop offset="0" stop-color="#fff" stop-opacity="0.10"/><stop offset="0.5" stop-color="#fff" stop-opacity="0.02"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<path d="M100 16 H470 A30 30 0 0 1 500 46 V423 H70 V46 A30 30 0 0 1 100 16 Z" fill="url(#fk_apple-watch-ultra-3_natural-orange_band)"/>
+<path d="M100 16 H470 A30 30 0 0 1 500 46 V423 H70 V46 A30 30 0 0 1 100 16 Z" fill="url(#fk_apple-watch-ultra-3_natural-orange_bandShade)"/>
+<path d="M70 933 H500 V1310 A30 30 0 0 1 470 1340 H100 A30 30 0 0 1 70 1310 V933 Z" fill="url(#fk_apple-watch-ultra-3_natural-orange_band)"/>
+<path d="M70 933 H500 V1310 A30 30 0 0 1 470 1340 H100 A30 30 0 0 1 70 1310 V933 Z" fill="url(#fk_apple-watch-ultra-3_natural-orange_bandShade)"/>
+<ellipse cx="285" cy="1083" rx="9" ry="12" fill="#000" opacity="0.32"/><ellipse cx="285" cy="1129" rx="9" ry="12" fill="#000" opacity="0.32"/><ellipse cx="285" cy="1175" rx="9" ry="12" fill="#000" opacity="0.32"/><ellipse cx="285" cy="1221" rx="9" ry="12" fill="#000" opacity="0.32"/><ellipse cx="285" cy="1267" rx="9" ry="12" fill="#000" opacity="0.32"/>
+<rect x="544" y="514.2" width="50" height="120" rx="14" fill="url(#fk_apple-watch-ultra-3_natural-orange_crown)"/>
+<rect x="586" y="522.2" width="6" height="3" fill="#000" opacity="0.35"/><rect x="586" y="533.7555555555556" width="6" height="3" fill="#000" opacity="0.35"/><rect x="586" y="545.3111111111111" width="6" height="3" fill="#000" opacity="0.35"/><rect x="586" y="556.8666666666667" width="6" height="3" fill="#000" opacity="0.35"/><rect x="586" y="568.4222222222222" width="6" height="3" fill="#000" opacity="0.35"/><rect x="586" y="579.9777777777779" width="6" height="3" fill="#000" opacity="0.35"/><rect x="586" y="591.5333333333334" width="6" height="3" fill="#000" opacity="0.35"/><rect x="586" y="603.088888888889" width="6" height="3" fill="#000" opacity="0.35"/><rect x="586" y="614.6444444444445" width="6" height="3" fill="#000" opacity="0.35"/>
+<rect x="546" y="494.20000000000005" width="38" height="150" rx="10" fill="url(#fk_apple-watch-ultra-3_natural-orange_case)" opacity="0.5"/>
+<rect x="546" y="709.5" width="22" height="150" rx="8" fill="url(#fk_apple-watch-ultra-3_natural-orange_crown)"/>
+<rect x="2" y="489" width="24" height="100" rx="8" fill="#ff6a1a"/>
+<path d="M160.2 363 H409.8 A144.2 144.2 0 0 1 554 507.2 V848.8 A144.2 144.2 0 0 1 409.8 993 H160.2 A144.2 144.2 0 0 1 16 848.8 V507.2 A144.2 144.2 0 0 1 160.2 363 Z" fill="url(#fk_apple-watch-ultra-3_natural-orange_case)"/>
+<path d="M160.2 363 H409.8 A144.2 144.2 0 0 1 554 507.2 V848.8 A144.2 144.2 0 0 1 409.8 993 H160.2 A144.2 144.2 0 0 1 16 848.8 V507.2 A144.2 144.2 0 0 1 160.2 363 Z" fill="url(#fk_apple-watch-ultra-3_natural-orange_edgeH)"/>
+<path d="M160.2 363 H409.8 A144.2 144.2 0 0 1 554 507.2 V848.8 A144.2 144.2 0 0 1 409.8 993 H160.2 A144.2 144.2 0 0 1 16 848.8 V507.2 A144.2 144.2 0 0 1 160.2 363 Z" fill="url(#fk_apple-watch-ultra-3_natural-orange_edgeV)"/>
+<path d="M160.2 364 H409.8 A143.2 143.2 0 0 1 553 507.2 V848.8 A143.2 143.2 0 0 1 409.8 992 H160.2 A143.2 143.2 0 0 1 17 848.8 V507.2 A143.2 143.2 0 0 1 160.2 364 Z" fill="none" stroke="#000" stroke-opacity="0.5" stroke-width="2"/>
+<path d="M160.2 367 H409.8 A140.2 140.2 0 0 1 550 507.2 V848.8 A140.2 140.2 0 0 1 409.8 989 H160.2 A140.2 140.2 0 0 1 20 848.8 V507.2 A140.2 140.2 0 0 1 160.2 367 Z" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="2"/>
+<path d="M160.2 382 H409.8 A125.19999999999999 125.19999999999999 0 0 1 535 507.2 V848.8 A125.19999999999999 125.19999999999999 0 0 1 409.8 974 H160.2 A125.19999999999999 125.19999999999999 0 0 1 35 848.8 V507.2 A125.19999999999999 125.19999999999999 0 0 1 160.2 382 Z" fill="#050506"/>
+<path d="M160.2 382 H409.8 A125.19999999999999 125.19999999999999 0 0 1 535 507.2 V848.8 A125.19999999999999 125.19999999999999 0 0 1 409.8 974 H160.2 A125.19999999999999 125.19999999999999 0 0 1 35 848.8 V507.2 A125.19999999999999 125.19999999999999 0 0 1 160.2 382 Z" fill="url(#fk_apple-watch-ultra-3_natural-orange_glass)"/>
+<!--/BODY-->
+<!--SCREEN--><defs>
+<linearGradient id="fk_scr_apple-watch-ultra-3_natural-orange_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c2d12"/><stop offset="1" stop-color="#020617"/></linearGradient>
+<radialGradient id="fk_scr_apple-watch-ultra-3_natural-orange_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#fdba74" stop-opacity="0.95"/><stop offset="1" stop-color="#fdba74" stop-opacity="0"/></radialGradient>
+<radialGradient id="fk_scr_apple-watch-ultra-3_natural-orange_c" cx="0.85" cy="0.92" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M166 421 H404 A92 92 0 0 1 496 513 V843 A92 92 0 0 1 404 935 H166 A92 92 0 0 1 74 843 V513 A92 92 0 0 1 166 421 Z" fill="url(#fk_scr_apple-watch-ultra-3_natural-orange_a)"/>
+<path d="M166 421 H404 A92 92 0 0 1 496 513 V843 A92 92 0 0 1 404 935 H166 A92 92 0 0 1 74 843 V513 A92 92 0 0 1 166 421 Z" fill="url(#fk_scr_apple-watch-ultra-3_natural-orange_b)"/>
+<path d="M166 421 H404 A92 92 0 0 1 496 513 V843 A92 92 0 0 1 404 935 H166 A92 92 0 0 1 74 843 V513 A92 92 0 0 1 166 421 Z" fill="url(#fk_scr_apple-watch-ultra-3_natural-orange_c)"/><!--/SCREEN-->
+<!--OVERLAY-->
+<path d="M166 421 H404 A92 92 0 0 1 496 513 V843 A92 92 0 0 1 404 935 H166 A92 92 0 0 1 74 843 V513 A92 92 0 0 1 166 421 Z" fill="none" stroke="#000" stroke-opacity="0.5" stroke-width="5"/>
+<path d="M160.2 382 H409.8 A125.19999999999999 125.19999999999999 0 0 1 535 507.2 V848.8 A125.19999999999999 125.19999999999999 0 0 1 409.8 974 H160.2 A125.19999999999999 125.19999999999999 0 0 1 35 848.8 V507.2 A125.19999999999999 125.19999999999999 0 0 1 160.2 382 Z" fill="url(#fk_apple-watch-ultra-3_natural-orange_glass)" opacity="0.6"/><!--/OVERLAY-->
+</svg>
