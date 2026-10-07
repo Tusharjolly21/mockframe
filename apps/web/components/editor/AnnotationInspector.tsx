@@ -3,7 +3,8 @@
 import type { ReactNode } from "react";
 import { ArrowLeft, Copy, Minus, Plus, Trash2 } from "lucide-react";
 import type { StickerLayer } from "@framekit/scene";
-import { ANNOTATION_DEFAULT_SIZE, isSizedAnnotation } from "@framekit/renderer";
+import { ANNOTATION_DEFAULT_SIZE, isSizedAnnotation, parseLabelId } from "@framekit/renderer";
+import { resolveAsset } from "@/lib/assets";
 import { duplicateLayer, removeLayer } from "@/lib/sceneOps";
 import { useSceneStore, useViewStore } from "@/lib/store";
 import { AnnotationPreview, ANNOTATION_SWATCHES } from "./AnnotatePopover";
@@ -119,7 +120,24 @@ const ARROW_BOX: Record<string, [number, number]> = {
   "annot-arrow-loop": [340, 180],
 };
 
+const LABEL_NAMES: Record<string, string> = {
+  pill: "Pill label",
+  burst: "Starburst",
+  laurel: "Award laurel",
+  rating: "Star rating",
+  cursor: "Live cursor",
+  ribbon: "Ribbon",
+  button: "CTA button",
+};
+const LABEL_BOX: Record<string, [number, number]> = {
+  burst: [240, 240],
+  laurel: [320, 220],
+  rating: [340, 110],
+  cursor: [200, 110],
+};
+
 export function annotationLabel(id: string) {
+  if (id.startsWith("label-")) return LABEL_NAMES[parseLabelId(id).kind] ?? "Label";
   if (id.startsWith("annot-arrow")) return "Arrow";
   if (id === "annot-highlight") return "Highlight";
   if (id === "annot-redact") return "Redaction";
@@ -149,6 +167,10 @@ function previewBox(layer: AnnotationLayer): [number, number] {
     const s = layer.size ?? ANNOTATION_DEFAULT_SIZE[id];
     return [s.width, s.height];
   }
+  if (id.startsWith("label-")) {
+    const { kind, text } = parseLabelId(id);
+    return LABEL_BOX[kind] ?? [90 + Math.max(3, text.length) * 21, kind === "button" ? 90 : 64];
+  }
   if (id.startsWith("annot-step-")) return [120, 120];
   if (id.startsWith("annot-callout-")) return [80 + Math.max(3, id.length - 14) * 17, 92];
   if (id.startsWith("annot-kbd-")) {
@@ -168,10 +190,12 @@ export function AnnotationControls({ layer }: { layer: AnnotationLayer }) {
   const isArrow = (ARROW_KINDS as readonly string[]).includes(id);
   const isFrame = (FRAME_KINDS as readonly string[]).includes(id);
   const size = isSizedAnnotation(id) ? layer.size ?? ANNOTATION_DEFAULT_SIZE[id] : null;
+  const isLabel = id.startsWith("label-");
+  const label = isLabel ? parseLabelId(id) : null;
 
   return (
     <>
-      <LayerHeader layerId={layer.id} kind="Annotation" title={annotationLabel(id)} />
+      <LayerHeader layerId={layer.id} kind={isLabel ? "Sticker" : "Annotation"} title={annotationLabel(id)} />
       <div className="mx-3 mt-2 grid place-items-center overflow-hidden rounded-2xl border border-[#ececf2] bg-[linear-gradient(180deg,#f8f8fb,#efeff4)] py-3">
         <AnnotationPreview id={id} tint={tint} box={previewBox(layer)} w={236} h={78} />
       </div>
@@ -203,6 +227,18 @@ export function AnnotationControls({ layer }: { layer: AnnotationLayer }) {
 
         <span className="mb-1.5 block text-xs text-[#6b6b76]">{id === "annot-blur" ? "Glass tint" : id.startsWith("annot-kbd-") ? "Key colour" : "Colour"}</span>
         <SwatchRow value={tint} onChange={(v) => patch({ tint: v })} />
+
+        {label && (
+          <>
+            <span className="mb-1.5 block text-xs text-[#6b6b76]">{label.kind === "rating" ? "Score" : label.kind === "cursor" ? "Name" : "Text"}</span>
+            <input
+              value={label.text}
+              maxLength={label.kind === "rating" ? 4 : 32}
+              onChange={(e) => patch({ stickerId: `label-${label.kind}-${e.target.value}` })}
+              className="mb-3 w-full rounded-xl border border-[#e4e4ec] bg-white px-3 py-2 text-sm text-[#17171c] focus:border-[#17171c] focus:outline-none"
+            />
+          </>
+        )}
 
         {id.startsWith("annot-callout-") && (
           <>
@@ -293,6 +329,84 @@ export function AnnotationControls({ layer }: { layer: AnnotationLayer }) {
           format={(v) => `${Math.round(v)}°`}
           onChange={(rotate) => patchTransform({ rotate })}
         />
+      </Section>
+    </>
+  );
+}
+
+/* ------------------------------ asset stickers ----------------------------- */
+
+type AssetStickerLayer = Extract<StickerLayer, { assetId: string }>;
+
+/** Icons, store badges and other image stickers. */
+export function AssetStickerControls({ layer }: { layer: AssetStickerLayer }) {
+  const updateLayer = useSceneStore((s) => s.updateLayer);
+  const patch = (p: Partial<AssetStickerLayer>) => updateLayer(layer.id, (l) => ({ ...(l as AssetStickerLayer), ...p }));
+  const patchTransform = (p: Partial<AssetStickerLayer["transform"]>) =>
+    updateLayer(layer.id, (l) => ({ ...l, transform: { ...l.transform, ...p } }));
+  const asset = resolveAsset(layer.assetId);
+  const name = asset?.name?.startsWith("icon-")
+    ? `${asset.name.slice(5).replaceAll("-", " ")} icon`
+    : asset?.name?.startsWith("badge-")
+      ? "Store badge"
+      : "Image sticker";
+
+  return (
+    <>
+      <LayerHeader layerId={layer.id} kind="Sticker" title={name.charAt(0).toUpperCase() + name.slice(1)} />
+      {asset && (
+        <div className="mx-3 mt-2 grid h-[96px] place-items-center overflow-hidden rounded-2xl border border-[#ececf2] bg-[linear-gradient(180deg,#f8f8fb,#efeff4)] p-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={asset.url}
+            alt=""
+            className="max-h-full max-w-full object-contain"
+            style={{ opacity: layer.opacity ?? 1, filter: layer.shadow ? "drop-shadow(0 6px 8px rgba(20,20,40,0.25))" : undefined }}
+          />
+        </div>
+      )}
+      <Section title="Style">
+        <span className="mb-1.5 block text-xs text-[#6b6b76]">Layer</span>
+        <Seg
+          id="sticker-placement"
+          options={[
+            { value: "foreground", label: "In front" },
+            { value: "background", label: "Behind devices" },
+          ]}
+          value={layer.placement === "background" ? "background" : "foreground"}
+          onChange={(v) => patch({ placement: v === "background" ? "background" : undefined })}
+        />
+        <span className="mb-1.5 block text-xs text-[#6b6b76]">Shadow</span>
+        <Seg
+          id="sticker-shadow"
+          options={[
+            { value: "none", label: "None" },
+            { value: "soft", label: "Soft" },
+            { value: "lifted", label: "Lifted" },
+          ]}
+          value={layer.shadow ?? "none"}
+          onChange={(v) => patch({ shadow: v === "none" ? undefined : v })}
+        />
+        <SliderRow
+          label="Opacity"
+          value={Math.round((layer.opacity ?? 1) * 100)}
+          min={10}
+          max={100}
+          format={(v) => `${Math.round(v)}%`}
+          onChange={(v) => patch({ opacity: v >= 100 ? undefined : v / 100 })}
+        />
+      </Section>
+      <Section title="Transform">
+        <SliderRow
+          label="Scale"
+          value={Math.round(layer.transform.scale * 1000) / 10}
+          min={2}
+          max={300}
+          step={0.5}
+          format={(v) => `${Math.round(v)}%`}
+          onChange={(v) => patchTransform({ scale: v / 100 })}
+        />
+        <SliderRow label="Rotate" value={layer.transform.rotate} min={-180} max={180} format={(v) => `${Math.round(v)}°`} onChange={(rotate) => patchTransform({ rotate })} />
       </Section>
     </>
   );

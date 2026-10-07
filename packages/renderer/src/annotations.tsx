@@ -1,3 +1,4 @@
+import type React from "react";
 import type { CSSProperties } from "react";
 
 /**
@@ -358,9 +359,255 @@ export function AnnotationGraphic({ id, tint, size }: { id: string; tint: string
     );
   }
 
+  if (id.startsWith("label-")) return <LabelGraphic id={id} tint={tint} uid={uid} />;
+
   return (
     <svg width="160" height="160" viewBox="0 0 160 160" style={{ display: "block" }}>
       <rect x="14" y="14" width="132" height="132" rx="28" fill={tint} />
     </svg>
   );
 }
+
+/* --------------------------------- labels -------------------------------- */
+
+/** split `label-<kind>-<text>` (text may itself contain dashes) */
+export function parseLabelId(id: string): { kind: string; text: string } {
+  const rest = id.slice("label-".length);
+  const i = rest.indexOf("-");
+  return i < 0 ? { kind: rest, text: "" } : { kind: rest.slice(0, i), text: rest.slice(i + 1) };
+}
+
+const STAR = "M12 2.2l2.95 6.07 6.68.93-4.86 4.66 1.2 6.62L12 17.3l-5.97 3.18 1.2-6.62L2.37 9.2l6.68-.93z";
+
+function Stars({ n = 5, size = 26, color, gap = 4 }: { n?: number; size?: number; color: string; gap?: number }) {
+  return (
+    <span style={{ display: "inline-flex", gap }}>
+      {Array.from({ length: n }, (_, i) => (
+        <svg key={i} width={size} height={size} viewBox="0 0 24 24" style={{ display: "block" }}>
+          <path d={STAR} fill={color} stroke={color} strokeWidth={1.2} strokeLinejoin="round" />
+        </svg>
+      ))}
+    </span>
+  );
+}
+
+function LabelGraphic({ id, tint, uid }: { id: string; tint: string; uid: string }) {
+  const { kind, text } = parseLabelId(id);
+  const light = tintLuma(tint) > 0.62;
+  const ink = light ? "#111114" : "#ffffff";
+  const deep = shade(tint, -0.22);
+
+  if (kind === "pill") {
+    return (
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "14px 30px 14px 24px",
+          borderRadius: 999,
+          background: `linear-gradient(135deg, ${shade(tint, 0.2)} 0%, ${tint} 55%, ${deep} 100%)`,
+          color: ink,
+          fontFamily: FONT,
+          fontSize: 30,
+          fontWeight: 800,
+          letterSpacing: "0.09em",
+          textTransform: "uppercase",
+          whiteSpace: "nowrap",
+          boxShadow: `inset 0 1px 0 rgba(255,255,255,${light ? 0.7 : 0.35}), inset 0 -2px 0 rgba(0,0,0,0.12), 0 12px 30px ${hexToRgba(deep, 0.45)}`,
+        }}
+      >
+        <svg width="26" height="26" viewBox="0 0 24 24" style={{ display: "block" }}>
+          <path d="M12 1.5c.6 4.9 2.6 8.3 10.5 10.5C14.6 14.2 12.6 17.6 12 22.5 11.4 17.6 9.4 14.2 1.5 12 9.4 9.8 11.4 6.4 12 1.5z" fill={ink} />
+        </svg>
+        {text || "New"}
+      </div>
+    );
+  }
+
+  if (kind === "burst") {
+    const t = text || "New!";
+    const pts: string[] = [];
+    const N = 22;
+    for (let i = 0; i < N * 2; i++) {
+      const r = i % 2 ? 98 : 112;
+      const a = (Math.PI * i) / N - Math.PI / 2;
+      pts.push(`${f(120 + Math.cos(a) * r)},${f(120 + Math.sin(a) * r)}`);
+    }
+    const words = t.split(" ");
+    const lines = words.length > 1 && t.length > 7 ? [words.slice(0, Math.ceil(words.length / 2)).join(" "), words.slice(Math.ceil(words.length / 2)).join(" ")] : [t];
+    const longest = Math.max(...lines.map((l) => l.length));
+    const fs = Math.min(54, Math.round(172 / Math.max(1, longest * 0.62)));
+    return (
+      <svg width="240" height="240" viewBox="0 0 240 240" style={{ display: "block", overflow: "visible" }}>
+        <defs>
+          <linearGradient id={`bg${uid}`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor={shade(tint, 0.22)} />
+            <stop offset="1" stopColor={deep} />
+          </linearGradient>
+        </defs>
+        <polygon points={pts.join(" ")} fill={`url(#bg${uid})`} stroke="#ffffff" strokeWidth={6} strokeLinejoin="round" style={{ filter: `drop-shadow(0 12px 18px ${hexToRgba(deep, 0.4)})` }} />
+        <circle cx="120" cy="120" r="80" fill="none" stroke={light ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.35)"} strokeWidth="2" strokeDasharray="3 6" />
+        <text x="120" y="120" textAnchor="middle" fontFamily={FONT} fontWeight={900} fontSize={fs} letterSpacing={-1} fill={ink}>
+          {lines.map((l, i) => (
+            <tspan key={i} x="120" dy={i === 0 ? `${0.36 - (lines.length - 1) * 0.5}em` : "1em"}>
+              {l}
+            </tspan>
+          ))}
+        </text>
+      </svg>
+    );
+  }
+
+  if (kind === "laurel") {
+    // one branch of leaves along an arc; the other side is its mirror image
+    const branch: React.ReactElement[] = [];
+    for (let i = 0; i < 8; i++) {
+      const deg = 104 + i * 16;
+      const a = (deg * Math.PI) / 180;
+      const x = 160 + Math.cos(a) * 112;
+      const y = 104 + Math.sin(a) * 92;
+      branch.push(<ellipse key={i} cx={f(x)} cy={f(y)} rx="8.5" ry="20" transform={`rotate(${deg + 24} ${f(x)} ${f(y)})`} fill={i % 2 ? tint : shade(tint, 0.2)} />);
+    }
+    const leaves = (
+      <>
+        <g>{branch}</g>
+        <g transform="translate(320 0) scale(-1 1)">{branch}</g>
+      </>
+    );
+    const t = text || "#1 App";
+    const fs = Math.min(40, Math.round(150 / Math.max(1, t.length * 0.58)));
+    return (
+      <svg width="320" height="220" viewBox="0 0 320 220" style={{ display: "block", overflow: "visible", filter: `drop-shadow(0 8px 14px ${hexToRgba(deep, 0.28)})` }}>
+        {leaves}
+        <text x="160" y="106" textAnchor="middle" fontFamily={FONT} fontWeight={850} fontSize={fs} letterSpacing={-1} fill={deep}>
+          {t}
+        </text>
+        <g transform="translate(103 126)">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <path key={i} d={STAR} fill={tint} transform={`translate(${i * 23} 0) scale(0.95)`} />
+          ))}
+        </g>
+      </svg>
+    );
+  }
+
+  if (kind === "rating") {
+    const score = text || "4.9";
+    return (
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 20,
+          padding: "20px 28px",
+          borderRadius: 28,
+          background: "rgba(255,255,255,0.94)",
+          boxShadow: "inset 0 1px 0 #ffffff, 0 0 0 1px rgba(20,20,40,0.07), 0 20px 44px rgba(20,20,40,0.2)",
+          fontFamily: FONT,
+          whiteSpace: "nowrap",
+        }}
+      >
+        <span style={{ fontSize: 64, fontWeight: 800, letterSpacing: "-0.04em", color: "#111114", lineHeight: 1 }}>{score}</span>
+        <span style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <Stars color={tintLuma(tint) > 0.85 ? "#f5b400" : tint} size={28} gap={3} />
+          <span style={{ fontSize: 19, fontWeight: 600, color: "#6b6b76", letterSpacing: "-0.01em" }}>Average rating</span>
+        </span>
+      </div>
+    );
+  }
+
+  if (kind === "cursor") {
+    return (
+      <div style={{ position: "relative", display: "inline-block", padding: "50px 0 0 40px" }}>
+        <svg width="54" height="60" viewBox="0 0 27 30" style={{ position: "absolute", left: 0, top: 0, overflow: "visible", filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.25))" }}>
+          <path d="M2 2 L24 13 L14 15.5 L9.5 27 Z" fill={tint} stroke="#ffffff" strokeWidth={2.4} strokeLinejoin="round" />
+        </svg>
+        <div
+          style={{
+            padding: "10px 20px",
+            borderRadius: "6px 999px 999px 999px",
+            background: tint,
+            color: ink,
+            fontFamily: FONT,
+            fontSize: 26,
+            fontWeight: 650,
+            whiteSpace: "nowrap",
+            boxShadow: `inset 0 1px 0 rgba(255,255,255,0.3), 0 8px 18px ${hexToRgba(deep, 0.35)}`,
+          }}
+        >
+          {text || "Alex"}
+        </div>
+      </div>
+    );
+  }
+
+  if (kind === "ribbon") {
+    const end = (side: "l" | "r"): CSSProperties => ({
+      position: "absolute",
+      top: 14,
+      [side === "l" ? "left" : "right"]: -30,
+      width: 54,
+      height: 64,
+      background: deep,
+      clipPath: side === "l" ? "polygon(0 0, 100% 0, 100% 100%, 0 100%, 34% 50%)" : "polygon(0 0, 100% 0, 66% 50%, 100% 100%, 0 100%)",
+      zIndex: 0,
+    });
+    return (
+      <div style={{ position: "relative", display: "inline-block", padding: "0 30px 14px" }}>
+        <span style={end("l")} />
+        <span style={end("r")} />
+        <div
+          style={{
+            position: "relative",
+            zIndex: 1,
+            padding: "16px 44px",
+            background: `linear-gradient(180deg, ${shade(tint, 0.14)}, ${tint})`,
+            color: ink,
+            fontFamily: FONT,
+            fontSize: 30,
+            fontWeight: 800,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            whiteSpace: "nowrap",
+            boxShadow: `inset 0 1px 0 rgba(255,255,255,0.3), 0 10px 22px ${hexToRgba(deep, 0.35)}`,
+          }}
+        >
+          {text || "Launch day"}
+        </div>
+      </div>
+    );
+  }
+
+  if (kind === "button") {
+    return (
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 16,
+          padding: "22px 30px 22px 38px",
+          borderRadius: 22,
+          background: `linear-gradient(180deg, ${shade(tint, 0.12)} 0%, ${tint} 100%)`,
+          color: ink,
+          fontFamily: FONT,
+          fontSize: 32,
+          fontWeight: 650,
+          letterSpacing: "-0.015em",
+          whiteSpace: "nowrap",
+          boxShadow: `inset 0 1px 0 rgba(255,255,255,${light ? 0.7 : 0.3}), 0 0 0 1px ${hexToRgba(deep, 0.6)}, 0 16px 34px ${hexToRgba(deep, 0.4)}`,
+        }}
+      >
+        {text || "Get started"}
+        <span style={{ display: "grid", placeItems: "center", width: 42, height: 42, borderRadius: 999, background: light ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.18)" }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </span>
+      </div>
+    );
+  }
+
+  return null;
+}
+

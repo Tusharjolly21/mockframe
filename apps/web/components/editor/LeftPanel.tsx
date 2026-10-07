@@ -26,7 +26,7 @@ import { TextAnimationControls } from "./TextAnimationControls";
 import { ClayControls, supportsClay } from "./ClayControls";
 import { isItalicOnly, nearestWeight, weightLabel, weightsFor } from "@/lib/fonts";
 import { ExportStep, StepFooter, StepNav } from "./StepFlow";
-import { AnnotationControls, LayerHeader } from "./AnnotationInspector";
+import { AnnotationControls, AssetStickerControls, LayerHeader } from "./AnnotationInspector";
 
 
 /** Warn when a dropped screenshot's aspect badly mismatches the device screen —
@@ -95,6 +95,8 @@ export function LeftPanel() {
           <AnnotationControls layer={selected} />
         ) : selected?.type === "sticker" && "iconMask" in selected && selected.iconMask ? (
           <AppIconControls layer={selected} />
+        ) : selected?.type === "sticker" && "assetId" in selected ? (
+          <AssetStickerControls layer={selected} />
         ) : target ? (
           <>
             <PhoneSlots layers={mockups} activeId={target.id} onSelect={select} />

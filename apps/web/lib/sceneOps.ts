@@ -160,7 +160,6 @@ export function addIconSticker(scene: SceneDocument, assetId: string, baseHeight
     type: "sticker",
     id,
     assetId,
-    placement: "background",
     transform: {
       x: ((n % 5) - 2) * scene.canvas.width * 0.08,
       y: -scene.canvas.height * 0.22 + (n % 3) * scene.canvas.height * 0.06,
@@ -270,6 +269,31 @@ export function addAnnotation(
       y: Math.round(scene.canvas.height * (d.y + cascade * 0.07)),
       scale: d.scale,
       rotate: d.rotate ?? 0,
+      tiltX: 0,
+      tiltY: 0,
+      perspective: 1200,
+    },
+  };
+  return { scene: addLayer(scene, layer), layerId: id };
+}
+
+export type LabelKind = "pill" | "burst" | "laurel" | "rating" | "cursor" | "ribbon" | "button";
+
+/** Designed label stickers (`label-<kind>-<text>`): text and colour stay editable. */
+export function addLabel(scene: SceneDocument, kind: LabelKind, text: string, tint: string): { scene: SceneDocument; layerId: string } {
+  const id = createId();
+  const n = scene.layers.length;
+  const scale = Math.round(Math.min(1.6, Math.max(0.6, scene.canvas.height / 1350)) * 1000) / 1000;
+  const layer: StickerLayer = {
+    type: "sticker",
+    id,
+    stickerId: `label-${kind}-${text}`,
+    tint,
+    transform: {
+      x: Math.round(((n % 5) - 2) * scene.canvas.width * 0.06),
+      y: Math.round(-scene.canvas.height * 0.26 + (n % 3) * scene.canvas.height * 0.05),
+      scale,
+      rotate: kind === "burst" ? -10 : kind === "ribbon" ? -4 : 0,
       tiltX: 0,
       tiltY: 0,
       perspective: 1200,

@@ -492,7 +492,19 @@ const LayerView = memo(function LayerView({
     return (
       <div data-layer-id={layer.id} style={wrapper}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={asset.url} alt="" width={asset.width} height={asset.height} style={{ display: "block", maxWidth: "none" }} crossOrigin="anonymous" />
+        <img
+          src={asset.url}
+          alt=""
+          width={asset.width}
+          height={asset.height}
+          style={{
+            display: "block",
+            maxWidth: "none",
+            opacity: layer.opacity ?? 1,
+            filter: STICKER_SHADOW[layer.shadow ?? "none"],
+          }}
+          crossOrigin="anonymous"
+        />
       </div>
     );
   }
@@ -509,3 +521,10 @@ const LayerView = memo(function LayerView({
 });
 
 export const SceneRenderer = memo(SceneRendererImpl);
+
+/** silhouette shadows for asset stickers (drop-shadow follows transparency) */
+const STICKER_SHADOW: Record<string, string | undefined> = {
+  none: undefined,
+  soft: "drop-shadow(0 6px 10px rgba(20,20,40,0.22))",
+  lifted: "drop-shadow(0 18px 22px rgba(20,20,40,0.3)) drop-shadow(0 3px 5px rgba(20,20,40,0.18))",
+};

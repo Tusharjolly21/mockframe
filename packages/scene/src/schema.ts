@@ -273,6 +273,10 @@ export const StickerLayerSchema = z.union([
     placement: z.enum(["background", "foreground"]).optional(),
     /** render as an app icon: squircle mask + subtle shadow, fixed square size */
     iconMask: z.enum(["ios", "android", "square"]).optional(),
+    /** 0..1, defaults to fully opaque */
+    opacity: z.number().min(0).max(1).optional(),
+    /** drop shadow under the sticker's silhouette */
+    shadow: z.enum(["soft", "lifted"]).optional(),
   }),
 ]);
 
