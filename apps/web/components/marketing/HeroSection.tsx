@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 import { DemoVideo } from "./DemoVideo";
+import { HeroDrop } from "./home/HeroDrop";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -99,7 +100,12 @@ export function HeroSection({ devicesCount }: { devicesCount: number }) {
           </a>
         </motion.div>
 
-        <motion.ol variants={item} className="mt-10 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[13px] text-zinc-500">
+        {/* phones get the editor's desktop gate, so the drop zone is for larger screens */}
+        <motion.div variants={item} className="mt-10 hidden w-full flex-col items-center sm:flex">
+          <HeroDrop />
+        </motion.div>
+
+        <motion.ol variants={item} className="mt-10 flex flex-wrap sm:hidden items-center justify-center gap-x-3 gap-y-2 text-[13px] text-zinc-500">
           {STEPS.map((s, i) => (
             <li key={s} className="flex items-center gap-3">
               <span className="flex items-center gap-2">

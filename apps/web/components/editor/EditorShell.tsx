@@ -7,9 +7,10 @@ import { track, trackOnce } from "@/lib/analytics";
 import { confirmCheckoutReturn } from "@/lib/billing/client";
 import { ingestFile } from "@/lib/assets";
 import { loadCustomDevices, syncCustomDevicesFromServer } from "@/lib/customDevices";
-import { buildDeviceScene, buildScreenScene, isScreenApp } from "@/lib/deviceScene";
+import { buildDeviceScene, buildScreenScene, deviceForScreenshot, isScreenApp } from "@/lib/deviceScene";
+import { takeParkedScreenshot } from "@/lib/handoff";
 import { startAutosave } from "@/lib/autosave";
-import { saveCurrentDraft } from "@/lib/drafts";
+import { saveCurrentDraft, useDraftsUi } from "@/lib/drafts";
 import { ensureGoogleFont, loadCustomFonts } from "@/lib/fonts";
 import { ShotStrip } from "./ShotStrip";
 import { useShotBatchStore } from "@/lib/shotBatch";
@@ -42,6 +43,7 @@ export function EditorShell({
   openPromoOnLoad = false,
   openReplayOnLoad = false,
   remixId,
+  openDroppedOnLoad = false,
   fromTemplate = false,
   embedded = false,
 }: {
@@ -56,6 +58,8 @@ export function EditorShell({
   openPromoOnLoad?: boolean;
   openReplayOnLoad?: boolean;
   remixId?: string;
+  /** a screenshot was dropped on a marketing page and parked for us (lib/handoff) */
+  openDroppedOnLoad?: boolean;
   /** a template page already loaded a scene, so skip the first-run picker */
   fromTemplate?: boolean;
   embedded?: boolean;
@@ -66,8 +70,9 @@ export function EditorShell({
   const [promoOpen, setPromoOpen] = useState(false);
   const extensionCaptures = useRef(new Set<string>());
   const deepLinked = Boolean(
-    initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad || remixId || fromTemplate
+    initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad || remixId || openDroppedOnLoad || fromTemplate
   );
+  const droppedTaken = useRef(false);
 
   // Fonts: this browser's uploads (+ the account's), and every catalog family
   // the scene's text uses — drafts, templates and remixes arrive with fonts
@@ -124,9 +129,9 @@ export function EditorShell({
   }, [openReplayOnLoad]);
 
   useEffect(() => {
-    track("editor_opened", { entry: initialDeviceId ? "device_page" : openCalibrate ? "calibrate" : "direct" });
+    track("editor_opened", { entry: openDroppedOnLoad ? "homepage_drop" : initialDeviceId ? "device_page" : openCalibrate ? "calibrate" : "direct" });
     trackOnce("editor_first_open");
-  }, [initialDeviceId, openCalibrate]);
+  }, [initialDeviceId, openCalibrate, openDroppedOnLoad]);
 
   useEffect(() => {
     if (!embedded || window.parent === window) return;
@@ -153,6 +158,37 @@ export function EditorShell({
     useSceneStore.temporal.getState().clear();
     window.history.replaceState({}, "", "/editor");
   }, [initialDeviceId]);
+
+  // Deep-link: /editor?drop=1 — a screenshot dropped on the homepage. Open it
+  // in the device that suits its shape; it's a real edit, so autosave keeps it.
+  useEffect(() => {
+    if (!openDroppedOnLoad || droppedTaken.current) return;
+    droppedTaken.current = true;
+    window.history.replaceState({}, "", "/editor");
+    const say = (detail: string) => window.dispatchEvent(new CustomEvent("framekit:toast", { detail }));
+    void (async () => {
+      const file = await takeParkedScreenshot();
+      if (!file) return say("Your screenshot didn't come through. Drop it on the canvas instead.");
+      try {
+        const asset = await ingestFile(file);
+        const base = buildDeviceScene(deviceForScreenshot(asset.width, asset.height));
+        if (base) {
+          useSceneStore.setState({ scene: base });
+          useSceneStore.temporal.getState().clear();
+          useDraftsUi.getState().setCurrent(null);
+        }
+        useViewStore.getState().bumpAssets();
+        const result = placeAsset(useSceneStore.getState().scene, asset, {});
+        setScene(() => result.scene);
+        useViewStore.getState().select(result.layerId);
+        useViewStore.getState().triggerEntrance(result.layerId);
+        track("media_added", { source: "homepage_drop" });
+        trackOnce("first_media_added", { source: "homepage_drop" });
+      } catch (e) {
+        say(e instanceof Error ? e.message : "That file couldn't be opened");
+      }
+    })();
+  }, [openDroppedOnLoad, setScene]);
 
   // Deep-link: /editor?screen=<app> (from the /tools chat-screen generator
   // pages) opens an iPhone pre-loaded with that app's default chat screen.

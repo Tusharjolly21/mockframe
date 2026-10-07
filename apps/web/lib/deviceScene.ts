@@ -1,4 +1,4 @@
-import { getDevice, type DeviceCategory } from "@framekit/devices";
+import { getDevice, suggestDevice, type DeviceCategory } from "@framekit/devices";
 import { createMockupLayer, createScene, type Background, type MockupLayer, type SceneDocument } from "@framekit/scene";
 import { encodeScreenAsset } from "./screens";
 import { defaultScreenDoc, SCREEN_APP_LABELS, type ScreenApp } from "./screens/types";
@@ -121,4 +121,23 @@ export function buildScreenScene(app: ScreenApp): SceneDocument | null {
   };
   scene.id = `scene-screen-${app}`;
   return scene;
+}
+
+/**
+ * The device a dropped screenshot reads best in, from its size: an exact
+ * screen match when there is one, otherwise the closest-looking common frame
+ * (phone, iPad, MacBook, iMac, or a browser window for tall full-page web
+ * captures). Never a photo scene.
+ */
+export function deviceForScreenshot(width: number, height: number): string {
+  const exact = suggestDevice(width, height);
+  if (exact && (exact.category === "phone" || exact.category === "tablet") && !exact.id.includes("psd")) return exact.id;
+  const ar = width / height;
+  if (ar < 0.4 && width >= 1600) return "safari-browser"; // full-page desktop capture
+  if (ar < 0.58) return "iphone-17-pro";
+  if (ar < 0.72) return "ipad-pro-11";
+  if (ar < 1) return "ipad-pro-13";
+  if (ar < 1.42) return "ipad-pro-13-landscape";
+  if (ar < 1.68) return "macbook-pro-14";
+  return "imac-24";
 }
