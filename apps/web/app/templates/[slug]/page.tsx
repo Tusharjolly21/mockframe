@@ -9,6 +9,7 @@ import { importPostUrl } from "@/lib/postImport";
 import { useSceneStore } from "@/lib/store";
 import { makeTemplateScene, templateBySlug } from "@/lib/screenTemplates";
 import { appTemplateBySlug, makeAppScreenScene } from "@/lib/appScreenTemplates";
+import { premiumTemplateBySlug } from "@/lib/premiumTemplates";
 
 /**
  * /templates/<slug> — opens the editor pre-loaded with one template card
@@ -19,7 +20,24 @@ export default function TemplateSlugPage() {
   const search = useSearchParams();
   const meta = templateBySlug(params.slug);
   const appTemplate = meta ? undefined : appTemplateBySlug(params.slug);
+  const premium = meta || appTemplate ? undefined : premiumTemplateBySlug(params.slug);
   const loaded = useRef(false);
+
+  // premium layouts: a complete composition (Pro ones are gated at export)
+  useEffect(() => {
+    if (!premium || loaded.current) return;
+    loaded.current = true;
+    useSceneStore.setState({ scene: premium.build() });
+    useSceneStore.temporal.getState().clear();
+    if (premium.pro) {
+      // after the editor has mounted its toast host (no cleanup: the load guard
+      // above means a StrictMode re-run would never schedule it again)
+      setTimeout(
+        () => window.dispatchEvent(new CustomEvent("framekit:toast", { detail: `${premium.name} is a Pro layout — edit freely, export with Pro` })),
+        900
+      );
+    }
+  }, [premium]);
 
   // app screenshot templates: a phone + editable app screen + headline
   useEffect(() => {
@@ -70,6 +88,6 @@ export default function TemplateSlugPage() {
     }
   }, [meta, search]);
 
-  if (!meta && !appTemplate) return notFound();
+  if (!meta && !appTemplate && !premium) return notFound();
   return <EditorShell fromTemplate />;
 }

@@ -135,7 +135,7 @@ export function UpgradeModal({
             {/* Monthly / Annual toggle with a sliding pill — matches the pricing page */}
             <div className="mt-7 flex items-center gap-3">
               <div className="relative inline-flex rounded-full border border-white/10 bg-white/[0.04] p-1">
-                {(["monthly", "yearly"] as const).map((b) => (
+                {(["yearly", "monthly"] as const).map((b) => (
                   <button
                     key={b}
                     onClick={() => setPlan(b)}

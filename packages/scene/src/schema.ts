@@ -338,6 +338,8 @@ export const SceneDocumentSchema = z.object({
     panoramaBackground: z.boolean().optional(),
   }),
   layers: z.array(LayerSchema), // z-ordered, index 0 = back
+  /** the premium template this scene started from; Pro ones need Pro to export */
+  template: z.object({ id: z.string(), pro: z.boolean().optional() }).optional(),
   timeline: TimelineSchema.optional(),
   connectors: z
     .array(
