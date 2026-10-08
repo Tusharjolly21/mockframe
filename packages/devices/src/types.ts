@@ -76,6 +76,11 @@ export interface RasterPlate {
    * and the layer is laid on it at scale 1, with no margin and no drop shadow.
    */
   fullBleed?: boolean;
+  /**
+   * The plate's backdrop was cut out (transparent), so Style backgrounds show
+   * behind the device. This is the original backdrop colour, used as the default.
+   */
+  backdrop?: string;
   /** small preview image for picker tiles (the plate itself can be 4000px wide) */
   thumb?: string;
 }

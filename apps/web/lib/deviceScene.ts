@@ -6,7 +6,7 @@ import { defaultScreenDoc, SCREEN_APP_LABELS, type ScreenApp } from "./screens/t
 type DeviceLike = {
   category: DeviceCategory;
   frame: { width: number; height: number };
-  plate?: { width: number; height: number };
+  plate?: { width: number; height: number; backdrop?: string };
 };
 
 /** Device-aware starting compositions keep a fresh editor scene from feeling generic. */
@@ -18,6 +18,10 @@ export function presentationForDevice(device: DeviceLike): {
 } {
   const category = device.category;
   const plate = device.plate;
+  if (plate?.backdrop) {
+    // a photo scene with its backdrop cut out: start on the photo's own colour, free to restyle
+    return { width: plate.width, height: plate.height, background: { type: "solid", color: plate.backdrop }, backdrop: {} };
+  }
   const frameRatio = plate ? plate.width / plate.height : device.frame.width / device.frame.height;
   const portrait = frameRatio < 0.82;
   const wide = frameRatio > 1.45;
