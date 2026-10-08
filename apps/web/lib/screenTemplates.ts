@@ -235,7 +235,8 @@ function makeSceneDeviceScene(deviceId: string): SceneDocument {
   const pw = plate?.width ?? 1600;
   const ph = plate?.height ?? 1200;
   // canvas = plate aspect, scaled up 1.22× so there's breathing room around the device
-  const margin = 1.22;
+  const fullBleed = !!plate?.fullBleed;
+  const margin = fullBleed ? 1 : 1.22;
   const width = Math.round(pw * margin);
   const height = Math.round(ph * margin);
   const scene = createScene({
@@ -246,7 +247,7 @@ function makeSceneDeviceScene(deviceId: string): SceneDocument {
   // scale so the device fills ~82% of the canvas height, centered with margin
   const layer = createMockupLayer({ deviceId, media: null });
   layer.transform = { ...layer.transform, scale: Math.round((1 / margin) * 1000) / 1000 };
-  layer.shadow = { mode: "adaptive", lightAngle: 90, distance: 40, softness: 90, opacity: 0.26, color: "#0b0b17" };
+  layer.shadow = { mode: "adaptive", lightAngle: 90, distance: 40, softness: 90, opacity: fullBleed ? 0 : 0.26, color: "#0b0b17" };
   scene.id = `scene-template-${deviceId}`;
   layer.id = "layer-template";
   scene.layers.push(layer);

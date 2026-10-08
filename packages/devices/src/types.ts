@@ -70,6 +70,14 @@ export interface RasterPlate {
    * mask overshoot) — those keep the exact rounded-rect clip.
    */
   bezelMask?: boolean;
+  /**
+   * The plate is a finished, full-bleed photo (background, props and shadows
+   * included), not a cut-out device. The canvas is sized exactly to the plate
+   * and the layer is laid on it at scale 1, with no margin and no drop shadow.
+   */
+  fullBleed?: boolean;
+  /** small preview image for picker tiles (the plate itself can be 4000px wide) */
+  thumb?: string;
 }
 
 export interface Device {

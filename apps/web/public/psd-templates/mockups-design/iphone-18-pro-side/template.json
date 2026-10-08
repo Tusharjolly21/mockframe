@@ -1,0 +1,29 @@
+{
+  "source": "02 Free iPhone 18 Pro Mockup Side Perspective.psd",
+  "plate": {
+    "width": 4500,
+    "height": 3000
+  },
+  "quad": [
+    [
+      2130.33,
+      506.196
+    ],
+    [
+      2993.651,
+      701.037
+    ],
+    [
+      3020.808,
+      2766.764
+    ],
+    [
+      2126.54,
+      2613.596
+    ]
+  ],
+  "screen": {
+    "width": 1320,
+    "height": 2868
+  }
+}

@@ -206,7 +206,7 @@ export function prettyLooks(scene: SceneDocument, palette: string[], round = 0):
   const mockups = scene.layers.filter((l): l is MockupLayer => l.type === "mockup");
   const hero = mockups.find((m) => m.media) ?? mockups[0];
   const device = hero?.deviceId ? getDevice(hero.deviceId) : undefined;
-  const photoScene = device?.category === "scene";
+  const photoScene = device?.category === "scene" || !!device?.plate?.fullBleed;
   const tall = !device || (device.category !== "laptop" && device.category !== "desktop" && device.category !== "browser" && device.frame.height >= device.frame.width);
   const layouts = tall ? TALL_LAYOUTS : WIDE_LAYOUTS;
   const restage = mockups.length === 1 && !photoScene;
