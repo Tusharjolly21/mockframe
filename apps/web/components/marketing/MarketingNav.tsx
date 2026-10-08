@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { BrandMark } from "./BrandMark";
+import { useAuth } from "@/lib/auth";
 import { SITE_NAME } from "@/lib/site";
 
 /** Product surfaces live in one dropdown so the bar stays uncluttered as
@@ -25,6 +26,35 @@ const FLAT_LINKS: [href: string, label: string][] = [
   ["/guides", "Guides"],
   ["/pricing", "Pricing"],
 ];
+
+/** Signed in: your avatar, linking to /account. Signed out: a quiet "Sign in". */
+function NavAccount() {
+  const { account, loading, configured } = useAuth();
+  if (!configured || loading) return null;
+  if (!account) {
+    return (
+      <Link href="/account" className="hidden text-[13.5px] text-zinc-400 transition-colors hover:text-white sm:block">
+        Sign in
+      </Link>
+    );
+  }
+  const initial = (account.name || account.email || "?").trim().charAt(0).toUpperCase();
+  return (
+    <Link
+      href="/account"
+      aria-label="Your account"
+      title={account.name || account.email || "Your account"}
+      className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-violet-600 to-cyan-500 text-[13px] font-semibold text-white ring-1 ring-white/20 hover:ring-white/50"
+    >
+      {account.photo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={account.photo} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+      ) : (
+        initial
+      )}
+    </Link>
+  );
+}
 
 /** Fixed, blurred dark nav for the marketing pages — with a mobile menu. */
 export function MarketingNav() {
@@ -133,6 +163,7 @@ export function MarketingNav() {
           >
             Start free
           </Link>
+          <NavAccount />
           <button
             type="button"
             aria-label={open ? "Close menu" : "Open menu"}

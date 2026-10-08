@@ -5,19 +5,25 @@ import { isBillingActive, readBilling } from "@/lib/server/billing";
 
 export const runtime = "nodejs";
 
-/** GET → { active, plan } for the current user (guests are never Pro). */
+const NONE = { active: false, plan: null, kind: null, status: null, paidThrough: null, cancelAtPeriodEnd: false };
+
+/** GET → { active, plan, kind, status, paidThrough, cancelAtPeriodEnd } for the current user (guests are never Pro). */
 export async function GET(req: NextRequest) {
   try {
     const owner = await getRequestOwner(req);
-    if (!owner.uid) return NextResponse.json({ active: false, plan: null });
+    if (!owner.uid) return NextResponse.json(NONE);
     const billing = await readBilling(owner.uid);
     return NextResponse.json({
       active: isBillingActive(billing),
       plan: billing?.plan ?? null,
+      kind: billing?.kind ?? null,
+      status: billing?.status ?? null,
+      paidThrough: billing?.paidThrough ?? null,
+      cancelAtPeriodEnd: billing?.cancelAtPeriodEnd === true,
     });
   } catch (err) {
-    if (err instanceof FirebaseConfigError) return NextResponse.json({ active: false, plan: null });
+    if (err instanceof FirebaseConfigError) return NextResponse.json(NONE);
     console.error("[billing/status]", err);
-    return NextResponse.json({ active: false, plan: null });
+    return NextResponse.json(NONE);
   }
 }

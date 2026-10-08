@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LogOut, User as UserIcon } from "lucide-react";
+import Link from "next/link";
+import { LogOut, Settings2, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useEntitlementSync } from "@/lib/billing/client";
+import { useIsPro } from "@/lib/billing/gate";
 import { AuthModal } from "./AuthModal";
 
 /**
@@ -11,6 +14,8 @@ import { AuthModal } from "./AuthModal";
  */
 export function AccountButton() {
   const { configured, loading, account, signOut } = useAuth();
+  useEntitlementSync();
+  const pro = useIsPro();
   const [modal, setModal] = useState(false);
   const [menu, setMenu] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -69,6 +74,16 @@ export function AccountButton() {
             </div>
           </div>
           <div className="my-1 h-px bg-[#f0f0f3]" />
+          <Link
+            href="/account"
+            target="_blank"
+            rel="noopener"
+            onClick={() => setMenu(false)}
+            className="fk-press flex w-full items-center gap-2 px-3 py-2 text-left text-[12.5px] font-medium text-[#4a4a55] hover:bg-black/[0.04]"
+          >
+            <Settings2 size={14} /> Account and plan
+            <span className={`ml-auto rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${pro ? "bg-[#17171c] text-white" : "bg-[#f0f0f5] text-[#6b6b76]"}`}>{pro ? "Pro" : "Free"}</span>
+          </Link>
           <button
             onClick={async () => {
               setMenu(false);
