@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { BackgroundSchema, createId } from "@framekit/scene";
+import { MAX_PACK_LOCALES } from "./locales";
 
 /**
  * Pack documents describe an App Store / Play Store screenshot SET: shared
@@ -181,7 +182,8 @@ export const PackScreenSchema = z.object({
   id: z.string(),
   /** uploaded screenshot; null until the user drops one */
   assetId: z.string().nullable(),
-  /** keyed by BCP-47 locale; v1 writes only "en" (v2 localization slots in here) */
+  /** "en" holds the source captions (whatever language they're in); every
+   *  other key is a store locale id from `pack.locales` (see locales.ts) */
   captions: z.record(z.string(), CaptionSchema),
   overrides: z.object({
     hideDevice: z.boolean().optional(),
@@ -223,6 +225,14 @@ export const PackDocumentSchema = z.object({
     .optional(),
   marketing: MarketingSchema.optional(),
   source: PackSourceSchema.optional(),
+  /** extra store languages to export, as store locale ids; the source
+   *  captions always export too. Optional: packs before localization parse. */
+  locales: z.array(z.string().max(16)).max(MAX_PACK_LOCALES).optional(),
+  /** store locale the source captions are written in (default en-US); used to
+   *  name the source folders in the fastlane layout */
+  sourceLocale: z.string().max(16).optional(),
+  /** zip layout: store-named folders (default) or fastlane deliver/supply */
+  exportLayout: z.enum(["standard", "fastlane"]).optional(),
 });
 
 export type PackScreen = z.infer<typeof PackScreenSchema>;

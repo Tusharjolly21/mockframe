@@ -22,6 +22,8 @@ export interface DraftRecord {
   assets: GuestAsset[];
   /** small WebP preview captured at save time */
   thumbnail?: string;
+  /** local-only: this copy has changes the cloud hasn't confirmed yet */
+  pendingSync?: boolean;
 }
 
 /* --------------------------------- storage ---------------------------------- */
@@ -75,6 +77,28 @@ async function putLocalDraft(record: DraftRecord): Promise<void> {
   await withStore("readwrite", (s) => s.put(record));
 }
 
+/** Clear `pendingSync` once the cloud has this exact version. Read and write in
+ *  one transaction so a newer local save that landed meanwhile is never
+ *  overwritten by the older, now-synced copy. */
+async function markLocalSynced(record: DraftRecord): Promise<void> {
+  const db = await openDb();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE, "readwrite");
+      const store = tx.objectStore(STORE);
+      const req = store.get(record.id);
+      req.onsuccess = () => {
+        const current = req.result as DraftRecord | undefined;
+        if (current && current.updatedAt === record.updatedAt && current.pendingSync) store.put({ ...current, pendingSync: false });
+      };
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error ?? new Error("Draft storage failed"));
+    });
+  } finally {
+    db.close();
+  }
+}
+
 async function cloudRecord(record: DraftRecord): Promise<DraftRecord> {
   const assets = await Promise.all(record.assets.map((asset) => persistAsset(asset)));
   const response = await firebaseFetch("/api/drafts", {
@@ -89,15 +113,52 @@ async function cloudRecord(record: DraftRecord): Promise<DraftRecord> {
   return (await response.json()) as DraftRecord;
 }
 
+/**
+ * Write a draft to IndexedDB (marked as not yet synced), then mirror it to the
+ * cloud unless `cloud` is false. Local storage is the source of truth for this
+ * browser, so a failed upload never loses work; the next save or list retries.
+ */
+export async function persistDraft(
+  record: DraftRecord,
+  { cloud = true, local: writeLocal = true }: { cloud?: boolean; local?: boolean } = {}
+): Promise<DraftRecord> {
+  const local: DraftRecord = { ...record, pendingSync: true };
+  if (writeLocal) await putLocalDraft(local);
+  if (!cloud) return local;
+  try {
+    const { pendingSync: _pending, ...body } = local;
+    void _pending;
+    const synced = await cloudRecord(body);
+    await markLocalSynced(local).catch(() => {});
+    return synced;
+  } catch {
+    return local;
+  }
+}
+
 /** Cloud-first draft list with automatic migration of local guest drafts. */
 export async function listDrafts(): Promise<DraftRecord[]> {
   try {
     const response = await firebaseFetch("/api/drafts");
     if (!response.ok) throw new Error("Cloud draft list failed");
     const cloud = ((await response.json()) as DraftRecord[]).map(normalizeDraftRecord);
-    if (cloud.length > 0) return cloud.sort((a, b) => b.updatedAt - a.updatedAt);
+    const local = await listLocalDrafts().catch(() => [] as DraftRecord[]);
+    if (cloud.length > 0) {
+      // Local saves the cloud hasn't confirmed yet (an autosave right before the
+      // tab closed, or an offline edit) win over the older cloud copy, and get
+      // uploaded now. Synced local copies that are missing from the cloud were
+      // deleted elsewhere, so they stay hidden.
+      const byId = new Map(cloud.map((record) => [record.id, record]));
+      for (const record of local) {
+        if (!record.pendingSync) continue;
+        const remote = byId.get(record.id);
+        if (remote && remote.updatedAt >= record.updatedAt) continue;
+        byId.set(record.id, record);
+        void persistDraft(record).catch(() => {});
+      }
+      return [...byId.values()].sort((a, b) => b.updatedAt - a.updatedAt);
+    }
 
-    const local = await listLocalDrafts();
     for (const record of local) {
       try {
         await cloudRecord(record);
@@ -122,17 +183,12 @@ export async function deleteDraft(id: string): Promise<void> {
 }
 
 export async function putDraft(record: DraftRecord): Promise<void> {
-  await putLocalDraft(record);
-  try {
-    await cloudRecord(record);
-  } catch {
-    // IndexedDB remains the offline fallback.
-  }
+  await persistDraft(record); // IndexedDB remains the offline fallback
 }
 
 /* ------------------------------ save / load ---------------------------------- */
 
-function sceneAssetIds(scene: SceneDocument): string[] {
+export function sceneAssetIds(scene: SceneDocument): string[] {
   const ids: string[] = [];
   const push = (assetId: string) => {
     ids.push(assetId);
@@ -155,7 +211,7 @@ function sceneAssetIds(scene: SceneDocument): string[] {
   return ids;
 }
 
-function defaultName(): string {
+export function defaultDraftName(): string {
   const now = new Date();
   const day = now.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   const time = now.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
@@ -173,19 +229,20 @@ export async function saveDraft(opts: {
 }): Promise<DraftRecord> {
   const record: DraftRecord = {
     id: opts.id ?? createId(),
-    name: opts.name ?? defaultName(),
+    name: opts.name ?? defaultDraftName(),
     kind: opts.kind ?? "scene",
     updatedAt: Date.now(),
     scene: opts.scene,
     assets: opts.assets ?? collectAssets(sceneAssetIds(opts.scene)),
     thumbnail: opts.thumbnail,
   };
-  await putLocalDraft(record);
-  try {
-    return await cloudRecord(record);
-  } catch {
-    return record;
-  }
+  return persistDraft(record);
+}
+
+/** The most recently edited scene (not template or pack), local or cloud. */
+export async function latestSceneDraft(): Promise<DraftRecord | null> {
+  const all = await listDrafts();
+  return all.find((record) => record.kind === "scene") ?? null;
 }
 
 /** Restore a draft's assets and return its validated scene document. */
@@ -217,16 +274,29 @@ export async function captureThumbnail(scene: SceneDocument): Promise<string | u
 /* Which saved draft the canvas currently "is" — ⌘S and the panel's Save button
    update it in place; Start Over / loading another draft repoints it. */
 
+export type DraftSaveState = "idle" | "saving" | "saved" | "error";
+
 interface DraftsUiState {
   currentId: string | null;
   currentName: string | null;
+  /** bumps on every setCurrent, so autosave can tell "the canvas was repointed"
+   *  apart from ordinary edits even when the id itself doesn't change */
+  epoch: number;
+  saveState: DraftSaveState;
+  savedAt: number | null;
   setCurrent: (id: string | null, name?: string | null) => void;
+  setSaveState: (saveState: DraftSaveState, savedAt?: number) => void;
 }
 
 export const useDraftsUi = create<DraftsUiState>()((set) => ({
   currentId: null,
   currentName: null,
-  setCurrent: (currentId, currentName = null) => set({ currentId, currentName }),
+  epoch: 0,
+  saveState: "idle",
+  savedAt: null,
+  setCurrent: (currentId, currentName = null) =>
+    set((s) => ({ currentId, currentName, epoch: s.epoch + 1, ...(currentId ? {} : { saveState: "idle" as const, savedAt: null }) })),
+  setSaveState: (saveState, savedAt) => set((s) => ({ saveState, savedAt: savedAt ?? s.savedAt })),
 }));
 
 /** Save the live scene — updates the loaded draft, or creates a new one. */
@@ -241,6 +311,7 @@ export async function saveCurrentDraft(scene: SceneDocument): Promise<DraftRecor
     thumbnail,
   });
   useDraftsUi.getState().setCurrent(record.id, record.name);
+  useDraftsUi.getState().setSaveState("saved", Date.now());
   return record;
 }
 

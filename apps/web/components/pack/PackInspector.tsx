@@ -14,6 +14,8 @@ import { usePackStore } from "@/lib/pack/store";
 import { firebaseFetch } from "@/lib/firebaseClient";
 import { LaunchCopyPanel } from "@/components/ai/LaunchCopyPanel";
 import { StyleThumb } from "@/components/pack/StyleThumb";
+import { PackLanguages } from "@/components/pack/PackLanguages";
+import { SOURCE_LOCALE, storeLocale } from "@/lib/pack/locales";
 import { useCustomFamilies } from "@/components/editor/FontPicker";
 import { FONT_CATALOG, FONT_CATEGORIES, ensureGoogleFont } from "@/lib/fonts";
 
@@ -29,10 +31,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 /** Right rail: style gallery, captions for the active screen, brand + targets. */
 export function PackInspector() {
-  const { pack, activeScreenId, update } = usePackStore();
+  const { pack, activeScreenId, activeLocale, update } = usePackStore();
   const customFonts = useCustomFamilies();
   const screen = pack.screens.find((s) => s.id === activeScreenId) ?? pack.screens[0];
-  const cap = screen.captions.en ?? { title: "" };
+  const translating = activeLocale !== SOURCE_LOCALE;
+  const source = screen.captions[SOURCE_LOCALE] ?? { title: "" };
+  const cap = screen.captions[activeLocale] ?? { title: "" };
+  const localeInfo = storeLocale(activeLocale);
   const [recaptionBusy, setRecaptionBusy] = useState(false);
   const [recaptionError, setRecaptionError] = useState<string | null>(null);
 
@@ -90,17 +95,26 @@ export function PackInspector() {
         </div>
       </Section>
 
-      <Section title={`Caption · screen ${String(pack.screens.indexOf(screen) + 1).padStart(2, "0")}`}>
+      <Section
+        title={`Caption · screen ${String(pack.screens.indexOf(screen) + 1).padStart(2, "0")}${translating ? ` · ${localeInfo?.label ?? activeLocale}` : ""}`}
+      >
+        {translating && (
+          <p className="mb-2 truncate text-[11px] text-white/40" title={source.title}>
+            Original: {source.title || "—"}
+          </p>
+        )}
         <input
           value={cap.title}
-          onChange={(e) => update((p) => setCaption(p, screen.id, e.target.value, cap.subtitle ?? ""))}
-          placeholder="Headline, e.g. Plan your day"
+          dir="auto"
+          onChange={(e) => update((p) => setCaption(p, screen.id, e.target.value, cap.subtitle ?? "", activeLocale))}
+          placeholder={translating ? source.title || "Translated headline" : "Headline, e.g. Plan your day"}
           className="mb-2 w-full rounded-md border border-white/10 bg-black/30 px-2.5 py-1.5 outline-none focus:border-violet-500"
         />
         <input
           value={cap.subtitle ?? ""}
-          onChange={(e) => update((p) => setCaption(p, screen.id, cap.title, e.target.value))}
-          placeholder="Optional subtitle"
+          dir="auto"
+          onChange={(e) => update((p) => setCaption(p, screen.id, cap.title, e.target.value, activeLocale))}
+          placeholder={translating ? source.subtitle || "Translated subtitle" : "Optional subtitle"}
           className="w-full rounded-md border border-white/10 bg-black/30 px-2.5 py-1.5 outline-none focus:border-violet-500"
         />
         <div className="mt-3 flex gap-4 text-[12px] text-white/60">
@@ -135,7 +149,7 @@ export function PackInspector() {
             Flip tilt
           </label>
         </div>
-        {pack.source && (
+        {pack.source && !translating && (
           <div className="mt-3">
             <button
               onClick={regenerateCaptions}
@@ -147,6 +161,10 @@ export function PackInspector() {
             {recaptionError && <p className="mt-1.5 text-[11px] text-red-400">{recaptionError}</p>}
           </div>
         )}
+      </Section>
+
+      <Section title="Languages">
+        <PackLanguages />
       </Section>
 
       <Section title="Brand">
@@ -206,6 +224,29 @@ export function PackInspector() {
       </Section>
 
       <Section title="Export sizes">
+        <div className="mb-3 flex gap-1 rounded-lg bg-black/30 p-1 text-[12px]" role="radiogroup" aria-label="Zip layout">
+          {([
+            ["standard", "Store folders"],
+            ["fastlane", "fastlane"],
+          ] as const).map(([id, label]) => (
+            <button
+              key={id}
+              role="radio"
+              aria-checked={(pack.exportLayout ?? "standard") === id}
+              onClick={() => update((p) => ({ ...p, exportLayout: id }))}
+              className={`flex-1 rounded-md py-1 transition ${
+                (pack.exportLayout ?? "standard") === id ? "bg-violet-600 text-white" : "text-white/60"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {pack.exportLayout === "fastlane" && (
+          <p className="mb-3 text-[11px] leading-4 text-white/40">
+            Zip matches fastlane&apos;s folders. Unzip it in your project, then run deliver (App Store) or supply (Play). The README has the commands.
+          </p>
+        )}
         {PACK_TARGET_IDS.map((id) => (
           <label key={id} className="mb-1.5 flex items-center gap-2 text-[12px] text-white/70">
             <input

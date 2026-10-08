@@ -14,11 +14,12 @@ import {
   type LaunchSurfaceId,
   type PackTargetId,
 } from "@/lib/pack/schema";
+import { SOURCE_LOCALE, storeLocale } from "@/lib/pack/locales";
 import { usePackStore } from "@/lib/pack/store";
 
 /** Center pane: live render of the active screen at the active store size. */
 export function PackPreview() {
-  const { pack, activeScreenId, activeTarget, setActiveTarget } = usePackStore();
+  const { pack, activeScreenId, activeTarget, setActiveTarget, activeLocale, setActiveLocale } = usePackStore();
   const paneRef = useRef<HTMLDivElement>(null);
   const [pane, setPane] = useState({ w: 800, h: 600 });
 
@@ -72,8 +73,8 @@ export function PackPreview() {
     }
     return activeTarget === "play-feature"
       ? compileFeatureGraphic(pack)
-      : compilePackScene(pack, screenIndex, activeTarget as PackTargetId);
-  }, [pack, screenIndex, activeTarget]);
+      : compilePackScene(pack, screenIndex, activeTarget as PackTargetId, activeLocale);
+  }, [pack, screenIndex, activeTarget, activeLocale]);
   const isLaunch = activeTarget.startsWith("launch:");
   const fit = Math.min(pane.w / scene.canvas.width, pane.h / scene.canvas.height, 1) * 0.92;
 
@@ -105,6 +106,19 @@ export function PackPreview() {
               {PACK_LAUNCH_SURFACES[id].label}
             </button>
           ) : null
+        )}
+        {(pack.locales?.length ?? 0) > 0 && (
+          <select
+            value={activeLocale}
+            onChange={(e) => setActiveLocale(e.target.value)}
+            aria-label="Preview language"
+            className="ml-auto rounded-full border border-white/10 bg-black/30 px-2.5 py-1 text-xs text-white/80 outline-none"
+          >
+            <option value={SOURCE_LOCALE}>Original</option>
+            {(pack.locales ?? []).map((id) => (
+              <option key={id} value={id}>{storeLocale(id)?.label ?? id}</option>
+            ))}
+          </select>
         )}
       </div>
       <div ref={paneRef} className="flex flex-1 items-center justify-center overflow-hidden bg-[#17171c] p-6">

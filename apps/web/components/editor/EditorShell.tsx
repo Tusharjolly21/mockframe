@@ -7,8 +7,12 @@ import { track, trackOnce } from "@/lib/analytics";
 import { confirmCheckoutReturn } from "@/lib/billing/client";
 import { ingestFile } from "@/lib/assets";
 import { loadCustomDevices, syncCustomDevicesFromServer } from "@/lib/customDevices";
-import { buildDeviceScene, buildScreenScene, isScreenApp } from "@/lib/deviceScene";
-import { saveCurrentDraft } from "@/lib/drafts";
+import { buildDeviceScene, buildScreenScene, deviceForScreenshot, isScreenApp } from "@/lib/deviceScene";
+import { takeParkedScreenshot } from "@/lib/handoff";
+import { planFigmaScenes } from "@/lib/figmaOpen";
+import type { FigmaImportManifest } from "@/lib/figmaImport";
+import { startAutosave } from "@/lib/autosave";
+import { saveCurrentDraft, useDraftsUi } from "@/lib/drafts";
 import { ensureGoogleFont, loadCustomFonts } from "@/lib/fonts";
 import { ShotStrip } from "./ShotStrip";
 import { useShotBatchStore } from "@/lib/shotBatch";
@@ -19,9 +23,12 @@ import { AnimatePanel } from "./AnimatePanel";
 import { BottomBar } from "./BottomBar";
 import { CanvasStage } from "./CanvasStage";
 import { LeftPanel } from "./LeftPanel";
+import { LooksTray, MakePrettyButton, openLooks } from "./MakePretty";
 import { RightPanel } from "./RightPanel";
 import { ExportNextSteps } from "./ExportNextSteps";
-import { MobileGate } from "./MobileGate";
+import { PhoneEditor } from "./phone/PhoneEditor";
+import { usePhoneMode } from "./phone/usePhoneMode";
+import { ResumeDraftCard } from "./ResumeDraftCard";
 import { StarterModal } from "./StarterModal";
 import { ShortcutsSheet } from "./ShortcutsSheet";
 import { LogoChip, Toolbar } from "./Toolbar";
@@ -40,6 +47,8 @@ export function EditorShell({
   openPromoOnLoad = false,
   openReplayOnLoad = false,
   remixId,
+  openDroppedOnLoad = false,
+  figmaImportId,
   fromTemplate = false,
   embedded = false,
 }: {
@@ -54,15 +63,25 @@ export function EditorShell({
   openPromoOnLoad?: boolean;
   openReplayOnLoad?: boolean;
   remixId?: string;
+  /** a screenshot was dropped on a marketing page and parked for us (lib/handoff) */
+  openDroppedOnLoad?: boolean;
+  /** /editor?figma=<id>: frames sent from the Figma plugin */
+  figmaImportId?: string;
   /** a template page already loaded a scene, so skip the first-run picker */
   fromTemplate?: boolean;
   embedded?: boolean;
 }) {
   const setScene = useSceneStore((s) => s.setScene);
+  const { phone, openFullEditor } = usePhoneMode(embedded);
   const updateLayer = useSceneStore((s) => s.updateLayer);
   const [toast, setToast] = useState<string | null>(null);
   const [promoOpen, setPromoOpen] = useState(false);
   const extensionCaptures = useRef(new Set<string>());
+  const deepLinked = Boolean(
+    initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad || remixId || openDroppedOnLoad || figmaImportId || fromTemplate
+  );
+  const droppedTaken = useRef(false);
+  const figmaTaken = useRef(false);
 
   // Fonts: this browser's uploads (+ the account's), and every catalog family
   // the scene's text uses — drafts, templates and remixes arrive with fonts
@@ -119,9 +138,9 @@ export function EditorShell({
   }, [openReplayOnLoad]);
 
   useEffect(() => {
-    track("editor_opened", { entry: initialDeviceId ? "device_page" : openCalibrate ? "calibrate" : "direct" });
+    track("editor_opened", { entry: openDroppedOnLoad ? "homepage_drop" : figmaImportId ? "figma" : initialDeviceId ? "device_page" : openCalibrate ? "calibrate" : "direct" });
     trackOnce("editor_first_open");
-  }, [initialDeviceId, openCalibrate]);
+  }, [initialDeviceId, openCalibrate, openDroppedOnLoad, figmaImportId]);
 
   useEffect(() => {
     if (!embedded || window.parent === window) return;
@@ -148,6 +167,85 @@ export function EditorShell({
     useSceneStore.temporal.getState().clear();
     window.history.replaceState({}, "", "/editor");
   }, [initialDeviceId]);
+
+  // Deep-link: /editor?drop=1 — a screenshot dropped on the homepage. Open it
+  // in the device that suits its shape; it's a real edit, so autosave keeps it.
+  useEffect(() => {
+    if (!openDroppedOnLoad || droppedTaken.current) return;
+    droppedTaken.current = true;
+    window.history.replaceState({}, "", "/editor");
+    const say = (detail: string) => window.dispatchEvent(new CustomEvent("framekit:toast", { detail }));
+    void (async () => {
+      const file = await takeParkedScreenshot();
+      if (!file) return say("Your screenshot didn't come through. Drop it on the canvas instead.");
+      try {
+        const asset = await ingestFile(file);
+        const base = buildDeviceScene(deviceForScreenshot(asset.width, asset.height));
+        if (base) {
+          useSceneStore.setState({ scene: base });
+          useSceneStore.temporal.getState().clear();
+          useDraftsUi.getState().setCurrent(null);
+        }
+        useViewStore.getState().bumpAssets();
+        const result = placeAsset(useSceneStore.getState().scene, asset, {});
+        setScene(() => result.scene);
+        useViewStore.getState().select(result.layerId);
+        useViewStore.getState().triggerEntrance(result.layerId);
+        // pick a finished look in the screenshot's colours, with the others a click away
+        openLooks(true);
+        track("media_added", { source: "homepage_drop" });
+        trackOnce("first_media_added", { source: "homepage_drop" });
+      } catch (e) {
+        say(e instanceof Error ? e.message : "That file couldn't be opened");
+      }
+    })();
+  }, [openDroppedOnLoad, setScene]);
+
+  // Deep-link: /editor?figma=<id> — frames sent from the Figma plugin, each in
+  // a device that fits (several become a shot batch), or a store listing set.
+  useEffect(() => {
+    if (!figmaImportId || figmaTaken.current) return;
+    figmaTaken.current = true;
+    window.history.replaceState({}, "", "/editor");
+    const say = (detail: string) => window.dispatchEvent(new CustomEvent("framekit:toast", { detail }));
+    void (async () => {
+      try {
+        const base = `/api/figma-import/${encodeURIComponent(figmaImportId)}`;
+        const res = await fetch(base);
+        const manifest = (await res.json().catch(() => null)) as (FigmaImportManifest & { error?: string }) | null;
+        if (!res.ok || !manifest) return say(manifest?.error ?? "Your Figma frames couldn't be loaded. Send them again.");
+        const frames: { asset: Awaited<ReturnType<typeof ingestFile>>; name: string }[] = [];
+        for (let i = 0; i < manifest.frames.length; i++) {
+          const r = await fetch(`${base}/${i}`);
+          if (!r.ok) continue;
+          const blob = await r.blob();
+          const name = manifest.frames[i].name;
+          frames.push({ asset: await ingestFile(new File([blob], `${name}.${blob.type === "image/jpeg" ? "jpg" : "png"}`, { type: blob.type })), name });
+        }
+        if (!frames.length) return say("Your Figma frames couldn't be loaded. Send them again.");
+        const { shots, filled } = planFigmaScenes(manifest, frames);
+        if (!shots.length) return;
+        useViewStore.getState().bumpAssets();
+        const [first] = shots;
+        // the batch strip under the canvas switches between the shots
+        useShotBatchStore.setState({ shots: shots.map((s) => ({ id: s.id, name: s.name, scene: s.scene })), activeId: first.id });
+        useSceneStore.setState({ scene: first.base });
+        useSceneStore.temporal.getState().clear();
+        useDraftsUi.getState().setCurrent(null);
+        // putting the frame in is a real edit, so autosave keeps it
+        setScene(() => first.scene);
+        window.dispatchEvent(new CustomEvent("framekit:fit"));
+        if (shots.length === 1) openLooks(false);
+        track("figma_import_opened", { frames: frames.length, mode: manifest.mode });
+        trackOnce("first_media_added", { source: "figma" });
+        if (manifest.mode === "set" && !filled) say("Store sets need phone-shaped frames, so the sample screens stayed. Send them as In devices instead.");
+        else if (manifest.mode === "set") say(frames.length === 1 ? "Your frame is in all eight shots" : `Your ${frames.length} frames are in all eight shots`);
+        else say(shots.length === 1 ? "Your frame from Figma is in" : `${shots.length} frames from Figma, one shot each`);
+      } catch (e) {
+        say(e instanceof Error ? e.message : "Your Figma frames couldn't be loaded");
+      }
+    })();
+  }, [figmaImportId, setScene]);
 
   // Deep-link: /editor?screen=<app> (from the /tools chat-screen generator
   // pages) opens an iPhone pre-loaded with that app's default chat screen.
@@ -191,6 +289,7 @@ export function EditorShell({
     window.history.replaceState({}, "", "/editor");
     const say = (detail: string) => window.dispatchEvent(new CustomEvent("framekit:toast", { detail }));
     if (checkoutStatus === "failed" || checkoutStatus === "cancelled") {
+      track("purchase_cancelled", { status: checkoutStatus });
       const t = setTimeout(() => say("Payment was not completed — you have not been charged"), 0);
       return () => clearTimeout(t);
     }
@@ -200,6 +299,7 @@ export function EditorShell({
       say("Confirming your payment…");
       confirmCheckoutReturn(checkoutSubId ?? null).then((active) => {
         if (cancelled) return;
+        track(active ? "purchase_confirmed" : "purchase_pending");
         if (active) {
           useViewStore.getState().setRemoveWatermark(true);
           say("You're Pro - welcome aboard");
@@ -213,6 +313,11 @@ export function EditorShell({
       clearTimeout(t);
     };
   }, [isCheckoutReturn, checkoutSubId, checkoutStatus]);
+
+  // Autosave every edit to Drafts. Declared after the deep-link effects above so
+  // a deep-linked scene is the untouched baseline. The embed runs inside other
+  // sites, where silently filling this origin's storage would be a surprise.
+  useEffect(() => (embedded ? undefined : startAutosave()), [embedded]);
 
   // The batch is a list of independent scene documents. Keep the active shot
   // current without making the editor shell re-render for every control tweak.
@@ -447,6 +552,9 @@ export function EditorShell({
     return () => window.removeEventListener("framekit:toast", onToast);
   }, []);
 
+  if (phone === null) return <div className="h-dvh bg-[#0b0b0e] md:bg-transparent" />;
+  if (phone) return <PhoneEditor onFullEditor={openFullEditor} />;
+
   return (
     <div className="relative h-dvh overflow-hidden">
       {/* the canvas fills everything; panels float above it */}
@@ -470,8 +578,10 @@ export function EditorShell({
         {/* bottom toolbar (reset / position / 3D / emoji) + animate */}
         <div className="pointer-events-auto absolute bottom-1 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2">
           <ShotStrip />
+          <LooksTray />
           <div className="flex items-end gap-2">
             <BottomBar />
+            <MakePrettyButton />
             <AnimatePanel />
           </div>
         </div>
@@ -493,13 +603,10 @@ export function EditorShell({
       </AnimatePresence>
 
       {promoOpen && <PromoPanel onClose={() => setPromoOpen(false)} />}
-      <MobileGate embedded={embedded} />
       <ExportNextSteps />
       <ShortcutsSheet />
-      <StarterModal
-        embedded={embedded}
-        deepLinked={Boolean(initialDeviceId || initialScreenApp || openCalibrate || openUpgradeOnLoad || openCaptureOnLoad || openPromoOnLoad || openReplayOnLoad || remixId || fromTemplate)}
-      />
+      <StarterModal embedded={embedded} deepLinked={deepLinked} />
+      <ResumeDraftCard embedded={embedded} deepLinked={deepLinked} />
     </div>
   );
 }

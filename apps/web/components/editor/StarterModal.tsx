@@ -4,11 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { Clapperboard, Layers, MessageSquare, Smartphone, Sparkles, Wand2, X } from "lucide-react";
+import { track } from "@/lib/analytics";
 import { ingestFile } from "@/lib/assets";
 import { buildScreenScene } from "@/lib/deviceScene";
 import type { ScreenApp } from "@/lib/screens/types";
 import { placeAsset } from "@/lib/sceneOps";
-import { useSceneStore, useViewStore } from "@/lib/store";
+import { useDraftsUi } from "@/lib/drafts";
+import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
 
 const SEEN_KEY = "fk-starter-seen";
 
@@ -49,42 +51,55 @@ export function StarterModal({ deepLinked, embedded }: { deepLinked: boolean; em
     setOpen(false);
   }
 
+  function skip() {
+    track("starter_choice", { choice: "skip" });
+    dismiss();
+  }
+
   function chooseChat(app: ScreenApp, replay = false) {
     const scene = buildScreenScene(app);
     if (scene) {
       setScene(() => scene);
       select(null);
+      // a fresh starting point, not an edit: autosave waits for the first change
+      sceneTemporal.getState().clear();
+      useDraftsUi.getState().setCurrent(null);
     }
     dismiss();
     if (replay) setTimeout(() => window.dispatchEvent(new CustomEvent("framekit:animate-open")), 600);
   }
 
-  const TILES: { icon: React.ReactNode; title: string; text: string; badge?: string; onClick: () => void }[] = [
+  const TILES: { id: string; icon: React.ReactNode; title: string; text: string; badge?: string; onClick: () => void }[] = [
     {
+      id: "device_mockup",
       icon: <Smartphone size={22} />,
       title: "Device mockup",
       text: "Put a screenshot in a real iPhone, Android, iPad or Mac frame.",
       onClick: dismiss, // default scene is already a device
     },
     {
+      id: "beautify_screenshot",
       icon: <Layers size={22} />,
       title: "Beautify a screenshot",
       text: "Backgrounds, gradients, shadows — make any screenshot post-ready.",
       onClick: () => fileRef.current?.click(),
     },
     {
+      id: "chat_screen",
       icon: <MessageSquare size={22} />,
       title: "Chat screen",
       text: "Fake WhatsApp, iMessage, Discord and 12+ more, pixel-accurate.",
       onClick: () => chooseChat("whatsapp"),
     },
     {
+      id: "text_message_video",
       icon: <Clapperboard size={22} />,
       title: "Text message video",
       text: "A conversation that plays out message by message — TikTok-ready.",
       onClick: () => chooseChat("imessage", true),
     },
     {
+      id: "app_promo_video",
       icon: <Wand2 size={22} />,
       title: "App promo video",
       badge: "Pro",
@@ -95,6 +110,7 @@ export function StarterModal({ deepLinked, embedded }: { deepLinked: boolean; em
       },
     },
     {
+      id: "store_screenshots",
       icon: <Sparkles size={22} />,
       title: "App Store screenshots",
       text: "A full store-ready screenshot pack — by hand or from AI.",
@@ -115,7 +131,7 @@ export function StarterModal({ deepLinked, embedded }: { deepLinked: boolean; em
           transition={{ duration: 0.18 }}
           className="fixed inset-0 z-[75] flex items-center justify-center bg-[#0b0b0e]/70 p-4 backdrop-blur-sm"
           onMouseDown={(e) => {
-            if (e.target === e.currentTarget) dismiss();
+            if (e.target === e.currentTarget) skip();
           }}
         >
           <motion.div
@@ -125,7 +141,7 @@ export function StarterModal({ deepLinked, embedded }: { deepLinked: boolean; em
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
             className="relative w-[min(720px,94vw)] rounded-2xl border border-black/10 bg-white p-7 shadow-[0_40px_120px_rgba(0,0,0,0.35)]"
           >
-            <button onClick={dismiss} title="Skip" className="fk-press absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-lg text-[#9a9aa4] hover:bg-black/5 hover:text-[#17171c]">
+            <button onClick={skip} title="Skip" className="fk-press absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-lg text-[#9a9aa4] hover:bg-black/5 hover:text-[#17171c]">
               <X size={16} />
             </button>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-600">Welcome to MockFrame</p>
@@ -134,7 +150,10 @@ export function StarterModal({ deepLinked, embedded }: { deepLinked: boolean; em
               {TILES.map((t) => (
                 <button
                   key={t.title}
-                  onClick={t.onClick}
+                  onClick={() => {
+                    track("starter_choice", { choice: t.id });
+                    t.onClick();
+                  }}
                   className="fk-press group flex items-start gap-3 rounded-xl border border-black/10 bg-[#fafafc] p-4 text-left transition-colors hover:border-violet-400 hover:bg-white"
                 >
                   <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#17171c] text-white">{t.icon}</span>

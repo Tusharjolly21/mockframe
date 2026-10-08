@@ -4,12 +4,15 @@ import { create } from "zustand";
 import { ingestFile } from "../assets";
 import { addScreens, moveScreen, removeScreen } from "./ops";
 import { loadLatestPack, savePack } from "./persist";
+import { SOURCE_LOCALE } from "./locales";
 import { createPack, type PackDocument } from "./schema";
 
 interface PackState {
   pack: PackDocument;
   activeScreenId: string;
   activeTarget: string;
+  /** language shown in the preview and edited in the caption fields */
+  activeLocale: string;
   hydrated: boolean;
   exporting: boolean;
   progress: { done: number; total: number } | null;
@@ -24,6 +27,7 @@ interface PackState {
   moveScreenById: (id: string, delta: -1 | 1) => void;
   setActiveScreen: (id: string) => void;
   setActiveTarget: (t: string) => void;
+  setActiveLocale: (locale: string) => void;
   setExporting: (exporting: boolean, progress?: { done: number; total: number } | null) => void;
   dismissWarnings: () => void;
 }
@@ -40,6 +44,7 @@ export const usePackStore = create<PackState>()((set, get) => ({
   pack: initial,
   activeScreenId: initial.screens[0].id,
   activeTarget: "appstore-69",
+  activeLocale: SOURCE_LOCALE,
   hydrated: false,
   exporting: false,
   progress: null,
@@ -58,9 +63,12 @@ export const usePackStore = create<PackState>()((set, get) => ({
   update: (mut) => {
     const pack = mut(get().pack);
     set({ pack });
-    // keep the active screen valid after removals
+    // keep the active screen and language valid after removals
     if (!pack.screens.some((s) => s.id === get().activeScreenId)) {
       set({ activeScreenId: pack.screens[0].id });
+    }
+    if (get().activeLocale !== SOURCE_LOCALE && !(pack.locales ?? []).includes(get().activeLocale)) {
+      set({ activeLocale: SOURCE_LOCALE });
     }
     scheduleSave(pack);
   },
@@ -87,6 +95,7 @@ export const usePackStore = create<PackState>()((set, get) => ({
   moveScreenById: (id, delta) => get().update((p) => moveScreen(p, id, delta)),
   setActiveScreen: (id) => set({ activeScreenId: id }),
   setActiveTarget: (activeTarget) => set({ activeTarget }),
+  setActiveLocale: (activeLocale) => set({ activeLocale }),
   setExporting: (exporting, progress = null) => set({ exporting, progress }),
   dismissWarnings: () => set({ warnings: [] }),
 }));

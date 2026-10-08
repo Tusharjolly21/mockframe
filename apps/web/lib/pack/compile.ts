@@ -17,6 +17,8 @@ import {
   type PackDocument,
   type PackTargetId,
 } from "./schema";
+import { SOURCE_LOCALE, storeLocale } from "./locales";
+import { packSourceLocale } from "./ops";
 import { PACK_STYLES, type PackStyle } from "./styles";
 
 /**
@@ -26,10 +28,10 @@ import { PACK_STYLES, type PackStyle } from "./styles";
  * works across every store size.
  */
 
-const LOCALE = "en";
 
 export interface CompiledEntry {
-  /** zip path, e.g. "App Store/6.9-inch-1320x2868/01.png" */
+  /** zip path, e.g. "App Store/6.9-inch-1320x2868/01.png" (prefixed with the
+   *  locale folder, e.g. "de-DE/App Store/…", when the pack has languages) */
   path: string;
   scene: SceneDocument;
   panoramaIdx?: number;
@@ -42,7 +44,40 @@ function packBackground(pack: PackDocument, style: PackStyle): Background {
 
 const round3 = (n: number) => Math.round(n * 1000) / 1000;
 
-export function compilePackScene(pack: PackDocument, screenIndex: number, targetId: PackTargetId): SceneDocument {
+/** Rough rendered width in Latin-character units: CJK and other full-width
+ *  glyphs take about two. */
+function visualLength(text: string): number {
+  let n = 0;
+  for (const ch of text) n += /[\u1100-\u115f\u2e80-\ua4cf\uac00-\ud7a3\uf900-\ufaff\ufe30-\ufe4f\uff00-\uff60\uffe0-\uffe6]/.test(ch) ? 1.9 : 1;
+  return n;
+}
+
+/** Shrink long captions (translations run 20–40% longer than English) so they
+ *  stay inside the caption band instead of wrapping into the device. */
+export function captionFit(text: string, comfortable: number): number {
+  const len = visualLength(text);
+  if (len <= comfortable) return 1;
+  return Math.max(0.68, Math.sqrt(comfortable / len));
+}
+
+/** Captions for one screen in one language; untranslated screens fall back to the source. */
+export function screenCaption(screen: PackDocument["screens"][number], locale: string = SOURCE_LOCALE) {
+  const own = screen.captions[locale];
+  if (own && own.title.trim()) return own;
+  return screen.captions[SOURCE_LOCALE] ?? { title: "" };
+}
+
+/** Languages a pack exports, source first. */
+export function packLocales(pack: PackDocument): string[] {
+  return [SOURCE_LOCALE, ...(pack.locales ?? []).filter((l) => l !== SOURCE_LOCALE)];
+}
+
+export function compilePackScene(
+  pack: PackDocument,
+  screenIndex: number,
+  targetId: PackTargetId,
+  locale: string = SOURCE_LOCALE
+): SceneDocument {
   const target = PACK_TARGETS[targetId];
   const style = PACK_STYLES[pack.styleId];
   const screen = pack.screens[screenIndex];
@@ -63,8 +98,8 @@ export function compilePackScene(pack: PackDocument, screenIndex: number, target
     layers: [],
   };
 
-  const cap = screen.captions[LOCALE] ?? { title: "" };
-  const titleSize = Math.round(W * 0.055 * (style.titleScale ?? 1));
+  const cap = screenCaption(screen, locale);
+  const titleSize = Math.round(W * 0.055 * (style.titleScale ?? 1) * captionFit(cap.title.trim(), 30));
   if (cap.title.trim()) {
     const title = createTextLayer(cap.title.trim());
     title.font = { family: pack.style.fontFamily, weight: 800, size: titleSize, lineHeight: 1.12, letterSpacing: -0.02 };
@@ -78,7 +113,7 @@ export function compilePackScene(pack: PackDocument, screenIndex: number, target
   }
   if (cap.subtitle?.trim()) {
     const sub = createTextLayer(cap.subtitle.trim());
-    sub.font = { family: pack.style.fontFamily, weight: 500, size: Math.round(W * 0.032), lineHeight: 1.3, letterSpacing: 0 };
+    sub.font = { family: pack.style.fontFamily, weight: 500, size: Math.round(W * 0.032 * captionFit(cap.subtitle.trim(), 56)), lineHeight: 1.3, letterSpacing: 0 };
     sub.color = style.subtitleColor;
     sub.maxWidth = Math.round(W * 0.8);
     sub.transform = { ...sub.transform, y: Math.round((top ? -0.315 : 0.385) * H) };
@@ -227,23 +262,36 @@ export function compileLaunchScene(pack: PackDocument, surfaceId: LaunchSurfaceI
   return SceneDocumentSchema.parse(scene);
 }
 
-/** Every screen × enabled portrait target (screens numbered 01..NN), then the feature graphic. */
+/** Every screen × enabled portrait target (screens numbered 01..NN), once per
+ *  language, then the feature graphic and launch kit (language-neutral). A
+ *  pack without extra languages keeps the flat folder layout. */
 export function compilePack(pack: PackDocument): CompiledEntry[] {
   const style = PACK_STYLES[pack.styleId];
   const entries: CompiledEntry[] = [];
-  for (const targetId of PACK_TARGET_IDS) {
-    if (targetId === "play-feature" || !pack.targets[targetId]) continue;
-    const folder = PACK_TARGETS[targetId].folder;
-    pack.screens.forEach((_, i) => {
-      entries.push({
-        path: `${folder}/${String(i + 1).padStart(2, "0")}.png`,
-        scene: compilePackScene(pack, i, targetId),
-        ...(style.panorama ? { panoramaIdx: i, panoramaTotal: pack.screens.length } : {}),
+  const locales = packLocales(pack);
+  const localized = locales.length > 1;
+  const fastlane = pack.exportLayout === "fastlane";
+  for (const locale of locales) {
+    const prefix = localized ? `${localeFolder(locale)}/` : "";
+    for (const targetId of PACK_TARGET_IDS) {
+      if (targetId === "play-feature" || !pack.targets[targetId]) continue;
+      const folder = PACK_TARGETS[targetId].folder;
+      pack.screens.forEach((_, i) => {
+        entries.push({
+          path: fastlane ? fastlanePath(pack, locale, targetId, i) : `${prefix}${folder}/${String(i + 1).padStart(2, "0")}.png`,
+          scene: compilePackScene(pack, i, targetId, locale),
+          ...(style.panorama ? { panoramaIdx: i, panoramaTotal: pack.screens.length } : {}),
+        });
       });
-    });
+    }
   }
   if (pack.targets["play-feature"]) {
-    entries.push({ path: "Play Store/feature-graphic-1024x500.png", scene: compileFeatureGraphic(pack) });
+    entries.push({
+      path: fastlane
+        ? `fastlane/metadata/android/${playCode(packSourceLocale(pack))}/images/featureGraphic.png`
+        : "Play Store/feature-graphic-1024x500.png",
+      scene: compileFeatureGraphic(pack),
+    });
   }
   const launch = pack.launch;
   if (launch) {
@@ -255,6 +303,31 @@ export function compilePack(pack: PackDocument): CompiledEntry[] {
   return entries;
 }
 
+/* fastlane: `deliver` reads fastlane/screenshots/<App Store locale>/ and works
+   out each image's display type from its pixel size; `supply` reads
+   fastlane/metadata/android/<Play locale>/images/. */
+const FASTLANE_DEVICE: Partial<Record<PackTargetId, string>> = {
+  "appstore-69": "iPhone69",
+  "appstore-65": "iPhone65",
+  "appstore-ipad13": "iPadPro13",
+};
+
+function playCode(locale: string): string {
+  return storeLocale(locale)?.play ?? locale;
+}
+
+function fastlanePath(pack: PackDocument, locale: string, targetId: PackTargetId, i: number): string {
+  const store = locale === SOURCE_LOCALE ? packSourceLocale(pack) : locale;
+  const n = String(i + 1).padStart(2, "0");
+  if (targetId === "play-phone") return `fastlane/metadata/android/${playCode(store)}/images/phoneScreenshots/${n}.png`;
+  return `fastlane/screenshots/${store}/${n}_${FASTLANE_DEVICE[targetId] ?? targetId}.png`;
+}
+
+/** Zip folder for a language: the store locale id, or "source" for the pack's own captions. */
+export function localeFolder(locale: string): string {
+  return locale === SOURCE_LOCALE ? "source" : locale;
+}
+
 const LAUNCH_SURFACE_DESCRIPTIONS: Record<LaunchSurfaceId, string> = {
   "product-hunt": "Product Hunt gallery image.",
   "og-image": "og:image / Twitter card meta tag.",
@@ -263,6 +336,7 @@ const LAUNCH_SURFACE_DESCRIPTIONS: Record<LaunchSurfaceId, string> = {
 };
 
 export function packReadme(pack: PackDocument, failed: string[] = []): string {
+  if (pack.exportLayout === "fastlane") return fastlaneReadme(pack, failed);
   const lines: string[] = [
     `${pack.appName.trim() || "Your app"} — store screenshot pack`,
     "Generated with MockFrame · https://mockframe.app/app-store-screenshots",
@@ -281,6 +355,17 @@ export function packReadme(pack: PackDocument, failed: string[] = []): string {
   if (pack.targets["play-feature"])
     lines.push("Play Store/feature-graphic-1024x500.png  → Play Console → Main store listing → Feature graphic.");
   lines.push("", "Files are numbered in the order they appear in the store gallery.");
+  const locales = packLocales(pack);
+  if (locales.length > 1) {
+    lines.push(
+      "",
+      "LANGUAGES",
+      "----------------",
+      "Each language has its own folder with the layout above:",
+      ...locales.map((l) => `${localeFolder(l)}/  → ${l === SOURCE_LOCALE ? "your original captions" : `upload under the ${l} localization`}`),
+      "Screens without a translation use the original caption."
+    );
+  }
   const launch = pack.launch;
   const enabledLaunchIds = launch ? PACK_LAUNCH_SURFACE_IDS.filter((id) => launch.surfaces[id]) : [];
   if (enabledLaunchIds.length) {
@@ -294,5 +379,46 @@ export function packReadme(pack: PackDocument, failed: string[] = []): string {
     for (const f of failed) lines.push(f);
     lines.push("Re-run the export from MockFrame to retry these files.");
   }
+  return lines.join("\n");
+}
+
+function failedSection(failed: string[]): string[] {
+  if (!failed.length) return [];
+  return ["", "FAILED TO RENDER", "----------------", ...failed, "Re-run the export from MockFrame to retry these files."];
+}
+
+function fastlaneReadme(pack: PackDocument, failed: string[]): string {
+  const ios = pack.targets["appstore-69"] || pack.targets["appstore-65"] || pack.targets["appstore-ipad13"];
+  const android = pack.targets["play-phone"] || pack.targets["play-feature"];
+  const locales = packLocales(pack).map((l) => (l === SOURCE_LOCALE ? packSourceLocale(pack) : l));
+  const lines: string[] = [
+    `${pack.appName.trim() || "Your app"} — store screenshots, fastlane layout`,
+    "Generated with MockFrame · https://mockframe.app/app-store-screenshots",
+    "",
+    "Unzip this into your project root (it merges into your existing fastlane/ folder), then:",
+    "",
+  ];
+  if (ios) {
+    lines.push(
+      "App Store (fastlane deliver):",
+      "  fastlane deliver --skip_binary_upload --skip_metadata --overwrite_screenshots",
+      "  deliver picks each image's display size from its resolution.",
+      ""
+    );
+  }
+  if (android) {
+    lines.push(
+      "Google Play (fastlane supply):",
+      "  fastlane supply --skip_upload_apk --skip_upload_aab --skip_upload_metadata --skip_upload_changelogs",
+      ""
+    );
+  }
+  lines.push(`Languages: ${locales.join(", ")}`);
+  if (locales.length > 1) lines.push("Screens without a translation use the original caption.");
+  const launch = pack.launch;
+  if (launch && PACK_LAUNCH_SURFACE_IDS.some((id) => launch.surfaces[id])) {
+    lines.push("", "Launch Kit/ isn't used by fastlane: those are images for Product Hunt, social posts and stories.");
+  }
+  lines.push(...failedSection(failed));
   return lines.join("\n");
 }

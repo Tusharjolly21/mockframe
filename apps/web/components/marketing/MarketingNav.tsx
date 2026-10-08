@@ -14,8 +14,10 @@ const PRODUCT_LINKS: [href: string, label: string, blurb: string][] = [
   ["/mockups", "Mockups", "Device & browser screenshot mockups"],
   ["/app-store-screenshots", "App Store Screenshots", "Submission-ready packs for both stores"],
   ["/ai", "AI Generator", "Describe your app, get the whole pack"],
+  ["/screen-recorder", "Screen Recorder", "Recordings that zoom in on the action"],
   ["/launch-kit", "Launch Kit", "Every launch-day asset in one click"],
   ["/templates", "Templates", "Ready-made scenes to start from"],
+  ["/figma-plugin", "Figma Plugin", "Send frames straight into mockups"],
   ["/tools", "Tools", "Chat, capture & social mockup tools"],
 ];
 

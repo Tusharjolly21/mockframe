@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-/** Mobile-first, single-purpose chat maker. The full editor is desktop-only;
+/** Mobile-first, single-purpose chat maker. Phones get a simple editor too;
  *  this converts the (heavily mobile) fake-chat search traffic instead of
  *  bouncing it off fixed-width panels. */
 export default function ChatMakerPage() {

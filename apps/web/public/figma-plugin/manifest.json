@@ -1,0 +1,14 @@
+{
+  "name": "Mockframe",
+  "id": "1560000000000000000",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["https://mockframe.app"],
+    "devAllowedDomains": ["http://localhost:3000"],
+    "reasoning": "Uploads the frames you choose to Mockframe so they open in the editor."
+  }
+}

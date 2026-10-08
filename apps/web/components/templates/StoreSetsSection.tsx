@@ -1,19 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { STORE_PLATFORMS, STORE_SETS, type StorePlatform } from "@/lib/storeSets";
+import type { SceneDocument } from "@framekit/scene";
+import { LiveScene } from "@/components/templates/LiveScene";
+import { previewWithShots } from "@/lib/myShots";
+import { buildStoreSet, STORE_PLATFORMS, STORE_SETS, type StorePlatform } from "@/lib/storeSets";
+import { matchesTemplate, STORE_SET_USES, type TemplateFilter } from "@/lib/templateSearch";
+import type { MyShot } from "@/lib/templateShots";
+
+export const storeSetMatches = (filter: TemplateFilter) =>
+  STORE_SETS.filter((set) =>
+    matchesTemplate(filter, {
+      text: [set.name, set.kind, set.blurb, "store listing set screenshots app store google play iphone android", ...set.shots.map((s) => s.name)],
+      uses: STORE_SET_USES,
+    })
+  );
 
 /**
  * Templates gallery: the store listing sets, each shown as the row of eight
  * screenshots a store page would show. Clicking a screenshot opens the set in
  * the editor on that shot.
  */
-export function StoreSetsSection() {
+export function StoreSetsSection({ filter, shots }: { filter: TemplateFilter; shots: MyShot[] }) {
   const [platform, setPlatform] = useState<StorePlatform>("ios");
   const spec = STORE_PLATFORMS[platform];
   const thumbW = platform === "ios" ? 112 : 136;
   const thumbH = Math.round((thumbW * spec.height) / spec.width);
+  const shown = storeSetMatches(filter);
+  // every set's eight shots rebuilt with your screenshots
+  const mine = useMemo(() => {
+    const out: Record<string, SceneDocument[]> = {};
+    if (!shots.length) return out;
+    for (const set of STORE_SETS) {
+      const filled = previewWithShots(buildStoreSet(set, platform).map((s) => s.scene), shots);
+      if (filled) out[set.slug] = filled;
+    }
+    return out;
+  }, [shots, platform]);
+  if (!shown.length) return null;
 
   return (
     <section id="store-sets" className="mt-16 scroll-mt-24" aria-labelledby="store-sets-title">
@@ -52,8 +77,9 @@ export function StoreSetsSection() {
       </div>
 
       <div className="mt-8 space-y-4">
-        {STORE_SETS.map((set) => {
-          const href = `/templates/sets/${set.slug}?device=${platform}`;
+        {shown.map((set) => {
+          const scenes = mine[set.slug];
+          const href = `/templates/sets/${set.slug}?device=${platform}${scenes ? "&mine=1" : ""}`;
           return (
             <article key={set.slug} className="overflow-hidden rounded-2xl border border-white/10 bg-[#101116]">
               <div className="grid lg:grid-cols-[250px_minmax(0,1fr)]">
@@ -84,15 +110,19 @@ export function StoreSetsSection() {
                         className="group block overflow-hidden rounded-[10px] ring-1 ring-white/10 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:ring-white/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                         style={{ width: thumbW, height: thumbH, background: set.cardBg }}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={`/store-sets/previews/${set.slug}-${platform}-${i + 1}.webp`}
-                          alt={`${set.name} screenshot ${i + 1}: ${shot.name}`}
-                          width={thumbW}
-                          height={thumbH}
-                          loading="lazy"
-                          className="h-full w-full object-cover"
-                        />
+                        {scenes?.[i] ? (
+                          <LiveScene scene={scenes[i]} label={`${set.name} screenshot ${i + 1} with your screenshot: ${shot.name}`} className="h-full w-full" />
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={`/store-sets/previews/${set.slug}-${platform}-${i + 1}.webp`}
+                            alt={`${set.name} screenshot ${i + 1}: ${shot.name}`}
+                            width={thumbW}
+                            height={thumbH}
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
+                        )}
                       </Link>
                     </li>
                   ))}

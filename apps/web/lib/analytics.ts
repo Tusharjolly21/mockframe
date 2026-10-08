@@ -1,5 +1,28 @@
 "use client";
 
+/*
+ * Funnel events (Google Analytics). Read them in order to see where people drop off:
+ *
+ *   editor_opened / editor_first_open   landed in the editor
+ *   starter_choice {choice}             picked a tile in "What do you want to make?"
+ *   first_media_added                   added their own screenshot
+ *   export_completed / first_export     exported an image or video
+ *   draft_resumed                       came back to an autosaved scene
+ *   template_shots_added {count, via}   previewed the template gallery with their own screenshots
+ *   template_opened_with_shots {template}   opened a template with those screenshots in it
+ *   pack_exported {screens, languages, layout}   exported a store screenshot pack
+ *   pack_translated {languages}         AI-translated a pack's captions
+ *   upgrade_viewed {reason}             saw the Pro modal, and what they reached for
+ *   upgrade_signin                      had to sign in before paying
+ *   checkout_started {plan}             pressed pay
+ *   checkout_opened / checkout_closed / checkout_failed {plan}   the payment overlay
+ *   checkout_pay_clicked {plan}         pressed pay inside the overlay
+ *   checkout_finished {plan}            the overlay is sending them back to the editor
+ *   purchase_confirmed / purchase_pending   Pro unlocked (or still waiting on the webhook)
+ *   purchase_cancelled                  came back from checkout without paying
+ *   api_key_created                     made an API key for the render API / MCP server
+ */
+
 type EventParams = Record<string, string | number | boolean | undefined>;
 type AnalyticsWindow = Window & {
   dataLayer?: unknown[];

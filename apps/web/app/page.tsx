@@ -6,11 +6,11 @@ import {
   Code,
   Globe,
   Images,
-  MessageSquareQuote,
   MessagesSquare,
   Plus,
   Rocket,
   Sparkles,
+  Video,
   type LucideIcon,
 } from "lucide-react";
 import { getDevice, listDevices } from "@framekit/devices";
@@ -113,10 +113,10 @@ const TOOLS: { href: string; icon: LucideIcon; name: string; body: string }[] = 
     body: "Syntax-highlighted code and diffs as clean cards, with your own background and ratio.",
   },
   {
-    href: "/tools/tweet-screenshot",
-    icon: MessageSquareQuote,
-    name: "X post images",
-    body: "Turn a post into a readable card, on its own or inside a device.",
+    href: "/screen-recorder",
+    icon: Video,
+    name: "Screen recorder",
+    body: "Record your screen and get smooth zooms wherever something happens, framed on a background.",
   },
 ];
 

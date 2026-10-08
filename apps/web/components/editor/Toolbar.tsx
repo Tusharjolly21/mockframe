@@ -7,6 +7,8 @@ import {
   ArrowDown,
   ArrowUp,
   Box,
+  CloudCheck,
+  CloudOff,
   Clapperboard,
   Palette,
   Copy,
@@ -29,7 +31,9 @@ import { AccountButton } from "@/components/AccountButton";
 import { BrandMark } from "@/components/marketing/BrandMark";
 import { BrandKitPanel } from "./BrandKitPanel";
 import { ingestFile, resolveAsset } from "@/lib/assets";
-import { useDraftsUi } from "@/lib/drafts";
+import { timeAgo, useDraftsUi } from "@/lib/drafts";
+import { shareSceneShots } from "@/lib/myShots";
+import { useShotBatchStore } from "@/lib/shotBatch";
 import { addAppIcon, addText, duplicateLayer, removeLayer, reorderLayer } from "@/lib/sceneOps";
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
 import { DraftsPanel } from "./DraftsPanel";
@@ -99,7 +103,7 @@ export function Toolbar() {
   };
 
   const MENU: { icon: React.ReactNode; label: string; hint: string; pro?: boolean; run: () => void }[] = [
-    { icon: <FolderOpen size={15} />, label: "Drafts", hint: "Open saved scenes (⌘S saves)", run: () => setMore("drafts") },
+    { icon: <FolderOpen size={15} />, label: "Drafts", hint: "Your scenes save automatically", run: () => setMore("drafts") },
     { icon: <PanelsTopLeft size={15} />, label: "Shot batch", hint: "Style many images, export one ZIP", run: () => setMore("batch") },
     { icon: <Palette size={15} />, label: "Brand kit", hint: "Your colours and logo everywhere", run: () => setMore("brand") },
     { icon: <Sparkles size={15} />, label: "Realistic render", hint: "Photo-real device shots", pro: true, run: () => { setMore(null); setRenderOpen(true); } },
@@ -112,6 +116,7 @@ export function Toolbar() {
   return (
     <>
     <div className="fk-card pointer-events-auto flex items-center gap-1 rounded-2xl px-2 py-1.5">
+      <SaveStatus onOpen={() => setMore("drafts")} />
       <IconButton title="Undo (⌘Z)" onClick={() => sceneTemporal.getState().undo()} disabled={!hist.canUndo}>
         <Undo2 size={16} />
       </IconButton>
@@ -230,6 +235,40 @@ export function Toolbar() {
   );
 }
 
+/** Quiet autosave indicator; appears once the canvas is a saved draft. */
+function SaveStatus({ onOpen }: { onOpen: () => void }) {
+  const { currentId, currentName, saveState, savedAt } = useDraftsUi();
+  // re-render every half minute so "2m ago" in the tooltip stays honest
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => tick((n) => n + 1), 30_000);
+    return () => clearInterval(t);
+  }, []);
+  if (!currentId || saveState === "idle") return null;
+  const failed = saveState === "error";
+  const label = failed ? "Not saved" : saveState === "saving" ? "Saving…" : "Saved";
+  const title = failed
+    ? "Couldn't autosave — browser storage is unavailable. Export to keep your work."
+    : `Autosaved to Drafts${currentName ? ` as “${currentName}”` : ""}${savedAt ? ` · ${timeAgo(savedAt)}` : ""}`;
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onOpen}
+        title={title}
+        aria-live="polite"
+        className={`fk-press flex h-9 items-center gap-1.5 rounded-xl px-2 text-[11.5px] font-medium ${
+          failed ? "text-red-600 hover:bg-red-50" : "text-[#8a8a96] hover:bg-[#17171c]/6 hover:text-[#17171c]"
+        }`}
+      >
+        {failed ? <CloudOff size={15} /> : <CloudCheck size={15} className={saveState === "saving" ? "animate-pulse" : undefined} />}
+        <span className="w-[52px] text-left">{label}</span>
+      </button>
+      <div className="mx-0.5 h-5 w-px bg-[#e4e4ec]" />
+    </>
+  );
+}
+
 export function LogoChip() {
   return (
     <div className="fk-card pointer-events-auto flex items-center gap-1 rounded-2xl px-2.5 py-1.5">
@@ -247,6 +286,11 @@ export function LogoChip() {
         href="/templates"
         target="_blank"
         rel="noopener"
+        // the gallery then previews every template with this scene's screenshots
+        onClick={() => {
+          const batch = useShotBatchStore.getState().shots.map((s) => s.scene);
+          void shareSceneShots([useSceneStore.getState().scene, ...batch]);
+        }}
         className="fk-press ml-0.5 rounded-lg px-2.5 py-1.5 text-[12.5px] font-semibold text-[#6b6b76] hover:bg-black/[0.06] hover:text-[#17171c]"
       >
         Templates

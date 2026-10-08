@@ -50,7 +50,7 @@ export async function exportPackZip(
   const slug = (pack.appName || "app").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "app";
   const a = document.createElement("a");
   a.href = URL.createObjectURL(zip);
-  a.download = `${slug}-screenshots.zip`;
+  a.download = `${slug}-${pack.exportLayout === "fastlane" ? "fastlane" : "screenshots"}.zip`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   return { failed };

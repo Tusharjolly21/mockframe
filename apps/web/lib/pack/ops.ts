@@ -1,3 +1,4 @@
+import { DEFAULT_SOURCE_STORE_LOCALE, isStoreLocale, MAX_PACK_LOCALES, SOURCE_LOCALE } from "./locales";
 import { createPackScreen, type PackDocument } from "./schema";
 
 /** Pure pack mutations — the zustand store wraps these; tests hit them directly. */
@@ -82,13 +83,85 @@ export function applyCaptions(
   };
 }
 
-export function setCaption(pack: PackDocument, screenId: string, title: string, subtitle: string): PackDocument {
+export function setCaption(
+  pack: PackDocument,
+  screenId: string,
+  title: string,
+  subtitle: string,
+  locale: string = SOURCE_LOCALE
+): PackDocument {
   return {
     ...pack,
     screens: pack.screens.map((s) =>
       s.id === screenId
-        ? { ...s, captions: { ...s.captions, en: { title, ...(subtitle.trim() ? { subtitle } : {}) } } }
+        ? { ...s, captions: { ...s.captions, [locale]: { title, ...(subtitle.trim() ? { subtitle } : {}) } } }
         : s
     ),
+  };
+}
+
+/** Add store languages (unknown ids and duplicates are ignored, capped at MAX_PACK_LOCALES). */
+export function addLocales(pack: PackDocument, ids: string[]): PackDocument {
+  const next = [...(pack.locales ?? [])];
+  for (const id of ids) {
+    if (id === SOURCE_LOCALE || id === packSourceLocale(pack) || !isStoreLocale(id) || next.includes(id)) continue;
+    if (next.length >= MAX_PACK_LOCALES) break;
+    next.push(id);
+  }
+  return { ...pack, locales: next };
+}
+
+/** The store locale the pack's source captions are written in. */
+export function packSourceLocale(pack: PackDocument): string {
+  return pack.sourceLocale && isStoreLocale(pack.sourceLocale) ? pack.sourceLocale : DEFAULT_SOURCE_STORE_LOCALE;
+}
+
+/** Set the source captions' language; it can't also be a translation target. */
+export function setSourceLocale(pack: PackDocument, id: string): PackDocument {
+  if (!isStoreLocale(id)) return pack;
+  return removeLocale({ ...pack, sourceLocale: id }, id);
+}
+
+/** Drop a language and its translated captions. */
+export function removeLocale(pack: PackDocument, id: string): PackDocument {
+  return {
+    ...pack,
+    locales: (pack.locales ?? []).filter((l) => l !== id),
+    screens: pack.screens.map((s) => {
+      if (!(id in s.captions) || id === SOURCE_LOCALE) return s;
+      const captions = { ...s.captions };
+      delete captions[id];
+      return { ...s, captions };
+    }),
+  };
+}
+
+/** Screens of `locale` that have no translated title yet. */
+export function missingTranslations(pack: PackDocument, locale: string): number {
+  return pack.screens.filter((s) => (s.captions[SOURCE_LOCALE]?.title.trim() ?? "") && !s.captions[locale]?.title.trim()).length;
+}
+
+/** Write translated captions for one language, screen by screen in order.
+ *  Screens whose source caption is empty stay untranslated. */
+export function applyTranslation(
+  pack: PackDocument,
+  locale: string,
+  captions: { title: string; subtitle?: string }[]
+): PackDocument {
+  if (locale === SOURCE_LOCALE) return pack;
+  return {
+    ...pack,
+    screens: pack.screens.map((s, i) => {
+      const t = captions[i];
+      if (!t || !s.captions[SOURCE_LOCALE]?.title.trim()) return s;
+      const subtitle = s.captions[SOURCE_LOCALE]?.subtitle?.trim() ? t.subtitle?.trim() : undefined;
+      return {
+        ...s,
+        captions: {
+          ...s.captions,
+          [locale]: { title: t.title.trim().slice(0, 120), ...(subtitle ? { subtitle: subtitle.slice(0, 160) } : {}) },
+        },
+      };
+    }),
   };
 }

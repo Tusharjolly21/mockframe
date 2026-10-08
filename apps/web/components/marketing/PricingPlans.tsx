@@ -37,8 +37,10 @@ const PRO_FEATURES = [
   "4K & 6K output",
   "Full-page website capture",
   "Custom-brand watermark",
-  "Saved templates in your account",
-  "Team library — share templates with your team",
+  "Store screenshots in 39 languages, AI-translated",
+  "Screen recordings with auto zoom, up to 4K",
+  "Saved templates & a shared team library",
+  "Render API + MCP server for Claude & Cursor",
 ];
 
 type Billing = "monthly" | "yearly";

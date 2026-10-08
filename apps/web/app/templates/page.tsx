@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ArrowUpRight, Crown, LayoutGrid, Link2, MonitorSmartphone, Smartphone, Sparkles, Store } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Crown, LayoutGrid, Link2, MonitorSmartphone, SearchX, Smartphone, Sparkles, Store } from "lucide-react";
 import {
   CARD_LOOKS,
   TEMPLATES,
@@ -16,15 +16,31 @@ import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
 import { SocialBrandIcon } from "@/components/SocialBrandIcon";
-import { StoreSetsSection } from "@/components/templates/StoreSetsSection";
-import { PremiumTemplatesSection } from "@/components/templates/PremiumTemplatesSection";
+import { StoreSetsSection, storeSetMatches } from "@/components/templates/StoreSetsSection";
+import { PremiumTemplatesSection, premiumMatches } from "@/components/templates/PremiumTemplatesSection";
+import { LiveScene } from "@/components/templates/LiveScene";
+import { TemplateFinder, useShots } from "@/components/templates/TemplateFinder";
+import { sceneTemplateWithShots } from "@/lib/myShots";
+import {
+  APP_SCREEN_USES,
+  CARD_USES,
+  isFiltering,
+  matchesTemplate,
+  NO_FILTER,
+  POST_USES,
+  SCENE_GROUP_USES,
+  type TemplateFilter,
+} from "@/lib/templateSearch";
 import { PREMIUM_TEMPLATES } from "@/lib/premiumTemplates";
 import { STORE_SETS } from "@/lib/storeSets";
 import { APP_SCREEN_TEMPLATES, APP_TEMPLATE_CATEGORIES, type AppTemplateCategory } from "@/lib/appScreenTemplates";
 import { encodeScreenAsset, resolveScreenAsset } from "@/lib/screens";
 
+const appScreenMatches = (filter: TemplateFilter) =>
+  APP_SCREEN_TEMPLATES.filter((t) => matchesTemplate(filter, { text: [t.label, t.blurb, t.category, t.app, "app screen phone"], uses: APP_SCREEN_USES[t.category] ?? [] }));
+
 /** "App screenshots": phone + editable app screen templates, filterable by kind. */
-function AppScreenTemplates() {
+function AppScreenTemplates({ filter }: { filter: TemplateFilter }) {
   const [cat, setCat] = useState<AppTemplateCategory | "All">("All");
   // rendered after mount: screen text is measured with the browser's fonts,
   // so a server render would differ and break hydration
@@ -32,7 +48,11 @@ function AppScreenTemplates() {
   useEffect(() => {
     setPreviews(Object.fromEntries(APP_SCREEN_TEMPLATES.map((t) => [t.slug, resolveScreenAsset(encodeScreenAsset(t.doc()))?.url ?? null])));
   }, []);
-  const shown = APP_SCREEN_TEMPLATES.filter((t) => cat === "All" || t.category === cat);
+  const matching = appScreenMatches(filter);
+  // a search can leave the picked kind empty: fall back to all of them
+  const kind = cat !== "All" && !matching.some((t) => t.category === cat) ? "All" : cat;
+  const shown = matching.filter((t) => kind === "All" || t.category === kind);
+  if (!matching.length) return null;
   return (
     <>
       <Reveal>
@@ -42,12 +62,12 @@ function AppScreenTemplates() {
             <h2 className="mt-1 text-[24px] font-semibold">Realistic app screens in real phones</h2>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {(["All", ...APP_TEMPLATE_CATEGORIES] as const).map((c) => (
+            {(["All", ...APP_TEMPLATE_CATEGORIES.filter((c) => matching.some((t) => t.category === c))] as const).map((c) => (
               <button
                 key={c}
                 type="button"
                 onClick={() => setCat(c)}
-                className={`rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors ${cat === c ? "bg-white text-zinc-950" : "bg-white/[0.06] text-zinc-400 hover:text-white"}`}
+                className={`rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors ${kind === c ? "bg-white text-zinc-950" : "bg-white/[0.06] text-zinc-400 hover:text-white"}`}
               >
                 {c}
               </button>
@@ -95,7 +115,43 @@ export default function TemplatesPage() {
   const groups = activeSceneGroups();
   const postTemplate = TEMPLATES.find((template) => template.slug === "post")!;
   const postPreview = templatePreviewUrl(postTemplate);
-  const tools = TEMPLATES.filter((template) => template.slug !== "post");
+  const [filter, setFilter] = useState<TemplateFilter>(NO_FILTER);
+  const shots = useShots();
+  const filtering = isFiltering(filter);
+
+  const showPost = matchesTemplate(filter, { text: [postTemplate.label, postTemplate.blurb, "x twitter bluesky threads linkedin mastodon tweet"], uses: POST_USES });
+  const tools = TEMPLATES.filter(
+    (t) => t.slug !== "post" && matchesTemplate(filter, { text: [t.label, t.blurb, "content card"], uses: CARD_USES[t.app ?? ""] ?? [] })
+  );
+  const shownGroups = groups.filter((g) =>
+    matchesTemplate(filter, {
+      text: [g.label, g.blurb, "device scene photoreal mockup", ...scenesInGroup(g.id).map((t) => t.label)],
+      uses: SCENE_GROUP_USES[g.id] ?? [],
+    })
+  );
+  // each device collection's card shows its first scene your screenshot fits
+  const groupScenes = useMemo(() => {
+    const out: Record<string, ReturnType<typeof sceneTemplateWithShots>> = {};
+    if (!shots.length) return out;
+    for (const g of activeSceneGroups()) {
+      for (const t of scenesInGroup(g.id)) {
+        const scene = sceneTemplateWithShots(t, shots);
+        if (scene) {
+          out[g.id] = scene;
+          break;
+        }
+      }
+    }
+    return out;
+  }, [shots]);
+  const nothing =
+    filtering &&
+    !premiumMatches(filter).length &&
+    !storeSetMatches(filter).length &&
+    !showPost &&
+    !appScreenMatches(filter).length &&
+    !tools.length &&
+    !shownGroups.length;
 
   const openPost = () => {
     const url = postUrl.trim();
@@ -146,11 +202,24 @@ export default function TemplatesPage() {
           </header>
         </Reveal>
 
-        <PremiumTemplatesSection />
+        <TemplateFinder filter={filter} onFilter={setFilter} />
 
-        <StoreSetsSection />
+        {nothing && (
+          <div className="mt-10 rounded-2xl border border-dashed border-white/10 px-6 py-16 text-center">
+            <SearchX size={26} className="mx-auto text-zinc-500" />
+            <p className="mt-3 text-[16px] font-semibold">No templates match{filter.query.trim() ? ` "${filter.query.trim()}"` : ""}</p>
+            <p className="mt-1 text-[13.5px] text-zinc-500">Try a shorter search, or look through everything.</p>
+            <button type="button" onClick={() => setFilter(NO_FILTER)} className="mt-5 rounded-full bg-white px-5 py-2 text-[13px] font-semibold text-zinc-950 hover:bg-zinc-200">
+              Show all templates
+            </button>
+          </div>
+        )}
 
-        <Reveal>
+        <PremiumTemplatesSection filter={filter} shots={shots} />
+
+        <StoreSetsSection filter={filter} shots={shots} />
+
+        {showPost && <Reveal>
           <section className="mt-8 overflow-hidden rounded-lg border border-white/10 bg-[#101116]">
             <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
               <div className="flex flex-col justify-center p-6 sm:p-9 lg:p-12">
@@ -207,10 +276,11 @@ export default function TemplatesPage() {
               </button>
             </div>
           </section>
-        </Reveal>
+        </Reveal>}
 
-        <AppScreenTemplates />
+        <AppScreenTemplates filter={filter} />
 
+        {tools.length > 0 && <>
         <Reveal>
           <div id="content-cards" className="mt-16 flex scroll-mt-24 flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
@@ -250,7 +320,9 @@ export default function TemplatesPage() {
             );
           })}
         </RevealGroup>
+        </>}
 
+        {shownGroups.length > 0 && <>
         <Reveal>
           <div id="device-scenes" className="mt-16 flex scroll-mt-24 items-end justify-between border-b border-white/10 pb-4">
             <div>
@@ -261,14 +333,17 @@ export default function TemplatesPage() {
           </div>
         </Reveal>
         <RevealGroup className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {groups.map((group) => {
+          {shownGroups.map((group) => {
             const previewUrl = groupPreviewUrl(group.id);
+            const mine = groupScenes[group.id];
             const count = scenesInGroup(group.id).length;
             return (
               <RevealItem key={group.id}>
                 <Link href={`/templates/collection/${group.id}`} className="group block overflow-hidden rounded-lg border border-white/10 bg-[#101116] transition-colors hover:border-white/25">
                   <div className="flex h-60 items-center justify-center overflow-hidden p-7" style={{ background: `radial-gradient(circle at 50% 22%, ${group.accent}38, #111218 72%)` }}>
-                    {previewUrl && (
+                    {mine ? (
+                      <LiveScene scene={mine} label={`${group.label} mockup with your screenshot`} className="h-full w-[82%] drop-shadow-[0_18px_28px_rgba(0,0,0,.5)] transition-transform duration-300 group-hover:scale-[1.025]" />
+                    ) : previewUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={previewUrl} alt={group.label} className="max-h-full max-w-[82%] object-contain drop-shadow-[0_18px_28px_rgba(0,0,0,.5)] transition-transform duration-300 group-hover:scale-[1.025]" />
                     )}
@@ -285,6 +360,7 @@ export default function TemplatesPage() {
             );
           })}
         </RevealGroup>
+        </>}
       </section>
 
       <MarketingFooter />
