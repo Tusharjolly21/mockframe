@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { Crown } from "lucide-react";
 import type { SceneDocument } from "@framekit/scene";
 import { LiveScene } from "@/components/templates/LiveScene";
 import { previewWithShots } from "@/lib/myShots";
@@ -88,6 +89,9 @@ export function StoreSetsSection({ filter, shots }: { filter: TemplateFilter; sh
                     <div className="flex items-center gap-2.5">
                       <span aria-hidden className="h-7 w-7 rounded-[9px] ring-1 ring-white/15" style={{ background: set.cardBg }} />
                       <h3 className="text-[19px] font-semibold tracking-[-0.02em]">{set.name}</h3>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-500 px-2 py-0.5 text-[11px] font-semibold text-white">
+                        <Crown size={11} /> Pro
+                      </span>
                     </div>
                     <p className="mt-1 text-[12.5px] text-zinc-500">A sample {set.kind.toLowerCase()} app</p>
                     <p className="mt-3 text-[13.5px] leading-relaxed text-zinc-400">{set.blurb}</p>

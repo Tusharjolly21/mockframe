@@ -87,3 +87,15 @@ describe("templates with your screenshots", () => {
     expect(fillScenes([scene], [phone(1)], sizeOf).filled).toBe(0);
   });
 });
+
+describe("store sets are Pro", () => {
+  it("flags every shot of every set and platform as a Pro template", () => {
+    for (const set of STORE_SETS) {
+      for (const platform of ["ios", "android"] as const) {
+        for (const { scene } of buildStoreSet(set, platform)) {
+          expect(scene.template?.pro).toBe(true);
+        }
+      }
+    }
+  });
+});
