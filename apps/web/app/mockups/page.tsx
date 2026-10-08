@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import { listDevices, previewDataUri } from "@framekit/devices";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
-import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
-import { CATEGORY_META, CATEGORY_ORDER, SITE_URL, cleanDeviceName, socialMeta } from "@/lib/site";
+import { MockupsBrowser, type MockupItem } from "@/components/marketing/MockupsBrowser";
+import { Reveal } from "@/components/marketing/Reveal";
+import { SITE_URL, cleanDeviceName, socialMeta } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Device Mockup Generators",
@@ -17,11 +16,16 @@ export const metadata: Metadata = {
 export default function MockupsIndexPage() {
   const devices = listDevices();
   const total = devices.length;
-  const groups = CATEGORY_ORDER.map((cat) => ({
-    cat,
-    meta: CATEGORY_META[cat],
-    items: devices.filter((d) => d.category === cat),
-  })).filter((g) => g.items.length > 0);
+  const items: MockupItem[] = devices.map((d) => ({
+    id: d.id,
+    name: d.name,
+    title: cleanDeviceName(d),
+    category: d.category,
+    brand: d.brand,
+    photo: !!d.plate,
+    preview: previewDataUri(d),
+    screen: [d.screen.width, d.screen.height],
+  }));
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -54,54 +58,7 @@ export default function MockupsIndexPage() {
         </p>
       </Reveal>
 
-      <div className="mx-auto max-w-6xl px-6 pb-20">
-        {groups.map((g) => (
-          <section key={g.cat} id={g.cat} className="scroll-mt-24 pt-10">
-            <Reveal>
-              <div className="flex items-baseline justify-between">
-                <h2 className="text-[22px] font-medium tracking-[-0.02em] sm:text-[26px]">{g.meta.label}</h2>
-                <span className="text-[13px] font-medium text-zinc-500">
-                  {g.items.length} device{g.items.length === 1 ? "" : "s"}
-                </span>
-              </div>
-              <p className="mt-1 max-w-xl text-[13.5px] leading-relaxed text-zinc-500">{g.meta.blurb}</p>
-            </Reveal>
-
-            <RevealGroup className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {g.items.map((d) => (
-                <RevealItem key={d.id}>
-                  <Link
-                    href={`/mockups/${d.id}`}
-                    className="group flex h-full flex-col overflow-hidden rounded-[20px] border border-white/[0.08] bg-white/[0.02] transition-colors hover:border-white/20"
-                  >
-                    <div
-                      className="flex h-44 items-center justify-center overflow-hidden p-6"
-                      style={{ background: "radial-gradient(120% 90% at 50% 0%, rgba(124,58,237,0.12), transparent 70%)" }}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={previewDataUri(d)}
-                        alt={`${cleanDeviceName(d)} mockup`}
-                        className="drop-shadow-[0_12px_28px_rgba(0,0,0,0.55)]"
-                        style={{ maxHeight: "100%", maxWidth: "74%", width: "auto", objectFit: "contain" }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between border-t border-white/[0.06] p-3.5">
-                      <div className="min-w-0">
-                        <div className="truncate text-[13.5px] font-semibold text-white">{cleanDeviceName(d)}</div>
-                        <div className="text-[11.5px] text-zinc-500">
-                          {d.screen.width} × {d.screen.height}
-                        </div>
-                      </div>
-                      <ArrowUpRight size={15} className="shrink-0 text-zinc-600 transition-colors group-hover:text-white" />
-                    </div>
-                  </Link>
-                </RevealItem>
-              ))}
-            </RevealGroup>
-          </section>
-        ))}
-      </div>
+      <MockupsBrowser items={items} />
 
       <MarketingFooter />
     </main>

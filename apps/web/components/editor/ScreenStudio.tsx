@@ -28,7 +28,8 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Bell, CalendarDays, Code2, FileText, Heart, ImageIcon, ImagePlus, LayoutGrid, Link2, MessagesSquare, Mic, Paperclip, Phone, Quote, Search, Shuffle, Slack, SmilePlus, Sparkles, Trash2, X, Store } from "lucide-react";
 import type { MockupLayer } from "@framekit/scene";
-import { getDevice, listDevices } from "@framekit/devices";
+import { filterDevices, getDevice, listDevices, type DeviceFilter } from "@framekit/devices";
+import { DeviceFilterBar } from "@/components/DeviceFilterBar";
 import { ingestFile, resolveAsset } from "@/lib/assets";
 import {
   AI_MODEL_LABELS,
@@ -3457,6 +3458,11 @@ export const PROMO_FORMATS: { id: string; label: string; hint: string; width: nu
 
 function AppStorePromoFields({ doc, setDoc, applyFormat }: { doc: AppStorePromoDoc; setDoc: (d: ScreenDoc) => void; applyFormat: (d: AppStorePromoDoc) => void }) {
   const phoneDevices = listDevices().filter(d => d.category === "phone");
+  const [phoneFilter, setPhoneFilter] = useState<DeviceFilter>({});
+  const shownPhones = filterDevices(phoneDevices, phoneFilter);
+  // the chosen phone stays in the list even if the filter would hide it
+  const currentPhone = phoneDevices.find((d) => d.id === (doc.deviceId || "iphone-17-pro"));
+  const phoneOptions = currentPhone && !shownPhones.includes(currentPhone) ? [currentPhone, ...shownPhones] : shownPhones;
   const showcase = doc.showcase ?? "app";
   const showApp = showcase !== "web";
   const showWeb = showcase !== "app";
@@ -3575,12 +3581,15 @@ function AppStorePromoFields({ doc, setDoc, applyFormat }: { doc: AppStorePromoD
         <div className={showWeb ? "mt-1 border-t border-[#eeeef3] pt-3" : "mt-4"}>
           {showWeb && <span className="mb-1.5 block text-xs font-semibold text-[#6b6b76]">App</span>}
           <label className="block text-xs text-[#6b6b76] mb-1">Phone</label>
+          <div className="mb-2">
+            <DeviceFilterBar devices={phoneDevices} filter={phoneFilter} onChange={setPhoneFilter} tone="light" compact facets={["brand", "model", "style"]} />
+          </div>
           <select
             value={doc.deviceId || "iphone-17-pro"}
             onChange={(e) => setDoc({ ...doc, deviceId: e.target.value })}
             className="w-full bg-white border border-[#e4e4ec] rounded-lg px-2.5 py-1.5 text-xs text-[#17171c] focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            {phoneDevices.map(d => (
+            {phoneOptions.map(d => (
               <option key={d.id} value={d.id}>
                 {d.name}
               </option>
