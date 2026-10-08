@@ -76,6 +76,8 @@ export function deviceModel(device: { name: string }): string {
   if (/^MacBook (Air|Pro)\b/.test(base)) return base.match(/^MacBook (Air|Pro)/)![0];
   if (/^iPad (Pro|Air|Mini)\b/i.test(base)) return base.match(/^iPad (Pro|Air|Mini)/i)![0].replace(/mini/i, "Mini");
   if (/^Apple Watch Ultra\b/.test(base)) return "Apple Watch Ultra";
+  // the stone and podium scenes show an iPhone without naming a model
+  if (base === "iPhone") return "iPhone scenes";
   return base.replace(/\s*\d+(\.\d+)?″$/, "").trim();
 }
 
@@ -121,7 +123,7 @@ export function facetOptions(devices: FilterableDevice[], filter: DeviceFilter, 
   if (facet === "type") options.sort((a, b) => TYPE_ORDER.indexOf(a.value) - TYPE_ORDER.indexOf(b.value));
   else if (facet === "style") options.sort((a, b) => (a.value === "photo" ? -1 : 1) - (b.value === "photo" ? -1 : 1));
   else if (facet === "brand") options.sort((a, b) => b.count - a.count);
-  else options.sort((a, b) => collator.compare(b.value, a.value)); // newest model first
+  else options.sort((a, b) => Number(a.value.endsWith(" scenes")) - Number(b.value.endsWith(" scenes")) || collator.compare(b.value, a.value)); // newest model first, unnamed-model scenes last
   return options;
 }
 

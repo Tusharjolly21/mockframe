@@ -12,7 +12,12 @@ screen opening, and a `Highlights` glare layer. For each PSD we
      renders behind the plate and the glare sits on top of it,
   4. write plate.webp + screen-mask.png + template.json (quad, screen size).
 
-Usage: extract_mockups_design.py <psd> <out_dir> [--scale 1.0]
+Pass --cutout for PSDs whose top-level `Background` is a fill layer: the plate is
+then written with a transparent backdrop (the contact shadow kept as soft black
+alpha) so the editor's Style backgrounds show behind the device. The original
+backdrop colour goes to template.json as `backdrop`.
+
+Usage: extract_mockups_design.py <psd> <out_dir> [--scale 1.0] [--cutout]
        extract_mockups_design.py --thumb-only <out_dir>   (rewrite thumb.webp from plate.webp)
 Source PSDs are read-only and are never copied into the repo.
 """
@@ -111,14 +116,37 @@ def full_canvas(img: Image.Image, bbox, size, mode):
     return out
 
 
-def write_thumb(out: Path):
-    """800px picker thumbnail (the 4000px plate is far too heavy for a grid tile)."""
+def write_thumb(out: Path, backdrop: str | None = None):
+    """800px picker thumbnail (the 4000px plate is far too heavy for a grid tile).
+
+    A cut-out plate is flattened onto its original backdrop colour so the tile
+    shows the finished scene.
+    """
     plate = Image.open(out / "plate.webp").convert("RGBA")
     k = 800 / plate.width
-    plate.resize((800, round(plate.height * k)), Image.LANCZOS).save(out / "thumb.webp", quality=82, method=6)
+    thumb = plate.resize((800, round(plate.height * k)), Image.LANCZOS)
+    if backdrop is None and (out / "template.json").exists():
+        backdrop = json.loads((out / "template.json").read_text()).get("backdrop")
+    if backdrop:
+        flat = Image.new("RGBA", thumb.size, backdrop)
+        flat.alpha_composite(thumb)
+        thumb = flat
+    thumb.save(out / "thumb.webp", quality=82, method=6)
 
 
-def extract(psd_path: Path, out: Path, scale: float, index: int = 0):
+def cutout_layers(psd):
+    """Top-level backdrop fills and shadow layers (empty lists when the PSD has none)."""
+    top = [l for l in psd if l.kind != "group"]
+    bg = [l for l in top if l.name.strip().lower().startswith("background")]
+    shadows = [l for l in top if l.name.strip().lower().startswith("shadow")]
+    return bg, shadows
+
+
+def render(psd):
+    return np.asarray(psd.composite(force=True).convert("RGBA"), dtype=np.float32) / 255.0
+
+
+def extract(psd_path: Path, out: Path, scale: float, index: int = 0, cutout: bool = False):
     psd = PSDImage.open(psd_path)
     w, h = psd.size
     screen_so = find_screen(psd, index)
@@ -160,14 +188,41 @@ def extract(psd_path: Path, out: Path, scale: float, index: int = 0):
         layer.visible = False
     for layer in glare_layers:
         layer.visible = False
-    base = np.asarray(psd.composite(force=True).convert("RGB"), dtype=np.float32) / 255.0
+    backdrop = None
+    if cutout:
+        bg_layers, shadow_layers = cutout_layers(psd)
+        if not bg_layers:
+            raise SystemExit(f"{psd_path.name}: no top-level Background fill to cut out")
+        # A = backdrop only, B = backdrop + shadows: B / A is how much the shadows darken it
+        for l in shadow_layers:
+            l.visible = False
+        only_bg = render(psd)[..., :3]
+        for l in shadow_layers:
+            l.visible = True
+        with_shadow = render(psd)[..., :3]
+        for l in shadow_layers:
+            l.visible = False
+        # the subject alone: backdrop hidden, shadows hidden
+        for l in bg_layers:
+            l.visible = False
+        subject = render(psd)
+        backdrop = "#%02x%02x%02x" % tuple(int(round(float(c) * 255)) for c in only_bg[8, 8])
+        shade = np.clip(1.0 - (with_shadow / np.maximum(only_bg, 1e-3)).mean(axis=2), 0.0, 1.0)
+        a_sub = subject[..., 3]
+        # the shadow only counts where the subject does not already cover it
+        alpha_all = a_sub + (1.0 - a_sub) * shade
+        base_premult = subject[..., :3] * a_sub[..., None]
+        base_alpha = alpha_all[..., None]
+    else:
+        base_premult = np.asarray(psd.composite(force=True).convert("RGB"), dtype=np.float32) / 255.0
+        base_alpha = np.ones((h, w, 1), np.float32)
 
     # inside the screen the plate is just the glare film: white at alpha = glare
     film_a = glare.max(axis=2)
     film_rgb = np.where(film_a[..., None] > 1e-4, glare / np.maximum(film_a[..., None], 1e-4), 1.0)
     s = screen[..., None]
-    alpha = (1.0 - s) + s * film_a[..., None]
-    premult = base * (1.0 - s) + film_rgb * film_a[..., None] * s
+    alpha = base_alpha * (1.0 - s) + s * film_a[..., None]
+    premult = base_premult * (1.0 - s) + film_rgb * film_a[..., None] * s
     rgb = np.where(alpha > 1e-4, premult / np.maximum(alpha, 1e-4), 0.0)
     plate = np.dstack([np.clip(rgb, 0, 1), np.clip(alpha, 0, 1)])
     plate_img = Image.fromarray((plate * 255 + 0.5).astype(np.uint8), "RGBA")
@@ -185,7 +240,7 @@ def extract(psd_path: Path, out: Path, scale: float, index: int = 0):
     out.mkdir(parents=True, exist_ok=True)
     plate_img.save(out / "plate.webp", quality=92, method=6, exact=True)
     mask_img.save(out / "screen-mask.png", optimize=True)
-    write_thumb(out)
+    write_thumb(out, backdrop)
     (out / "template.json").write_text(
         json.dumps(
             {
@@ -193,6 +248,7 @@ def extract(psd_path: Path, out: Path, scale: float, index: int = 0):
                 "plate": {"width": w, "height": h},
                 "quad": quad,
                 "screen": {"width": screen_size[0], "height": screen_size[1]},
+                **({"backdrop": backdrop} if backdrop else {}),
             },
             indent=2,
         )
@@ -207,9 +263,10 @@ if __name__ == "__main__":
     ap.add_argument("out", type=Path, nargs="?")
     ap.add_argument("--scale", type=float, default=1.0)
     ap.add_argument("--thumb-only", action="store_true")
+    ap.add_argument("--cutout", action="store_true", help="write a transparent backdrop (see above)")
     ap.add_argument("--screen", type=int, default=0, help="which root-level screen to cut out (left to right)")
     a = ap.parse_args()
     if a.thumb_only:
         write_thumb(a.psd)  # the single positional is the output directory
     else:
-        extract(a.psd, a.out, a.scale, a.screen)
+        extract(a.psd, a.out, a.scale, a.screen, a.cutout)

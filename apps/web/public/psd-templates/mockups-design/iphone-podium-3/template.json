@@ -25,5 +25,6 @@
   "screen": {
     "width": 1179,
     "height": 2556
-  }
+  },
+  "backdrop": "#edeff0"
 }

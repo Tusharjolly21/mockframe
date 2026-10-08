@@ -242,7 +242,9 @@ function makeSceneDeviceScene(deviceId: string): SceneDocument {
   const scene = createScene({
     width,
     height,
-    background: { type: "linear-gradient", angle: 145, stops: [{ at: 0, color: "#eef1f6" }, { at: 1, color: "#d6dbe6" }] },
+    background: plate?.backdrop
+      ? { type: "solid", color: plate.backdrop }
+      : { type: "linear-gradient", angle: 145, stops: [{ at: 0, color: "#eef1f6" }, { at: 1, color: "#d6dbe6" }] },
   });
   // scale so the device fills ~82% of the canvas height, centered with margin
   const layer = createMockupLayer({ deviceId, media: null });
