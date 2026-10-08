@@ -36,7 +36,8 @@ import { DEFAULT_RECORD_OPTIONS, RecordSetup, type RecordOptions } from "./Recor
 import { RecorderShortcuts } from "./RecorderShortcuts";
 import { Timeline, typingId, type Selection } from "./Timeline";
 
-const PREVIEW_LONG = 1280;
+/** the preview's long side in canvas pixels: sharp on high-density screens, capped to keep playback smooth */
+const previewLong = () => (typeof window === "undefined" ? 1280 : Math.round(Math.min(2560, Math.max(1280, window.innerWidth * 0.8 * (window.devicePixelRatio || 1)))));
 const PREVIEW_FPS = 30;
 const PREFS_KEY = "mockframe.recorder.v2";
 
@@ -68,6 +69,10 @@ function loadPrefs(): Partial<Prefs> {
     return {};
   }
 }
+
+/** A fresh recording starts plain and silent (see `open`). */
+const FRESH_CURSOR: Partial<CursorSettings> = { style: "original", clickEffect: "none", highlight: "none", motionBlur: false };
+const FRESH_SOUND: Partial<SoundSettings> = { click: "none", typing: "none", zoom: "none", music: "none" };
 
 const emptyTrack = (rec: Recording): CursorTrack => ({ points: [], shapes: [], res: { w: rec.width, h: rec.height }, w: 0.01, h: 0.016 });
 
@@ -282,6 +287,14 @@ export function RecorderStudio() {
         return next;
       });
       history.current = { undo: [], redo: [], base: null };
+      // every new recording opens clean: the screen as recorded with the camera
+      // zooming and following along, silent, no effects. Sounds, music and cursor
+      // styles are one click away in the panel.
+      setCursor((c) => ({ ...c, ...FRESH_CURSOR }));
+      setSound((s) => ({ ...s, ...FRESH_SOUND }));
+      setStyle((st) => ({ ...st, motionBlur: false }));
+      // a sharp screen gets a sharp export: zoomed-in shots keep their detail
+      setQuality(next.width >= 2560 ? 2560 : 1920);
       editsRef.current = NO_EDITS;
       setEditsState(NO_EDITS);
       setSelected(null);
@@ -296,7 +309,7 @@ export function RecorderStudio() {
       const a = await analyzeRecording(next, (f) => setBusy(`Finding your cursor, clicks and typing… ${Math.round(f * 100)}%`));
       setCursorTrack(a.cursor);
       setActivity(a.activity);
-      const zooms = detectZooms(a.activity, next.durationMs, { clicks: a.clicks, typing: a.typing });
+      const zooms = detectZooms(a.activity, next.durationMs, { clicks: a.clicks, typing: a.typing, follow: !!a.cursor });
       editsRef.current = { zooms, clicks: a.clicks, typing: a.typing };
       setEditsState(editsRef.current);
       track("recorder_auto_zoom", { zooms: zooms.length, clicks: a.clicks.length, typing: a.typing.length, cursor: !!a.cursor });
@@ -421,7 +434,14 @@ export function RecorderStudio() {
   const player = () => (playerRef.current ??= new LiveSoundPlayer());
   useEffect(() => () => playerRef.current?.dispose(), []);
 
-  const size = useMemo(() => canvasSize(style.aspect, PREVIEW_LONG), [style.aspect]);
+  const [long, setLong] = useState(1280);
+  useEffect(() => {
+    const fit = () => setLong(previewLong());
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, []);
+  const size = useMemo(() => canvasSize(style.aspect, Math.round(long / 160) * 160), [style.aspect, long]);
   const dur = rec?.durationMs ?? 0;
   const ctrack = useMemo(() => (rec ? (cursorTrack ?? emptyTrack(rec)) : null), [rec, cursorTrack]);
   const custom = cursor.style !== "original" && !!cursorTrack;
@@ -454,6 +474,7 @@ export function RecorderStudio() {
       .finally(() => live && setMusicLoading(false));
     return () => {
       live = false;
+      setMusicLoading(false);
     };
   }, [sound.music]);
 

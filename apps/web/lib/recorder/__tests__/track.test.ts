@@ -6,7 +6,10 @@ const W = 640;
 const H = 360;
 
 function run(frames: { t: number; gray: Uint8Array }[], durationMs: number) {
+  // as the studio does it: learn the cursor's look first, then follow it
   const a = new RecordingAnalyzer(W, H, durationMs);
+  for (const f of frames) a.learn(f.gray, f.t);
+  a.startTracking();
   for (const f of frames) a.push(f.gray, f.t);
   return a.finish();
 }

@@ -291,22 +291,145 @@ export async function analyzeRecording(rec: Recording, onProgress?: (fraction: n
   scratch.height = plan.h;
   const sctx = scratch.getContext("2d", { willReadFrequently: true })!;
   const gray = new Uint8Array(plan.w * plan.h);
-  let i = 0;
   let lastYield = performance.now();
-  for await (const wrapped of sink.canvasesAtTimestamps(times)) {
-    const t = times[i++] * 1000;
-    if (!wrapped) continue;
-    sctx.drawImage(wrapped.canvas as CanvasImageSource, 0, 0, plan.w, plan.h);
-    analyzer.push(toGray(sctx.getImageData(0, 0, plan.w, plan.h).data, gray), Math.round(t));
-    if (i % 15 === 0) onProgress?.(i / times.length);
+  const breathe = async () => {
     // let the page breathe on long recordings
     if (performance.now() - lastYield > 120) {
       await new Promise((r) => setTimeout(r, 0));
       lastYield = performance.now();
     }
+  };
+  // two passes over the frames: first learn what the cursor looks like, then
+  // follow it. The first pass keeps what changed from frame to frame, so the
+  // second doesn't have to decode the video again (unless that grows too big).
+  const cache = new FrameCache(plan.w, plan.h);
+  let i = 0;
+  for await (const wrapped of sink.canvasesAtTimestamps(times)) {
+    const t = Math.round(times[i++] * 1000);
+    if (!wrapped) continue;
+    sctx.drawImage(wrapped.canvas as CanvasImageSource, 0, 0, plan.w, plan.h);
+    const g = toGray(sctx.getImageData(0, 0, plan.w, plan.h).data, gray);
+    analyzer.learn(g, t);
+    cache.add(g, t);
+    if (i % 15 === 0) onProgress?.((0.55 * i) / times.length);
+    await breathe();
+  }
+  analyzer.startTracking();
+  i = 0;
+  if (cache.ok) {
+    for (const [g, t] of cache.replay()) {
+      analyzer.push(g, t);
+      if (++i % 30 === 0) onProgress?.(0.55 + (0.45 * i) / cache.length);
+      await breathe();
+    }
+  } else {
+    for await (const wrapped of sink.canvasesAtTimestamps(times)) {
+      const t = Math.round(times[i++] * 1000);
+      if (!wrapped) continue;
+      sctx.drawImage(wrapped.canvas as CanvasImageSource, 0, 0, plan.w, plan.h);
+      analyzer.push(toGray(sctx.getImageData(0, 0, plan.w, plan.h).data, gray), t);
+      if (i % 15 === 0) onProgress?.(0.55 + (0.45 * i) / times.length);
+      await breathe();
+    }
   }
   onProgress?.(1);
   return analyzer.finish();
+}
+
+const CACHE_TILE = 32;
+const CACHE_MAX_BYTES = 384 * 1024 * 1024;
+
+/**
+ * Grayscale frames kept as the tiles that changed since the frame before.
+ * Screen recordings mostly change in small places, so this stays small; it
+ * gives up (ok = false) past CACHE_MAX_BYTES, after a lot of scrolling say.
+ */
+export class FrameCache {
+  private frames: { t: number; tiles: Uint32Array; data: Uint8Array }[] = [];
+  private last: Uint8Array;
+  private bytes = 0;
+  private readonly cols: number;
+  private readonly rows: number;
+  ok = true;
+
+  constructor(
+    private w: number,
+    private h: number
+  ) {
+    this.last = new Uint8Array(w * h);
+    this.cols = Math.ceil(w / CACHE_TILE);
+    this.rows = Math.ceil(h / CACHE_TILE);
+  }
+
+  get length() {
+    return this.frames.length;
+  }
+
+  add(gray: Uint8Array, t: number) {
+    if (!this.ok) return;
+    const { w, h, last } = this;
+    const changed: number[] = [];
+    let size = 0;
+    for (let ty = 0; ty < this.rows; ty++) {
+      const y0 = ty * CACHE_TILE;
+      const y1 = Math.min(h, y0 + CACHE_TILE);
+      for (let tx = 0; tx < this.cols; tx++) {
+        const x0 = tx * CACHE_TILE;
+        const x1 = Math.min(w, x0 + CACHE_TILE);
+        let diff = !this.frames.length;
+        for (let y = y0; y < y1 && !diff; y++) {
+          for (let k = y * w + x0, e = y * w + x1; k < e; k++) {
+            if (gray[k] !== last[k]) {
+              diff = true;
+              break;
+            }
+          }
+        }
+        if (diff) {
+          changed.push(ty * this.cols + tx);
+          size += (x1 - x0) * (y1 - y0);
+        }
+      }
+    }
+    const data = new Uint8Array(size);
+    let o = 0;
+    for (const tile of changed) {
+      const { x0, x1, y0, y1 } = this.tile(tile);
+      for (let y = y0; y < y1; y++) {
+        data.set(gray.subarray(y * w + x0, y * w + x1), o);
+        last.set(gray.subarray(y * w + x0, y * w + x1), y * w + x0);
+        o += x1 - x0;
+      }
+    }
+    this.frames.push({ t, tiles: Uint32Array.from(changed), data });
+    this.bytes += size + changed.length * 4 + 32;
+    if (this.bytes > CACHE_MAX_BYTES) {
+      this.ok = false;
+      this.frames = [];
+    }
+  }
+
+  private tile(i: number) {
+    const x0 = (i % this.cols) * CACHE_TILE;
+    const y0 = Math.floor(i / this.cols) * CACHE_TILE;
+    return { x0, y0, x1: Math.min(this.w, x0 + CACHE_TILE), y1: Math.min(this.h, y0 + CACHE_TILE) };
+  }
+
+  /** The frames again, in order. The buffer is reused: copy it to keep it. */
+  *replay(): Generator<[Uint8Array, number]> {
+    const buf = new Uint8Array(this.w * this.h);
+    for (const f of this.frames) {
+      let o = 0;
+      for (const tile of f.tiles) {
+        const { x0, x1, y0, y1 } = this.tile(tile);
+        for (let y = y0; y < y1; y++) {
+          buf.set(f.data.subarray(o, o + x1 - x0), y * this.w + x0);
+          o += x1 - x0;
+        }
+      }
+      yield [buf, f.t];
+    }
+  }
 }
 
 /** Fetches single frames of a recording on demand (for the cursor eraser's clean plate). */
