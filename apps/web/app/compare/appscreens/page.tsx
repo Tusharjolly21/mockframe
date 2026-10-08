@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { socialMeta } from "@/lib/site";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const metadata: Metadata = {
   title: "AppScreens Alternative: Free Store Screenshots",
@@ -211,7 +212,7 @@ export default function AppScreensComparePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: safeJsonLd({
             "@context": "https://schema.org",
             "@type": "FAQPage",
             mainEntity: FAQ.map((f) => ({

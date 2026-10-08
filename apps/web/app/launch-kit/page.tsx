@@ -4,6 +4,7 @@ import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { LaunchKitWizard } from "@/components/launchkit/LaunchKitWizard";
 import { SITE_NAME, SITE_URL, socialMeta } from "@/lib/site";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const metadata: Metadata = {
   title: "App Launch Kit Generator",
@@ -60,7 +61,7 @@ export default function LaunchKitPage() {
   return (
     <main className="min-h-dvh bg-[#09090b] text-white">
       <MarketingNav />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
 
       <header className="relative overflow-hidden">
         <div aria-hidden className="pointer-events-none absolute left-1/2 top-0 h-[480px] w-[1000px] -translate-x-1/2" style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.18), transparent 70%)" }} />

@@ -7,6 +7,7 @@ import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { getGuide, GUIDES } from "@/lib/guides";
 import { metaDescription, SITE_NAME, SITE_URL, socialMeta } from "@/lib/site";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export function generateStaticParams() {
   return GUIDES.map(({ slug }) => ({ slug }));
@@ -60,7 +61,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   return (
     <main className="min-h-dvh bg-[#09090b] text-white">
       <MarketingNav />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
 
       {/* hero */}
       <header className="relative overflow-hidden">

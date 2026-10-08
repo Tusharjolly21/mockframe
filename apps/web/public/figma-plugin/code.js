@@ -65,7 +65,9 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({ type: "error", text: e instanceof Error ? e.message : String(e) });
     }
   } else if (msg.type === "open") {
-    figma.openExternal(msg.url);
+    // only ever open our own site, whatever the UI frame asks for
+    var target = typeof msg.url === "string" ? msg.url : "";
+    if (/^https:\/\/(www\.)?mockframe\.app(\/|$)/.test(target)) figma.openExternal(target);
   } else if (msg.type === "notify") {
     figma.notify(msg.text);
   } else if (msg.type === "save-prefs") {

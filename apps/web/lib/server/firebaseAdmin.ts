@@ -35,6 +35,10 @@ export function firebaseSetupHint(): string {
 
 export function firebaseErrorPayload(err: unknown): { error: string; code?: string; message?: string } {
   const anyErr = err as { code?: unknown; message?: unknown };
+  // Firestore/Admin messages can carry project ids, collection paths and console index URLs:
+  // keep them in the server log and show them to the caller only while developing.
+  console.error("[firebase]", err);
+  if (process.env.NODE_ENV === "production") return { error: "Firebase request failed" };
   return {
     error: "Firebase request failed",
     code: typeof anyErr?.code === "string" ? anyErr.code : undefined,

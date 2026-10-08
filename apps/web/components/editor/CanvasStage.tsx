@@ -60,7 +60,8 @@ export function CanvasStage() {
     const INSET_BOTTOM = hasStrip ? 196 : 84;
     const innerW = el.clientWidth - INSET_X * 2;
     const innerH = el.clientHeight - INSET_TOP - INSET_BOTTOM;
-    const z = Math.min(innerW / scene.canvas.width, innerH / scene.canvas.height);
+    // a window narrower than both panels leaves a negative inner width: never mirror or hide the canvas
+    const z = Math.max(0.05, Math.min(innerW / scene.canvas.width, innerH / scene.canvas.height));
     setZoom(z);
     setPan({
       x: INSET_X + (innerW - scene.canvas.width * z) / 2,
@@ -314,22 +315,32 @@ export function CanvasStage() {
       setDragging(false);
       sceneTemporal.getState().resume();
       if (finished) {
+        // a plain click (pointer down and up with nothing changed) must not write: it would push an undo
+        // entry, spin up an autosave draft and dismiss the "resume your draft" card
         if (finished.kind === "move") {
-          setScene((s) => ({
-            ...s,
-            layers: s.layers.map((l) => finished.starts[l.id]
-              ? { ...l, transform: { ...l.transform, x: finished.starts[l.id].x + finished.currentX, y: finished.starts[l.id].y + finished.currentY } }
-              : l),
-          }));
+          if (finished.currentX !== 0 || finished.currentY !== 0) {
+            setScene((s) => ({
+              ...s,
+              layers: s.layers.map((l) => finished.starts[l.id]
+                ? { ...l, transform: { ...l.transform, x: finished.starts[l.id].x + finished.currentX, y: finished.starts[l.id].y + finished.currentY } }
+                : l),
+            }));
+          }
           for (const id of Object.keys(finished.starts)) clearDragStyle(id);
         } else if (finished.kind === "scale") {
-          updateLayer(finished.id, (l) => ({ ...l, transform: { ...l.transform, scale: finished.currentScale } }));
+          if (finished.currentScale !== finished.scale) {
+            updateLayer(finished.id, (l) => ({ ...l, transform: { ...l.transform, scale: finished.currentScale } }));
+          }
           clearDragStyle(finished.id);
         } else if (finished.kind === "rotate") {
-          updateLayer(finished.id, (l) => ({ ...l, transform: { ...l.transform, rotate: finished.currentRotate } }));
+          if (finished.currentRotate !== finished.rotate) {
+            updateLayer(finished.id, (l) => ({ ...l, transform: { ...l.transform, rotate: finished.currentRotate } }));
+          }
           clearDragStyle(finished.id);
         } else {
-          updateLayer(finished.id, (l) => ({ ...l, transform: { ...l.transform, tiltX: finished.currentTiltX, tiltY: finished.currentTiltY } }));
+          if (finished.currentTiltX !== finished.tiltX || finished.currentTiltY !== finished.tiltY) {
+            updateLayer(finished.id, (l) => ({ ...l, transform: { ...l.transform, tiltX: finished.currentTiltX, tiltY: finished.currentTiltY } }));
+          }
           clearDragStyle(finished.id);
         }
       }

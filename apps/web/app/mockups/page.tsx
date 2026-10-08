@@ -5,6 +5,7 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MockupsBrowser, type MockupItem } from "@/components/marketing/MockupsBrowser";
 import { Reveal } from "@/components/marketing/Reveal";
 import { SITE_URL, cleanDeviceName, socialMeta } from "@/lib/site";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const metadata: Metadata = {
   title: "Device Mockup Generators",
@@ -42,7 +43,7 @@ export default function MockupsIndexPage() {
 
   return (
     <main className="min-h-dvh bg-[#09090b] text-white">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <MarketingNav />
 
       <Reveal className="mx-auto max-w-6xl px-6 pb-8 pt-32">

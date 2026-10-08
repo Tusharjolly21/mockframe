@@ -38,8 +38,9 @@ export async function GET(req: NextRequest) {
   if (r.status >= 300 && r.status < 400) return NextResponse.json({ error: "Redirect not allowed" }, { status: 502 });
   if (!r.ok) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const type = r.headers.get("content-type") ?? "image/jpeg";
-  if (!type.startsWith("image/")) return NextResponse.json({ error: "Not an image" }, { status: 415 });
+  // raster formats only: an SVG served from our origin can carry script
+  if (!/^image\/(png|jpe?g|webp|gif|avif)\b/i.test(type)) return NextResponse.json({ error: "Not an image" }, { status: 415 });
   return new NextResponse(r.body, {
-    headers: { "content-type": type, "cache-control": "public, max-age=3600" },
+    headers: { "content-type": type, "cache-control": "public, max-age=3600", "x-content-type-options": "nosniff" },
   });
 }

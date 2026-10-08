@@ -4,6 +4,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { FirebaseConfigError, firebaseSetupHint, firebaseStorage, firestoreDb } from "@/lib/server/firebaseAdmin";
 import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
 import { requestIsPro } from "@/lib/server/entitlement";
+import { consumeDailyQuota, quotaSubject } from "@/lib/server/quota";
 
 export const runtime = "nodejs";
 
@@ -108,6 +109,18 @@ export async function POST(req: NextRequest) {
     const isPro = await requestIsPro(req);
     const maxBytes = isPro ? MAX_IMAGE_BYTES_PRO : MAX_IMAGE_BYTES_FREE;
     const maxAssets = isPro ? MAX_ASSETS_PRO : MAX_ASSETS_FREE;
+
+    // refuse oversized bodies before buffering them (a form adds a little overhead around the file)
+    if (Number(req.headers.get("content-length") ?? 0) > maxBytes + 512 * 1024) {
+      return NextResponse.json({ error: `Image exceeds ${mb(maxBytes)}MB` }, { status: 413 });
+    }
+    // guest ids are chosen by the caller and anonymous accounts are free to mint, so the per-owner
+    // asset cap alone is no limit: also meter uploads per IP (guests) or account (signed in) per day
+    const signedIn = !!owner.uid && owner.signInProvider !== "anonymous";
+    const quota = await consumeDailyQuota(quotaSubject(req, owner), "asset-upload", signedIn ? 400 : 80);
+    if (!quota.allowed) {
+      return attachOwnerCookie(NextResponse.json({ error: "Daily upload limit reached — try again tomorrow" }, { status: 429 }), owner);
+    }
 
     const form = await req.formData();
     const file = form.get("file");

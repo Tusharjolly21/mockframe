@@ -6,6 +6,7 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { PlanComparison } from "@/components/marketing/PlanComparison";
 import { PricingPlans } from "@/components/marketing/PricingPlans";
 import { Reveal } from "@/components/marketing/Reveal";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -111,7 +112,7 @@ export default function PricingPage() {
         </Reveal>
       </section>
 
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(FAQ_JSONLD) }} />
       <MarketingFooter />
     </main>
   );

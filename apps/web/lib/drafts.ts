@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { createId, migrateScene, type SceneDocument } from "@framekit/scene";
 import { collectAssets, persistAsset, restoreAssets, type GuestAsset } from "./assets";
 import { firebaseFetch } from "./firebaseClient";
-import { decodeScreenAsset, isScreenAsset } from "./screens";
+import { decodeScreenAsset, isScreenAsset, referencedAssetIds } from "./screens";
 
 /**
  * Drafts use cloud Firestore when available and IndexedDB as an offline cache.
@@ -196,16 +196,14 @@ export function sceneAssetIds(scene: SceneDocument): string[] {
     // reference (contact DP) must be snapshotted or a reload loses it
     if (isScreenAsset(assetId)) {
       const doc = decodeScreenAsset(assetId);
-      if (doc && "avatar" in doc && doc.avatar) ids.push(doc.avatar);
-      // per-message image attachments
-      if (doc && "messages" in doc && Array.isArray(doc.messages)) {
-        for (const m of doc.messages) if (m && typeof m === "object" && "image" in m && m.image) ids.push(m.image as string);
-      }
+      if (doc) ids.push(...referencedAssetIds(doc));
     }
   };
   if (scene.canvas.background.type === "image") push(scene.canvas.background.assetId);
   for (const l of scene.layers) {
     if (l.type === "mockup" && l.media) push(l.media.assetId);
+    // the original screenshot behind a Realistic render: "Edit screenshot" needs it after a reload
+    if (l.type === "mockup" && l.render?.sourceAssetId) push(l.render.sourceAssetId);
     if (l.type === "sticker" && "assetId" in l) push(l.assetId);
   }
   return ids;

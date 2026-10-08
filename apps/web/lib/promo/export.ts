@@ -28,7 +28,8 @@ async function toDataUrl(url: string, width: number, height: number): Promise<st
   const longEdge = Math.max(width, height);
   const needsScale = longEdge > EXPORT_MAX_LONG_EDGE;
   // small data URLs pass through untouched
-  if (url.startsWith("data:") && !needsScale && url.length < 1_500_000) return url;
+  // (only raster data URLs: the render API rejects anything else, so SVG and friends get rasterized below)
+  if (/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(url) && !needsScale && url.length < 1_500_000) return url;
   try {
     const blob = await (await fetch(url)).blob();
     const bitmap = await createImageBitmap(blob);

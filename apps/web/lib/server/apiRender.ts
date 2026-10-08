@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { API_RESULT_TTL_MS, isDataUrl, isUploadRef, type RenderJob, type RenderedImage } from "../apiRender";
 import { launchBrowser } from "./browser";
-import { assertPublicUrl } from "./ssrf";
+import { assertPublicUrl, fetchPublicBytes } from "./ssrf";
 import { tempRead, tempSave, tempSignedUrl } from "./tempStore";
 
 /** one screenshot, fetched or uploaded */
@@ -30,12 +30,12 @@ async function fetchImage(url: string): Promise<string> {
   await assertPublicUrl(target).catch(() => {
     throw new ApiInputError(`${target.hostname} can't be fetched. Use a public https URL or upload the file.`);
   });
-  const res = await fetch(target, { redirect: "error", signal: AbortSignal.timeout(15_000) }).catch(() => null);
-  if (!res?.ok) throw new ApiInputError(`Couldn't download ${url} (${res?.status ?? "no response"}).`);
-  const type = res.headers.get("content-type")?.split(";")[0].trim() ?? "";
+  const res = await fetchPublicBytes(target, { maxBytes: MAX_SCREENSHOT_BYTES, accept: "image/png,image/jpeg,image/webp" }).catch(() => null);
+  if (!res || res.status < 200 || res.status > 299) throw new ApiInputError(`Couldn't download ${url} (${res?.status ?? "no response"}).`);
+  const type = res.contentType;
   if (!/^image\/(png|jpeg|webp)$/.test(type)) throw new ApiInputError(`${url} isn't a PNG, JPEG or WebP image.`);
-  const data = Buffer.from(await res.arrayBuffer());
-  if (data.length > MAX_SCREENSHOT_BYTES) throw new ApiInputError(`${url} is over 10 MB.`);
+  if (res.tooLarge) throw new ApiInputError(`${url} is over 10 MB.`);
+  const data = res.data;
   return `data:${type};base64,${data.toString("base64")}`;
 }
 

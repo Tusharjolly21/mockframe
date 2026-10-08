@@ -1,11 +1,10 @@
-import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
 import { NextRequest, NextResponse } from "next/server";
 import type { Page } from "puppeteer-core";
 import { requestIsPro } from "@/lib/server/entitlement";
 import { consumeDailyQuota, quotaSubject } from "@/lib/server/quota";
 import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
 import { launchBrowser } from "@/lib/server/browser";
+import { assertPublicUrl, isBlockedAddress } from "@/lib/server/ssrf";
 
 export const runtime = "nodejs";
 // cold start downloads the ~66MB chromium pack before any page work — with a
@@ -24,49 +23,28 @@ const MAX_PAGE_HEIGHT = 8_000; // cap full-page captures — some pages are endl
  *  user never notices, low enough that a script can't run up the bill */
 const FREE_CAPTURES_PER_DAY = 25;
 
-/** Fast hostname check, followed by DNS validation below to prevent rebinding. */
-function isBlockedHost(host: string): boolean {
-  const h = host.toLowerCase().replace(/^\[|\]$/g, "");
-  if (h === "localhost" || h === "0.0.0.0" || h === "::1" || h.endsWith(".local") || h.endsWith(".internal")) return true;
-  if (/^127\.|^10\.|^192\.168\.|^169\.254\./.test(h)) return true;
-  const m172 = h.match(/^172\.(\d+)\./);
-  if (m172 && +m172[1] >= 16 && +m172[1] <= 31) return true;
-  if (/^f[cd][0-9a-f]{2}:|^fe80:/.test(h)) return true; // IPv6 ULA + link-local
-  return false;
-}
-
-function isBlockedAddress(address: string): boolean {
-  const normalized = address.toLowerCase().split("%")[0];
-  const mapped = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/)?.[1];
-  if (mapped) return isBlockedAddress(mapped);
-  if (isIP(normalized) === 4) {
-    const parts = normalized.split(".").map(Number);
-    const [a, b] = parts;
-    return (
-      a === 0 || a === 10 || a === 127 || a >= 224 ||
-      (a === 100 && b >= 64 && b <= 127) ||
-      (a === 169 && b === 254) ||
-      (a === 172 && b >= 16 && b <= 31) ||
-      (a === 192 && b === 168) ||
-      (a === 198 && (b === 18 || b === 19))
-    );
-  }
-  if (isIP(normalized) === 6) {
-    return normalized === "::" || normalized === "::1" || /^f[cd]/.test(normalized) || /^fe[89ab]/.test(normalized) || /^ff/.test(normalized);
-  }
-  return true;
-}
-
+/** Scheme, hostname and DNS checks shared with the other server-side fetchers (lib/server/ssrf.ts). */
 async function assertPublicTarget(target: URL): Promise<void> {
   if (target.protocol !== "https:" && target.protocol !== "http:") throw new Error("Only http(s) URLs are supported");
-  if (isBlockedHost(target.hostname)) throw new Error("This host can't be captured");
-  const addresses = await lookup(target.hostname, { all: true, verbatim: true });
-  if (!addresses.length || addresses.some(({ address }) => isBlockedAddress(address))) {
+  try {
+    await assertPublicUrl(target);
+  } catch {
     throw new Error("This host can't be captured");
   }
 }
 
-async function protectPageRequests(page: Page): Promise<void> {
+/** Everything a page may load besides http(s): inline data and blobs, never file:, ftp:, ws: and friends. */
+const INLINE_SCHEMES = new Set(["data:", "blob:", "about:"]);
+
+async function protectPageRequests(page: Page): Promise<{ reachedInternal: () => boolean }> {
+  let internalHit = false;
+  // the DNS check above and Chromium's own lookup are two lookups, so a rebinding
+  // name can pass the first and land on an internal address in the second.
+  // Judge the address each response actually came from.
+  page.on("response", (response) => {
+    const ip = response.remoteAddress().ip;
+    if (ip && isBlockedAddress(ip)) internalHit = true;
+  });
   const decisions = new Map<string, Promise<boolean>>();
   const hostIsPublic = (hostname: string) => {
     const key = hostname.toLowerCase();
@@ -83,6 +61,10 @@ async function protectPageRequests(page: Page): Promise<void> {
     void (async () => {
       try {
         const requestUrl = new URL(request.url());
+        if (requestUrl.protocol !== "http:" && requestUrl.protocol !== "https:" && !INLINE_SCHEMES.has(requestUrl.protocol)) {
+          await request.abort("blockedbyclient");
+          return;
+        }
         if ((requestUrl.protocol === "http:" || requestUrl.protocol === "https:") && !(await hostIsPublic(requestUrl.hostname))) {
           await request.abort("blockedbyclient");
           return;
@@ -93,6 +75,7 @@ async function protectPageRequests(page: Page): Promise<void> {
       }
     })();
   });
+  return { reachedInternal: () => internalHit };
 }
 
 async function preparePageContent(page: Page, loadLazy: boolean): Promise<number> {
@@ -186,7 +169,7 @@ export async function POST(req: NextRequest) {
   try {
     browser = await launchBrowser();
     const page = await browser.newPage();
-    await protectPageRequests(page);
+    const guard = await protectPageRequests(page);
     await page.setViewport({ width: viewportWidth, height: viewportWidth <= 480 ? 844 : 900, deviceScaleFactor: 2 });
     await page.setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149 Safari/537.36 MockFrameCapture/1.0");
     await page.emulateMediaFeatures([{ name: "prefers-color-scheme", value: dark ? "dark" : "light" }]);
@@ -195,16 +178,20 @@ export async function POST(req: NextRequest) {
     await page.goto(target.href, { waitUntil: "domcontentloaded", timeout: 20_000 });
     const finalUrl = new URL(page.url());
     await assertPublicTarget(finalUrl);
+    if (guard.reachedInternal()) throw new Error("blocked: page resolved to an internal address");
     await page.waitForNetworkIdle({ idleTime: 500, timeout: 8_000 }).catch(() => {});
     if (settleDelay) await new Promise((r) => setTimeout(r, settleDelay));
     const height = await preparePageContent(page, Boolean(loadLazy) || Boolean(fullPage));
 
+    if (guard.reachedInternal()) throw new Error("blocked: page resolved to an internal address");
     let png: Uint8Array;
     if (fullPage) {
       png = await page.screenshot({ clip: { x: 0, y: 0, width: viewportWidth, height: Math.max(1, height) }, captureBeyondViewport: true, type: "png" });
     } else {
       png = await page.screenshot({ type: "png" });
     }
+    // responses that landed while the screenshot was taken
+    if (guard.reachedInternal()) throw new Error("blocked: page resolved to an internal address");
 
     return new NextResponse(Buffer.from(png), {
       headers: { "Content-Type": "image/png", "Cache-Control": "no-store" },

@@ -41,6 +41,10 @@ function packSourceFrom(description?: string, tone?: PackSource["tone"], audienc
   return Object.keys(source).length > 0 ? source : undefined;
 }
 
+/** AI pack generations a non-Pro caller may start per UTC day (the lifetime free allowance is enforced separately) */
+const FREE_AI_DAILY_LIMIT = 4;
+const FREE_AI_DAILY_LIMIT_PER_NETWORK = 20;
+
 export const runtime = "nodejs";
 export const maxDuration = 120; // adaptive thinking can take a while
 
@@ -161,9 +165,20 @@ export async function POST(req: NextRequest) {
     if (!verdict.allowed) return NextResponse.json(verdict, { status: 402 });
 
     if (isPro) {
-      // day-quota abuse guard — free users are already capped by the gate above
       const quota = await consumeDailyQuota(quotaSubject(req, owner), "ai-pack", AI_DAILY_LIMIT);
       if (!quota.allowed) return NextResponse.json({ error: "Daily AI limit reached — try again tomorrow" }, { status: 429 });
+    } else {
+      // The free-generation counter above is only bumped AFTER the (expensive) model call, so a burst of
+      // parallel requests from one fresh account would all pass it. Meter free callers up front, per
+      // account and per network address, so a script can't turn free sign-ups into model spend.
+      const perAccount = await consumeDailyQuota(quotaSubject(req, owner), "ai-pack-free", FREE_AI_DAILY_LIMIT);
+      // only spend the shared network allowance on callers their own account allowed
+      const perNetwork = perAccount.allowed
+        ? await consumeDailyQuota(quotaSubject(req, { ...owner, uid: null }), "ai-pack-free-ip", FREE_AI_DAILY_LIMIT_PER_NETWORK)
+        : perAccount;
+      if (!perAccount.allowed || !perNetwork.allowed) {
+        return NextResponse.json({ error: "Daily AI limit reached — try again tomorrow" }, { status: 429 });
+      }
     }
 
     if (body.mode === "real") {

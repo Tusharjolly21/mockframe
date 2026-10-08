@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { firebaseErrorPayload, firebaseSetupHint, FirebaseConfigError, firestoreDb, firebaseAuth } from "@/lib/server/firebaseAdmin";
 import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
+import { parseTheme } from "@/lib/themeSchema";
 
 export const runtime = "nodejs";
 
@@ -44,11 +45,15 @@ export async function POST(req: NextRequest) {
   try {
     const owner = await getRequestOwner(req);
     if (!accountOnly(owner)) return NextResponse.json({ error: "Sign in before sharing a theme." }, { status: 401 });
-    const body = (await req.json()) as { theme?: unknown; name?: string; email?: string; role?: Role };
+    const body = (await req.json().catch(() => null)) as { theme?: unknown; name?: string; email?: string; role?: Role } | null;
+    if (!body || typeof body !== "object") return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     const email = body.email?.trim().toLowerCase();
     if (!email || !email.includes("@")) return NextResponse.json({ error: "Enter a valid employee email." }, { status: 400 });
     if (body.role !== "read" && body.role !== "contribute") return NextResponse.json({ error: "Choose a valid permission." }, { status: 400 });
     if (!body.theme || typeof body.theme !== "object") return NextResponse.json({ error: "Theme data is required." }, { status: 400 });
+    // members open this in their editor: only a well-formed theme may be shared
+    const checkedTheme = parseTheme({ id: "shared", name: "Shared theme", ...(body.theme as object) });
+    if (!checkedTheme) return NextResponse.json({ error: "That theme can't be shared." }, { status: 400 });
 
     let invitedUid: string | null = null;
     try {
@@ -58,9 +63,9 @@ export async function POST(req: NextRequest) {
       // Pending invites are matched by email when the employee signs in.
     }
     const doc = firestoreDb().collection("sharedThemes").doc();
-    const theme = body.theme as Record<string, unknown>;
+    const theme = checkedTheme;
     await doc.set({
-      name: body.name?.trim() || String(theme.name || "Shared theme"),
+      name: body.name?.trim().slice(0, 120) || theme.name || "Shared theme",
       theme: { ...theme, id: doc.id, builtin: false },
       ownerUid: owner.uid,
       ownerEmail: owner.email ?? null,

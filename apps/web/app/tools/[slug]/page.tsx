@@ -6,6 +6,7 @@ import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { SITE_NAME, SITE_URL, socialMeta, metaDescription } from "@/lib/site";
 import { TOOL_PAGES, toolPage } from "@/lib/toolPages";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export function generateStaticParams() {
   return TOOL_PAGES.map(({ slug }) => ({ slug }));
@@ -77,7 +78,7 @@ export default async function ToolPageRoute({ params }: { params: Promise<{ slug
   return (
     <main className="min-h-dvh bg-[#09090b] text-white">
       <MarketingNav />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
 
       <section className="mx-auto grid min-h-[min(820px,92vh)] max-w-6xl items-center gap-14 px-6 pb-16 pt-28 lg:grid-cols-[0.9fr_1.1fr]">
         <div>

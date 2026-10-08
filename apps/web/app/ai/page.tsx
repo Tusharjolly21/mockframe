@@ -3,6 +3,7 @@ import Link from "next/link";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { AiPackForm } from "@/components/ai/AiPackForm";
 import { socialMeta } from "@/lib/site";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const metadata: Metadata = {
   title: "AI App Store Screenshot Generator",
@@ -115,7 +116,7 @@ export default function AiPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: safeJsonLd({
             "@context": "https://schema.org",
             "@type": "FAQPage",
             mainEntity: FAQ.map((f) => ({

@@ -198,19 +198,19 @@ export function screenLogicalWidth(doc: ScreenDoc): number {
 
 /** All uploaded asset ids a doc references (avatar + per-message images +
  *  YouTube thumbnail / Story background / Hinge photo cards). */
-function referencedAssetIds(doc: ScreenDoc): string[] {
+export function referencedAssetIds(doc: ScreenDoc): string[] {
   const ids: string[] = [];
   if ("avatar" in doc && doc.avatar) ids.push(doc.avatar);
   if (doc.app === "ios-notification" && doc.appIcon) ids.push(doc.appIcon);
   if (doc.app === "youtube" && doc.thumbnail) ids.push(doc.thumbnail);
   if (doc.app === "story" && doc.background) ids.push(doc.background);
   if (doc.app === "snapchat" && doc.adImage) ids.push(doc.adImage);
-  if (doc.app === "hinge") for (const card of doc.cards) if (card.type === "photo" && card.image) ids.push(card.image);
-  if (hasMessages(doc)) for (const m of doc.messages) if ((m as { image?: string }).image) ids.push((m as { image: string }).image);
+  if (doc.app === "hinge") for (const card of doc.cards ?? []) if (card.type === "photo" && card.image) ids.push(card.image);
+  if (hasMessages(doc)) for (const m of doc.messages ?? []) if ((m as { image?: string }).image) ids.push((m as { image: string }).image);
   // per-person photos (commenter avatars + multi-sender chat avatars)
-  if (doc.app === "youtube") for (const cm of doc.comments) if (cm.avatar) ids.push(cm.avatar);
-  if (doc.app === "tiktok") for (const cm of doc.comments) if (cm.avatar) ids.push(cm.avatar);
-  if (doc.app === "reddit") for (const cm of doc.comments) if (cm.avatar) ids.push(cm.avatar);
+  if (doc.app === "youtube") for (const cm of doc.comments ?? []) if (cm.avatar) ids.push(cm.avatar);
+  if (doc.app === "tiktok") for (const cm of doc.comments ?? []) if (cm.avatar) ids.push(cm.avatar);
+  if (doc.app === "reddit") for (const cm of doc.comments ?? []) if (cm.avatar) ids.push(cm.avatar);
   if (doc.app === "xpost") {
     for (const cm of doc.comments ?? []) if (cm.avatar) ids.push(cm.avatar);
     for (const im of doc.images ?? []) ids.push(im);
@@ -220,7 +220,7 @@ function referencedAssetIds(doc: ScreenDoc): string[] {
     for (const cm of doc.commentList ?? []) if (cm.avatar) ids.push(cm.avatar);
     for (const im of doc.images ?? []) ids.push(im);
   }
-  if (doc.app === "slack" || doc.app === "discord") for (const m of doc.messages) if (m.avatar) ids.push(m.avatar);
+  if (doc.app === "slack" || doc.app === "discord") for (const m of doc.messages ?? []) if (m.avatar) ids.push(m.avatar);
   if (doc.app === "appstore-promo") {
     if (doc.screenshot) ids.push(doc.screenshot);
     if (doc.webScreenshot) ids.push(doc.webScreenshot);

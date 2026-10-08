@@ -6,6 +6,7 @@ import { BrandMark } from "@/components/marketing/BrandMark";
 import { firestoreDb } from "@/lib/server/firebaseAdmin";
 import { PRESS_SLUG_RE } from "@/lib/launchkit/types";
 import { SITE_URL } from "@/lib/site";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const runtime = "nodejs";
 export const revalidate = 300;
@@ -50,6 +51,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+/** Stored documents predate link validation, so judge every href again before it reaches the page. */
+function isHttps(value: string | undefined): value is string {
+  if (!value) return false;
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export default async function PressPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const doc = await loadPress(slug);
@@ -60,7 +71,7 @@ export default async function PressPage({ params }: { params: Promise<{ slug: st
     { href: doc.links.site, label: "Website" },
     { href: doc.links.appstore, label: "App Store" },
     { href: doc.links.play, label: "Google Play" },
-  ].filter((l) => l.href);
+  ].filter((l) => isHttps(l.href));
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -68,13 +79,13 @@ export default async function PressPage({ params }: { params: Promise<{ slug: st
     name: doc.appName,
     description: doc.boilerplate || doc.tagline,
     applicationCategory: doc.category || "Application",
-    ...(doc.links.site ? { url: doc.links.site } : {}),
+    ...(isHttps(doc.links.site) ? { url: doc.links.site } : {}),
     ...(doc.icon ? { image: doc.icon } : {}),
   };
 
   return (
     <main className="min-h-dvh bg-[#09090b] text-white">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
 
       {/* hero */}
       <header className="relative overflow-hidden border-b border-white/10">
@@ -101,7 +112,7 @@ export default async function PressPage({ params }: { params: Promise<{ slug: st
                 {l.label} <ArrowUpRight size={13} />
               </a>
             ))}
-            {doc.contact && (
+            {/^[^\s@<>?&=,;:"'()\[\]\\]+@[^\s@<>?&=,;:"'()\[\]\\]+$/.test(doc.contact) && (
               <a href={`mailto:${doc.contact}`} className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-[13px] font-semibold text-zinc-900" style={{ background: accent }}>
                 <Mail size={13} /> Press contact
               </a>

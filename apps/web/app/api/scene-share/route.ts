@@ -31,7 +31,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const parsed = SceneDocumentSchema.safeParse(migrateScene(body.scene));
+  if (!body || typeof body !== "object") return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+
+  let parsed: ReturnType<typeof SceneDocumentSchema.safeParse>;
+  try {
+    parsed = SceneDocumentSchema.safeParse(migrateScene(body.scene));
+  } catch {
+    // migrateScene assumes an object; garbage in is a 400, not a 500
+    return NextResponse.json({ error: "Invalid scene" }, { status: 400 });
+  }
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid scene" }, { status: 400 });
   }

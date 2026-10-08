@@ -9,7 +9,7 @@ export const PromoRenderScreenshotSchema = z
     kind: z.enum(["image", "video"]).default("image"),
     dataUrl: z
       .string()
-      .startsWith("data:image/")
+      .regex(/^data:image\/(png|jpe?g|webp|gif);base64,/i, "Screenshots must be PNG, JPEG, WebP or GIF data URLs")
       .max(16 * 1024 * 1024)
       .optional(),
     url: z

@@ -2,6 +2,7 @@
 
 import type { Backdrop, Background, Effect, SceneDocument } from "@framekit/scene";
 import { firebaseFetch } from "./firebaseClient";
+import { parseTheme } from "./themeSchema";
 
 /**
  * Saved style Themes (PostSpark's "Sand Light · Save"): a named snapshot of the
@@ -85,7 +86,9 @@ export function loadSavedThemes(): StyleTheme[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(LS_KEY);
-    return raw ? (JSON.parse(raw) as StyleTheme[]) : [];
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    // rebuilt from validated pieces: a corrupt or hand-edited entry is skipped instead of crashing the theme panel
+    return Array.isArray(parsed) ? parsed.map(parseTheme).filter((t): t is StyleTheme => !!t && !t.builtin) : [];
   } catch {
     return [];
   }
@@ -112,7 +115,10 @@ export async function syncThemesFromServer(): Promise<StyleTheme[]> {
     const server = (await r.json()) as StyleTheme[] | null;
     const local = loadSavedThemes();
     const byId = new Map(local.map((t) => [t.id, t]));
-    for (const t of Array.isArray(server) ? server : []) if (!byId.has(t.id)) byId.set(t.id, t);
+    for (const raw of Array.isArray(server) ? server : []) {
+      const t = parseTheme(raw);
+      if (t && !t.builtin && !byId.has(t.id)) byId.set(t.id, t);
+    }
     const merged = [...byId.values()];
     try {
       window.localStorage.setItem(LS_KEY, JSON.stringify(merged));
@@ -124,8 +130,9 @@ export async function syncThemesFromServer(): Promise<StyleTheme[]> {
       if (sharedResponse.ok) {
         const shared = (await sharedResponse.json()) as { id: string; theme: StyleTheme; role: "read" | "contribute"; ownerEmail?: string | null }[];
         for (const item of shared) {
-          const theme = { ...item.theme, id: item.id, shared: { shareId: item.id, role: item.role, ownerEmail: item.ownerEmail } };
-          byId.set(item.id, theme);
+          const checked = parseTheme({ ...item.theme, id: item.id });
+          if (!checked) continue;
+          byId.set(item.id, { ...checked, builtin: false, shared: { shareId: item.id, role: item.role, ownerEmail: item.ownerEmail } });
         }
       }
     } catch {
@@ -216,8 +223,11 @@ export async function importThemeFile(file: File): Promise<StyleTheme> {
   if ((isEnvelope && (raw as Partial<ThemeExportFile>).format !== "mockframe-theme") || !isTheme(candidate)) {
     throw new Error("This is not a valid MockFrame theme file.");
   }
+  // an export has no id of its own to keep; validate the rest before it can reach the panel
+  const checked = parseTheme({ ...candidate, id: "imported" });
+  if (!checked) throw new Error("This theme file has an unsupported background.");
   const theme: StyleTheme = {
-    ...candidate,
+    ...checked,
     id: `t_${Date.now().toString(36)}_${Math.floor(Math.random() * 1e6).toString(36)}`,
     name: candidate.name.trim() || "Imported theme",
     builtin: false,

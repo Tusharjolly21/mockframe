@@ -6,6 +6,7 @@ import { getDevice, listDevices, previewDataUri, type Device, deviceModel, filte
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { SITE_NAME, SITE_URL, baseDeviceName, categoryLabel, cleanDeviceName, deviceDescription, deviceKeywords, deviceOgImage, deviceSpecs, deviceTitle, socialMeta } from "@/lib/site";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 /** Statically generate one page per device in the registry. */
 export function generateStaticParams() {
@@ -86,7 +87,7 @@ export default async function DeviceMockupPage({
 
   return (
     <main className="min-h-dvh bg-[#09090b] text-white">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <MarketingNav />
 
       <div className="mx-auto max-w-6xl px-6 pt-24">
