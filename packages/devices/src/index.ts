@@ -147,3 +147,4 @@ export function suggestDevice(imageW: number, imageH: number): Device | undefine
 }
 
 export { DEVICES };
+export * from "./filters";

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, ArrowUpRight, Sparkles } from "lucide-react";
-import { getDevice, listDevices, previewDataUri, type Device } from "@framekit/devices";
+import { getDevice, listDevices, previewDataUri, type Device, deviceModel, filterDevices } from "@framekit/devices";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { SITE_NAME, SITE_URL, baseDeviceName, categoryLabel, cleanDeviceName, deviceDescription, deviceKeywords, deviceOgImage, deviceSpecs, deviceTitle, socialMeta } from "@/lib/site";
@@ -56,6 +56,8 @@ export default async function DeviceMockupPage({
   const preview = previewDataUri(device);
   const specs = deviceSpecs(device);
   const related = relatedDevices(device);
+  const model = deviceModel(device);
+  const sameModel = filterDevices(listDevices(), { model }).length;
   const editorHref = `/editor?device=${device.id}`;
 
   const jsonLd = {
@@ -138,6 +140,14 @@ export default async function DeviceMockupPage({
               >
                 All devices
               </Link>
+              {sameModel > 1 && (
+                <Link
+                  href={`/mockups?${new URLSearchParams({ model }).toString()}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-4 py-3 text-[14px] font-medium text-zinc-400 hover:text-white"
+                >
+                  All {model} mockups ({sameModel})
+                </Link>
+              )}
             </div>
 
             {/* quick spec chips */}

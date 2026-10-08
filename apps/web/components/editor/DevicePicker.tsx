@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { getDevice, listDevices, previewDataUri, type Device, type DeviceCategory } from "@framekit/devices";
+import { filterDevices, getDevice, listDevices, normalizeFilter, previewDataUri, type Device, type DeviceCategory, type DeviceFilter } from "@framekit/devices";
 import { ChevronDown, Globe, ImagePlus, Laptop, Monitor, Smartphone, Sparkles, Tablet, Trash2, Watch } from "lucide-react";
+import { DeviceFilterBar } from "@/components/DeviceFilterBar";
 import { deleteCustomDevice, isCustomDevice } from "@/lib/customDevices";
 import { CustomMockupModal } from "./CustomMockupModal";
 import { toast } from "./Toolbar";
@@ -42,6 +43,8 @@ export function DevicePicker({
   const [open, setOpen] = useState(false);
   // open on the real photo mockups by default (fall back to All if none loaded)
   const [cat, setCat] = useState<DeviceCategory | "all">("scene");
+  // brand / model / look narrow the current tab; they combine with each other and with the tab
+  const [filter, setFilter] = useState<DeviceFilter>({});
   const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
   const [regBump, setRegBump] = useState(0); // re-read the registry after create/delete
@@ -119,12 +122,17 @@ export function DevicePicker({
   // recompute on every OPEN too: custom devices are registered by an EditorShell
   // mount effect that runs AFTER this component's first render — a [cat]-only
   // memo would serve the stale pre-registration list forever after a reload
-  const devices = useMemo(
+  const tabDevices = useMemo(
     // "Realistic" = every photo-plate device (PSD scenes of any kind + custom photos)
     () => listDevices().filter((d) => cat === "all" || (cat === "scene" ? !!d.plate : d.category === cat)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [cat, regBump, open]
   );
+  // switching tabs drops any brand/model/look the new tab can't offer
+  useEffect(() => {
+    setFilter((f) => normalizeFilter(tabDevices, f));
+  }, [tabDevices]);
+  const devices = useMemo(() => filterDevices(tabDevices, filter), [tabDevices, filter]);
   const cats = useMemo(() => {
     const present = new Set(listDevices().map((d) => d.category));
     return CATEGORIES.filter((c) => c.id === "all" || c.id === "scene" || present.has(c.id as DeviceCategory));
@@ -197,7 +205,18 @@ export function DevicePicker({
               })}
             </div>
 
-            <div className="panel-scroll grid max-h-[52vh] grid-cols-2 gap-3 overflow-y-auto pr-1">
+            <div className="mb-3">
+              <DeviceFilterBar
+                devices={tabDevices}
+                filter={filter}
+                onChange={setFilter}
+                tone="light"
+                compact
+                facets={cat === "scene" ? ["type", "brand", "model"] : cat === "all" ? ["type", "brand", "model", "style"] : ["brand", "model", "style"]}
+              />
+            </div>
+
+            <div className="panel-scroll grid max-h-[46vh] grid-cols-2 gap-3 overflow-y-auto pr-1">
               {/* always visible — the picker auto-opens on the current device's
                   family, which used to hide this tile behind the Mockups tab */}
               <button
@@ -232,7 +251,7 @@ export function DevicePicker({
               ))}
               {devices.length === 0 && (
                 <p className="col-span-2 py-10 text-center text-xs text-[#9a9aa4]">
-                  No devices in this category yet — the registry grows weekly.
+                  No devices match these filters.
                 </p>
               )}
             </div>
