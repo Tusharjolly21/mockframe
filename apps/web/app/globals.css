@@ -170,3 +170,10 @@ input[type="color"]::-webkit-color-swatch {
 @media (prefers-reduced-motion: reduce) {
   .fk-nudge { animation: none; }
 }
+
+/* screen recorder countdown */
+@keyframes mf-count {
+  0% { transform: scale(1.35); opacity: 0; }
+  18% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.96); opacity: 0.85; }
+}
