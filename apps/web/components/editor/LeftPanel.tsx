@@ -280,14 +280,16 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
             const next = getDevice(deviceId);
             if (!next) return;
             const presentation = presentationForDevice(next);
-            const canvasWidth = next.category === "scene" && next.plate ? Math.round(next.plate.width * 1.22) : presentation.width;
-            const canvasHeight = next.category === "scene" && next.plate ? Math.round(next.plate.height * 1.22) : presentation.height;
-            const scale = Math.round(((canvasHeight * 0.78) / next.frame.height) * 1000) / 1000;
+            const fullBleed = !!next.plate?.fullBleed;
+            const canvasWidth = fullBleed ? next.plate!.width : next.category === "scene" && next.plate ? Math.round(next.plate.width * 1.22) : presentation.width;
+            const canvasHeight = fullBleed ? next.plate!.height : next.category === "scene" && next.plate ? Math.round(next.plate.height * 1.22) : presentation.height;
+            const scale = fullBleed ? 1 : Math.round(((canvasHeight * 0.78) / next.frame.height) * 1000) / 1000;
             const applyToLayer = (l: MockupLayer): MockupLayer => ({
               ...l,
               deviceId,
               frameVariant: variantId,
               transform: { ...l.transform, x: 0, y: 0, scale },
+              ...(fullBleed && l.shadow ? { shadow: { ...l.shadow, opacity: 0 } } : {}),
             });
             if (applyMode === "all" && deviceLayerCount > 1) {
               setScene((s) => ({

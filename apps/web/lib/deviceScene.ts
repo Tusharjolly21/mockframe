@@ -66,6 +66,18 @@ export function buildDeviceScene(deviceId: string): SceneDocument | null {
   const device = getDevice(deviceId);
   if (!device) return null;
 
+  if (device.plate?.fullBleed) {
+    // a finished photo: canvas = plate, laid on at scale 1, no margin or shadow
+    const presentation = presentationForDevice(device);
+    const scene = createScene({ width: device.plate.width, height: device.plate.height, background: presentation.background, backdrop: presentation.backdrop });
+    const layer = createMockupLayer({ deviceId: device.id, media: null });
+    layer.shadow = { ...layer.shadow!, opacity: 0 };
+    scene.id = `scene-device-${device.id}`;
+    layer.id = "layer-device";
+    scene.layers.push(layer);
+    return scene;
+  }
+
   if (device.category === "scene" && device.plate) {
     const margin = 1.22;
     const width = Math.round(device.plate.width * margin);

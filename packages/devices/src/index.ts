@@ -4,6 +4,7 @@ import { PSD_IPHONE16_SCENES } from "./psdIPhone16Scenes";
 import { PSD_IPAD_PRO_SCENES } from "./psdIPadProScenes";
 import { PSD_COMPOSITE_SCENES } from "./psdCompositeScenes";
 import { PSD_MACBOOK_SCENES } from "./psdMacbookScenes";
+import { PSD_MOCKUPS_DESIGN_SCENES } from "./psdMockupsDesignScenes";
 import { DEVICES as PARAMETRIC_DEVICES } from "./generated/registry";
 import { SCENE_DEVICES } from "./scenes";
 import { SVG_DEVICES } from "./svgDevices";
@@ -30,6 +31,7 @@ const DEVICES: Device[] = [
   ...SVG_DEVICES,
   ...SCENE_DEVICES,
   ...CC0_SCENES,
+  ...PSD_MOCKUPS_DESIGN_SCENES,
   ...PSD_WATCH_SCENES,
   ...PSD_IPHONE16_SCENES,
   ...PSD_IPAD_PRO_SCENES,
@@ -116,7 +118,7 @@ export function getVariant(device: Device, variantId?: string): DeviceVariant {
 /** Standalone data-URI of a device preview SVG, for <img> thumbnails. */
 export function previewDataUri(device: Device, variantId?: string): string {
   // raster photo scenes preview from the plate image itself
-  if (device.plate) return device.plate.src;
+  if (device.plate) return device.plate.thumb ?? device.plate.src;
   const v = getVariant(device, variantId);
   // photoreal bodies reference an external <image>, which an <img>-loaded SVG cannot fetch,
   // so those devices ship a baked raster thumbnail instead
@@ -131,7 +133,8 @@ export function previewDataUri(device: Device, variantId?: string): string {
  */
 export function suggestDevice(imageW: number, imageH: number): Device | undefined {
   // photo scenes are user-picked, never auto-suggested from an upload's size
-  const pool = DEVICES.filter((d) => d.category !== "scene");
+  // (a full-bleed photo scene is a styling choice too, never a size match)
+  const pool = DEVICES.filter((d) => d.category !== "scene" && !d.plate?.fullBleed);
   const exact = pool.find((d) => d.screen.width === imageW && d.screen.height === imageH);
   if (exact) return exact;
   const ar = imageW / imageH;

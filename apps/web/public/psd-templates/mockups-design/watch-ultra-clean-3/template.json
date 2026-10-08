@@ -1,0 +1,29 @@
+{
+  "source": "04 Free Apple Watch Ultra Mockup Clean Front View.psd",
+  "plate": {
+    "width": 4500,
+    "height": 3000
+  },
+  "quad": [
+    [
+      3479.02,
+      1020.01
+    ],
+    [
+      4169.329,
+      1028.087
+    ],
+    [
+      4182.902,
+      2000.146
+    ],
+    [
+      3492.05,
+      2008.376
+    ]
+  ],
+  "screen": {
+    "width": 1266,
+    "height": 1542
+  }
+}
