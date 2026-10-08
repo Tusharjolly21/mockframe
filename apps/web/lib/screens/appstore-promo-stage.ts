@@ -1,6 +1,7 @@
 "use client";
 
 import { getDevice, getVariant } from "@framekit/devices";
+import { inlineDeviceImages } from "./deviceBodies";
 import { esc, systemFont, textWidth, truncate, wrapText } from "./common";
 import { appStorePromoCardSize, browserWindow, domainOf, laurel, luminance, rgb } from "./appstore-promo";
 import type { AppStorePromoDoc } from "./types";
@@ -429,7 +430,7 @@ export function renderPromoStage(doc: AppStorePromoDoc, avatarUrl?: string, scre
       ? `<image href="${screenshotUrl}" x="${r.x}" y="${r.y}" width="${r.width}" height="${r.height}" preserveAspectRatio="xMidYMin slice"/>`
       : sampleScreen(r.x, r.y, r.width, r.height);
     return `<g transform="translate(${f1(x)} ${f1(y)}) scale(${s.toFixed(5)})">
-      <g filter="url(#ps-lift)">${variant.body}</g>
+      <g filter="url(#ps-lift)">${inlineDeviceImages(variant.body)}</g>
       <clipPath id="ps-screen"><path d="${fr.maskPath}"/></clipPath>
       <g clip-path="url(#ps-screen)">${screen}</g>
       <g>${variant.overlay}</g>

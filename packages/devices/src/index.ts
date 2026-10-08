@@ -118,6 +118,9 @@ export function previewDataUri(device: Device, variantId?: string): string {
   // raster photo scenes preview from the plate image itself
   if (device.plate) return device.plate.src;
   const v = getVariant(device, variantId);
+  // photoreal bodies reference an external <image>, which an <img>-loaded SVG cannot fetch,
+  // so those devices ship a baked raster thumbnail instead
+  if (v.previewSrc) return v.previewSrc;
   return `data:image/svg+xml,${encodeURIComponent(v.preview)}`;
 }
 

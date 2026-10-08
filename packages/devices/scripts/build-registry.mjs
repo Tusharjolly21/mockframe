@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 const PKG = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT = path.join(PKG, "registry");
 const OUT = path.join(PKG, "src", "generated");
+const PUBLIC_DEVICES = path.join(PKG, "..", "..", "apps", "web", "public", "devices");
 
 const section = (svg, name) => {
   const m = svg.match(new RegExp(`<!--${name}-->([\\s\\S]*?)<!--/${name}-->`));
@@ -29,6 +30,10 @@ for (const id of fs.readdirSync(ROOT).sort()) {
       body: section(svg, "BODY"),
       overlay: section(svg, "OVERLAY"),
       preview: svg, // full standalone svg (with screen placeholder) for pickers
+      // baked thumbnail (photoreal body + wallpaper), see scripts/bake-previews.mjs
+      ...(fs.existsSync(path.join(PUBLIC_DEVICES, id, `${v.id}-preview.webp`))
+        ? { previewSrc: `/devices/${id}/${v.id}-preview.webp` }
+        : {}),
     };
   });
   devices.push({ ...meta, variants });

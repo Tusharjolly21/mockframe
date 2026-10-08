@@ -1,55 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2916 2228">
-<!--BODY-->
-<defs>
-<linearGradient id="fk_ipad-pro-13-landscape_space-black_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4a4e"/><stop offset="0.5" stop-color="#242427"/><stop offset="1" stop-color="#3d3d41"/></linearGradient>
-
-<linearGradient id="fk_ipad-pro-13-landscape_space-black_edgeH" x1="0" y1="0" x2="1" y2="0">
-  <stop offset="0" stop-color="#000" stop-opacity="0.55"/>
-  <stop offset="0.004" stop-color="#fff" stop-opacity="0.05"/>
-  <stop offset="0.009" stop-color="#fff" stop-opacity="0.55"/>
-  <stop offset="0.018" stop-color="#fff" stop-opacity="0.06"/>
-  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
-  <stop offset="0.982" stop-color="#fff" stop-opacity="0.04"/>
-  <stop offset="0.991" stop-color="#fff" stop-opacity="0.38"/>
-  <stop offset="0.996" stop-color="#000" stop-opacity="0.1"/>
-  <stop offset="1" stop-color="#000" stop-opacity="0.6"/>
-</linearGradient>
-<linearGradient id="fk_ipad-pro-13-landscape_space-black_edgeV" x1="0" y1="0" x2="0" y2="1">
-  <stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
-  <stop offset="0.006" stop-color="#fff" stop-opacity="0.08"/>
-  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
-  <stop offset="0.994" stop-color="#000" stop-opacity="0.12"/>
-  <stop offset="1" stop-color="#000" stop-opacity="0.5"/>
-</linearGradient>
-<linearGradient id="fk_ipad-pro-13-landscape_space-black_btn_left" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000"/><stop offset="0.25" stop-color="#4a4a4e"/><stop offset="0.6" stop-color="#242427"/><stop offset="1" stop-color="#3d3d41"/></linearGradient>
-<linearGradient id="fk_ipad-pro-13-landscape_space-black_btn_right" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3d3d41"/><stop offset="0.4" stop-color="#242427"/><stop offset="0.75" stop-color="#4a4a4e"/><stop offset="1" stop-color="#000"/></linearGradient>
-<linearGradient id="fk_ipad-pro-13-landscape_space-black_glass" x1="0" y1="0" x2="1" y2="1">
-  <stop offset="0" stop-color="#ffffff" stop-opacity="0.07"/>
-  <stop offset="0.35" stop-color="#ffffff" stop-opacity="0.015"/>
-  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
-</linearGradient>
-<radialGradient id="fk_ipad-pro-13-landscape_space-black_sheen" cx="0.25" cy="0.05" r="1.4">
-  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
-  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
-  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
-</radialGradient>
-</defs>
-<rect x="2" y="155" width="16" height="170" rx="7" fill="#000" opacity="0.28"/>
-<rect x="2" y="152" width="16" height="170" rx="7" fill="url(#fk_ipad-pro-13-landscape_space-black_btn_left)"/>
-<rect x="5" y="158" width="2" height="158" rx="1" fill="#fff" opacity="0.35"/>
-<path d="M122 12 H2794 A110 110 0 0 1 2904 122 V2106 A110 110 0 0 1 2794 2216 H122 A110 110 0 0 1 12 2106 V122 A110 110 0 0 1 122 12 Z" fill="url(#fk_ipad-pro-13-landscape_space-black_rail)"/>
-<path d="M122 12 H2794 A110 110 0 0 1 2904 122 V2106 A110 110 0 0 1 2794 2216 H122 A110 110 0 0 1 12 2106 V122 A110 110 0 0 1 122 12 Z" fill="url(#fk_ipad-pro-13-landscape_space-black_edgeH)"/>
-<path d="M122 12 H2794 A110 110 0 0 1 2904 122 V2106 A110 110 0 0 1 2794 2216 H122 A110 110 0 0 1 12 2106 V122 A110 110 0 0 1 122 12 Z" fill="url(#fk_ipad-pro-13-landscape_space-black_edgeV)"/>
-
-<path d="M122 12.75 H2794 A109.25 109.25 0 0 1 2903.25 122 V2106 A109.25 109.25 0 0 1 2794 2215.25 H122 A109.25 109.25 0 0 1 12.75 2106 V122 A109.25 109.25 0 0 1 122 12.75 Z" fill="none" stroke="#000" stroke-opacity="0.55" stroke-width="1.5"/>
-<path d="M122 15 H2794 A107 107 0 0 1 2901 122 V2106 A107 107 0 0 1 2794 2213 H122 A107 107 0 0 1 15 2106 V122 A107 107 0 0 1 122 15 Z" fill="none" stroke="#fff" stroke-opacity="0.32" stroke-width="1.4"/>
-<path d="M122 28 H2794 A94 94 0 0 1 2888 122 V2106 A94 94 0 0 1 2794 2200 H122 A94 94 0 0 1 28 2106 V122 A94 94 0 0 1 122 28 Z" fill="#000" fill-opacity="0.65"/>
-<path d="M122 30 H2794 A92 92 0 0 1 2886 122 V2106 A92 92 0 0 1 2794 2198 H122 A92 92 0 0 1 30 2106 V122 A92 92 0 0 1 122 30 Z" fill="#0a0a0c"/>
-<path d="M122 30 H2794 A92 92 0 0 1 2886 122 V2106 A92 92 0 0 1 2794 2198 H122 A92 92 0 0 1 30 2106 V122 A92 92 0 0 1 122 30 Z" fill="url(#fk_ipad-pro-13-landscape_space-black_glass)"/>
-<path d="M122 30 H2794 A92 92 0 0 1 2886 122 V2106 A92 92 0 0 1 2794 2198 H122 A92 92 0 0 1 30 2106 V122 A92 92 0 0 1 122 30 Z" fill="url(#fk_ipad-pro-13-landscape_space-black_sheen)"/>
-<path d="M122 31 H2794 A91 91 0 0 1 2885 122 V2106 A91 91 0 0 1 2794 2197 H122 A91 91 0 0 1 31 2106 V122 A91 91 0 0 1 122 31 Z" fill="none" stroke="#fff" stroke-opacity="0.07" stroke-width="2"/>
-<path d="M128 79 H2788 A49 49 0 0 1 2837 128 V2100 A49 49 0 0 1 2788 2149 H128 A49 49 0 0 1 79 2100 V128 A49 49 0 0 1 128 79 Z" fill="#000"/>
-<!--/BODY-->
+<!--BODY--><image href="/devices/ipad-pro-13-landscape/space-black.webp" x="0" y="0" width="2916" height="2228" preserveAspectRatio="none"/><!--/BODY-->
 <!--SCREEN--><defs>
 <linearGradient id="fk_scr_ipad-pro-13-landscape_space-black_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#1e3a8a"/></linearGradient>
 <radialGradient id="fk_scr_ipad-pro-13-landscape_space-black_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#f0abfc" stop-opacity="0.95"/><stop offset="1" stop-color="#f0abfc" stop-opacity="0"/></radialGradient>

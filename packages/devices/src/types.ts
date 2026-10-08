@@ -23,6 +23,8 @@ export interface DeviceVariant {
   overlay: string;
   /** full standalone SVG (with a placeholder screen) for device pickers */
   preview: string;
+  /** baked raster thumbnail with a wallpaper on the screen; preferred over `preview` when present */
+  previewSrc?: string;
 }
 
 /**

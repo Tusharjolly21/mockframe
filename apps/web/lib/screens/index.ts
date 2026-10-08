@@ -35,6 +35,7 @@ import { renderIosNotification, iosNotificationSize } from "./iosnotification";
 import { renderSpotify, spotifyCardSize } from "./spotify";
 import { renderAppStore, appStoreCardSize } from "./appstore";
 import { renderAppStorePromo, appStorePromoCardSize } from "./appstore-promo";
+import { consumeDeviceImagesPending } from "./deviceBodies";
 import { renderGoogleMaps, googleMapsCardSize } from "./googlemaps";
 import { renderGooglePlay, googlePlayCardSize } from "./googleplay";
 import { SCREEN_APP_LABELS, type ScreenDoc } from "./types";
@@ -357,6 +358,8 @@ export function resolveScreenAsset(
   const doc = decodeScreenAsset(assetId);
   if (!doc) return undefined;
   const { url, logicalH, logicalW } = renderScreenSized(doc, lookupUrl);
+  // a device body image is still loading: serve this render but don't cache it
+  const bodiesPending = consumeDeviceImagesPending();
   const resolved = {
     id: assetId,
     name: `${SCREEN_APP_LABELS[doc.app]} screen`,
@@ -367,7 +370,7 @@ export function resolveScreenAsset(
   // a referenced upload (avatar or message image) isn't registered yet (e.g.
   // mid draft-restore): serve the fallback but don't cache — it fills in once
   // the asset loads
-  if (referencedAssetIds(doc).some((id) => !lookupUrl?.(id))) return resolved;
+  if (bodiesPending || referencedAssetIds(doc).some((id) => !lookupUrl?.(id))) return resolved;
   if (cache.size >= CACHE_MAX) {
     const oldest = cache.keys().next().value;
     if (oldest !== undefined) cache.delete(oldest);

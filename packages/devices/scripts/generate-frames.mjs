@@ -15,6 +15,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "registry");
+// Photoreal bodies: scenes-src/blender renders each variant from a JSON spec this file writes,
+// the PNGs are compressed to webp in apps/web/public/devices/<id>/<variant>.webp. A device
+// uses its render when the file exists and falls back to the vector body otherwise.
+const SPEC_DIR = path.join(ROOT, "..", "scenes-src", "blender", "specs");
+const PUBLIC_DEVICES = path.join(ROOT, "..", "..", "..", "apps", "web", "public", "devices");
 
 /* ------------------------------- svg helpers ------------------------------- */
 
@@ -40,6 +45,22 @@ const linGrad = (id, stops, x1 = 0, y1 = 0, x2 = 0, y2 = 1) =>
   `<linearGradient id="${id}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">` +
   stops.map(([at, color]) => `<stop offset="${at}" stop-color="${color}"/>`).join("") +
   `</linearGradient>`;
+
+/* ------------------------- photoreal body helpers --------------------------- */
+
+const midStop = (stops) => stops[Math.floor(stops.length / 2)][1];
+const hexLum = (hex) => {
+  const h = hex.replace("#", "");
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+// extra front fill for flat metal faces: pale finishes need more to read as silver than dark ones
+const fillFor = (hex) => Math.round((10 + 34 * hexLum(hex)) * 10) / 10;
+
+function renderedBody(id, variant, W, H) {
+  if (!fs.existsSync(path.join(PUBLIC_DEVICES, id, `${variant}.webp`))) return null;
+  return `<image href="/devices/${id}/${variant}.webp" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none"/>`;
+}
 
 /* ---------------------------- screen placeholders --------------------------- */
 /* Preview screens show wallpaper-style art, not black glass — the picker should
@@ -95,6 +116,7 @@ function railShading(p) {
 }
 
 function phone({ id, variant, screenW, screenH, screenR, bezel, bodyR, rail, bodyFill, camera, buttons, antenna = true }) {
+  const tabletLike = camera.kind === "bezel-dot";
   const M = 12; // margin for button protrusion
   const bodyW = screenW + bezel * 2;
   const bodyH = screenH + bezel * 2;
@@ -162,6 +184,18 @@ ${antennaBands}
 <path d="${rr(sx - 3, sy - 3, screenW + 6, screenH + 6, screenR + 3)}" fill="#000"/>
 `;
 
+  const spec = {
+    kind: "phone",
+    frame: { width: W, height: H },
+    M, bodyW, bodyH, bodyR, rim: rw,
+    railColor: midStop(rail),
+    railRough: 0.3,
+    buttons,
+    screen: { x: sx, y: sy, w: screenW, h: screenH, r: screenR },
+    depth: tabletLike ? Math.round(bodyW * 0.04) : Math.round(bodyW * 0.115),
+    frontFill: fillFor(midStop(rail)) * 0.55,
+  };
+
   let overlay = "";
   if (camera.kind === "island") {
     const iw = camera.w, ih = camera.h;
@@ -211,7 +245,7 @@ ${antennaBands}
     W, H,
     screenRect: { x: sx, y: sy, width: screenW, height: screenH },
     maskPath: rr(sx, sy, screenW, screenH, screenR),
-    body, overlay,
+    body: renderedBody(id, variant, W, H) ?? body, overlay, spec,
   };
 }
 
@@ -315,6 +349,16 @@ ${linGrad(`${p}_deck`, deckFill, 0, 0, 0, 1)}
 <rect x="${M + baseW - 280}" y="${by + baseH - 4}" width="120" height="8" rx="4" fill="#000" opacity="0.5"/>
 `;
 
+  const spec = {
+    kind: "laptop",
+    frame: { width: W, height: H },
+    M, lidX, lidW, lidH, baseW, baseH,
+    alumColor: midStop(alum),
+    deckColor: midStop(deckFill),
+    screen: { x: sx, y: sy, w: screenW, h: screenH },
+    frontFill: fillFor(midStop(deckFill)),
+  };
+
   const nw = notch.w, nh = notch.h;
   const overlay = `
 <path d="${rr(sx + screenW / 2 - nw / 2, sy - 1, nw, nh + 1, { tl: 0, tr: 0, br: 18, bl: 18 })}" fill="#000000"/>
@@ -325,7 +369,7 @@ ${linGrad(`${p}_deck`, deckFill, 0, 0, 0, 1)}
     W, H,
     screenRect: { x: sx, y: sy, width: screenW, height: screenH },
     maskPath: rr(sx, sy, screenW, screenH, { tl: 26, tr: 26, br: 0, bl: 0 }),
-    body, overlay,
+    body: renderedBody(id, variant, W, H) ?? body, overlay, spec,
   };
 }
 
@@ -548,11 +592,21 @@ ${ultra ? `<rect x="${bx - 14}" y="${by + bodyH * 0.2}" width="24" height="100" 
   const overlay = `
 <path d="${rr(sx, sy, screenW, screenH, screenR)}" fill="none" stroke="#000" stroke-opacity="0.5" stroke-width="5"/>
 <path d="${rr(bx + rim, by + rim, bodyW - rim * 2, bodyH - rim * 2, bodyR - rim)}" fill="url(#${p}_glass)" opacity="0.6"/>`;
+  const spec = {
+    kind: "square", ultra,
+    frame: { width: W, height: H },
+    bx, by, bodyW, bodyH, bodyR, rim, crownW,
+    bandW, bandLen,
+    caseColor: midStop(caseC), caseRough: ultra ? 0.34 : 0.28,
+    frontFill: fillFor(midStop(caseC)) * 0.7,
+    bandColor: midStop(band),
+    screen: { x: sx, y: sy, w: screenW, h: screenH, r: screenR },
+  };
   return {
     W, H,
     screenRect: { x: sx, y: sy, width: screenW, height: screenH },
     maskPath: rr(sx, sy, screenW, screenH, screenR),
-    body, overlay,
+    body: renderedBody(id, variant, W, H) ?? body, overlay: renderedBody(id, variant, W, H) ? "" : overlay, spec,
   };
 }
 
@@ -601,11 +655,23 @@ ${Array.from({ length: 60 }, (_, i) => { const a = (i / 60) * Math.PI * 2; const
 <path d="${circlePath(cx, cy, d / 2)}" fill="none" stroke="#000" stroke-opacity="0.5" stroke-width="5"/>
 <path d="${circlePath(cx, cy, d / 2 + bezel * (ring ? 0.2 : 0.45))}" fill="url(#${p}_dome)"/>
 <path d="${circlePath(cx, cy, d / 2)}" fill="url(#${p}_rimShade)"/>`;
+  const spec = {
+    kind: "round",
+    frame: { width: W, height: H },
+    cx, cy, R, rim: Math.round(R * 0.05),
+    glassR: d / 2 + bezel * (ring ? 0.2 : 0.45), screenR: d / 2,
+    crownW, bandW, bandLen, buttons,
+    caseColor: midStop(caseC), caseRough: 0.28,
+    frontFill: fillFor(midStop(caseC)) * 0.7,
+    bandColor: midStop(band),
+    ring: ring ?? undefined,
+  };
+  const img = renderedBody(id, variant, W, H);
   return {
     W, H,
     screenRect: { x: cx - d / 2, y: cy - d / 2, width: d, height: d },
     maskPath: circlePath(cx, cy, d / 2),
-    body, overlay,
+    body: img ?? body, overlay: img ? "" : overlay, spec,
   };
 }
 
@@ -654,11 +720,21 @@ ${kind === "imac" ? `<path d="${rr(bx, by + bezel + screenH + bezel * 0.6, bodyW
   const overlay = `
 <circle cx="${sx + screenW / 2}" cy="${sy - glassBezel / 2}" r="7" fill="#1a1d26"/>
 <rect x="${sx}" y="${sy}" width="${screenW}" height="${screenH}" fill="none" stroke="#000" stroke-opacity="0.35" stroke-width="3"/>`;
+  const spec = {
+    kind: "monitor", imac: kind === "imac",
+    frame: { width: W, height: H },
+    bx, by, bodyW, bodyH, R,
+    frameColor: frameC[0][1], chinColor: chinC[0][1], standColor: kind === "imac" ? chinC[0][1] : standC[0][1],
+    chinStart: bezel + screenH + bezel * 0.6,
+    standW, neckH, footH, glassBezel,
+    screen: { x: sx, y: sy, w: screenW, h: screenH },
+    frontFill: kind === "imac" ? 16 : 11,
+  };
   return {
     W, H,
     screenRect: { x: sx, y: sy, width: screenW, height: screenH },
     maskPath: rr(sx, sy, screenW, screenH, 0),
-    body, overlay,
+    body: renderedBody(id, variant, W, H) ?? body, overlay, spec,
   };
 }
 
@@ -1532,6 +1608,11 @@ for (const dev of DEVICES) {
 <!--OVERLAY-->${g.overlay}<!--/OVERLAY-->
 </svg>`;
     fs.writeFileSync(path.join(dir, `frame-${v.id}.svg`), svg);
+    if (g.spec) {
+      const specDir = path.join(SPEC_DIR, dev.meta.id);
+      fs.mkdirSync(specDir, { recursive: true });
+      fs.writeFileSync(path.join(specDir, `${v.id}.json`), JSON.stringify(g.spec));
+    }
     variants.push({ id: v.id, label: v.label, svg: `frame-${v.id}.svg` });
   }
 

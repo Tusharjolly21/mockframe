@@ -1,0 +1,1 @@
+{"kind":"phone","frame":{"width":1287,"height":2664},"M":12,"bodyW":1263,"bodyH":2640,"bodyR":190,"rim":15,"railColor":"#e39fb2","railRough":0.3,"buttons":[{"side":"left","y":486,"len":95},{"side":"left","y":665,"len":176},{"side":"left","y":869,"len":176},{"side":"right","y":613,"len":294}],"screen":{"x":54,"y":54,"w":1179,"h":2556,"r":150},"depth":145,"frontFill":18.315}
