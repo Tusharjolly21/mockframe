@@ -22,6 +22,7 @@ import { FormatsRow } from "@/components/marketing/home/FormatsRow";
 import { GalleryWall } from "@/components/marketing/home/GalleryWall";
 import { StyleSwitcher } from "@/components/marketing/home/StyleSwitcher";
 import { SITE_NAME, SITE_URL, socialMeta } from "@/lib/site";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 const DEVICE_COUNT = listDevices().length;
 
@@ -178,7 +179,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-dvh bg-[#09090b] text-white">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <MarketingNav />
 
       <HeroSection devicesCount={devices.length} />

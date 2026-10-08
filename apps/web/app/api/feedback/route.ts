@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { FirebaseConfigError, firebaseSetupHint, firestoreDb } from "@/lib/server/firebaseAdmin";
 import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
+import { consumeDailyQuota, quotaSubject } from "@/lib/server/quota";
 
 export const runtime = "nodejs";
 
@@ -10,7 +11,11 @@ const TYPES = new Set(["feedback", "bug", "feature", "showcase"]);
 export async function POST(req: NextRequest) {
   try {
     const owner = await getRequestOwner(req);
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    // open to guests, so meter it: a script shouldn't be able to fill the inbox collection
+    const quota = await consumeDailyQuota(quotaSubject(req, owner), "feedback", 10);
+    if (!quota.allowed) return attachOwnerCookie(NextResponse.json({ error: "You've sent a lot of feedback today. Thank you! Try again tomorrow." }, { status: 429 }), owner);
     const type = typeof body?.type === "string" && TYPES.has(body.type) ? body.type : "feedback";
     const message = typeof body?.message === "string" ? body.message.trim() : "";
     const email = typeof body?.email === "string" ? body.email.trim().slice(0, 180) : "";

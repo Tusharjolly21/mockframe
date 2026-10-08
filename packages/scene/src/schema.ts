@@ -4,9 +4,20 @@ export const SCHEMA_VERSION = 3 as const;
 
 /* ---------------------------------- shared ---------------------------------- */
 
+/**
+ * A CSS colour that ends up spliced into style strings (gradients, shadows, masks).
+ * Shared scenes come from other people, so refuse anything that could close the
+ * value and add its own: `url(` would make every viewer fetch a remote file, and
+ * `;` `{` `}` `\` `<` `>` are never part of a colour.
+ */
+export const CssColorSchema = z
+  .string()
+  .max(200)
+  .refine((v) => !/[;{}\\<>]|url\s*\(|@import|expression\s*\(/i.test(v), { message: "Invalid colour" });
+
 export const GradientStopSchema = z.object({
   at: z.number().min(0).max(1),
-  color: z.string(),
+  color: CssColorSchema,
 });
 
 export const TransformSchema = z.object({
@@ -22,7 +33,7 @@ export const TransformSchema = z.object({
 /* -------------------------------- background -------------------------------- */
 
 export const BackgroundSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("solid"), color: z.string() }),
+  z.object({ type: z.literal("solid"), color: CssColorSchema }),
   z.object({
     type: z.literal("linear-gradient"),
     angle: z.number(),
@@ -37,7 +48,7 @@ export const BackgroundSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("mesh-gradient"),
     seed: z.number().int(), // deterministic from seed — critical for re-render parity
-    colors: z.array(z.string()).min(2).max(8),
+    colors: z.array(CssColorSchema).min(2).max(8),
   }),
   z.object({
     type: z.literal("image"),
@@ -56,7 +67,7 @@ export const EffectSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("grain"), intensity: z.number().min(0).max(1), seed: z.number().int() }),
   z.object({ type: z.literal("vhs"), intensity: z.number().min(0).max(1) }),
   z.object({ type: z.literal("glitch"), intensity: z.number().min(0).max(1), seed: z.number().int() }),
-  z.object({ type: z.literal("vignette"), intensity: z.number().min(0).max(1), color: z.string() }),
+  z.object({ type: z.literal("vignette"), intensity: z.number().min(0).max(1), color: CssColorSchema }),
   z.object({ type: z.literal("blur"), radius: z.number().min(0).max(100) }),
 ]);
 
@@ -89,7 +100,7 @@ export const BackdropSchema = z.object({
       ]),
       intensity: z.number().min(0).max(1),
       thickness: z.number().min(0).max(1),
-      color: z.string(),
+      color: CssColorSchema,
       rotation: z.number().min(-180).max(180).optional(),
       blur: z.number().min(0).max(30).optional(),
       blendMode: z.enum(["normal", "overlay", "soft-light", "multiply", "screen"]).optional(),
@@ -129,7 +140,7 @@ export const ShadowSchema = z.object({
   distance: z.number().min(0),
   softness: z.number().min(0),
   opacity: z.number().min(0).max(1),
-  color: z.string(),
+  color: CssColorSchema,
 });
 
 /* ---------------------------------- layers ----------------------------------- */
@@ -143,7 +154,7 @@ export const MediaSchema = z.object({
   offsetY: z.number(),
   scale: z.number().positive(),
   /** letterbox color behind contain-fit media */
-  bg: z.string().optional(),
+  bg: CssColorSchema.optional(),
   trim: z.object({ startMs: z.number(), endMs: z.number() }).optional(),
   /** non-destructive crop of the source image, as 0..1 fractions of its size */
   crop: z.object({ x: z.number(), y: z.number(), w: z.number().positive(), h: z.number().positive() }).optional(),
@@ -183,7 +194,7 @@ export const MockupLayerSchema = z.object({
   border: z
     .object({
       width: z.number().min(0),
-      color: z.union([z.string(), z.array(GradientStopSchema)]),
+      color: z.union([CssColorSchema, z.array(GradientStopSchema)]),
       inset: z.number().min(0),
     })
     .optional(),
@@ -233,7 +244,7 @@ export const TextLayerSchema = z.object({
     lineHeight: z.number().positive(),
     letterSpacing: z.number(),
   }),
-  color: z.string(),
+  color: CssColorSchema,
   align: z.enum(["left", "center", "right"]),
   maxWidth: z.number().positive().nullable(),
   transform: TransformSchema,
@@ -244,11 +255,11 @@ export const TextLayerSchema = z.object({
   /** gradient text fill (overrides color when set) */
   gradient: z.array(GradientStopSchema).optional(),
   /** outline / stroke */
-  stroke: z.object({ width: z.number().min(0), color: z.string() }).optional(),
+  stroke: z.object({ width: z.number().min(0), color: CssColorSchema }).optional(),
   /** drop shadow */
-  shadow: z.object({ x: z.number(), y: z.number(), blur: z.number().min(0), color: z.string() }).optional(),
+  shadow: z.object({ x: z.number(), y: z.number(), blur: z.number().min(0), color: CssColorSchema }).optional(),
   /** highlight pill behind the text */
-  highlight: z.object({ color: z.string(), radius: z.number().min(0), padX: z.number().min(0), padY: z.number().min(0) }).optional(),
+  highlight: z.object({ color: CssColorSchema, radius: z.number().min(0), padX: z.number().min(0), padY: z.number().min(0) }).optional(),
   /** entrance animation (static images always show the finished text) */
   animation: TextAnimationSchema.optional(),
 });
@@ -338,7 +349,7 @@ export const SceneDocumentSchema = z.object({
     /** rounded canvas corners; exports keep transparency outside the radius */
     cornerRadius: z.number().min(0).optional(),
     /** decorative ring drawn just inside the canvas edge */
-    border: z.object({ width: z.number().min(0), color: z.string() }).optional(),
+    border: z.object({ width: z.number().min(0), color: CssColorSchema }).optional(),
     panoramaBackground: z.boolean().optional(),
   }),
   layers: z.array(LayerSchema), // z-ordered, index 0 = back
@@ -351,7 +362,7 @@ export const SceneDocumentSchema = z.object({
         id: z.string(),
         fromLayerId: z.string(),
         toLayerId: z.string(),
-        color: z.string().optional(),
+        color: CssColorSchema.optional(),
         thickness: z.number().optional(),
         dashArray: z.string().optional(),
         arrowHead: z.boolean().optional(),

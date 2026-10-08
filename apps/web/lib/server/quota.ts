@@ -25,7 +25,9 @@ export interface QuotaResult {
  * shared/CGNAT address.
  */
 export function quotaSubject(req: NextRequest, owner: RequestOwner): string {
-  if (owner.uid) return `user_${owner.uid}`;
+  // Anonymous Firebase accounts cost nothing to mint (one unauthenticated call each), so a
+  // uid-keyed bucket for them is as decorative as a cookie-keyed one: key them by IP too.
+  if (owner.uid && owner.signInProvider !== "anonymous") return `user_${owner.uid}`;
   // Trusted client IP. On Vercel `x-real-ip` is set by the platform to the real
   // client IP and cannot be spoofed by the caller. `x-forwarded-for`'s LEFTMOST
   // entry IS caller-controlled (Vercel appends the real IP to the right), so we
@@ -50,8 +52,16 @@ function utcDay(): string {
  * requests read the same count and every one of them passes.
  *
  * Fails OPEN on infrastructure errors (including Firebase not being configured
- * locally): a caller cannot induce those, so availability wins over strictness.
+ * locally): availability wins over strictness there. The exception is contention:
+ * a caller CAN induce an aborted transaction by hammering one bucket from many
+ * parallel requests, so an aborted transaction counts as "over the limit". A Firestore outage or project-wide
+ * RESOURCE_EXHAUSTED is not the caller's doing and fails open instead.
  */
+function isContention(err: unknown): boolean {
+  const code = (err as { code?: unknown })?.code;
+  return code === 10 || code === "aborted" || /\b(contention|aborted)\b/i.test(String((err as Error)?.message ?? ""));
+}
+
 export async function consumeDailyQuota(subject: string, bucket: string, limit: number): Promise<QuotaResult> {
   try {
     const db = firestoreDb();
@@ -67,6 +77,7 @@ export async function consumeDailyQuota(subject: string, bucket: string, limit: 
     });
   } catch (err) {
     if (!(err instanceof FirebaseConfigError)) console.error("[quota]", bucket, err);
+    if (!(err instanceof FirebaseConfigError) && isContention(err)) return { allowed: false, used: limit, limit };
     return { allowed: true, used: 0, limit };
   }
 }

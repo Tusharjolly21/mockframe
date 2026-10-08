@@ -173,6 +173,9 @@ export function openDraftInEditor(rec: DraftRecord): boolean {
   try {
     const next = openDraft(rec);
     useSceneStore.getState().setScene(() => next);
+    // the previous canvas is not part of this draft's history: without this, ⌘Z would bring it
+    // back and autosave would write it into the draft that was just opened
+    sceneTemporal.getState().clear();
     const isTemplate = rec.kind === "template";
     useDraftsUi.getState().setCurrent(isTemplate ? null : rec.id, isTemplate ? null : rec.name);
     const view = useViewStore.getState();

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { FirebaseConfigError, firebaseErrorPayload, firebaseSetupHint, firestoreDb } from "@/lib/server/firebaseAdmin";
 import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
+import { consumeDailyQuota, quotaSubject } from "@/lib/server/quota";
 
 /**
  * Firebase-backed JSON k/v store — server persistence for themes and other
@@ -14,6 +15,10 @@ export const runtime = "nodejs";
 function validKey(key: string): boolean {
   return /^[a-z0-9-]{1,64}$/.test(key);
 }
+
+/** The only keys the app writes. Anything else would let a caller create unlimited documents under a fresh owner id. */
+const WRITABLE_KEYS = new Set(["themes"]);
+const WRITES_PER_DAY = 600;
 
 function configError() {
   return NextResponse.json({ error: "Firebase is not configured", hint: firebaseSetupHint() }, { status: 501 });
@@ -36,7 +41,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ key: strin
 
 export async function PUT(req: NextRequest, ctx: { params: Promise<{ key: string }> }) {
   const { key } = await ctx.params;
-  if (!validKey(key)) return NextResponse.json({ error: "Bad key" }, { status: 400 });
+  if (!validKey(key) || !WRITABLE_KEYS.has(key)) return NextResponse.json({ error: "Bad key" }, { status: 400 });
   const body = await req.text();
   // Firestore's hard limit is ~1 MiB per document; stay under it once value +
   // serverTimestamp + key overhead are added (matches drafts/templates).
@@ -49,6 +54,8 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ key: string
   }
   try {
     const owner = await getRequestOwner(req);
+    const quota = await consumeDailyQuota(quotaSubject(req, owner), "store-write", WRITES_PER_DAY);
+    if (!quota.allowed) return attachOwnerCookie(NextResponse.json({ error: "Too many saves today" }, { status: 429 }), owner);
     await firestoreDb().doc(`mockframeOwners/${owner.ownerId}/kv/${key}`).set({
       value,
       updatedAt: FieldValue.serverTimestamp(),

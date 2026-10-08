@@ -6,6 +6,7 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Reveal } from "@/components/marketing/Reveal";
 import { SITE_NAME, SITE_URL, socialMeta } from "@/lib/site";
 import { TOOL_PAGES, type ToolPage } from "@/lib/toolPages";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 export const metadata: Metadata = {
   title: "Free Screenshot & Mockup Tools",
@@ -80,7 +81,7 @@ export default function ToolsIndexPage() {
   return (
     <main className="min-h-dvh bg-[#09090b] text-white">
       <MarketingNav />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
 
       <section className="mx-auto max-w-6xl px-6 pb-14 pt-32">
         <Reveal className="max-w-2xl">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { firebaseErrorPayload, firebaseSetupHint, FirebaseConfigError, firestoreDb, firebaseAuth } from "@/lib/server/firebaseAdmin";
 import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
+import { parseTheme } from "@/lib/themeSchema";
 
 export const runtime = "nodejs";
 type Role = "read" | "contribute";
@@ -44,9 +45,13 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
     const result = await access(req, id);
     if (!result.doc) return NextResponse.json({ error: "Shared theme not found or access denied." }, { status: 404 });
     if (result.role !== "contribute") return NextResponse.json({ error: "This theme is read-only for your account." }, { status: 403 });
-    const body = (await req.json()) as { theme?: unknown; email?: string; role?: Role };
+    const body = (await req.json().catch(() => null)) as { theme?: unknown; email?: string; role?: Role } | null;
+    if (!body || typeof body !== "object") return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     if (body.theme && typeof body.theme === "object") {
-      await result.doc.ref.update({ theme: { ...(body.theme as object), id, builtin: false }, updatedAt: FieldValue.serverTimestamp() });
+      // every member opens this theme in their editor: only a well-formed one may be stored
+      const checked = parseTheme({ name: "Shared theme", ...(body.theme as object), id });
+      if (!checked) return NextResponse.json({ error: "That theme can't be saved." }, { status: 400 });
+      await result.doc.ref.update({ theme: { ...checked, id, builtin: false }, updatedAt: FieldValue.serverTimestamp() });
     }
     if (body.email && body.role && (body.role === "read" || body.role === "contribute") && result.doc.data.ownerUid === result.owner.uid) {
       const email = body.email.trim().toLowerCase();

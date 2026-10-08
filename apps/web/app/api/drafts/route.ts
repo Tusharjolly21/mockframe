@@ -23,6 +23,9 @@ function draftsCollection(ownerId: string) {
   return firestoreDb().collection(`mockframeOwners/${ownerId}/drafts`);
 }
 
+/** well above what real use reaches (autosave reuses one draft id per canvas) */
+const MAX_DRAFTS_PER_OWNER = 300;
+
 export async function GET(req: NextRequest) {
   try {
     const owner = await getRequestOwner(req);
@@ -59,6 +62,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  if (!body || typeof body !== "object" || Array.isArray(body)) return NextResponse.json({ error: "Invalid draft" }, { status: 400 });
 
   let scene: unknown;
   let pack: unknown;
@@ -92,7 +96,16 @@ export async function POST(req: NextRequest) {
       updatedAt: FieldValue.serverTimestamp(),
       ownerId: owner.ownerId,
     };
-    await draftsCollection(owner.ownerId).doc(id).set(record, { merge: true });
+    const ref = draftsCollection(owner.ownerId).doc(id);
+    // cap how many drafts one owner (guests and anonymous accounts included) can keep, so a loop of
+    // fresh ids can't pile up ~1 MB documents; updating an existing draft is always allowed
+    if (!(await ref.get()).exists) {
+      const count = (await draftsCollection(owner.ownerId).count().get()).data().count;
+      if (count >= MAX_DRAFTS_PER_OWNER) {
+        return NextResponse.json({ error: "Draft limit reached — delete some drafts to save new ones" }, { status: 429 });
+      }
+    }
+    await ref.set(record, { merge: true });
     return attachOwnerCookie(
       NextResponse.json({
         id,

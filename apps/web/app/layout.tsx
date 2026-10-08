@@ -3,6 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { safeJsonLd } from "@/lib/jsonLd";
 
 const GOOGLE_ANALYTICS_ID = "G-CN1PEZYM0L";
 
@@ -91,7 +92,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-zinc-950 text-zinc-200 antialiased" suppressHydrationWarning>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_AND_SITE_JSONLD) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(ORG_AND_SITE_JSONLD) }}
         />
         <AuthProvider>{children}</AuthProvider>
       </body>

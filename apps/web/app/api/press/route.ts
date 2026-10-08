@@ -30,6 +30,30 @@ export async function POST(req: NextRequest) {
   if (!PRESS_SLUG_RE.test(requested)) return NextResponse.json({ error: "Invalid slug" }, { status: 400 });
 
   const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+  // links and the contact end up in href / mailto: on a public page, so keep them to plain https URLs and one email address
+  const invalid: string[] = [];
+  const httpsLink = (v: unknown, label: string) => {
+    let raw = str(v, 300);
+    if (!raw) return "";
+    // "yourapp.com" is what people type; give it a scheme instead of dropping it
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(raw)) raw = `https://${raw}`;
+    try {
+      const url = new URL(raw);
+      if (url.protocol === "https:") return raw;
+      if (url.protocol === "http:") return `https://${raw.slice("http://".length)}`;
+    } catch {
+      /* falls through */
+    }
+    invalid.push(label);
+    return "";
+  };
+  const email = (v: unknown) => {
+    const raw = str(v, 120);
+    if (!raw) return "";
+    if (/^[^\s@<>?&=,;:"'()\[\]\\]+@[^\s@<>?&=,;:"'()\[\]\\]+\.[^\s@<>?&=,;:"'()\[\]\\]+$/.test(raw)) return raw;
+    invalid.push("press contact");
+    return "";
+  };
   const hostedUrl = (v: unknown) => (typeof v === "string" && v.startsWith("https://") && v.length < 2048 ? v : null);
   const shots = (Array.isArray(body.screenshots) ? body.screenshots : [])
     .map((s) => (typeof s === "object" && s !== null ? hostedUrl((s as Record<string, unknown>).url) : null))
@@ -45,12 +69,15 @@ export async function POST(req: NextRequest) {
     icon: hostedUrl(body.icon),
     screenshots: shots,
     links: {
-      site: str((body.links as Record<string, unknown> | undefined)?.site, 300),
-      appstore: str((body.links as Record<string, unknown> | undefined)?.appstore, 300),
-      play: str((body.links as Record<string, unknown> | undefined)?.play, 300),
+      site: httpsLink((body.links as Record<string, unknown> | undefined)?.site, "website link"),
+      appstore: httpsLink((body.links as Record<string, unknown> | undefined)?.appstore, "App Store link"),
+      play: httpsLink((body.links as Record<string, unknown> | undefined)?.play, "Google Play link"),
     },
-    contact: str(body.contact, 120),
+    contact: email(body.contact),
   };
+  if (invalid.length) {
+    return NextResponse.json({ error: `Check the ${invalid.join(", ")}: use a full web address and a plain email address.` }, { status: 400 });
+  }
 
   try {
     const owner = await getRequestOwner(req);

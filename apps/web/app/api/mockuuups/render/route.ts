@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { renderMockup, MockuuupsError } from "@/lib/server/mockuuups";
 import { requestIsPro } from "@/lib/server/entitlement";
+import { consumeDailyQuota, quotaSubject } from "@/lib/server/quota";
+import { getRequestOwner } from "@/lib/server/requestOwner";
+
+/** renders per account per UTC day; the upstream credits are shared by every subscriber */
+const RENDERS_PER_DAY = 150;
 
 /**
  * POST /api/mockuuups/render  { mockup, imageUrl, size? }
@@ -31,6 +36,9 @@ export async function POST(req: NextRequest) {
   if (!/^https?:\/\//.test(imageUrl)) return NextResponse.json({ error: "imageUrl must be a public http(s) URL" }, { status: 400 });
 
   try {
+    const owner = await getRequestOwner(req);
+    const quota = await consumeDailyQuota(quotaSubject(req, owner), "mockuuups-render", RENDERS_PER_DAY);
+    if (!quota.allowed) return NextResponse.json({ error: "Daily render limit reached — try again tomorrow" }, { status: 429 });
     const { dataUrl, cost } = await renderMockup(mockup, imageUrl, size);
     return NextResponse.json({ url: dataUrl, cost });
   } catch (err) {

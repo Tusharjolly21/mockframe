@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
     const progress = await getPromoRenderProgress(renderId, bucket);
     return NextResponse.json(progress);
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Status failed" }, { status: 500 });
+    console.error("[promo-render/status]", err);
+    return NextResponse.json({ error: process.env.NODE_ENV !== "production" && err instanceof Error ? err.message : "Status failed" }, { status: 500 });
   }
 }

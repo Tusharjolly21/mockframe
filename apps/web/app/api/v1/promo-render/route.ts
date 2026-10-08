@@ -89,7 +89,9 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Render failed";
-    return NextResponse.json({ error: `Render failed: ${message}` }, { status: 500 });
+    // renderer errors name functions, buckets and ARNs: log them, show them only while developing
+    console.error("[promo-render]", err);
+    const detail = process.env.NODE_ENV !== "production" && err instanceof Error ? `: ${err.message}` : "";
+    return NextResponse.json({ error: `Render failed${detail}` }, { status: 500 });
   }
 }
