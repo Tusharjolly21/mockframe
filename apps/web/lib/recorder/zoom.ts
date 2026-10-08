@@ -13,8 +13,10 @@ export interface ZoomSegment {
   /** focus point, 0..1 of the recording */
   x: number;
   y: number;
-  /** 1 = whole recording; 2 = half the width visible */
+  /** 1 = whole recording; 2 = half the width visible; below 1 pulls back to show more background */
   scale: number;
+  /** keep the cursor in view: the camera pans after it while zoomed */
+  follow?: boolean;
 }
 
 /** What changed between two sampled frames. */
@@ -26,9 +28,29 @@ export interface ActivitySample {
   box: { x: number; y: number; w: number; h: number } | null;
 }
 
-export const MIN_ZOOM = 1.25;
-export const MAX_ZOOM = 3;
+export const MIN_ZOOM = 0.6;
+export const MAX_ZOOM = 4;
 export const DEFAULT_ZOOM = 1.8;
+
+/** How the camera moves between zooms. */
+export type ZoomMotion = "smooth" | "snappy" | "slow" | "bouncy" | "instant";
+
+export const ZOOM_MOTIONS: { id: ZoomMotion; label: string; hint: string }[] = [
+  { id: "smooth", label: "Smooth", hint: "Glides in and out" },
+  { id: "snappy", label: "Snappy", hint: "Quick and crisp" },
+  { id: "slow", label: "Cinematic", hint: "Slow, film-like moves" },
+  { id: "bouncy", label: "Bouncy", hint: "A little overshoot" },
+  { id: "instant", label: "Cut", hint: "Jumps straight there" },
+];
+
+/** spring speed and damping for each motion (damping 1 = no overshoot) */
+const MOTION: Record<ZoomMotion, { omega: number; zeta: number }> = {
+  smooth: { omega: 5.6, zeta: 1 },
+  snappy: { omega: 10, zeta: 1 },
+  slow: { omega: 3.2, zeta: 1 },
+  bouncy: { omega: 7.5, zeta: 0.55 },
+  instant: { omega: 60, zeta: 1 },
+};
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
@@ -62,6 +84,10 @@ interface DetectOpts {
   leadMs?: number;
   /** stay zoomed this long after the action stops */
   holdMs?: number;
+  /** clicks found in the recording: the strongest reason to zoom */
+  clicks?: { t: number; x: number; y: number }[];
+  /** bursts of typing */
+  typing?: { startMs: number; endMs: number; x: number; y: number }[];
 }
 
 /**
@@ -70,14 +96,18 @@ interface DetectOpts {
  * zoom on their centre. Whole-screen changes don't zoom.
  */
 export function detectZooms(samples: ActivitySample[], durationMs: number, opts: DetectOpts = {}): ZoomSegment[] {
-  const { minEnergy = 0.003, maxEnergy = 0.3, leadMs = 450, holdMs = 1300 } = opts;
-  type Hit = { t: number; cx: number; cy: number; size: number; e: number };
+  const { minEnergy = 0.003, maxEnergy = 0.3, leadMs = 450, holdMs = 1300, clicks = [], typing = [] } = opts;
+  type Hit = { t: number; cx: number; cy: number; size: number; e: number; click?: boolean };
   const hits: Hit[] = [];
   for (const s of samples) {
     if (!s.box || s.energy < minEnergy || s.energy > maxEnergy) continue;
     if (s.box.w * s.box.h > 0.4) continue;
     hits.push({ t: s.t, cx: s.box.x + s.box.w / 2, cy: s.box.y + s.box.h / 2, size: Math.max(s.box.w, s.box.h), e: s.energy });
   }
+  // a click outweighs any amount of on-screen change; typing comes next
+  for (const c of clicks) hits.push({ t: c.t, cx: c.x, cy: c.y, size: 0.2, e: 0.5, click: true });
+  for (const b of typing) for (let t = b.startMs; t <= b.endMs; t += 250) hits.push({ t, cx: b.x, cy: b.y, size: 0.22, e: 0.2 });
+  hits.sort((a, b) => a.t - b.t);
 
   const clusters: Hit[][] = [];
   for (const h of hits) {
@@ -95,7 +125,7 @@ export function detectZooms(samples: ActivitySample[], durationMs: number, opts:
     clusters.push([h]);
   }
 
-  const zooms: ZoomSegment[] = [];
+  const zooms: (ZoomSegment & { click?: boolean })[] = [];
   for (const c of clusters) {
     const w = c.reduce((a, x) => a + x.e, 0);
     const x = c.reduce((a, h) => a + h.cx * h.e, 0) / w;
@@ -103,19 +133,28 @@ export function detectZooms(samples: ActivitySample[], durationMs: number, opts:
     const sizes = c.map((h) => h.size).sort((a, b) => a - b);
     const size = sizes[Math.floor(sizes.length / 2)];
     // show the action with room around it
-    const scale = clamp(0.45 / Math.max(size, 0.05), 1.4, 2);
+    // clicks get a proper close-up; other changes zoom just enough to show them
+    const scale = c.some((h) => h.click) ? 1.8 : clamp(0.45 / Math.max(size, 0.05), 1.4, 2);
     const startMs = Math.max(0, c[0].t - leadMs);
     const endMs = Math.min(durationMs, c.at(-1)!.t + holdMs);
     const prev = zooms.at(-1);
     // a short gap between two zooms on nearly the same spot reads as one zoom
+    const click = c.some((h) => h.click);
     if (prev && startMs - prev.endMs < 700 && Math.hypot(prev.x - x, prev.y - y) < 0.25) {
       prev.endMs = endMs;
+      // a click outranks whatever the zoom was about before
+      if (click && !prev.click) Object.assign(prev, { x, y, click });
+      prev.scale = Math.max(prev.scale, Math.round(scale * 10) / 10);
       continue;
     }
-    zooms.push({ id: zoomId(), startMs, endMs, x, y, scale: Math.round(scale * 10) / 10 });
+    zooms.push({ id: zoomId(), startMs, endMs, x, y, scale: Math.round(scale * 10) / 10, click });
   }
   return normalizeZooms(
-    zooms.filter((z) => z.endMs - z.startMs >= 1000),
+    zooms.filter((z) => z.endMs - z.startMs >= 1000).map((z) => {
+      const { click, ...rest } = z;
+      void click;
+      return rest;
+    }),
     durationMs
   );
 }
@@ -140,33 +179,73 @@ export function cameraTarget(segments: ZoomSegment[], t: number): CameraPose {
   return z ? { x: z.x, y: z.y, scale: z.scale } : { x: 0.5, y: 0.5, scale: 1 };
 }
 
+export interface CameraOpts {
+  motion?: ZoomMotion;
+  /** where the cursor is at `t` (0..1), for zooms that follow it */
+  cursor?: (t: number) => { x: number; y: number; visible: boolean } | null;
+}
+
 /**
- * Critically damped springs chase the target, sampled at `fps`: the camera
- * eases in, overshoots nothing, and pans straight from one zoom to the next.
- * `omega` sets the speed (higher is snappier).
+ * Springs chase the target, sampled at `fps`: the camera eases in and pans
+ * straight from one zoom to the next. With the default motion the spring is
+ * critically damped, so nothing overshoots.
+ *
+ * A zoom that follows the cursor keeps it inside the middle of the view: the
+ * camera only pans when the cursor heads for the edge, like a cameraman
+ * keeping up rather than a camera glued to the pointer.
  */
-export function cameraTrack(segments: ZoomSegment[], durationMs: number, fps = 60, omega = 5.6): CameraTrack {
+export function cameraTrack(segments: ZoomSegment[], durationMs: number, fps = 60, opts: CameraOpts = {}): CameraTrack {
+  const { omega, zeta } = MOTION[opts.motion ?? "smooth"];
   const n = Math.max(1, Math.ceil((durationMs / 1000) * fps) + 1);
   const dt = 1 / fps;
   const poses: CameraPose[] = [];
   const pos = { x: 0.5, y: 0.5, scale: 1 };
   const vel = { x: 0, y: 0, scale: 0 };
   const keys = ["x", "y", "scale"] as const;
+  let follow = null as { id: string; x: number; y: number } | null;
+  // step finer than a frame so fast springs stay stable
+  const sub = Math.max(2, Math.ceil((omega * dt) / 0.15));
   for (let i = 0; i < n; i++) {
-    const target = cameraTarget(segments, (i / fps) * 1000);
-    for (let half = 0; half < 2; half++) {
-      const h = dt / 2;
+    const t = (i / fps) * 1000;
+    const z = segments.find((s) => t >= s.startMs && t < s.endMs);
+    const target = z ? { x: z.x, y: z.y, scale: z.scale } : { x: 0.5, y: 0.5, scale: 1 };
+    if (z?.follow && opts.cursor) {
+      if (follow?.id !== z.id) follow = { id: z.id, x: z.x, y: z.y };
+      const c = opts.cursor(t);
+      if (c?.visible) {
+        // dead zone: the middle 40% of the view
+        const half = (0.5 / Math.max(1, z.scale)) * 0.4;
+        if (c.x < follow.x - half) follow.x = c.x + half;
+        if (c.x > follow.x + half) follow.x = c.x - half;
+        if (c.y < follow.y - half) follow.y = c.y + half;
+        if (c.y > follow.y + half) follow.y = c.y - half;
+        Object.assign(follow, clampFocus(follow.x, follow.y, z.scale));
+      }
+      target.x = follow.x;
+      target.y = follow.y;
+    } else follow = null;
+    for (let step = 0; step < sub; step++) {
+      const h = dt / sub;
       for (const k of keys) {
-        // x'' = -2ζω x' - ω²(x - target), ζ = 1
-        const acc = -2 * omega * vel[k] - omega * omega * (pos[k] - target[k]);
+        // x'' = -2ζω x' - ω²(x - target)
+        const acc = -2 * zeta * omega * vel[k] - omega * omega * (pos[k] - target[k]);
         vel[k] += acc * h;
         pos[k] += vel[k] * h;
       }
     }
-    const scale = Math.max(1, pos.scale);
+    const scale = Math.max(MIN_ZOOM * 0.8, pos.scale);
     poses.push({ ...clampFocus(pos.x, pos.y, scale), scale });
   }
   return { fps, poses };
+}
+
+/** How fast the camera is moving at `t` (view widths per second, roughly). For motion blur. */
+export function cameraSpeed(track: CameraTrack, t: number): number {
+  const i = Math.min(track.poses.length - 2, Math.max(0, Math.floor((t / 1000) * track.fps)));
+  if (i < 0 || track.poses.length < 2) return 0;
+  const a = track.poses[i];
+  const b = track.poses[i + 1];
+  return (Math.hypot((b.x - a.x) * a.scale, (b.y - a.y) * a.scale) + Math.abs(Math.log(b.scale / a.scale))) * track.fps;
 }
 
 /** The camera at `t`, interpolated between samples. */

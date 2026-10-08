@@ -41,7 +41,7 @@ describe("auto zoom detection", () => {
   it("keeps the view inside the recording", () => {
     expect(clampFocus(0, 1, 2)).toEqual({ x: 0.25, y: 0.75 });
     const [z] = normalizeZooms([{ id: "a", startMs: -100, endMs: 9000, x: 0.99, y: 0.01, scale: 9 }], 5000);
-    expect(z).toMatchObject({ startMs: 0, endMs: 5000, scale: 3 });
+    expect(z).toMatchObject({ startMs: 0, endMs: 5000, scale: 4 });
     const r = viewRect({ ...z, scale: z.scale });
     expect(r.x + r.w).toBeLessThanOrEqual(1);
     expect(r.y).toBeGreaterThanOrEqual(0);

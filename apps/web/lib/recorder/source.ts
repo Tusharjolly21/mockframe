@@ -1,6 +1,6 @@
 "use client";
 
-import type { ActivitySample } from "./zoom";
+import { analysisPlan, RecordingAnalyzer, toGray, type Analysis } from "./track";
 
 /** A recording loaded into the studio. */
 export interface Recording {
@@ -11,6 +11,8 @@ export interface Recording {
   height: number;
   durationMs: number;
   hasAudio: boolean;
+  /** the webcam, recorded alongside (same start, same length) */
+  camera?: { blob: Blob; url: string; width: number; height: number } | null;
 }
 
 export const MAX_RECORDING_BYTES = 1024 * 1024 * 1024;
@@ -18,48 +20,186 @@ export const MAX_RECORDING_MS = 10 * 60 * 1000;
 
 /* -------------------------------- capture --------------------------------- */
 
+export interface CaptureOptions {
+  /** the tab's or system's own sound, when the browser offers it */
+  systemAudio: boolean;
+  /** a live microphone stream to record over the screen (voiceover) */
+  mic: MediaStream | null;
+  /** a live camera stream to record alongside */
+  camera: MediaStream | null;
+}
+
+export type CaptureState = "ready" | "recording" | "paused" | "stopped";
+
+export interface CaptureResult {
+  screen: Blob;
+  camera: Blob | null;
+}
+
 export interface Capture {
   stream: MediaStream;
-  /** resolves with the recording once sharing stops (button or browser bar) */
-  done: Promise<Blob>;
+  /** resolves once recording stops (button, shortcut or the browser's own bar) */
+  done: Promise<CaptureResult>;
+  /** start recording: call after the countdown */
+  begin: () => void;
+  pause: () => void;
+  resume: () => void;
   stop: () => void;
+  /** stop and throw the recording away */
+  cancel: () => void;
+  state: () => CaptureState;
+  /** recorded time so far, pauses excluded */
+  elapsedMs: () => number;
 }
 
 const RECORDER_TYPES = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp9", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4"];
+const CAMERA_TYPES = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm", "video/mp4"];
 
 export function canCapture(): boolean {
   return typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia && typeof MediaRecorder !== "undefined";
 }
 
+export async function openMic(deviceId?: string): Promise<MediaStream> {
+  return navigator.mediaDevices.getUserMedia({
+    audio: { deviceId: deviceId ? { exact: deviceId } : undefined, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+  });
+}
+
+export async function openCamera(deviceId?: string): Promise<MediaStream> {
+  return navigator.mediaDevices.getUserMedia({
+    video: { deviceId: deviceId ? { exact: deviceId } : undefined, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
+  });
+}
+
+export async function listDevices(): Promise<{ mics: MediaDeviceInfo[]; cameras: MediaDeviceInfo[] }> {
+  try {
+    const all = await navigator.mediaDevices.enumerateDevices();
+    return { mics: all.filter((d) => d.kind === "audioinput"), cameras: all.filter((d) => d.kind === "videoinput") };
+  } catch {
+    return { mics: [], cameras: [] };
+  }
+}
+
+/** One audio track out of several (system sound + mic), or the only one, or none. */
+function mixAudio(tracks: MediaStreamTrack[]): { track: MediaStreamTrack | null; close: () => void } {
+  if (tracks.length <= 1) return { track: tracks[0] ?? null, close: () => {} };
+  const ctx = new AudioContext();
+  const dest = ctx.createMediaStreamDestination();
+  for (const t of tracks) ctx.createMediaStreamSource(new MediaStream([t])).connect(dest);
+  return { track: dest.stream.getAudioTracks()[0], close: () => void ctx.close() };
+}
+
 /**
- * Ask the browser to share a tab, window or screen and record it. Rejects
- * when the person cancels the picker.
+ * Ask the browser to share a tab, window or screen. Recording starts with
+ * begin(), so a countdown can run first. Rejects when the person cancels
+ * the picker.
  */
-export async function startCapture(): Promise<Capture> {
-  const stream = await navigator.mediaDevices.getDisplayMedia({
+export async function startCapture(opts: CaptureOptions): Promise<Capture> {
+  const display = await navigator.mediaDevices.getDisplayMedia({
     video: { frameRate: { ideal: 60 }, width: { ideal: 3840 }, height: { ideal: 2160 } },
-    audio: true,
-    // Chrome-only hints: start on tabs, keep this tab out of the list
-    ...({ selfBrowserSurface: "exclude", surfaceSwitching: "include", preferCurrentTab: false } as object),
+    audio: opts.systemAudio,
+    // Chrome-only hints: start on tabs, keep this tab out of the list, offer system audio
+    ...({ selfBrowserSurface: "exclude", surfaceSwitching: "include", preferCurrentTab: false, systemAudio: opts.systemAudio ? "include" : "exclude" } as object),
   } as DisplayMediaStreamOptions);
+  const audio = mixAudio([...display.getAudioTracks(), ...(opts.mic?.getAudioTracks() ?? [])]);
+  const stream = new MediaStream([...display.getVideoTracks(), ...(audio.track ? [audio.track] : [])]);
+
   const mimeType = RECORDER_TYPES.find((t) => MediaRecorder.isTypeSupported(t));
   const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 16_000_000 });
+  const camRecorder = opts.camera
+    ? new MediaRecorder(opts.camera, { mimeType: CAMERA_TYPES.find((t) => MediaRecorder.isTypeSupported(t)), videoBitsPerSecond: 4_000_000 })
+    : null;
   const chunks: Blob[] = [];
+  const camChunks: Blob[] = [];
   recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
-  const done = new Promise<Blob>((resolve, reject) => {
-    recorder.onstop = () => {
-      stream.getTracks().forEach((t) => t.stop());
-      if (chunks.length) resolve(new Blob(chunks, { type: recorder.mimeType || "video/webm" }));
+  if (camRecorder) camRecorder.ondataavailable = (e) => e.data.size && camChunks.push(e.data);
+
+  let state: CaptureState = "ready";
+  let cancelled = false;
+  let startedAt = 0;
+  let pausedTotal = 0;
+  let pausedAt = 0;
+  let limit: ReturnType<typeof setTimeout> | undefined;
+
+  const release = () => {
+    display.getTracks().forEach((t) => t.stop());
+    audio.close();
+    clearTimeout(limit);
+  };
+  const camDone = new Promise<Blob | null>((resolve) => {
+    if (!camRecorder) return resolve(null);
+    camRecorder.onstop = () => resolve(camChunks.length ? new Blob(camChunks, { type: camRecorder.mimeType || "video/webm" }) : null);
+    camRecorder.onerror = () => resolve(null);
+  });
+  let rejectDone: (e: Error) => void = () => {};
+  const done = new Promise<CaptureResult>((resolve, reject) => {
+    rejectDone = reject;
+    recorder.onstop = async () => {
+      release();
+      const camera = await camDone;
+      if (cancelled) reject(new DOMException("Recording cancelled", "AbortError"));
+      else if (chunks.length) resolve({ screen: new Blob(chunks, { type: recorder.mimeType || "video/webm" }), camera });
       else reject(new Error("Nothing was recorded"));
     };
-    recorder.onerror = () => reject(new Error("Recording failed"));
+    recorder.onerror = () => {
+      release();
+      reject(new Error("Recording failed"));
+    };
   });
-  const stop = () => recorder.state !== "inactive" && recorder.stop();
+
+  const stop = () => {
+    if (state === "stopped") return;
+    const wasReady = state === "ready";
+    state = "stopped";
+    if (wasReady) {
+      // stopped during the countdown: nothing to keep
+      release();
+      rejectDone(new DOMException("Recording cancelled", "AbortError"));
+      return;
+    }
+    if (recorder.state !== "inactive") recorder.stop();
+    if (camRecorder && camRecorder.state !== "inactive") camRecorder.stop();
+  };
   // the browser's own "Stop sharing" ends the video track
-  stream.getVideoTracks()[0]?.addEventListener("ended", stop);
-  recorder.start(1000);
-  setTimeout(stop, MAX_RECORDING_MS);
-  return { stream, done, stop };
+  display.getVideoTracks()[0]?.addEventListener("ended", stop);
+
+  return {
+    stream,
+    done,
+    begin: () => {
+      if (state !== "ready") return;
+      state = "recording";
+      startedAt = performance.now();
+      recorder.start(1000);
+      camRecorder?.start(1000);
+      limit = setTimeout(stop, MAX_RECORDING_MS);
+    },
+    pause: () => {
+      if (state !== "recording") return;
+      state = "paused";
+      pausedAt = performance.now();
+      recorder.pause();
+      camRecorder?.pause();
+    },
+    resume: () => {
+      if (state !== "paused") return;
+      state = "recording";
+      pausedTotal += performance.now() - pausedAt;
+      recorder.resume();
+      camRecorder?.resume();
+    },
+    stop,
+    cancel: () => {
+      cancelled = true;
+      stop();
+    },
+    state: () => state,
+    elapsedMs: () => {
+      if (state === "ready" || !startedAt) return 0;
+      const now = state === "paused" ? pausedAt : performance.now();
+      return now - startedAt - pausedTotal;
+    },
+  };
 }
 
 /* --------------------------------- loading -------------------------------- */
@@ -116,67 +256,85 @@ export async function loadRecording(file: Blob, name: string, opts: { fromCaptur
   };
 }
 
-/* -------------------------------- activity -------------------------------- */
+/** Read a webcam recording made alongside the screen. Returns null if it can't be played. */
+export async function loadCameraRecording(file: Blob): Promise<Recording["camera"]> {
+  try {
+    const blob = await remux(file);
+    const { input } = await openInput(blob);
+    const track = await input.getPrimaryVideoTrack();
+    if (!track || !(await track.canDecode())) return null;
+    return { blob, url: URL.createObjectURL(blob), width: track.squarePixelWidth || track.codedWidth, height: track.squarePixelHeight || track.codedHeight };
+  } catch {
+    return null;
+  }
+}
 
-const SAMPLE_W = 96;
-const STEP_MS = 200;
-/** a pixel changed if its brightness moved by more than this (0..255) */
-const PIXEL_THRESHOLD = 26;
+/* -------------------------------- analysis -------------------------------- */
 
 /**
- * Sample the recording a few times a second at thumbnail size and record
- * where it changed between samples. Feeds detectZooms().
+ * Watch the recording once, frame by frame at reduced size, and find the
+ * cursor, the clicks, the typing and where things change. Feeds the zooms,
+ * the cursor styles, the click effects and the sound effects.
  */
-export async function analyzeActivity(rec: Recording, onProgress?: (fraction: number) => void): Promise<ActivitySample[]> {
+export async function analyzeRecording(rec: Recording, onProgress?: (fraction: number) => void): Promise<Analysis> {
   const { mb, input } = await openInput(rec.blob);
   const track = await input.getPrimaryVideoTrack();
-  if (!track) return [];
-  const w = SAMPLE_W;
-  const h = Math.max(8, Math.round((SAMPLE_W * rec.height) / rec.width));
-  const sink = new mb.CanvasSink(track, { width: w, height: h, fit: "fill", poolSize: 2 });
+  const plan = analysisPlan(rec.width, rec.height, rec.durationMs);
+  const analyzer = new RecordingAnalyzer(plan.w, plan.h, rec.durationMs);
+  if (!track) return analyzer.finish();
+  const sink = new mb.CanvasSink(track, { width: plan.w, height: plan.h, fit: "fill", poolSize: 2 });
   const times: number[] = [];
-  for (let t = 0; t < rec.durationMs; t += STEP_MS) times.push(t / 1000);
+  for (let t = 0; t < rec.durationMs; t += 1000 / plan.fps) times.push(t / 1000);
 
-  const samples: ActivitySample[] = [];
-  let prev: Uint8ClampedArray | null = null;
-  let i = 0;
   const scratch = document.createElement("canvas");
-  scratch.width = w;
-  scratch.height = h;
+  scratch.width = plan.w;
+  scratch.height = plan.h;
   const sctx = scratch.getContext("2d", { willReadFrequently: true })!;
+  const gray = new Uint8Array(plan.w * plan.h);
+  let i = 0;
+  let lastYield = performance.now();
   for await (const wrapped of sink.canvasesAtTimestamps(times)) {
     const t = times[i++] * 1000;
     if (!wrapped) continue;
-    sctx.drawImage(wrapped.canvas as CanvasImageSource, 0, 0, w, h);
-    const data = sctx.getImageData(0, 0, w, h).data;
-    const luma = new Uint8ClampedArray(w * h);
-    for (let p = 0, q = 0; q < luma.length; p += 4, q++) luma[q] = (data[p] * 77 + data[p + 1] * 150 + data[p + 2] * 29) >> 8;
-    if (prev) {
-      let changed = 0;
-      let x0 = w, y0 = h, x1 = -1, y1 = -1;
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const k = y * w + x;
-          if (Math.abs(luma[k] - prev[k]) > PIXEL_THRESHOLD) {
-            changed++;
-            if (x < x0) x0 = x;
-            if (x > x1) x1 = x;
-            if (y < y0) y0 = y;
-            if (y > y1) y1 = y;
-          }
-        }
-      }
-      samples.push({
-        t,
-        energy: changed / luma.length,
-        box: changed ? { x: x0 / w, y: y0 / h, w: (x1 - x0 + 1) / w, h: (y1 - y0 + 1) / h } : null,
-      });
+    sctx.drawImage(wrapped.canvas as CanvasImageSource, 0, 0, plan.w, plan.h);
+    analyzer.push(toGray(sctx.getImageData(0, 0, plan.w, plan.h).data, gray), Math.round(t));
+    if (i % 15 === 0) onProgress?.(i / times.length);
+    // let the page breathe on long recordings
+    if (performance.now() - lastYield > 120) {
+      await new Promise((r) => setTimeout(r, 0));
+      lastYield = performance.now();
     }
-    prev = luma;
-    if (i % 10 === 0) onProgress?.(i / times.length);
   }
   onProgress?.(1);
-  return samples;
+  return analyzer.finish();
+}
+
+/** Fetches single frames of a recording on demand (for the cursor eraser's clean plate). */
+export function frameFetcher(rec: Recording, maxW = 1920) {
+  let sinkP: Promise<{ getCanvas: (t: number) => Promise<{ canvas: unknown } | null> }> | null = null;
+  const w = Math.min(maxW, rec.width);
+  const h = Math.max(2, Math.round((w * rec.height) / rec.width));
+  return async (ms: number): Promise<CanvasImageSource | null> => {
+    sinkP ??= (async () => {
+      const { mb, input } = await openInput(rec.blob);
+      const track = await input.getPrimaryVideoTrack();
+      if (!track) throw new Error("no video");
+      return new mb.CanvasSink(track, { width: w, height: h, fit: "fill", poolSize: 1 });
+    })();
+    try {
+      const sink = await sinkP;
+      const f = await sink.getCanvas(ms / 1000);
+      if (!f) return null;
+      // copy out: the sink reuses its canvas
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      c.getContext("2d")!.drawImage(f.canvas as CanvasImageSource, 0, 0);
+      return c;
+    } catch {
+      return null;
+    }
+  };
 }
 
 /** The recording's sound, decoded for the exporter (null when silent or unreadable). */
