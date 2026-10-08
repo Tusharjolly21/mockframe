@@ -19,12 +19,22 @@ const PLATE_MAX_W = 1920;
  * screen where the cursor isn't: every frame updates it everywhere except
  * under the cursor, so the pixels there are from the last moment the cursor
  * was elsewhere. Those get pasted back over the cursor's silhouette.
+ *
+ * When the screen changed under a resting cursor (a scroll, a hover colour,
+ * a new page) the plate is out of date there. The ring of pixels just around
+ * the cursor gives that away, and then the hole is filled in from its
+ * surroundings in the current frame instead.
  */
 export class CursorEraser {
   private plate: HTMLCanvasElement;
   private pctx: CanvasRenderingContext2D;
   private scratch: HTMLCanvasElement;
-  private masks = new Map<number, HTMLCanvasElement>();
+  private sctx: CanvasRenderingContext2D;
+  private probe: HTMLCanvasElement;
+  private prctx: CanvasRenderingContext2D;
+  private masks = new Map<number, { canvas: HTMLCanvasElement; alpha: Uint8ClampedArray }>();
+  /** the current frame's pixels around the cursor, from `update` */
+  private here: { t: number; x: number; y: number; w: number; h: number; px: Uint8ClampedArray } | null = null;
   readonly pw: number;
   readonly ph: number;
   /** false until the plate holds a frame (see init) */
@@ -43,18 +53,26 @@ export class CursorEraser {
     this.plate.height = this.ph;
     this.pctx = this.plate.getContext("2d")!;
     this.scratch = document.createElement("canvas");
+    this.sctx = this.scratch.getContext("2d", { willReadFrequently: true })!;
+    this.probe = document.createElement("canvas");
+    this.prctx = this.probe.getContext("2d", { willReadFrequently: true })!;
   }
 
-  /** Where the recorded cursor is at `t`, in plate pixels, with a margin. */
+  /** Where the recorded cursor is at `t`, in whole plate pixels, with a margin. */
   rect(t: number): { x: number; y: number; w: number; h: number; shape?: number } | null {
     const p = rawCursorAt(this.track, t);
     if (!p.visible) return null;
     const res = this.track.res;
-    const shape = p.shape != null ? this.track.shapes[p.shape] : null;
-    const sw = (shape ? shape.w / res.w : this.track.w) * this.pw;
-    const sh = (shape ? shape.h / res.h : this.track.h) * this.ph;
-    const m = Math.max(3, (this.pw / res.w) * 2.5);
-    return { x: p.x * this.pw - m, y: p.y * this.ph - m, w: sw + m * 2, h: sh + m * 2, shape: p.shape };
+    // points are the cursor's hotspot (an arrow's tip, an I-beam's middle); the shape hangs off it
+    const shape = this.track.shapes[p.shape ?? 0] ?? null;
+    const kx = this.pw / res.w;
+    const ky = this.ph / res.h;
+    const sw = shape ? shape.w * kx : this.track.w * this.pw;
+    const sh = shape ? shape.h * ky : this.track.h * this.ph;
+    const m = Math.ceil(Math.max(3, kx * 2.5));
+    const x = Math.round(p.x * this.pw - (shape ? shape.hx * kx : 0)) - m;
+    const y = Math.round(p.y * this.ph - (shape ? shape.hy * ky : 0)) - m;
+    return { x, y, w: Math.ceil(sw) + m * 2, h: Math.ceil(sh) + m * 2, shape: shape ? (p.shape ?? 0) : undefined };
   }
 
   /** Start from a frame where the cursor is somewhere else. */
@@ -67,6 +85,14 @@ export class CursorEraser {
   update(frame: CanvasImageSource, t: number) {
     const r = this.rect(t);
     const c = this.pctx;
+    this.here = null;
+    if (r) {
+      // keep what's under the cursor right now, to check the plate against
+      this.fit(this.probe, r.w, r.h);
+      this.prctx.clearRect(0, 0, r.w, r.h);
+      this.prctx.drawImage(frame, -r.x, -r.y, this.pw, this.ph);
+      this.here = { t, x: r.x, y: r.y, w: r.w, h: r.h, px: this.prctx.getImageData(0, 0, r.w, r.h).data };
+    }
     c.save();
     if (r) {
       c.beginPath();
@@ -78,8 +104,17 @@ export class CursorEraser {
     c.restore();
   }
 
-  private mask(shape: number, scale: number, margin: number): HTMLCanvasElement {
-    const key = shape * 1000 + Math.round(scale * 100);
+  private fit(cv: HTMLCanvasElement, w: number, h: number) {
+    if (cv.width < w || cv.height < h) {
+      cv.width = Math.max(cv.width, w);
+      cv.height = Math.max(cv.height, h);
+    }
+  }
+
+  /** The cursor's silhouette at plate scale inside a `w` x `h` rect with margin `margin`, grown a little so no edge survives. */
+  private mask(shape: number, w: number, h: number, margin: number) {
+    const scale = this.pw / this.track.res.w;
+    const key = shape * 1e8 + w * 1e4 + h;
     let m = this.masks.get(key);
     if (m) return m;
     const s = this.track.shapes[shape];
@@ -90,41 +125,108 @@ export class CursorEraser {
     const img = bctx.createImageData(s.w, s.h);
     for (let i = 0; i < s.mask.length; i++) if (s.mask[i]) img.data[i * 4 + 3] = 255;
     bctx.putImageData(img, 0, 0);
-    // fill the holes between mask pixels and grow it a little, so no edge of the cursor survives
-    m = document.createElement("canvas");
-    m.width = Math.ceil(s.w * scale + margin * 2);
-    m.height = Math.ceil(s.h * scale + margin * 2);
-    const mctx = m.getContext("2d")!;
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const mctx = canvas.getContext("2d", { willReadFrequently: true })!;
     const d = Math.max(1, scale * 1.5);
     for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) mctx.drawImage(base, margin + (dx * d) / 2, margin + (dy * d) / 2, s.w * scale, s.h * scale);
+    const raw = mctx.getImageData(0, 0, w, h).data;
+    const alpha = new Uint8ClampedArray(w * h);
+    for (let i = 0; i < alpha.length; i++) alpha[i] = raw[i * 4 + 3];
+    m = { canvas, alpha };
     this.masks.set(key, m);
     return m;
   }
 
-  /** Paste the clean pixels over the cursor, inside `video` (the recording's rect on the canvas). */
+  /** Paste clean pixels over the cursor, inside `video` (the recording's rect on the canvas). */
   patch(ctx: CanvasRenderingContext2D, video: StageRect, t: number) {
     if (!this.ready) return;
     const r = this.rect(t);
     if (!r) return;
-    const w = Math.max(1, Math.ceil(r.w));
-    const h = Math.max(1, Math.ceil(r.h));
-    if (this.scratch.width < w || this.scratch.height < h) {
-      this.scratch.width = Math.max(this.scratch.width, w);
-      this.scratch.height = Math.max(this.scratch.height, h);
-    }
-    const sc = this.scratch.getContext("2d")!;
+    const { w, h } = r;
+    this.fit(this.scratch, w, h);
+    const sc = this.sctx;
     sc.clearRect(0, 0, w, h);
     sc.drawImage(this.plate, r.x, r.y, w, h, 0, 0, w, h);
     if (r.shape != null) {
-      const scale = this.pw / this.track.res.w;
-      const margin = (w - this.track.shapes[r.shape].w * scale) / 2;
-      sc.globalCompositeOperation = "destination-in";
-      sc.drawImage(this.mask(r.shape, scale, Math.max(0, margin)), 0, 0);
-      sc.globalCompositeOperation = "source-over";
+      const margin = Math.ceil(Math.max(3, (this.pw / this.track.res.w) * 2.5));
+      const M = this.mask(r.shape, w, h, margin);
+      const here = this.here && this.here.t === t && this.here.x === r.x && this.here.y === r.y && this.here.w === w && this.here.h === h ? this.here.px : null;
+      const img = sc.getImageData(0, 0, w, h);
+      if (here && !matches(img.data, here, w, h)) fillHole(img.data, here, M.alpha, w, h);
+      for (let i = 0; i < M.alpha.length; i++) img.data[i * 4 + 3] = M.alpha[i];
+      sc.putImageData(img, 0, 0);
     }
     const kx = video.w / this.pw;
     const ky = video.h / this.ph;
     ctx.drawImage(this.scratch, 0, 0, w, h, video.x + r.x * kx, video.y + r.y * ky, w * kx, h * ky);
+  }
+}
+
+/** Whether the plate still agrees with the frame on the rect's outer ring (where the cursor never is). */
+function matches(plate: Uint8ClampedArray, frame: Uint8ClampedArray, w: number, h: number): boolean {
+  let sum = 0;
+  let n = 0;
+  const add = (x: number, y: number) => {
+    const i = (y * w + x) * 4;
+    sum += Math.abs(plate[i] - frame[i]) + Math.abs(plate[i + 1] - frame[i + 1]) + Math.abs(plate[i + 2] - frame[i + 2]);
+    n += 3;
+  };
+  for (let x = 0; x < w; x++) {
+    add(x, 0);
+    add(x, h - 1);
+  }
+  for (let y = 1; y < h - 1; y++) {
+    add(0, y);
+    add(w - 1, y);
+  }
+  return sum / n < 10;
+}
+
+/** Fill the masked pixels of `out` from their unmasked neighbours in `frame`, ring by ring from the edge in. */
+function fillHole(out: Uint8ClampedArray, frame: Uint8ClampedArray, alpha: Uint8ClampedArray, w: number, h: number) {
+  const known = new Uint8Array(w * h);
+  for (let i = 0; i < known.length; i++) {
+    if (alpha[i] < 8) {
+      known[i] = 1;
+      out[i * 4] = frame[i * 4];
+      out[i * 4 + 1] = frame[i * 4 + 1];
+      out[i * 4 + 2] = frame[i * 4 + 2];
+    }
+  }
+  let todo = known.length;
+  const next: number[] = [];
+  for (let pass = 0; pass < 64 && todo; pass++) {
+    next.length = 0;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = y * w + x;
+        if (known[i]) continue;
+        let r = 0, g = 0, b = 0, n = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          const yy = y + dy;
+          if (yy < 0 || yy >= h) continue;
+          for (let dx = -1; dx <= 1; dx++) {
+            const xx = x + dx;
+            if (xx < 0 || xx >= w || !known[yy * w + xx]) continue;
+            const j = (yy * w + xx) * 4;
+            r += out[j];
+            g += out[j + 1];
+            b += out[j + 2];
+            n++;
+          }
+        }
+        if (!n) continue;
+        out[i * 4] = r / n;
+        out[i * 4 + 1] = g / n;
+        out[i * 4 + 2] = b / n;
+        next.push(i);
+      }
+    }
+    if (!next.length) break;
+    for (const i of next) known[i] = 1;
+    todo -= next.length;
   }
 }
 

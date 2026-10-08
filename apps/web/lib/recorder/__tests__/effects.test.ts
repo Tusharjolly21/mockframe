@@ -11,7 +11,7 @@ const track: CursorTrack = {
     { t: 1100, x: 0.6, y: 0.5, visible: true, shape: 0 },
     { t: 3000, x: 0.6, y: 0.5, visible: true, shape: 0 },
   ],
-  shapes: [{ w: 10, h: 16, mask: new Uint8Array(160).fill(1) }],
+  shapes: [{ w: 10, h: 16, mask: new Uint8Array(160).fill(1), hx: 0, hy: 0 }],
   res: { w: 640, h: 360 },
   w: 10 / 640,
   h: 16 / 360,

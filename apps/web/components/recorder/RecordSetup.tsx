@@ -104,8 +104,8 @@ export function RecordSetup(p: RecordSetupProps) {
         <div>
           <h1 className="max-w-lg text-balance text-[40px] font-semibold leading-[1.08] tracking-[-0.035em]">Record your screen. It zooms in on every click.</h1>
           <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/55">
-            Mockframe follows your cursor, zooms where you click, adds click sounds and a camera bubble, and swaps in a crisp cursor of your choice. All on
-            this device.
+            Your take opens crisp and quiet, with the camera zooming in where you click and following your cursor. Then add sounds, music, a camera
+            bubble or a new cursor if you like. All on this device.
           </p>
           <ul className="mt-7 space-y-2 text-[13px] text-white/60">
             <li className="flex items-center gap-3"><Kbd keys={["Alt", "Shift", "R"]} /> start and stop, from the floating controls too</li>

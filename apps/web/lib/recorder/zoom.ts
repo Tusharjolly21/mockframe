@@ -88,6 +88,12 @@ interface DetectOpts {
   clicks?: { t: number; x: number; y: number }[];
   /** bursts of typing */
   typing?: { startMs: number; endMs: number; x: number; y: number }[];
+  /**
+   * The cursor is known: zooms follow it, and zooms close together in time
+   * become one, so the camera glides from one spot to the next instead of
+   * pulling out and back in.
+   */
+  follow?: boolean;
 }
 
 /**
@@ -96,7 +102,7 @@ interface DetectOpts {
  * zoom on their centre. Whole-screen changes don't zoom.
  */
 export function detectZooms(samples: ActivitySample[], durationMs: number, opts: DetectOpts = {}): ZoomSegment[] {
-  const { minEnergy = 0.003, maxEnergy = 0.3, leadMs = 450, holdMs = 1300, clicks = [], typing = [] } = opts;
+  const { minEnergy = 0.003, maxEnergy = 0.3, leadMs = 450, holdMs = 1300, clicks = [], typing = [], follow = false } = opts;
   type Hit = { t: number; cx: number; cy: number; size: number; e: number; click?: boolean };
   const hits: Hit[] = [];
   for (const s of samples) {
@@ -140,14 +146,15 @@ export function detectZooms(samples: ActivitySample[], durationMs: number, opts:
     const prev = zooms.at(-1);
     // a short gap between two zooms on nearly the same spot reads as one zoom
     const click = c.some((h) => h.click);
-    if (prev && startMs - prev.endMs < 700 && Math.hypot(prev.x - x, prev.y - y) < 0.25) {
+    const near = Math.hypot(prev ? prev.x - x : 1, prev ? prev.y - y : 1) < 0.25;
+    if (prev && ((startMs - prev.endMs < 700 && near) || (follow && startMs - prev.endMs < 1600))) {
       prev.endMs = endMs;
       // a click outranks whatever the zoom was about before
-      if (click && !prev.click) Object.assign(prev, { x, y, click });
+      if (click && !prev.click && near) Object.assign(prev, { x, y, click });
       prev.scale = Math.max(prev.scale, Math.round(scale * 10) / 10);
       continue;
     }
-    zooms.push({ id: zoomId(), startMs, endMs, x, y, scale: Math.round(scale * 10) / 10, click });
+    zooms.push({ id: zoomId(), startMs, endMs, x, y, scale: Math.round(scale * 10) / 10, click, ...(follow ? { follow: true } : {}) });
   }
   return normalizeZooms(
     zooms.filter((z) => z.endMs - z.startMs >= 1000).map((z) => {
@@ -191,8 +198,8 @@ export interface CameraOpts {
  * critically damped, so nothing overshoots.
  *
  * A zoom that follows the cursor keeps it inside the middle of the view: the
- * camera only pans when the cursor heads for the edge, like a cameraman
- * keeping up rather than a camera glued to the pointer.
+ * camera drifts after it and catches up quickly when it heads for the edge,
+ * like a cameraman keeping up rather than a camera glued to the pointer.
  */
 export function cameraTrack(segments: ZoomSegment[], durationMs: number, fps = 60, opts: CameraOpts = {}): CameraTrack {
   const { omega, zeta } = MOTION[opts.motion ?? "smooth"];
@@ -213,6 +220,10 @@ export function cameraTrack(segments: ZoomSegment[], durationMs: number, fps = 6
       if (follow?.id !== z.id) follow = { id: z.id, x: z.x, y: z.y };
       const c = opts.cursor(t);
       if (c?.visible) {
+        // ease toward the cursor, so whatever it does next ends up near the middle
+        const k = 1 - Math.exp(-dt * 1.4);
+        follow.x += (c.x - follow.x) * k;
+        follow.y += (c.y - follow.y) * k;
         // dead zone: the middle 40% of the view
         const half = (0.5 / Math.max(1, z.scale)) * 0.4;
         if (c.x < follow.x - half) follow.x = c.x + half;
