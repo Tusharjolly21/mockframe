@@ -845,6 +845,8 @@ export function buildStoreSet(set: StoreSet, platform: StorePlatform): { name: s
     }
     const scene = s.build();
     scene.id = `store-set-${set.slug}-${platform}-${i + 1}-${createId().slice(0, 6)}`;
+    // Every store listing set is Pro to export (guardProScreens reads this).
+    scene.template = { id: `store-set-${set.slug}`, pro: true };
     return { name: `${i + 1}. ${spec.name}`, scene };
   });
 }
