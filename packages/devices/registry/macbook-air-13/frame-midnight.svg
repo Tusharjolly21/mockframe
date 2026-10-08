@@ -1,33 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3277 1958">
-<!--BODY-->
-<defs>
-<linearGradient id="fk_macbook-air-13_midnight_alum" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4250"/><stop offset="1" stop-color="#1c212b"/></linearGradient>
-<linearGradient id="fk_macbook-air-13_midnight_deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c3340"/><stop offset="1" stop-color="#161a22"/></linearGradient>
-<linearGradient id="fk_macbook-air-13_midnight_deckSide" x1="0" y1="0" x2="1" y2="0">
-  <stop offset="0" stop-color="#000" stop-opacity="0.45"/><stop offset="0.04" stop-color="#000" stop-opacity="0.08"/>
-  <stop offset="0.12" stop-color="#fff" stop-opacity="0.06"/><stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
-  <stop offset="0.88" stop-color="#fff" stop-opacity="0.06"/><stop offset="0.96" stop-color="#000" stop-opacity="0.08"/>
-  <stop offset="1" stop-color="#000" stop-opacity="0.45"/>
-</linearGradient>
-<linearGradient id="fk_macbook-air-13_midnight_glass" x1="0" y1="0" x2="1" y2="1">
-  <stop offset="0" stop-color="#fff" stop-opacity="0.06"/><stop offset="0.45" stop-color="#fff" stop-opacity="0.01"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
-</linearGradient>
-</defs>
-<path d="M388.5 10 H2888.5 A96 96 0 0 1 2984.5 106 V1806 A24 24 0 0 1 2960.5 1830 H316.5 A24 24 0 0 1 292.5 1806 V106 A96 96 0 0 1 388.5 10 Z" fill="url(#fk_macbook-air-13_midnight_alum)"/>
-<path d="M388.5 11 H2888.5 A95 95 0 0 1 2983.5 106 V1806 A23 23 0 0 1 2960.5 1829 H316.5 A23 23 0 0 1 293.5 1806 V106 A95 95 0 0 1 388.5 11 Z" fill="none" stroke="#fff" stroke-opacity="0.3" stroke-width="2"/>
-<path d="M388.5 20 H2888.5 A86 86 0 0 1 2974.5 106 V1804 A16 16 0 0 1 2958.5 1820 H318.5 A16 16 0 0 1 302.5 1804 V106 A86 86 0 0 1 388.5 20 Z" fill="#050506"/>
-<path d="M388.5 20 H2888.5 A86 86 0 0 1 2974.5 106 V1804 A16 16 0 0 1 2958.5 1820 H318.5 A16 16 0 0 1 302.5 1804 V106 A86 86 0 0 1 388.5 20 Z" fill="url(#fk_macbook-air-13_midnight_glass)"/>
-<rect x="356.5" y="74" width="2564" height="1668" rx="24" fill="#000"/>
-<rect x="332.5" y="1818" width="2612" height="12" fill="#000" opacity="0.6"/>
-<path d="M24 1830 H3253 A14 14 0 0 1 3267 1844 V1890 A58 58 0 0 1 3209 1948 H68 A58 58 0 0 1 10 1890 V1844 A14 14 0 0 1 24 1830 Z" fill="url(#fk_macbook-air-13_midnight_deck)"/>
-<path d="M24 1830 H3253 A14 14 0 0 1 3267 1844 V1890 A58 58 0 0 1 3209 1948 H68 A58 58 0 0 1 10 1890 V1844 A14 14 0 0 1 24 1830 Z" fill="url(#fk_macbook-air-13_midnight_deckSide)"/>
-<rect x="24" y="1830" width="3229" height="5" fill="#fff" opacity="0.32"/>
-<path d="M1348.5 1830 H1928.5 V1834 A30 30 0 0 1 1898.5 1864 H1378.5 A30 30 0 0 1 1348.5 1834 V1830 Z" fill="#000" opacity="0.2"/>
-<path d="M1350.5 1860 H1926.5 A2 2 0 0 1 1928.5 1862 V1862 A2 2 0 0 1 1926.5 1864 H1350.5 A2 2 0 0 1 1348.5 1862 V1862 A2 2 0 0 1 1350.5 1860 Z" fill="#fff" opacity="0.12"/>
-<rect x="40" y="1938" width="3197" height="10" rx="5" fill="#000" opacity="0.25"/>
-<rect x="170" y="1944" width="120" height="8" rx="4" fill="#000" opacity="0.5"/>
-<rect x="2987" y="1944" width="120" height="8" rx="4" fill="#000" opacity="0.5"/>
-<!--/BODY-->
+<!--BODY--><image href="/devices/macbook-air-13/midnight.webp" x="0" y="0" width="3277" height="1958" preserveAspectRatio="none"/><!--/BODY-->
 <!--SCREEN--><defs>
 <linearGradient id="fk_scr_macbook-air-13_midnight_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0891b2"/><stop offset="1" stop-color="#1e40af"/></linearGradient>
 <radialGradient id="fk_scr_macbook-air-13_midnight_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#67e8f9" stop-opacity="0.95"/><stop offset="1" stop-color="#67e8f9" stop-opacity="0"/></radialGradient>

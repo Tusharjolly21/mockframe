@@ -3,6 +3,7 @@
 import { createId } from "@framekit/scene";
 import type { ResolvedAsset } from "@framekit/renderer";
 import { resolveBuiltin } from "./builtinBackgrounds";
+import { onDeviceImagesReady } from "./screens/deviceBodies";
 import { decodeScreenAsset, resolveScreenAsset, screenLogicalHeight, screenLogicalWidth, SCREEN_PREFIX } from "./screens";
 import { SCREEN_APP_LABELS } from "./screens/types";
 import { firebaseFetch } from "./firebaseClient";
@@ -89,6 +90,9 @@ export function resolvePreviewAsset(assetId: string): GuestAsset | undefined {
   previewCache.set(assetId, asset);
   return asset;
 }
+
+// a Store Promo screen rendered before its device body had loaded: tell subscribers to re-resolve
+onDeviceImagesReady(() => listeners.forEach((fn) => fn()));
 
 export function onAssetsChange(fn: () => void): () => void {
   listeners.add(fn);

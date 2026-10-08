@@ -1,58 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1172 2612">
-<!--BODY-->
-<defs>
-<linearGradient id="fk_galaxy-z-flip-7_jetblack_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4d4d52"/><stop offset="0.5" stop-color="#232326"/><stop offset="1" stop-color="#3d3d41"/></linearGradient>
-
-<linearGradient id="fk_galaxy-z-flip-7_jetblack_edgeH" x1="0" y1="0" x2="1" y2="0">
-  <stop offset="0" stop-color="#000" stop-opacity="0.55"/>
-  <stop offset="0.004" stop-color="#fff" stop-opacity="0.05"/>
-  <stop offset="0.009" stop-color="#fff" stop-opacity="0.55"/>
-  <stop offset="0.018" stop-color="#fff" stop-opacity="0.06"/>
-  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
-  <stop offset="0.982" stop-color="#fff" stop-opacity="0.04"/>
-  <stop offset="0.991" stop-color="#fff" stop-opacity="0.38"/>
-  <stop offset="0.996" stop-color="#000" stop-opacity="0.1"/>
-  <stop offset="1" stop-color="#000" stop-opacity="0.6"/>
-</linearGradient>
-<linearGradient id="fk_galaxy-z-flip-7_jetblack_edgeV" x1="0" y1="0" x2="0" y2="1">
-  <stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
-  <stop offset="0.006" stop-color="#fff" stop-opacity="0.08"/>
-  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
-  <stop offset="0.994" stop-color="#000" stop-opacity="0.12"/>
-  <stop offset="1" stop-color="#000" stop-opacity="0.5"/>
-</linearGradient>
-<linearGradient id="fk_galaxy-z-flip-7_jetblack_btn_left" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000"/><stop offset="0.25" stop-color="#4d4d52"/><stop offset="0.6" stop-color="#232326"/><stop offset="1" stop-color="#3d3d41"/></linearGradient>
-<linearGradient id="fk_galaxy-z-flip-7_jetblack_btn_right" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3d3d41"/><stop offset="0.4" stop-color="#232326"/><stop offset="0.75" stop-color="#4d4d52"/><stop offset="1" stop-color="#000"/></linearGradient>
-<linearGradient id="fk_galaxy-z-flip-7_jetblack_glass" x1="0" y1="0" x2="1" y2="1">
-  <stop offset="0" stop-color="#ffffff" stop-opacity="0.07"/>
-  <stop offset="0.35" stop-color="#ffffff" stop-opacity="0.015"/>
-  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
-</linearGradient>
-<radialGradient id="fk_galaxy-z-flip-7_jetblack_sheen" cx="0.25" cy="0.05" r="1.4">
-  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
-  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
-  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
-</radialGradient>
-</defs>
-<rect x="1154" y="835" width="16" height="160" rx="7" fill="#000" opacity="0.28"/>
-<rect x="1154" y="832" width="16" height="160" rx="7" fill="url(#fk_galaxy-z-flip-7_jetblack_btn_right)"/>
-<rect x="1165" y="838" width="2" height="148" rx="1" fill="#fff" opacity="0.35"/>
-<rect x="1154" y="1025" width="16" height="220" rx="7" fill="#000" opacity="0.28"/>
-<rect x="1154" y="1022" width="16" height="220" rx="7" fill="url(#fk_galaxy-z-flip-7_jetblack_btn_right)"/>
-<rect x="1165" y="1028" width="2" height="208" rx="1" fill="#fff" opacity="0.35"/>
-<path d="M142 12 H1030 A130 130 0 0 1 1160 142 V2470 A130 130 0 0 1 1030 2600 H142 A130 130 0 0 1 12 2470 V142 A130 130 0 0 1 142 12 Z" fill="url(#fk_galaxy-z-flip-7_jetblack_rail)"/>
-<path d="M142 12 H1030 A130 130 0 0 1 1160 142 V2470 A130 130 0 0 1 1030 2600 H142 A130 130 0 0 1 12 2470 V142 A130 130 0 0 1 142 12 Z" fill="url(#fk_galaxy-z-flip-7_jetblack_edgeH)"/>
-<path d="M142 12 H1030 A130 130 0 0 1 1160 142 V2470 A130 130 0 0 1 1030 2600 H142 A130 130 0 0 1 12 2470 V142 A130 130 0 0 1 142 12 Z" fill="url(#fk_galaxy-z-flip-7_jetblack_edgeV)"/>
-
-<path d="M142 12.75 H1030 A129.25 129.25 0 0 1 1159.25 142 V2470 A129.25 129.25 0 0 1 1030 2599.25 H142 A129.25 129.25 0 0 1 12.75 2470 V142 A129.25 129.25 0 0 1 142 12.75 Z" fill="none" stroke="#000" stroke-opacity="0.55" stroke-width="1.5"/>
-<path d="M142 15 H1030 A127 127 0 0 1 1157 142 V2470 A127 127 0 0 1 1030 2597 H142 A127 127 0 0 1 15 2470 V142 A127 127 0 0 1 142 15 Z" fill="none" stroke="#fff" stroke-opacity="0.32" stroke-width="1.4"/>
-<path d="M142 22 H1030 A120 120 0 0 1 1150 142 V2470 A120 120 0 0 1 1030 2590 H142 A120 120 0 0 1 22 2470 V142 A120 120 0 0 1 142 22 Z" fill="#000" fill-opacity="0.65"/>
-<path d="M142 24 H1030 A118 118 0 0 1 1148 142 V2470 A118 118 0 0 1 1030 2588 H142 A118 118 0 0 1 24 2470 V142 A118 118 0 0 1 142 24 Z" fill="#0a0a0c"/>
-<path d="M142 24 H1030 A118 118 0 0 1 1148 142 V2470 A118 118 0 0 1 1030 2588 H142 A118 118 0 0 1 24 2470 V142 A118 118 0 0 1 142 24 Z" fill="url(#fk_galaxy-z-flip-7_jetblack_glass)"/>
-<path d="M142 24 H1030 A118 118 0 0 1 1148 142 V2470 A118 118 0 0 1 1030 2588 H142 A118 118 0 0 1 24 2470 V142 A118 118 0 0 1 142 24 Z" fill="url(#fk_galaxy-z-flip-7_jetblack_sheen)"/>
-<path d="M142 25 H1030 A117 117 0 0 1 1147 142 V2470 A117 117 0 0 1 1030 2587 H142 A117 117 0 0 1 25 2470 V142 A117 117 0 0 1 142 25 Z" fill="none" stroke="#fff" stroke-opacity="0.07" stroke-width="2"/>
-<path d="M142 43 H1030 A99 99 0 0 1 1129 142 V2470 A99 99 0 0 1 1030 2569 H142 A99 99 0 0 1 43 2470 V142 A99 99 0 0 1 142 43 Z" fill="#000"/>
-<rect x="8" y="1290" width="20.4" height="32" rx="6" fill="#111114" opacity="0.85"/>
+<!--BODY--><image href="/devices/galaxy-z-flip-7/jetblack.webp" x="0" y="0" width="1172" height="2612" preserveAspectRatio="none"/><rect x="8" y="1290" width="20.4" height="32" rx="6" fill="#111114" opacity="0.85"/>
 <rect x="1143.6" y="1290" width="20.4" height="32" rx="6" fill="#111114" opacity="0.85"/><!--/BODY-->
 <!--SCREEN--><defs>
 <linearGradient id="fk_scr_galaxy-z-flip-7_jetblack_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#be185d"/><stop offset="1" stop-color="#1e1b4b"/></linearGradient>

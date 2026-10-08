@@ -1,33 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4410 2576">
-<!--BODY-->
-<defs>
-<linearGradient id="fk_macbook-pro-16_space-black_alum" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a4a4e"/><stop offset="1" stop-color="#232326"/></linearGradient>
-<linearGradient id="fk_macbook-pro-16_space-black_deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#39393d"/><stop offset="1" stop-color="#1a1a1d"/></linearGradient>
-<linearGradient id="fk_macbook-pro-16_space-black_deckSide" x1="0" y1="0" x2="1" y2="0">
-  <stop offset="0" stop-color="#000" stop-opacity="0.45"/><stop offset="0.04" stop-color="#000" stop-opacity="0.08"/>
-  <stop offset="0.12" stop-color="#fff" stop-opacity="0.06"/><stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
-  <stop offset="0.88" stop-color="#fff" stop-opacity="0.06"/><stop offset="0.96" stop-color="#000" stop-opacity="0.08"/>
-  <stop offset="1" stop-color="#000" stop-opacity="0.45"/>
-</linearGradient>
-<linearGradient id="fk_macbook-pro-16_space-black_glass" x1="0" y1="0" x2="1" y2="1">
-  <stop offset="0" stop-color="#fff" stop-opacity="0.06"/><stop offset="0.45" stop-color="#fff" stop-opacity="0.01"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
-</linearGradient>
-</defs>
-<path d="M487 10 H3923 A96 96 0 0 1 4019 106 V2424 A24 24 0 0 1 3995 2448 H415 A24 24 0 0 1 391 2424 V106 A96 96 0 0 1 487 10 Z" fill="url(#fk_macbook-pro-16_space-black_alum)"/>
-<path d="M487 11 H3923 A95 95 0 0 1 4018 106 V2424 A23 23 0 0 1 3995 2447 H415 A23 23 0 0 1 392 2424 V106 A95 95 0 0 1 487 11 Z" fill="none" stroke="#fff" stroke-opacity="0.3" stroke-width="2"/>
-<path d="M487 20 H3923 A86 86 0 0 1 4009 106 V2422 A16 16 0 0 1 3993 2438 H417 A16 16 0 0 1 401 2422 V106 A86 86 0 0 1 487 20 Z" fill="#050506"/>
-<path d="M487 20 H3923 A86 86 0 0 1 4009 106 V2422 A16 16 0 0 1 3993 2438 H417 A16 16 0 0 1 401 2422 V106 A86 86 0 0 1 487 20 Z" fill="url(#fk_macbook-pro-16_space-black_glass)"/>
-<rect x="475" y="94" width="3460" height="2238" rx="24" fill="#000"/>
-<rect x="431" y="2436" width="3548" height="12" fill="#000" opacity="0.6"/>
-<path d="M24 2448 H4386 A14 14 0 0 1 4400 2462 V2508 A58 58 0 0 1 4342 2566 H68 A58 58 0 0 1 10 2508 V2462 A14 14 0 0 1 24 2448 Z" fill="url(#fk_macbook-pro-16_space-black_deck)"/>
-<path d="M24 2448 H4386 A14 14 0 0 1 4400 2462 V2508 A58 58 0 0 1 4342 2566 H68 A58 58 0 0 1 10 2508 V2462 A14 14 0 0 1 24 2448 Z" fill="url(#fk_macbook-pro-16_space-black_deckSide)"/>
-<rect x="24" y="2448" width="4362" height="5" fill="#fff" opacity="0.32"/>
-<path d="M1915 2448 H2495 V2452 A30 30 0 0 1 2465 2482 H1945 A30 30 0 0 1 1915 2452 V2448 Z" fill="#000" opacity="0.2"/>
-<path d="M1917 2478 H2493 A2 2 0 0 1 2495 2480 V2480 A2 2 0 0 1 2493 2482 H1917 A2 2 0 0 1 1915 2480 V2480 A2 2 0 0 1 1917 2478 Z" fill="#fff" opacity="0.12"/>
-<rect x="40" y="2556" width="4330" height="10" rx="5" fill="#000" opacity="0.25"/>
-<rect x="170" y="2562" width="120" height="8" rx="4" fill="#000" opacity="0.5"/>
-<rect x="4120" y="2562" width="120" height="8" rx="4" fill="#000" opacity="0.5"/>
-<!--/BODY-->
+<!--BODY--><image href="/devices/macbook-pro-16/space-black.webp" x="0" y="0" width="4410" height="2576" preserveAspectRatio="none"/><!--/BODY-->
 <!--SCREEN--><defs>
 <linearGradient id="fk_scr_macbook-pro-16_space-black_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#1e40af"/></linearGradient>
 <radialGradient id="fk_scr_macbook-pro-16_space-black_b" cx="0.28" cy="0.22" r="0.8"><stop offset="0" stop-color="#c4b5fd" stop-opacity="0.95"/><stop offset="1" stop-color="#c4b5fd" stop-opacity="0"/></radialGradient>

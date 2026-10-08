@@ -1,58 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2228 2304">
-<!--BODY-->
-<defs>
-<linearGradient id="fk_pixel-10-pro-fold_jade_rail" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dfeee0"/><stop offset="0.5" stop-color="#a9c7ae"/><stop offset="1" stop-color="#d0e5d3"/></linearGradient>
-
-<linearGradient id="fk_pixel-10-pro-fold_jade_edgeH" x1="0" y1="0" x2="1" y2="0">
-  <stop offset="0" stop-color="#000" stop-opacity="0.55"/>
-  <stop offset="0.004" stop-color="#fff" stop-opacity="0.05"/>
-  <stop offset="0.009" stop-color="#fff" stop-opacity="0.55"/>
-  <stop offset="0.018" stop-color="#fff" stop-opacity="0.06"/>
-  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
-  <stop offset="0.982" stop-color="#fff" stop-opacity="0.04"/>
-  <stop offset="0.991" stop-color="#fff" stop-opacity="0.38"/>
-  <stop offset="0.996" stop-color="#000" stop-opacity="0.1"/>
-  <stop offset="1" stop-color="#000" stop-opacity="0.6"/>
-</linearGradient>
-<linearGradient id="fk_pixel-10-pro-fold_jade_edgeV" x1="0" y1="0" x2="0" y2="1">
-  <stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
-  <stop offset="0.006" stop-color="#fff" stop-opacity="0.08"/>
-  <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
-  <stop offset="0.994" stop-color="#000" stop-opacity="0.12"/>
-  <stop offset="1" stop-color="#000" stop-opacity="0.5"/>
-</linearGradient>
-<linearGradient id="fk_pixel-10-pro-fold_jade_btn_left" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000"/><stop offset="0.25" stop-color="#dfeee0"/><stop offset="0.6" stop-color="#a9c7ae"/><stop offset="1" stop-color="#d0e5d3"/></linearGradient>
-<linearGradient id="fk_pixel-10-pro-fold_jade_btn_right" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d0e5d3"/><stop offset="0.4" stop-color="#a9c7ae"/><stop offset="0.75" stop-color="#dfeee0"/><stop offset="1" stop-color="#000"/></linearGradient>
-<linearGradient id="fk_pixel-10-pro-fold_jade_glass" x1="0" y1="0" x2="1" y2="1">
-  <stop offset="0" stop-color="#ffffff" stop-opacity="0.07"/>
-  <stop offset="0.35" stop-color="#ffffff" stop-opacity="0.015"/>
-  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
-</linearGradient>
-<radialGradient id="fk_pixel-10-pro-fold_jade_sheen" cx="0.25" cy="0.05" r="1.4">
-  <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
-  <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.02"/>
-  <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
-</radialGradient>
-</defs>
-<rect x="2210" y="535" width="16" height="180" rx="7" fill="#000" opacity="0.28"/>
-<rect x="2210" y="532" width="16" height="180" rx="7" fill="url(#fk_pixel-10-pro-fold_jade_btn_right)"/>
-<rect x="2221" y="538" width="2" height="168" rx="1" fill="#fff" opacity="0.35"/>
-<rect x="2210" y="755" width="16" height="260" rx="7" fill="#000" opacity="0.28"/>
-<rect x="2210" y="752" width="16" height="260" rx="7" fill="url(#fk_pixel-10-pro-fold_jade_btn_right)"/>
-<rect x="2221" y="758" width="2" height="248" rx="1" fill="#fff" opacity="0.35"/>
-<path d="M142 12 H2086 A130 130 0 0 1 2216 142 V2162 A130 130 0 0 1 2086 2292 H142 A130 130 0 0 1 12 2162 V142 A130 130 0 0 1 142 12 Z" fill="url(#fk_pixel-10-pro-fold_jade_rail)"/>
-<path d="M142 12 H2086 A130 130 0 0 1 2216 142 V2162 A130 130 0 0 1 2086 2292 H142 A130 130 0 0 1 12 2162 V142 A130 130 0 0 1 142 12 Z" fill="url(#fk_pixel-10-pro-fold_jade_edgeH)"/>
-<path d="M142 12 H2086 A130 130 0 0 1 2216 142 V2162 A130 130 0 0 1 2086 2292 H142 A130 130 0 0 1 12 2162 V142 A130 130 0 0 1 142 12 Z" fill="url(#fk_pixel-10-pro-fold_jade_edgeV)"/>
-
-<path d="M142 12.75 H2086 A129.25 129.25 0 0 1 2215.25 142 V2162 A129.25 129.25 0 0 1 2086 2291.25 H142 A129.25 129.25 0 0 1 12.75 2162 V142 A129.25 129.25 0 0 1 142 12.75 Z" fill="none" stroke="#000" stroke-opacity="0.55" stroke-width="1.5"/>
-<path d="M142 15 H2086 A127 127 0 0 1 2213 142 V2162 A127 127 0 0 1 2086 2289 H142 A127 127 0 0 1 15 2162 V142 A127 127 0 0 1 142 15 Z" fill="none" stroke="#fff" stroke-opacity="0.32" stroke-width="1.4"/>
-<path d="M142 28 H2086 A114 114 0 0 1 2200 142 V2162 A114 114 0 0 1 2086 2276 H142 A114 114 0 0 1 28 2162 V142 A114 114 0 0 1 142 28 Z" fill="#000" fill-opacity="0.65"/>
-<path d="M142 30 H2086 A112 112 0 0 1 2198 142 V2162 A112 112 0 0 1 2086 2274 H142 A112 112 0 0 1 30 2162 V142 A112 112 0 0 1 142 30 Z" fill="#0d120e"/>
-<path d="M142 30 H2086 A112 112 0 0 1 2198 142 V2162 A112 112 0 0 1 2086 2274 H142 A112 112 0 0 1 30 2162 V142 A112 112 0 0 1 142 30 Z" fill="url(#fk_pixel-10-pro-fold_jade_glass)"/>
-<path d="M142 30 H2086 A112 112 0 0 1 2198 142 V2162 A112 112 0 0 1 2086 2274 H142 A112 112 0 0 1 30 2162 V142 A112 112 0 0 1 142 30 Z" fill="url(#fk_pixel-10-pro-fold_jade_sheen)"/>
-<path d="M142 31 H2086 A111 111 0 0 1 2197 142 V2162 A111 111 0 0 1 2086 2273 H142 A111 111 0 0 1 31 2162 V142 A111 111 0 0 1 142 31 Z" fill="none" stroke="#fff" stroke-opacity="0.07" stroke-width="2"/>
-<path d="M156 73 H2072 A83 83 0 0 1 2155 156 V2148 A83 83 0 0 1 2072 2231 H156 A83 83 0 0 1 73 2148 V156 A83 83 0 0 1 156 73 Z" fill="#000"/>
-<rect x="1100" y="8" width="28" height="35.2" rx="6" fill="#111114" opacity="0.85"/>
+<!--BODY--><image href="/devices/pixel-10-pro-fold/jade.webp" x="0" y="0" width="2228" height="2304" preserveAspectRatio="none"/><rect x="1100" y="8" width="28" height="35.2" rx="6" fill="#111114" opacity="0.85"/>
 <rect x="1100" y="2260.8" width="28" height="35.2" rx="6" fill="#111114" opacity="0.85"/><!--/BODY-->
 <!--SCREEN--><defs>
 <linearGradient id="fk_scr_pixel-10-pro-fold_jade_a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f766e"/><stop offset="1" stop-color="#0f172a"/></linearGradient>

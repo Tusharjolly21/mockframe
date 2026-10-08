@@ -1,6 +1,7 @@
 "use client";
 
 import { getDevice, getVariant } from "@framekit/devices";
+import { inlineDeviceImages } from "./deviceBodies";
 import { esc, systemFont, textWidth, truncate, wrapText } from "./common";
 import type { AppStorePromoDoc, PromoWebFrame } from "./types";
 import { renderPromoStage } from "./appstore-promo-stage";
@@ -443,7 +444,7 @@ export function renderAppStorePromo(doc: AppStorePromoDoc, avatarUrl?: string, s
 
     parts.push(
       `<g transform="translate(${dx.toFixed(1)} ${dy}) scale(${s.toFixed(5)})">
-        <g filter="url(#asp-phone-shadow)">${variant.body}</g>
+        <g filter="url(#asp-phone-shadow)">${inlineDeviceImages(variant.body)}</g>
         <clipPath id="asp-screen-clip"><path d="${frame.maskPath}"/></clipPath>
         <g clip-path="url(#asp-screen-clip)">${screen}</g>
         <g>${variant.overlay}</g>
