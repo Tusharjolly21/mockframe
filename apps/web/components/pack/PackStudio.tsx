@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AuthModal } from "@/components/AuthModal";
 import { UpgradeModal } from "@/components/editor/UpgradeModal";
 import { track, trackOnce } from "@/lib/analytics";
 import { useEntitlementSync } from "@/lib/billing/client";
 import { exportPackZip, requestPackExport } from "@/lib/pack/export";
+import { capturableScreens } from "@/lib/pack/ops";
 import { usePackStore } from "@/lib/pack/store";
 import { PackInspector } from "./PackInspector";
 import { PackPreview } from "./PackPreview";
@@ -15,8 +16,22 @@ const UPGRADE_REASON = "App Store screenshot packs";
 
 export function PackStudio() {
   useEntitlementSync();
-  const { pack, hydrate, hydrated, update, addFiles, exporting, progress, setExporting, warnings, dismissWarnings } =
-    usePackStore();
+  const {
+    pack,
+    hydrate,
+    hydrated,
+    update,
+    addFiles,
+    exporting,
+    progress,
+    setExporting,
+    warnings,
+    dismissWarnings,
+    refreshing,
+    refreshFiles,
+    refreshFromUrls,
+  } = usePackStore();
+  const refreshInput = useRef<HTMLInputElement>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +43,22 @@ export function PackStudio() {
 
   const missing = pack.screens.filter((s) => !s.assetId).length;
   const anyTarget = Object.values(pack.targets).some(Boolean);
+  const urlScreens = capturableScreens(pack).length;
+  const hasShots = pack.screens.some((s) => s.assetId);
+  const busy = exporting || !!refreshing;
+
+  // release refresh: new screenshots in, everything else (captions, languages, style) kept
+  async function runRefresh(kind: "files" | "urls", files: File[] = []) {
+    setError(null);
+    setDone(null);
+    try {
+      const summary = kind === "files" ? await refreshFiles(files) : await refreshFromUrls();
+      track("pack_refreshed", { kind, screens: pack.screens.length });
+      setDone(summary);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Refresh failed — please retry.");
+    }
+  }
 
   async function onExport() {
     setError(null);
@@ -93,9 +124,44 @@ export function PackStudio() {
           {exporting && progress && (
             <span className="text-xs text-white/60">Rendering {progress.done}/{progress.total}…</span>
           )}
+          {refreshing && (
+            <span className="text-xs text-white/60">Refreshing {refreshing.done}/{refreshing.total}…</span>
+          )}
+          {hasShots && (
+            <button
+              onClick={() => refreshInput.current?.click()}
+              disabled={busy}
+              title="New release? Drop in the new screenshots — captions, languages and style stay as they are"
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-white/80 transition hover:border-white/35 hover:text-white disabled:opacity-50"
+            >
+              Update screenshots
+            </button>
+          )}
+          {urlScreens > 0 && (
+            <button
+              onClick={() => void runRefresh("urls")}
+              disabled={busy}
+              title={`Re-capture the ${urlScreens} screen(s) that have a source URL`}
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-white/80 transition hover:border-white/35 hover:text-white disabled:opacity-50"
+            >
+              Re-capture from URLs
+            </button>
+          )}
+          <input
+            ref={refreshInput}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              const files = Array.from(e.target.files ?? []);
+              e.target.value = "";
+              if (files.length) void runRefresh("files", files);
+            }}
+          />
           <button
             onClick={() => void onExport()}
-            disabled={exporting}
+            disabled={busy}
             className="rounded-lg bg-violet-600 px-4 py-1.5 text-sm font-semibold transition hover:bg-violet-500 disabled:opacity-50"
           >
             {exporting ? "Exporting…" : "Export pack"}

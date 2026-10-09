@@ -1,8 +1,9 @@
 "use client";
 
 import { create } from "zustand";
-import { ingestFile } from "../assets";
-import { addScreens, moveScreen, removeScreen } from "./ops";
+import { ingestFile, resolveAsset } from "../assets";
+import { firebaseFetch } from "../firebaseClient";
+import { addScreens, capturableScreens, moveScreen, refreshScreens, removeScreen } from "./ops";
 import { loadLatestPack, savePack } from "./persist";
 import { SOURCE_LOCALE } from "./locales";
 import { createPack, type PackDocument } from "./schema";
@@ -30,6 +31,29 @@ interface PackState {
   setActiveLocale: (locale: string) => void;
   setExporting: (exporting: boolean, progress?: { done: number; total: number } | null) => void;
   dismissWarnings: () => void;
+  /** a release refresh is running: progress through its screens */
+  refreshing: { done: number; total: number } | null;
+  /** swap in a new release's screenshots, keeping captions/style; resolves to a summary line */
+  refreshFiles: (files: File[]) => Promise<string>;
+  /** re-capture every screen that has a source URL (or just one); resolves to a summary line */
+  refreshFromUrls: (onlyScreenId?: string) => Promise<string>;
+}
+
+/** Mobile viewport for store captures: /api/capture renders 390px wide at 2x (780×1688, portrait). */
+const CAPTURE_WIDTH = 390;
+
+async function captureScreen(url: string, dark: boolean): Promise<File> {
+  const res = await firebaseFetch("/api/capture", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url, dark, width: CAPTURE_WIDTH }),
+  });
+  if (!res.ok) {
+    const j = await res.json().catch(() => ({}));
+    throw new Error(j.error ?? "Capture failed");
+  }
+  const host = url.replace(/^https?:\/\//i, "").split(/[/?#]/)[0];
+  return new File([await res.blob()], `${host}.png`, { type: "image/png" });
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -49,6 +73,7 @@ export const usePackStore = create<PackState>()((set, get) => ({
   exporting: false,
   progress: null,
   warnings: [],
+  refreshing: null,
 
   hydrate: async () => {
     if (get().hydrated) return;
@@ -98,4 +123,51 @@ export const usePackStore = create<PackState>()((set, get) => ({
   setActiveLocale: (activeLocale) => set({ activeLocale }),
   setExporting: (exporting, progress = null) => set({ exporting, progress }),
   dismissWarnings: () => set({ warnings: [] }),
+
+  refreshFiles: async (files) => {
+    const images = files.filter((f) => f.type.startsWith("image/"));
+    if (!images.length) return "No images selected.";
+    set({ refreshing: { done: 0, total: images.length } });
+    try {
+      const assets = await Promise.all(images.map((f) => ingestFile(f)));
+      const result = refreshScreens(get().pack, assets, (id) => resolveAsset(id)?.name);
+      set({ warnings: [...get().warnings, ...result.warnings] });
+      get().update(() => result.pack);
+      return `Updated ${result.updated} screenshot${result.updated === 1 ? "" : "s"} — captions, translations and style kept. Export to get the new set.`;
+    } finally {
+      set({ refreshing: null });
+    }
+  },
+
+  refreshFromUrls: async (onlyScreenId) => {
+    const screens = capturableScreens(get().pack).filter((s) => !onlyScreenId || s.id === onlyScreenId);
+    if (!screens.length) return "No screens have a source URL yet — add one in the screen settings.";
+    const failed: string[] = [];
+    let updated = 0;
+    set({ refreshing: { done: 0, total: screens.length } });
+    try {
+      // one at a time: every capture boots headless Chromium on the server
+      for (const [i, screen] of screens.entries()) {
+        const capture = screen.capture!;
+        try {
+          const asset = await ingestFile(await captureScreen(capture.url, !!capture.dark));
+          // the screen may have been edited or removed while we waited
+          get().update((p) => ({
+            ...p,
+            screens: p.screens.map((s) => (s.id === screen.id ? { ...s, assetId: asset.id } : s)),
+          }));
+          updated++;
+        } catch (e) {
+          failed.push(`${capture.url} (${e instanceof Error ? e.message : "failed"})`);
+          // a quota or plan limit will fail every remaining capture the same way
+          if (e instanceof Error && /captures a day|Upgrade/i.test(e.message)) break;
+        }
+        set({ refreshing: { done: i + 1, total: screens.length } });
+      }
+    } finally {
+      set({ refreshing: null });
+    }
+    if (failed.length) set({ warnings: [...get().warnings, `Couldn't refresh: ${failed.join("; ")}`] });
+    return `Re-captured ${updated} of ${screens.length} screen${screens.length === 1 ? "" : "s"}.${updated ? " Export to get the new set." : ""}`;
+  },
 }));

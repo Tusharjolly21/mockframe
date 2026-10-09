@@ -1,5 +1,5 @@
 import { DEFAULT_SOURCE_STORE_LOCALE, isStoreLocale, MAX_PACK_LOCALES, SOURCE_LOCALE } from "./locales";
-import { createPackScreen, type PackDocument } from "./schema";
+import { createPackScreen, type PackCapture, type PackDocument } from "./schema";
 
 /** Pure pack mutations — the zustand store wraps these; tests hit them directly. */
 
@@ -164,4 +164,92 @@ export function applyTranslation(
       };
     }),
   };
+}
+
+/** File name without folders or extension, case-folded — "Home Screen.PNG" ≡ "home screen". */
+function baseName(name: string): string {
+  return (name.split(/[\\/]/).pop() ?? name).replace(/\.[a-z0-9]{2,5}$/i, "").trim().toLowerCase();
+}
+
+export interface RefreshResult {
+  pack: PackDocument;
+  /** screens whose screenshot was replaced */
+  updated: number;
+  /** incoming files that had no screen to go to (refresh never adds screens) */
+  skipped: string[];
+  warnings: string[];
+}
+
+/**
+ * Release refresh: swap in a new set of screenshots while keeping everything
+ * else — captions in every language, style, order, overrides. Each file goes
+ * to the screen whose current screenshot has the same file name; the rest
+ * fill the remaining screens top to bottom. `currentName` maps an existing
+ * asset id to its file name (the asset registry lives in the browser).
+ */
+export function refreshScreens(
+  pack: PackDocument,
+  incoming: IncomingAsset[],
+  currentName: (assetId: string) => string | undefined
+): RefreshResult {
+  const assigned = new Map<string, IncomingAsset>(); // screen id → new asset
+  const leftovers: IncomingAsset[] = [];
+
+  for (const asset of incoming) {
+    const key = baseName(asset.name);
+    const match = pack.screens.find(
+      (s) => !assigned.has(s.id) && s.assetId !== null && baseName(currentName(s.assetId) ?? "") === key && key !== ""
+    );
+    if (match) assigned.set(match.id, asset);
+    else leftovers.push(asset);
+  }
+  for (const screen of pack.screens) {
+    if (!leftovers.length) break;
+    if (!assigned.has(screen.id)) assigned.set(screen.id, leftovers.shift()!);
+  }
+
+  const warnings: string[] = [];
+  for (const a of assigned.values()) {
+    if (a.width >= a.height) {
+      warnings.push(`${a.name} looks landscape — store phone screenshots are portrait; it will be cover-cropped.`);
+    }
+  }
+  const skipped = leftovers.map((a) => a.name);
+  if (skipped.length) {
+    warnings.push(
+      `${skipped.length} file(s) had no screen to replace and were skipped (${skipped.join(", ")}). Use “Add screenshots” for new screens.`
+    );
+  }
+
+  return {
+    pack: {
+      ...pack,
+      screens: pack.screens.map((s) => {
+        const a = assigned.get(s.id);
+        return a ? { ...s, assetId: a.id } : s;
+      }),
+    },
+    updated: assigned.size,
+    skipped,
+    warnings,
+  };
+}
+
+/** Set (or clear, with null) the URL a screen is re-captured from on refresh. */
+export function setScreenCapture(pack: PackDocument, screenId: string, capture: PackCapture | null): PackDocument {
+  return {
+    ...pack,
+    screens: pack.screens.map((s) => {
+      if (s.id !== screenId) return s;
+      if (capture) return { ...s, capture };
+      const next = { ...s };
+      delete next.capture;
+      return next;
+    }),
+  };
+}
+
+/** Screens that "Refresh from URLs" can re-capture. */
+export function capturableScreens(pack: PackDocument): PackDocument["screens"] {
+  return pack.screens.filter((s) => !!s.capture?.url);
 }
