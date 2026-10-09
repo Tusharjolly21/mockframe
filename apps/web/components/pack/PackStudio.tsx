@@ -30,16 +30,43 @@ export function PackStudio() {
     refreshing,
     refreshFiles,
     refreshFromUrls,
+    deployNote,
+    dismissDeployNote,
+    applyDeployRefresh,
   } = usePackStore();
   const refreshInput = useRef<HTMLInputElement>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState(UPGRADE_REASON);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
 
   useEffect(() => {
     void hydrate();
   }, [hydrate]);
+
+  // openUpgrade() from anywhere in the studio (e.g. the deploy refresh panel)
+  useEffect(() => {
+    const onUpgrade = (e: Event) => {
+      setUpgradeReason((e as CustomEvent<{ reason?: string } | undefined>).detail?.reason ?? UPGRADE_REASON);
+      setUpgradeOpen(true);
+    };
+    window.addEventListener("framekit:upgrade", onUpgrade);
+    return () => window.removeEventListener("framekit:upgrade", onUpgrade);
+  }, []);
+
+  // a deploy can land while the studio sits in a background tab — pick it up on return
+  useEffect(() => {
+    if (!hydrated) return;
+    let last = Date.now();
+    const onFocus = () => {
+      if (Date.now() - last < 30_000) return;
+      last = Date.now();
+      void applyDeployRefresh();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [hydrated, applyDeployRefresh]);
 
   const missing = pack.screens.filter((s) => !s.assetId).length;
   const anyTarget = Object.values(pack.targets).some(Boolean);
@@ -76,7 +103,10 @@ export function PackStudio() {
       if (!verdict.allowed) {
         track("pack_export_blocked", { reason: verdict.reason });
         if (verdict.reason === "signin") setAuthOpen(true);
-        else setUpgradeOpen(true);
+        else {
+          setUpgradeReason(UPGRADE_REASON);
+          setUpgradeOpen(true);
+        }
         return;
       }
       setExporting(true, { done: 0, total: 1 });
@@ -169,10 +199,11 @@ export function PackStudio() {
         </div>
       </header>
 
-      {(error || done || warnings.length > 0) && (
+      {(error || done || deployNote || warnings.length > 0) && (
         <div className="flex items-start justify-between gap-4 border-b border-white/10 bg-[#15151a] px-4 py-2 text-[13px]">
           <div className="space-y-0.5">
             {error && <p className="text-red-400">{error}</p>}
+            {deployNote && <p className="text-emerald-400">{deployNote}</p>}
             {done && <p className="text-emerald-400">{done}</p>}
             {warnings.map((w, i) => (
               <p key={i} className="text-amber-300/90">{w}</p>
@@ -184,6 +215,7 @@ export function PackStudio() {
             onClick={() => {
               setError(null);
               setDone(null);
+              dismissDeployNote();
               dismissWarnings();
             }}
           >
@@ -199,7 +231,7 @@ export function PackStudio() {
       </div>
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
-      {upgradeOpen && <UpgradeModal reason={UPGRADE_REASON} onClose={() => setUpgradeOpen(false)} />}
+      {upgradeOpen && <UpgradeModal reason={upgradeReason} onClose={() => setUpgradeOpen(false)} />}
     </div>
   );
 }

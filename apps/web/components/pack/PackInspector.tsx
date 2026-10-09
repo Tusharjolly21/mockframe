@@ -16,6 +16,7 @@ import { firebaseFetch } from "@/lib/firebaseClient";
 import { LaunchCopyPanel } from "@/components/ai/LaunchCopyPanel";
 import { StyleThumb } from "@/components/pack/StyleThumb";
 import { PackLanguages } from "@/components/pack/PackLanguages";
+import { PackDeployRefresh } from "@/components/pack/PackDeployRefresh";
 import { SOURCE_LOCALE, storeLocale } from "@/lib/pack/locales";
 import { useCustomFamilies } from "@/components/editor/FontPicker";
 import { FONT_CATALOG, FONT_CATEGORIES, ensureGoogleFont } from "@/lib/fonts";
@@ -167,6 +168,10 @@ export function PackInspector() {
 
       <Section title="Languages">
         <PackLanguages />
+      </Section>
+
+      <Section title="Refresh on deploy">
+        <PackDeployRefresh />
       </Section>
 
       <Section title="Brand">
