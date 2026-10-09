@@ -6,6 +6,9 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { safeJsonLd } from "@/lib/jsonLd";
 
 const GOOGLE_ANALYTICS_ID = "G-CN1PEZYM0L";
+// Only the production host reports to GA; Vercel previews and localhost don't.
+const GA_HOST = new URL(SITE_URL).hostname;
+const ANALYTICS_OPT_OUT_KEY = "mockframe:analytics:opt-out";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -70,6 +73,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <Script id="google-analytics" strategy="afterInteractive">
           {`
+            (function () {
+              // Keep the owner's own visits and non-production hosts out of GA.
+              // Visit any page with ?mf_internal=1 once per browser to opt that
+              // browser out; ?mf_internal=0 opts it back in.
+              var off = location.hostname !== '${GA_HOST}';
+              try {
+                var params = new URLSearchParams(location.search);
+                var flag = params.get('mf_internal');
+                if (flag === '1') localStorage.setItem('${ANALYTICS_OPT_OUT_KEY}', '1');
+                if (flag === '0') localStorage.removeItem('${ANALYTICS_OPT_OUT_KEY}');
+                if (flag !== null) {
+                  params.delete('mf_internal');
+                  var qs = params.toString();
+                  history.replaceState(history.state, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+                  console.info('[MockFrame] analytics ' + (flag === '1' ? 'disabled' : 'enabled') + ' for this browser');
+                }
+                if (localStorage.getItem('${ANALYTICS_OPT_OUT_KEY}') === '1') off = true;
+              } catch (e) {}
+              if (off) window['ga-disable-${GOOGLE_ANALYTICS_ID}'] = true;
+            })();
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
