@@ -307,6 +307,7 @@ export function compilePack(pack: PackDocument): CompiledEntry[] {
    out each image's display type from its pixel size; `supply` reads
    fastlane/metadata/android/<Play locale>/images/. */
 const FASTLANE_DEVICE: Partial<Record<PackTargetId, string>> = {
+  "appstore-63": "iPhone63",
   "appstore-69": "iPhone69",
   "appstore-65": "iPhone65",
   "appstore-ipad13": "iPadPro13",
@@ -344,6 +345,8 @@ export function packReadme(pack: PackDocument, failed: string[] = []): string {
     "WHERE TO UPLOAD",
     "----------------",
   ];
+  if (pack.targets["appstore-63"])
+    lines.push('App Store/6.3-inch-1206x2622/  → App Store Connect → Screenshots → "iPhone with Dynamic Island (medium display)" (6.3″) — the iPhone size Apple currently requires.');
   if (pack.targets["appstore-69"])
     lines.push('App Store/6.9-inch-1320x2868/  → App Store Connect → your app → Screenshots → "iPhone 6.9″ Display".');
   if (pack.targets["appstore-65"])
@@ -388,7 +391,7 @@ function failedSection(failed: string[]): string[] {
 }
 
 function fastlaneReadme(pack: PackDocument, failed: string[]): string {
-  const ios = pack.targets["appstore-69"] || pack.targets["appstore-65"] || pack.targets["appstore-ipad13"];
+  const ios = pack.targets["appstore-63"] || pack.targets["appstore-69"] || pack.targets["appstore-65"] || pack.targets["appstore-ipad13"];
   const android = pack.targets["play-phone"] || pack.targets["play-feature"];
   const locales = packLocales(pack).map((l) => (l === SOURCE_LOCALE ? packSourceLocale(pack) : l));
   const lines: string[] = [
@@ -403,6 +406,9 @@ function fastlaneReadme(pack: PackDocument, failed: string[]): string {
       "App Store (fastlane deliver):",
       "  fastlane deliver --skip_binary_upload --skip_metadata --overwrite_screenshots",
       "  deliver picks each image's display size from its resolution.",
+      ...(pack.targets["appstore-63"]
+        ? ["  The 6.3-inch (1206×2622) files need a fastlane release that knows that display size; if deliver", "  rejects them, update fastlane or upload those files in App Store Connect by hand."]
+        : []),
       ""
     );
   }

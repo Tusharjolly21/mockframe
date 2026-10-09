@@ -7,7 +7,8 @@ import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { SITE_NAME, SITE_URL, baseDeviceName, categoryLabel, cleanDeviceName, deviceDescription, deviceKeywords, deviceOgImage, deviceSpecs, deviceTitle, socialMeta } from "@/lib/site";
 import { safeJsonLd } from "@/lib/jsonLd";
-import { canonicalDevice, familyScenes, isCanonicalDevicePage } from "@/lib/deviceSeo";
+import { DEVICE_PAGES_UPDATED, canonicalDevice, deviceFaq, familyScenes, isCanonicalDevicePage } from "@/lib/deviceSeo";
+import { formatArticleDate } from "@/lib/articles";
 
 /** Statically generate one page per device in the registry. */
 export function generateStaticParams() {
@@ -62,6 +63,8 @@ export default async function DeviceMockupPage({
   const related = relatedDevices(device);
   const scenes = familyScenes(device);
   const familyHead = canonicalDevice(device);
+  const ratio = specs.find((s) => s.label === "Aspect ratio")?.value ?? "";
+  const faq = deviceFaq(device, { name, base, ratio, scenes: scenes.length });
   const model = deviceModel(device);
   const sameModel = filterDevices(listDevices(), { model }).length;
   const editorHref = `/editor?device=${device.id}`;
@@ -87,6 +90,10 @@ export default async function DeviceMockupPage({
         offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
         publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
       },
+      {
+        "@type": "FAQPage",
+        mainEntity: faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+      },
     ],
   };
 
@@ -103,6 +110,9 @@ export default async function DeviceMockupPage({
           </Link>
           <span>/</span>
           <span className="font-medium text-zinc-300">{name}</span>
+          <span className="ml-auto text-zinc-600">
+            Updated <time dateTime={DEVICE_PAGES_UPDATED}>{formatArticleDate(DEVICE_PAGES_UPDATED)}</time>
+          </span>
         </nav>
 
         {/* hero */}
@@ -257,6 +267,19 @@ export default async function DeviceMockupPage({
             .
           </p>
         )}
+
+        {/* per-device FAQ (also FAQPage structured data above) */}
+        <section className="pt-16">
+          <h2 className="text-[24px] font-medium tracking-[-0.02em] sm:text-[28px]">{base} mockup FAQ</h2>
+          <dl className="mt-6 max-w-3xl space-y-6">
+            {faq.map((f) => (
+              <div key={f.q}>
+                <dt className="text-[15.5px] font-semibold text-white">{f.q}</dt>
+                <dd className="mt-1 text-[14.5px] leading-relaxed text-zinc-400">{f.a}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
 
         {/* related */}
         {related.length > 0 && (

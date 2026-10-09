@@ -12,14 +12,26 @@ export function generateStaticParams() {
   return TOOL_PAGES.map(({ slug }) => ({ slug }));
 }
 
+// Tools whose core output is on the free plan (see components/marketing/PlanComparison.tsx).
+// Only these get "Free" in the title; video export and most chat screens are Pro.
+const FREE_TOOLS = new Set(["website-screenshot", "code-screenshot", "tweet-screenshot", "bluesky-screenshot", "fake-whatsapp-chat-generator", "fake-imessage-generator"]);
+
+function withArticle(noun: string): string {
+  return `${/^[aeiou]/i.test(noun) ? "an" : "a"} ${noun}`;
+}
+
+function toolTitle(tool: { slug: string; name: string }): string {
+  return FREE_TOOLS.has(tool.slug) ? `Free ${tool.name}` : tool.name;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const tool = toolPage((await params).slug);
   if (!tool) return { title: "Tool not found" };
   return {
-    title: tool.name,
+    title: toolTitle(tool),
     description: metaDescription(tool.description),
     alternates: { canonical: `/tools/${tool.slug}` },
-    ...socialMeta({ path: `/tools/${tool.slug}`, title: `${tool.name} — ${SITE_NAME}`, description: metaDescription(tool.description), image: tool.image }),
+    ...socialMeta({ path: `/tools/${tool.slug}`, title: `${toolTitle(tool)} — ${SITE_NAME}`, description: metaDescription(tool.description), image: tool.image }),
   };
 }
 
@@ -139,7 +151,7 @@ export default async function ToolPageRoute({ params }: { params: Promise<{ slug
 
       <section className="border-t border-white/[0.07] bg-white/[0.02] py-20">
         <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-[26px] font-medium">What you can do with it</h2>
+          <h2 className="text-[26px] font-medium">What is {withArticle(tool.name.replace(/^Fake /, "fake "))}?</h2>
           <p className="mt-6 text-[15.5px] leading-8 text-zinc-400">{tool.overview}</p>
         </div>
       </section>

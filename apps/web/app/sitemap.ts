@@ -4,8 +4,9 @@ import { SITE_URL } from "@/lib/site";
 import { TOOL_PAGES } from "@/lib/toolPages";
 import { GUIDES } from "@/lib/guides";
 import { SCENE_GROUPS } from "@/lib/sceneGroups";
-import { isCanonicalDevicePage } from "@/lib/deviceSeo";
+import { DEVICE_PAGES_UPDATED, isCanonicalDevicePage } from "@/lib/deviceSeo";
 import { COMPARISONS } from "@/lib/comparisons";
+import { ARTICLES } from "@/lib/articles";
 
 // Google only trusts <lastmod> when it's "consistently and verifiably accurate".
 // Stamping every URL with `new Date()` on each build made the whole site's
@@ -18,14 +19,14 @@ const UPDATED = {
   legal: new Date("2026-10-07"), // /license created, privacy covers fonts + teams
   tools: new Date("2026-10-07"), // tool copy (post import) + metadata refresh
   launchKit: new Date("2026-10-07"),
-  packStudio: new Date("2026-10-07"), // title/description refresh
+  packStudio: new Date("2026-10-09"), // 6.3-inch size, 2026 size table
   ai: new Date("2026-10-07"), // title/description refresh
   compare: new Date("2026-10-09"), // Previewed, AppLaunchpad, Shots pages + index
   developers: new Date("2026-07-14"),
   changelog: new Date("2026-07-14"),
-  guides: new Date("2026-10-07"), // rebuilt guides, retitled
+  guides: new Date("2026-10-09"), // reference articles listed on the index
   templates: new Date("2026-10-07"), // premium layouts + photoreal collections
-  devices: new Date("2026-10-09"), // photo scenes folded into one page per device family
+  devices: new Date(DEVICE_PAGES_UPDATED), // per-device FAQ, "Free" titles, scene galleries
   recorder: new Date("2026-10-07"), // auto-zoom screen recorder launch
   figma: new Date("2026-10-07"), // Figma plugin launch
 } as const;
@@ -85,5 +86,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...toolPages, ...guidePages, ...templateCollections, ...devicePages];
+  // reference articles carry their own verified-on date
+  const articlePages: MetadataRoute.Sitemap = ARTICLES.map((a) => ({
+    url: `${SITE_URL}/guides/${a.slug}`,
+    lastModified: new Date(a.updated),
+    changeFrequency: "monthly",
+    priority: 0.8,
+  }));
+
+  return [...staticPages, ...toolPages, ...articlePages, ...guidePages, ...templateCollections, ...devicePages];
 }

@@ -105,8 +105,9 @@ export function deviceDescription(device: Device): string {
 export function deviceTitle(device: Device): string {
   const name = cleanDeviceName(device);
   // Keep the rendered "<title> — MockFrame" within ~60 characters for SERPs.
-  const full = `${name} Mockup Generator`;
-  return full.length <= 48 ? full : `${name} Mockup`;
+  // Ranking tool pages lead with "Free"; drop it first when space runs out.
+  for (const t of [`Free ${name} Mockup Generator`, `${name} Mockup Generator`]) if (t.length <= 48) return t;
+  return `${name} Mockup`;
 }
 
 /** Absolute social image for a device, when a real raster preview exists. */

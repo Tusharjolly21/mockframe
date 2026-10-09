@@ -7,6 +7,7 @@ import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
 import { GUIDES } from "@/lib/guides";
+import { ARTICLES, formatArticleDate } from "@/lib/articles";
 
 export const metadata: Metadata = {
   title: "Guides",
@@ -121,6 +122,29 @@ export default function GuidesPage() {
             );
           })}
         </RevealGroup>
+      </section>
+
+      {/* long-form reference articles (lib/articles.ts) */}
+      <section className="mx-auto max-w-6xl px-6 pb-28">
+        <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Reference</h2>
+        <div className="mt-6 grid gap-5 sm:grid-cols-2">
+          {ARTICLES.map((article) => (
+            <Link
+              key={article.slug}
+              href={`/guides/${article.slug}`}
+              className="group flex flex-col rounded-2xl border border-white/10 bg-[#0f1015] p-6 transition-colors hover:border-white/25"
+            >
+              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-zinc-500">
+                Updated {formatArticleDate(article.updated)} · {article.readTime}
+              </span>
+              <h3 className="mt-3 text-[18px] font-semibold leading-snug tracking-[-0.01em]">{article.title}</h3>
+              <p className="mt-2 flex-1 text-[13.5px] leading-6 text-zinc-400">{article.description}</p>
+              <span className="mt-5 inline-flex items-center gap-2 text-[13px] font-semibold text-white">
+                Read <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+              </span>
+            </Link>
+          ))}
+        </div>
       </section>
       <MarketingFooter />
     </main>

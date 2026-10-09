@@ -109,6 +109,19 @@ describe("compilePack", () => {
     expect(entries.every((e) => e.panoramaTotal === 3)).toBe(true);
   });
 
+  it("6.3-inch target renders at 1206x2622 into its own folder", () => {
+    const pack = samplePack();
+    pack.targets = { "appstore-63": true, "appstore-69": false, "appstore-65": false, "appstore-ipad13": false, "play-phone": false, "play-feature": false };
+    const entries = compilePack(pack);
+    expect(entries.map((e) => e.path)).toEqual([
+      "App Store/6.3-inch-1206x2622/01.png",
+      "App Store/6.3-inch-1206x2622/02.png",
+      "App Store/6.3-inch-1206x2622/03.png",
+    ]);
+    expect([entries[0].scene.canvas.width, entries[0].scene.canvas.height]).toEqual([1206, 2622]);
+    expect(packReadme(pack)).toContain("6.3-inch-1206x2622");
+  });
+
   it("non-panorama styles emit no panorama indices", () => {
     const entries = compilePack(samplePack());
     expect(entries.every((e) => e.panoramaIdx === undefined)).toBe(true);

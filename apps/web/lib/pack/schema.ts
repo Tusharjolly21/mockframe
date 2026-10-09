@@ -12,6 +12,7 @@ import { MAX_PACK_LOCALES } from "./locales";
 export const PACK_VERSION = 1 as const;
 
 export const PACK_TARGET_IDS = [
+  "appstore-63",
   "appstore-69",
   "appstore-65",
   "appstore-ipad13",
@@ -34,6 +35,18 @@ export interface PackTarget {
 }
 
 export const PACK_TARGETS: Record<PackTargetId, PackTarget> = {
+  // "iPhone with Dynamic Island (medium display)": the iPhone slot Apple's
+  // screenshot spec lists as required (Oct 2026). It accepts only 1179×2556 or
+  // 1206×2622 — 6.9" images are rejected there, so this can't be scaled from them.
+  "appstore-63": {
+    id: "appstore-63",
+    store: "appstore",
+    label: "App Store 6.3″",
+    width: 1206,
+    height: 2622,
+    deviceId: "iphone-17-pro",
+    folder: "App Store/6.3-inch-1206x2622",
+  },
   "appstore-69": {
     id: "appstore-69",
     store: "appstore",
@@ -216,6 +229,8 @@ export const PackDocumentSchema = z.object({
   }),
   screens: z.array(PackScreenSchema).min(1).max(10),
   targets: z.object({
+    // optional: packs saved before the 6.3" target existed don't have the key
+    "appstore-63": z.boolean().optional(),
     "appstore-69": z.boolean(),
     "appstore-65": z.boolean(),
     "appstore-ipad13": z.boolean(),
@@ -283,6 +298,7 @@ export function createPack(): PackDocument {
     },
     screens: [createPackScreen()],
     targets: {
+      "appstore-63": true,
       "appstore-69": true,
       "appstore-65": true,
       "appstore-ipad13": false,

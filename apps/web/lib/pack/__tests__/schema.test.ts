@@ -32,9 +32,10 @@ describe("PackDocument schema", () => {
     expect(PackDocumentSchema.safeParse(pack).success).toBe(false);
   });
 
-  it("default targets: both iPhone sizes + Play on, iPad off", () => {
+  it("default targets: all iPhone sizes + Play on, iPad off", () => {
     const pack = createPack();
     expect(pack.targets).toEqual({
+      "appstore-63": true,
       "appstore-69": true,
       "appstore-65": true,
       "appstore-ipad13": false,
@@ -49,9 +50,19 @@ describe("PackDocument schema", () => {
     expect(screen.assetId).toBe("asset-1");
   });
 
-  it("target ids enumerate exactly the five targets", () => {
+  it("target ids enumerate exactly the six targets", () => {
     expect([...PACK_TARGET_IDS].sort()).toEqual(
-      ["appstore-65", "appstore-69", "appstore-ipad13", "play-feature", "play-phone"].sort()
+      ["appstore-63", "appstore-65", "appstore-69", "appstore-ipad13", "play-feature", "play-phone"].sort()
     );
+  });
+
+  it("6.3-inch target is Apple's medium Dynamic Island size", () => {
+    expect(PACK_TARGETS["appstore-63"]).toMatchObject({ width: 1206, height: 2622, folder: "App Store/6.3-inch-1206x2622" });
+  });
+
+  it("packs saved before the 6.3-inch target still parse", () => {
+    const pack = createPack();
+    const { "appstore-63": _dropped, ...legacyTargets } = pack.targets;
+    expect(PackDocumentSchema.safeParse({ ...pack, targets: legacyTargets }).success).toBe(true);
   });
 });

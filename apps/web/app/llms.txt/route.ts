@@ -2,6 +2,7 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { TOOL_PAGES } from "@/lib/toolPages";
 import { GUIDES } from "@/lib/guides";
 import { COMPARISONS } from "@/lib/comparisons";
+import { ARTICLES } from "@/lib/articles";
 
 // A plain-text map of the site for AI assistants (ChatGPT, Claude, Perplexity…).
 // AI assistants are MockFrame's largest referral channel, so give them an
@@ -13,7 +14,7 @@ export function GET() {
   const lines = [
     `# ${SITE_NAME}`,
     "",
-    `> ${SITE_NAME} is a browser-based screenshot mockup studio. Drop a screenshot into a photoreal device frame (iPhone, iPad, MacBook, Apple Watch, Android, browsers), style the scene, and export an image or video. It also generates App Store and Google Play screenshot sets, fake-chat story mockups, website screenshots and screen recordings with auto-zoom. Free to start; Pro unlocks higher-resolution export and unlimited packs.`,
+    `> ${SITE_NAME} is a browser-based screenshot mockup studio. Drop a screenshot into a photoreal device frame (iPhone, iPad, MacBook, Apple Watch, Android, browsers), style the scene, and export an image or video. It also generates App Store and Google Play screenshot sets (including Apple's required 6.3-inch iPhone size), fake-chat story mockups, website screenshots and screen recordings with auto-zoom. Free to start; Pro unlocks higher-resolution export and unlimited packs.`,
     "",
     "## Main pages",
     `- [Device mockups](${SITE_URL}/mockups): every device frame, one page per model with screen specs`,
@@ -27,6 +28,9 @@ export function GET() {
     "",
     "## Tools",
     ...TOOL_PAGES.map((t) => `- [${t.name}](${SITE_URL}/tools/${t.slug}): ${t.description}`),
+    "",
+    "## Reference",
+    ...ARTICLES.map((a) => `- [${a.title}](${SITE_URL}/guides/${a.slug}): ${a.description}`),
     "",
     "## Guides",
     ...GUIDES.map((g) => `- [${g.title}](${SITE_URL}/guides/${g.slug}): ${g.description}`),
