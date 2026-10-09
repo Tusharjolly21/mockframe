@@ -305,6 +305,22 @@ export const KeyframeSchema = z.object({
   ]),
 });
 
+/**
+ * A camera "zoom shot" (shots.so-style video zoom): the camera eases in to
+ * `zoom`× on a focus point, holds, then eases back out. Focus is a fraction
+ * of the canvas (0..1), so it survives canvas resizes. Applies to every layer;
+ * `tilt` adds a 3D turn to the devices while zoomed.
+ */
+export const ZoomShotSchema = z.object({
+  id: z.string(),
+  startMs: z.number().min(0),
+  holdMs: z.number().min(0),
+  x: z.number().min(0).max(1),
+  y: z.number().min(0).max(1),
+  zoom: z.number().min(1).max(4),
+  tilt: z.number().min(-30).max(30).optional(),
+});
+
 export const TimelineSchema = z.object({
   durationMs: z.number().positive(),
   fps: z.union([z.literal(30), z.literal(60)]),
@@ -326,6 +342,8 @@ export const TimelineSchema = z.object({
     })
   ),
   presets: z.array(z.string()).optional(),
+  /** camera zoom shots, in time order (see ZoomShotSchema) */
+  zooms: z.array(ZoomShotSchema).max(12).optional(),
 });
 
 /* ----------------------------------- scene ----------------------------------- */
@@ -386,4 +404,5 @@ export type TextAnimation = z.infer<typeof TextAnimationSchema>;
 export type StickerLayer = z.infer<typeof StickerLayerSchema>;
 export type Layer = z.infer<typeof LayerSchema>;
 export type Timeline = z.infer<typeof TimelineSchema>;
+export type ZoomShot = z.infer<typeof ZoomShotSchema>;
 export type SceneDocument = z.infer<typeof SceneDocumentSchema>;

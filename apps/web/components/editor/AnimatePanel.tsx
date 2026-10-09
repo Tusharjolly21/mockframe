@@ -19,6 +19,7 @@ import { exportSceneGif } from "@/lib/gifExport";
 import { useSceneStore, useViewStore, withTransientHistory } from "@/lib/store";
 import { openUpgrade } from "@/lib/billing/gate";
 import { MotionStudio } from "./MotionStudio";
+import { ZoomStudio } from "./ZoomStudio";
 import { useVideoSettings, VideoSettingsControl } from "./VideoSettingsControl";
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -96,7 +97,7 @@ export function AnimatePanel() {
   const [speed, setSpeed] = useState<"slow" | "normal" | "fast">("normal");
   const [busy, setBusy] = useState<null | { pct: number; label: string }>(null);
   const [plan, setPlan] = useState<AnimShot[]>([]);
-  const [tab, setTab] = useState<"motion" | "replay">("motion");
+  const [tab, setTab] = useState<"motion" | "zoom" | "replay">("motion");
   
   // Scrubber & effects state
   const [currentTime, setCurrentTime] = useState(0);
@@ -126,6 +127,8 @@ export function AnimatePanel() {
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
+      // the Zoom tab's canvas overlay is portaled to <body> but belongs to this panel
+      if ((e.target as Element | null)?.closest?.("[data-animate-overlay]")) return;
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
     };
     window.addEventListener("mousedown", onDown);
@@ -401,7 +404,7 @@ export function AnimatePanel() {
               <div className="flex items-center gap-2.5">
                 <Clapperboard size={15} className="text-violet-400" />
                 <div className="flex rounded-lg border border-white/5 bg-white/5 p-0.5">
-                  {([["motion", "Motion"], ["replay", "Chat replay"]] as const).map(([id, label]) => (
+                  {([["motion", "Motion"], ["zoom", "Zoom"], ["replay", "Chat replay"]] as const).map(([id, label]) => (
                     <button
                       key={id}
                       onClick={() => setTab(id)}
@@ -496,7 +499,7 @@ export function AnimatePanel() {
             </div>
 
             {!showReplay ? (
-              <MotionStudio />
+              tab === "zoom" ? <ZoomStudio /> : <MotionStudio />
             ) : (
               <div className="flex-1 flex flex-col justify-between">
                 {/* Horizontal tracks and scrubber ruler */}

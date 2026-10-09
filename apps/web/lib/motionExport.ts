@@ -4,7 +4,6 @@ import { getFontEmbedCSS, toCanvas } from "html-to-image";
 import { applyPalette, GIFEncoder, quantize } from "gifenc";
 import type { SceneDocument } from "@framekit/scene";
 import { drawDisclosure, loadDisclosure } from "./disclosure";
-import type { MotionPreset } from "./motion";
 import { createVideoWriter, downloadBlob } from "./videoEncode";
 import { DEFAULT_VIDEO_SETTINGS, videoBitrate, videoSize, type VideoSettings } from "./videoSettings";
 
@@ -18,10 +17,19 @@ import { DEFAULT_VIDEO_SETTINGS, videoBitrate, videoSize, type VideoSettings } f
  * back to recording a canvas playback with MediaRecorder.
  */
 
+/** What the exporter needs to know about a clip: a motion preset or a video-zoom camera clip. */
+export interface ExportClip {
+  /** used in the file name */
+  id: string;
+  /** loops play twice; intros hold their last frame a beat */
+  kind: "loop" | "intro";
+  durationMs: number;
+}
+
 export interface MotionExportOpts {
   node: HTMLElement;
   scene: SceneDocument;
-  preset: MotionPreset;
+  preset: ExportClip;
   /** pose the scene at clip time t (0..1), transiently */
   renderAt: (t: number) => void;
   restore: () => void;
