@@ -1,7 +1,8 @@
 "use client";
 
 import type { Layer, MockupLayer } from "@framekit/scene";
-import { mediaCrop } from "@framekit/renderer";
+import { isLandscape, mediaCrop } from "@framekit/renderer";
+import { getDevice } from "@framekit/devices";
 import { resolveAsset } from "./assets";
 import { sceneTemporal, useSceneStore, useViewStore } from "./store";
 
@@ -154,7 +155,13 @@ export function endGesture() {
 
 /** can this layer be adjusted on the canvas? (needs a screenshot; baked renders can't) */
 export function canAdjust(layer: Layer | undefined): layer is MockupLayer {
-  return !!layer && layer.type === "mockup" && !!layer.media && !layer.render && !!resolveAsset(layer.media.assetId);
+  return !!layer && layer.type === "mockup" && !!layer.media && !layer.render && !!resolveAsset(layer.media.assetId) && !landscapeDevice(layer);
+}
+
+/** On-canvas adjusting isn't rotation-aware yet; landscape devices use the panel's Fill/Fit and zoom. */
+function landscapeDevice(layer: MockupLayer): boolean {
+  const device = layer.deviceId ? getDevice(layer.deviceId) : undefined;
+  return !!device && isLandscape(layer, device);
 }
 
 export function enterAdjust(id: string) {
@@ -163,6 +170,8 @@ export function enterAdjust(id: string) {
     const l = layer as Layer | undefined;
     if (l?.type === "mockup" && l.render) {
       window.dispatchEvent(new CustomEvent("framekit:toast", { detail: "Realistic renders are baked. Use Edit screenshot to change the source." }));
+    } else if (l?.type === "mockup" && landscapeDevice(l)) {
+      window.dispatchEvent(new CustomEvent("framekit:toast", { detail: "In landscape, use Fill / Fit and Zoom in the panel — on-canvas adjusting works in portrait." }));
     }
     return;
   }

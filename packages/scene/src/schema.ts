@@ -165,6 +165,8 @@ export const MockupLayerSchema = z.object({
   id: z.string(),
   deviceId: z.string().nullable(), // null = frameless screenshot
   frameVariant: z.string().optional(),
+  /** phones and tablets can be turned sideways for landscape screenshots (framed devices only) */
+  orientation: z.enum(["portrait", "landscape"]).optional(),
   screenshotStyle: z
     .enum(["default", "glass-light", "glass-dark", "liquid-glass", "inset-light", "inset-dark", "outline", "border"])
     .optional(), // frameless only
