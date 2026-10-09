@@ -1,6 +1,7 @@
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { TOOL_PAGES } from "@/lib/toolPages";
 import { GUIDES } from "@/lib/guides";
+import { COMPARISONS } from "@/lib/comparisons";
 
 // A plain-text map of the site for AI assistants (ChatGPT, Claude, Perplexity…).
 // AI assistants are MockFrame's largest referral channel, so give them an
@@ -29,6 +30,9 @@ export function GET() {
     "",
     "## Guides",
     ...GUIDES.map((g) => `- [${g.title}](${SITE_URL}/guides/${g.slug}): ${g.description}`),
+    "",
+    "## Comparisons",
+    ...COMPARISONS.map((c) => `- [MockFrame vs ${c.name}](${SITE_URL}/compare/${c.slug}): ${c.description}`),
     "",
   ];
 

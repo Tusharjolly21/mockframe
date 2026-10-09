@@ -7,6 +7,7 @@ import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { SITE_NAME, SITE_URL, baseDeviceName, categoryLabel, cleanDeviceName, deviceDescription, deviceKeywords, deviceOgImage, deviceSpecs, deviceTitle, socialMeta } from "@/lib/site";
 import { safeJsonLd } from "@/lib/jsonLd";
+import { canonicalDevice, familyScenes, isCanonicalDevicePage } from "@/lib/deviceSeo";
 
 /** Statically generate one page per device in the registry. */
 export function generateStaticParams() {
@@ -23,7 +24,8 @@ export async function generateMetadata({
   if (!device) return { title: "Mockup not found", robots: { index: false } };
   const title = deviceTitle(device);
   const description = deviceDescription(device);
-  const canonical = `/mockups/${device.id}`;
+  // photo scenes defer to their family page (see lib/deviceSeo.ts)
+  const canonical = `/mockups/${canonicalDevice(device).id}`;
   const og = deviceOgImage(device);
   return {
     title,
@@ -37,7 +39,8 @@ export async function generateMetadata({
 
 /** Up to 7 sibling devices in the same category (then fill from the rest). */
 function relatedDevices(device: Device): Device[] {
-  const all = listDevices().filter((d) => d.id !== device.id);
+  const family = canonicalDevice(device).id;
+  const all = listDevices().filter((d) => d.id !== device.id && isCanonicalDevicePage(d) && d.id !== family);
   const sameCat = all.filter((d) => d.category === device.category);
   const rest = all.filter((d) => d.category !== device.category);
   return [...sameCat, ...rest].slice(0, 7);
@@ -57,6 +60,8 @@ export default async function DeviceMockupPage({
   const preview = previewDataUri(device);
   const specs = deviceSpecs(device);
   const related = relatedDevices(device);
+  const scenes = familyScenes(device);
+  const familyHead = canonicalDevice(device);
   const model = deviceModel(device);
   const sameModel = filterDevices(listDevices(), { model }).length;
   const editorHref = `/editor?device=${device.id}`;
@@ -206,6 +211,52 @@ export default async function DeviceMockupPage({
             .
           </p>
         </section>
+
+        {/* every photo scene of this device family, gathered on the family page */}
+        {scenes.length > 0 && (
+          <section className="pt-16">
+            <h2 className="text-[24px] font-medium tracking-[-0.02em] sm:text-[28px]">
+              Photoreal {base} scenes ({scenes.length})
+            </h2>
+            <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-zinc-500">
+              Prefer a photographed device to a flat frame? Each scene below is calibrated to the {base} display —
+              open one and your screenshot is warped onto the screen with real lighting.
+            </p>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {scenes.map((d) => (
+                <Link
+                  key={d.id}
+                  href={`/editor?device=${d.id}`}
+                  className="group flex flex-col overflow-hidden rounded-[20px] border border-white/[0.08] bg-white/[0.02] transition-colors hover:border-white/20"
+                >
+                  <div className="flex h-40 items-center justify-center overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={previewDataUri(d)}
+                      alt={`${cleanDeviceName(d)} mockup scene`}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between border-t border-white/[0.06] p-3.5">
+                    <span className="text-[13.5px] font-semibold text-white">{cleanDeviceName(d)}</span>
+                    <ArrowUpRight size={15} className="text-zinc-600 transition-colors group-hover:text-white" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {familyHead.id !== device.id && (
+          <p className="pt-10 text-[14px] text-zinc-500">
+            This is one of several {base} scenes.{" "}
+            <Link href={`/mockups/${familyHead.id}`} className="text-violet-300 underline-offset-2 hover:underline">
+              See every {baseDeviceName(familyHead)} mockup
+            </Link>
+            .
+          </p>
+        )}
 
         {/* related */}
         {related.length > 0 && (

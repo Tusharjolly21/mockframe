@@ -4,6 +4,8 @@ import { SITE_URL } from "@/lib/site";
 import { TOOL_PAGES } from "@/lib/toolPages";
 import { GUIDES } from "@/lib/guides";
 import { SCENE_GROUPS } from "@/lib/sceneGroups";
+import { isCanonicalDevicePage } from "@/lib/deviceSeo";
+import { COMPARISONS } from "@/lib/comparisons";
 
 // Google only trusts <lastmod> when it's "consistently and verifiably accurate".
 // Stamping every URL with `new Date()` on each build made the whole site's
@@ -18,12 +20,12 @@ const UPDATED = {
   launchKit: new Date("2026-10-07"),
   packStudio: new Date("2026-10-07"), // title/description refresh
   ai: new Date("2026-10-07"), // title/description refresh
-  compare: new Date("2026-10-07"), // title/description refresh
+  compare: new Date("2026-10-09"), // Previewed, AppLaunchpad, Shots pages + index
   developers: new Date("2026-07-14"),
   changelog: new Date("2026-07-14"),
   guides: new Date("2026-10-07"), // rebuilt guides, retitled
   templates: new Date("2026-10-07"), // premium layouts + photoreal collections
-  devices: new Date("2026-10-07"), // realistic mockups reorganised
+  devices: new Date("2026-10-09"), // photo scenes folded into one page per device family
   recorder: new Date("2026-10-07"), // auto-zoom screen recorder launch
   figma: new Date("2026-10-07"), // Figma plugin launch
 } as const;
@@ -36,7 +38,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/ai`, lastModified: UPDATED.ai, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/screen-recorder`, lastModified: UPDATED.recorder, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/figma-plugin`, lastModified: UPDATED.figma, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${SITE_URL}/compare/appscreens`, lastModified: UPDATED.compare, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/compare`, lastModified: UPDATED.compare, changeFrequency: "monthly", priority: 0.6 },
+    ...COMPARISONS.map((c) => ({ url: `${SITE_URL}/compare/${c.slug}`, lastModified: UPDATED.compare, changeFrequency: "monthly" as const, priority: 0.7 })),
     { url: `${SITE_URL}/tools`, lastModified: UPDATED.tools, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/launch-kit`, lastModified: UPDATED.launchKit, changeFrequency: "weekly", priority: 0.9 },
     // /chat is intentionally omitted — a noindexed mobile builder (the WhatsApp / iMessage tool pages carry the SEO)
@@ -60,7 +63,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  const devicePages: MetadataRoute.Sitemap = listDevices().map((d) => ({
+  // photo-scene variants canonicalise to their family page, so only list the family page
+  const devicePages: MetadataRoute.Sitemap = listDevices().filter(isCanonicalDevicePage).map((d) => ({
     url: `${SITE_URL}/mockups/${d.id}`,
     lastModified: UPDATED.devices,
     changeFrequency: "monthly",
