@@ -13,6 +13,7 @@ import {
   SiYoutube,
 } from "@icons-pack/react-simple-icons";
 import { findSizePreset, SIZE_CATEGORIES, type SizePreset } from "@/lib/canvasSizes";
+import { resizeCanvasFitted } from "./AddDevice";
 import { ingestFile, resolveAsset } from "@/lib/assets";
 import { BG_CATEGORIES, isProBgCategory, isProBgSwatch, magicSwatches, type BgSwatch } from "@/lib/backgrounds";
 import { openUpgrade, useIsPro } from "@/lib/billing/gate";
@@ -1190,6 +1191,30 @@ function RatioShape({ w, h, children }: { w: number; h: number; children?: React
   );
 }
 
+/** A size field that applies on Enter or blur, so typing "1080" doesn't refit the scene at 1, 10 and 108 px first. */
+function SizeInput({ value, onCommit }: { value: number; onCommit: (v: number) => void }) {
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => setDraft(String(value)), [value]);
+  const commit = () => {
+    const v = Number(draft);
+    if (Number.isFinite(v) && v > 0 && v !== value) onCommit(v);
+    else setDraft(String(value));
+  };
+  return (
+    <input
+      type="number"
+      inputMode="numeric"
+      value={draft}
+      min={64}
+      max={8192}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
+      className="w-full bg-transparent text-[13px] font-semibold tabular-nums text-[#17171c] focus:outline-none"
+    />
+  );
+}
+
 function SizeSelector() {
   const scene = useSceneStore((s) => s.scene);
   const setScene = useSceneStore((s) => s.setScene);
@@ -1200,15 +1225,8 @@ function SizeSelector() {
 
   const { width, height } = scene.canvas;
   const active = findSizePreset(width, height);
-  const setSize = (w: number, h: number) =>
-    setScene((s) => ({
-      ...s,
-      canvas: {
-        ...s.canvas,
-        width: Math.max(64, Math.min(8192, Math.round(w) || 64)),
-        height: Math.max(64, Math.min(8192, Math.round(h) || 64)),
-      },
-    }));
+  // devices and text are refitted so they stay inside the new shape
+  const setSize = (w: number, h: number) => setScene((s) => resizeCanvasFitted(s, w, h));
 
   useEffect(() => {
     if (!open) return;
@@ -1295,14 +1313,7 @@ function SizeSelector() {
                         className="flex flex-1 items-center gap-2 rounded-xl border border-[#e4e4ec] bg-white px-3 py-2"
                       >
                         <span className="text-[11px] font-semibold text-[#9a9aa4]">{label}</span>
-                        <input
-                          type="number"
-                          value={value}
-                          min={64}
-                          max={8192}
-                          onChange={(e) => apply(Number(e.target.value))}
-                          className="w-full bg-transparent text-[13px] font-semibold tabular-nums text-[#17171c] focus:outline-none"
-                        />
+                        <SizeInput value={value} onCommit={apply} />
                       </label>
                     ))}
                     <button

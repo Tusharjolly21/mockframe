@@ -24,7 +24,7 @@ export function ScreenStrip() {
   };
 
   return (
-    <aside className="flex w-40 shrink-0 flex-col gap-2 overflow-y-auto border-r border-white/10 bg-[#101014] p-3">
+    <aside className="flex w-full shrink-0 gap-2 overflow-x-auto border-b border-white/10 bg-[#101014] p-3 md:w-40 md:flex-col md:overflow-y-auto md:overflow-x-hidden md:border-b-0 md:border-r">
       {pack.screens.map((screen, i) => {
         const asset = screen.assetId ? resolveAsset(screen.assetId) : undefined;
         return (
@@ -59,7 +59,7 @@ export function ScreenStrip() {
                 setActiveScreen(screen.id);
               }
             }}
-            className={`group relative cursor-pointer rounded-lg border p-1 transition ${
+            className={`group relative w-24 shrink-0 cursor-pointer rounded-lg border p-1 transition md:w-auto ${
               screen.id === activeScreenId ? "border-violet-500 bg-violet-500/10" : "border-white/10 hover:border-white/25"
             }`}
           >
@@ -73,7 +73,7 @@ export function ScreenStrip() {
             </div>
             <div className="mt-1 flex items-center justify-between px-0.5 text-[11px] text-white/50">
               <span>{String(i + 1).padStart(2, "0")}</span>
-              <span className="flex gap-1 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
+              <span className="flex gap-1 transition md:opacity-0 md:group-hover:opacity-100 group-focus-within:opacity-100">
                 <button aria-label="Move up" onClick={(e) => { e.stopPropagation(); moveScreenById(screen.id, -1); }}>↑</button>
                 <button aria-label="Move down" onClick={(e) => { e.stopPropagation(); moveScreenById(screen.id, 1); }}>↓</button>
                 <button aria-label="Replace screenshot" title="Replace screenshot" onClick={(e) => { e.stopPropagation(); pickFor(screen.id); }}>↻</button>
@@ -85,7 +85,7 @@ export function ScreenStrip() {
       })}
       <button
         onClick={() => fileInput.current?.click()}
-        className="rounded-lg border border-dashed border-white/20 py-3 text-sm text-white/60 transition hover:border-violet-400 hover:text-white"
+        className="w-24 shrink-0 rounded-lg border border-dashed border-white/20 px-2 py-3 text-sm md:w-auto md:px-0 text-white/60 transition hover:border-violet-400 hover:text-white"
       >
         + Add screenshots
       </button>

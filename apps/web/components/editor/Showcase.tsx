@@ -133,11 +133,12 @@ export function ShowcaseButton() {
       whileTap={{ scale: 0.96 }}
       onClick={() => (ready ? makeShowcase("pill") : toast("Add a screenshot first, then make a showcase"))}
       disabled={running}
+      aria-label="Showcase"
       title="Showcase: turn this screenshot into a poster, a before / after and four finished shots"
-      className="fk-card pointer-events-auto flex cursor-pointer items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-semibold text-[#17171c] disabled:opacity-60"
+      className="fk-card pointer-events-auto flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-full px-4 py-2.5 text-[13px] min-[1360px]:px-5 font-semibold text-[#17171c] disabled:opacity-60"
     >
       <GalleryVerticalEnd size={15} className="text-violet-600" />
-      Showcase
+      <span className="hidden min-[1360px]:inline">Showcase</span>
     </motion.button>
   );
 }
