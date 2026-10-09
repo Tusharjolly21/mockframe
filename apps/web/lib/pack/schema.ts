@@ -178,10 +178,20 @@ export const MarketingSchema = z.object({
   launchTweet: z.string().max(280),
 });
 
+/** Where a screen's screenshot comes from, so "Refresh" can re-capture it
+ *  after the app changes (web apps / PWAs). Optional: most screens are uploads. */
+export const PackCaptureSchema = z.object({
+  url: z.string().max(2048).url().regex(/^https?:\/\//i, "http(s) only"),
+  dark: z.boolean().optional(),
+});
+
+export type PackCapture = z.infer<typeof PackCaptureSchema>;
+
 export const PackScreenSchema = z.object({
   id: z.string(),
   /** uploaded screenshot; null until the user drops one */
   assetId: z.string().nullable(),
+  capture: PackCaptureSchema.optional(),
   /** "en" holds the source captions (whatever language they're in); every
    *  other key is a store locale id from `pack.locales` (see locales.ts) */
   captions: z.record(z.string(), CaptionSchema),

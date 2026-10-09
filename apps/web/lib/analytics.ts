@@ -12,6 +12,7 @@
  *   template_opened_with_shots {template}   opened a template with those screenshots in it
  *   pack_exported {screens, languages, layout}   exported a store screenshot pack
  *   pack_translated {languages}         AI-translated a pack's captions
+ *   pack_refreshed {kind, screens}      swapped in a new release's screenshots (files) or re-captured them (urls)
  *   upgrade_viewed {reason}             saw the Pro modal, and what they reached for
  *   upgrade_signin                      had to sign in before paying
  *   checkout_started {plan}             pressed pay

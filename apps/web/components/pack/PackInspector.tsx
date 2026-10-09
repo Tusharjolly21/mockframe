@@ -9,7 +9,8 @@ import {
   PACK_TARGETS,
   packLaunch,
 } from "@/lib/pack/schema";
-import { setCaption, applyCaptions } from "@/lib/pack/ops";
+import { setCaption, applyCaptions, setScreenCapture } from "@/lib/pack/ops";
+import { PackCaptureSchema } from "@/lib/pack/schema";
 import { usePackStore } from "@/lib/pack/store";
 import { firebaseFetch } from "@/lib/firebaseClient";
 import { LaunchCopyPanel } from "@/components/ai/LaunchCopyPanel";
@@ -149,6 +150,7 @@ export function PackInspector() {
             Flip tilt
           </label>
         </div>
+        {!translating && <ScreenSourceUrl key={screen.id} screenId={screen.id} />}
         {pack.source && !translating && (
           <div className="mt-3">
             <button
@@ -298,5 +300,83 @@ export function PackInspector() {
         </Section>
       )}
     </aside>
+  );
+}
+
+/** Optional per-screen source URL: lets "Re-capture from URLs" rebuild the
+ *  screenshot after a release instead of the user re-uploading it. */
+function ScreenSourceUrl({ screenId }: { screenId: string }) {
+  const { pack, update, refreshing, refreshFromUrls } = usePackStore();
+  const screen = pack.screens.find((s) => s.id === screenId);
+  const [draft, setDraft] = useState(screen?.capture?.url ?? "");
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  if (!screen) return null;
+
+  function commit(raw: string): boolean {
+    const value = raw.trim();
+    if (!value) {
+      update((p) => setScreenCapture(p, screenId, null));
+      return true;
+    }
+    const url = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+    const parsed = PackCaptureSchema.safeParse({ url, dark: screen?.capture?.dark });
+    if (!parsed.success) {
+      setMsg({ ok: false, text: "That doesn't look like a web address." });
+      return false;
+    }
+    setDraft(url);
+    setMsg(null);
+    update((p) => setScreenCapture(p, screenId, parsed.data));
+    return true;
+  }
+
+  return (
+    <div className="mt-3 border-t border-white/10 pt-3">
+      <label className="mb-1 block text-[11px] text-white/45" htmlFor={`src-${screenId}`}>
+        Source URL <span className="text-white/30">· optional, for web apps</span>
+      </label>
+      <input
+        id={`src-${screenId}`}
+        value={draft}
+        inputMode="url"
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={(e) => commit(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && commit(draft)}
+        placeholder="https://yourapp.com/dashboard"
+        className="w-full rounded-md border border-white/10 bg-black/30 px-2.5 py-1.5 text-[12px] outline-none focus:border-violet-500"
+      />
+      {screen.capture && (
+        <div className="mt-2 flex items-center justify-between gap-2 text-[12px] text-white/60">
+          <label className="flex items-center gap-1.5">
+            <input
+              type="checkbox"
+              checked={!!screen.capture.dark}
+              onChange={(e) => update((p) => setScreenCapture(p, screenId, { ...screen.capture!, dark: e.target.checked }))}
+            />
+            Dark mode
+          </label>
+          <button
+            disabled={!!refreshing}
+            onClick={async () => {
+              if (!commit(draft)) return;
+              setMsg({ ok: true, text: "Capturing…" });
+              const summary = await refreshFromUrls(screenId).catch(() => "Re-captured 0");
+              // the failure reason itself lands in the studio's warning bar
+              const ok = summary.startsWith("Re-captured 1");
+              setMsg({ ok, text: ok ? "Captured." : "Capture failed — see the message at the top." });
+            }}
+            className="rounded-md border border-white/10 px-2 py-1 text-[11.5px] text-white/75 transition hover:border-white/25 disabled:opacity-50"
+          >
+            Capture now
+          </button>
+        </div>
+      )}
+      {msg && <p className={`mt-1.5 text-[11px] ${msg.ok ? "text-white/50" : "text-red-400"}`}>{msg.text}</p>}
+      {!screen.capture && (
+        <p className="mt-1 text-[10.5px] leading-4 text-white/30">
+          Add one and “Re-capture from URLs” rebuilds this screen after each release.
+        </p>
+      )}
+    </div>
   );
 }
