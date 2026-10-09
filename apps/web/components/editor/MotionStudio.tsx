@@ -11,6 +11,7 @@ import { openUpgrade } from "@/lib/billing/gate";
 import { TransparentVideoToggle, useVideoSettings, VideoSettingsControl } from "./VideoSettingsControl";
 import { applyBgMotion, backgroundPose, clearBgMotion, isRest, type LiveBackground } from "@/lib/backgroundMotion";
 import { LiveBackgroundControl, useLiveBackground } from "./LiveBackgroundControl";
+import { sceneMotionSetup } from "@/lib/premiumTemplates";
 
 const SCENE_NODE = "#scene-canvas [data-scene-id]";
 
@@ -90,7 +91,11 @@ function PresetGlyph({ preset, active }: { preset: MotionPreset; active: boolean
  * export it as MP4/WebM or GIF. Works alongside (not instead of) chat replay.
  */
 export function MotionStudio() {
-  const [presetId, setPresetId] = useState<MotionPresetId>("float");
+  // a scene set up with a preset (video templates) opens on it
+  const [presetId, setPresetId] = useState<MotionPresetId>(() => {
+    const id = sceneMotionSetup(useSceneStore.getState().scene).preset;
+    return id && MOTION_PRESETS.some((p) => p.id === id) ? id : "float";
+  });
   const [hover, setHover] = useState<MotionPresetId | null>(null);
   const [busy, setBusy] = useState<null | { pct: number; label: string }>(null);
   const [playing, setPlaying] = useState(false);

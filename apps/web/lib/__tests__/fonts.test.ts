@@ -109,3 +109,20 @@ describe("nearestWeight", () => {
     expect(nearestWeight(600, [400])).toBe(400);
   });
 });
+
+describe("googleCss", () => {
+  it("asks for upright weights only by default", async () => {
+    const { googleCss } = await import("../fonts");
+    expect(googleCss("Space Grotesk", [400, 700])).toBe("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap");
+  });
+
+  it("asks for true italics, uprights first, for families that have them", async () => {
+    const { googleCss } = await import("../fonts");
+    expect(googleCss("Newsreader", [400, 600], true)).toBe("https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400;1,600&display=swap");
+  });
+
+  it("only flags families with italics", async () => {
+    const { FONT_CATALOG } = await import("../fonts");
+    expect(FONT_CATALOG.filter((f) => f.italics).map((f) => f.family).sort()).toEqual(["Fraunces", "Instrument Serif", "Newsreader"]);
+  });
+});

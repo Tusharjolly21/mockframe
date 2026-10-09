@@ -158,11 +158,13 @@ export function AnimatePanel() {
   useEffect(() => {
     setPlan(anim ? buildAnimPlan(anim.doc) : []);
   }, [anim]);
-  // a chat on the canvas opens straight into its replay; otherwise motion
+  // a chat on the canvas opens straight into its replay; a scene with camera
+  // zooms (e.g. a video template) into Zoom; otherwise motion
   const hasChat = !!animLive;
+  const hasZooms = useSceneStore((s) => !!s.scene.timeline?.zooms?.length);
   useEffect(() => {
-    setTab(hasChat ? "replay" : "motion");
-  }, [hasChat]);
+    setTab(hasChat ? "replay" : hasZooms ? "zoom" : "motion");
+  }, [hasChat, hasZooms]);
   const showReplay = !!anim && tab === "replay";
 
   const renderState = (s: { k: number; typing: boolean; dotPhase: number; settled: boolean }) => {

@@ -12,6 +12,7 @@ import { useSceneStore } from "@/lib/store";
 import { CARD_LOOKS, makeTemplateScene, templateBySlug } from "@/lib/screenTemplates";
 import { appTemplateBySlug, makeAppScreenScene } from "@/lib/appScreenTemplates";
 import { premiumTemplateBySlug } from "@/lib/premiumTemplates";
+import { setLiveBackground } from "@/lib/backgroundMotion";
 
 const toast = (detail: string) => window.dispatchEvent(new CustomEvent("framekit:toast", { detail }));
 
@@ -50,13 +51,15 @@ export default function TemplateSlugPage() {
     useSceneStore.setState({ scene });
     useSceneStore.temporal.getState().clear();
     if (mine) swapInMyShots(scene, premium.slug);
+    // video templates bring their live background with them
+    if (premium.video) setLiveBackground(premium.video.live);
     if (premium.pro) {
       // after the editor has mounted its toast host (no cleanup: the load guard
       // above means a StrictMode re-run would never schedule it again)
-      setTimeout(
-        () => window.dispatchEvent(new CustomEvent("framekit:toast", { detail: `${premium.name} is a Pro layout — edit freely, export with Pro` })),
-        900
-      );
+      const detail = premium.video
+        ? `${premium.name} is a Pro video template — press Animate to preview it, export with Pro`
+        : `${premium.name} is a Pro layout — edit freely, export with Pro`;
+      setTimeout(() => window.dispatchEvent(new CustomEvent("framekit:toast", { detail })), 900);
     }
   }, [premium, mine]);
 

@@ -58,6 +58,16 @@ export const PREMIUM_USES: Record<string, TemplateUse[]> = {
   "before-after": ["social"],
   "whats-new": ["social", "app-store"],
   "reel-cover": ["social", "video"],
+  "late-shift": ["social"],
+  "signal-poster": ["social"],
+  "glass-slab": ["website"],
+  "two-tone": ["website", "social"],
+  "field-notes": ["social", "website"],
+  "fanned": ["social"],
+  "zoom-tour": ["video", "website"],
+  "turntable": ["video", "social"],
+  "depth-story": ["video", "social"],
+  "feature-tour": ["video", "website"],
 };
 
 export const STORE_SET_USES: TemplateUse[] = ["app-store"];

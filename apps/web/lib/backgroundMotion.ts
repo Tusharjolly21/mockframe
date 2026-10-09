@@ -81,6 +81,14 @@ export function clearBgMotion(node: HTMLElement | null): void {
 }
 
 const KEY = "mockframe:live-background";
+/** fired on window when the live-background choice changes */
+export const LIVE_BACKGROUND_EVENT = "mockframe:live-background";
+
+/** Choose the live background everywhere (Motion and Zoom tabs follow it). */
+export function setLiveBackground(v: LiveBackground): void {
+  saveLiveBackground(v);
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(LIVE_BACKGROUND_EVENT));
+}
 
 export function loadLiveBackground(): LiveBackground {
   try {

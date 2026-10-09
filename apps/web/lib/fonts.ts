@@ -22,6 +22,8 @@ export interface CatalogFont {
   family: string;
   category: FontCategory;
   weights: number[];
+  /** true italics exist at every weight above (see googleCss) */
+  italics?: boolean;
 }
 
 /** Families already requested by the root layout's stylesheet link. */
@@ -70,13 +72,13 @@ export const FONT_CATALOG: CatalogFont[] = [
   { family: "Playfair Display", category: "Serif", weights: [400, 600, 700] },
   { family: "Lora", category: "Serif", weights: [400, 500, 600, 700] },
   { family: "Merriweather", category: "Serif", weights: [400, 700] },
-  { family: "Fraunces", category: "Serif", weights: [400, 500, 600, 700, 800, 900] },
-  { family: "Instrument Serif", category: "Serif", weights: [400] },
+  { family: "Fraunces", category: "Serif", weights: [400, 500, 600, 700, 800, 900], italics: true },
+  { family: "Instrument Serif", category: "Serif", weights: [400], italics: true },
   { family: "DM Serif Display", category: "Serif", weights: [400] },
   { family: "Libre Baskerville", category: "Serif", weights: [400, 700] },
   { family: "Cormorant Garamond", category: "Serif", weights: [400, 500, 600, 700] },
   { family: "EB Garamond", category: "Serif", weights: [400, 500, 600, 700, 800] },
-  { family: "Newsreader", category: "Serif", weights: [400, 500, 600, 700, 800] },
+  { family: "Newsreader", category: "Serif", weights: [400, 500, 600, 700, 800], italics: true },
   // display
   { family: "Bricolage Grotesque", category: "Display", weights: [400, 500, 600, 700, 800] },
   { family: "Syne", category: "Display", weights: [400, 500, 600, 700, 800] },
@@ -107,8 +109,19 @@ export function catalogFont(family: string): CatalogFont | undefined {
   return CATALOG_BY_FAMILY.get(family);
 }
 
-const googleCss = (family: string, weights: number[]) =>
-  `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, "+")}:wght@${weights.join(";")}&display=swap`;
+/**
+ * css2 URL for a family. Families flagged `italics` also request their true
+ * italic faces (`ital,wght@0,400;…;1,400;…`) so italic text isn't a synthetic
+ * slant — only flag families whose italics exist at every listed weight, or
+ * Google rejects the whole request.
+ */
+export const googleCss = (family: string, weights: number[], italics = false) => {
+  const name = encodeURIComponent(family).replace(/%20/g, "+");
+  const axis = italics
+    ? `ital,wght@${[...weights.map((w) => `0,${w}`), ...weights.map((w) => `1,${w}`)].join(";")}`
+    : `wght@${weights.join(";")}`;
+  return `https://fonts.googleapis.com/css2?family=${name}:${axis}&display=swap`;
+};
 
 const loading = new Map<string, Promise<void>>();
 
@@ -126,12 +139,13 @@ export function ensureGoogleFont(family: string): Promise<void> {
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.crossOrigin = "anonymous";
-    link.href = googleCss(family, font.weights);
+    link.href = googleCss(family, font.weights, font.italics);
     link.dataset.mockframeFont = family;
     link.onload = () => {
       // the stylesheet only declares faces; ask for the weights so the files
       // are fetched before the next paint / export
-      void Promise.all(font.weights.map((w) => document.fonts.load(`${w} 32px "${family}"`).catch(() => [])))
+      const styles = font.italics ? ["", "italic "] : [""];
+      void Promise.all(font.weights.flatMap((w) => styles.map((st) => document.fonts.load(`${st}${w} 32px "${family}"`).catch(() => []))))
         .then(() => resolve());
     };
     link.onerror = () => resolve(); // offline: fall back silently, keep the editor usable

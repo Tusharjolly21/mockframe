@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LIVE_BACKGROUNDS, loadLiveBackground, saveLiveBackground, type LiveBackground } from "@/lib/backgroundMotion";
-
-const EVENT = "mockframe:live-background";
+import { LIVE_BACKGROUND_EVENT as EVENT, LIVE_BACKGROUNDS, loadLiveBackground, setLiveBackground, type LiveBackground } from "@/lib/backgroundMotion";
 
 /** The live-background choice, shared by the Motion and Zoom tabs and remembered per browser. */
 export function useLiveBackground(): [LiveBackground, (v: LiveBackground) => void] {
@@ -15,9 +13,8 @@ export function useLiveBackground(): [LiveBackground, (v: LiveBackground) => voi
     return () => window.removeEventListener(EVENT, on);
   }, []);
   const set = (v: LiveBackground) => {
-    saveLiveBackground(v);
+    setLiveBackground(v);
     setValue(v);
-    window.dispatchEvent(new CustomEvent(EVENT));
   };
   return [value, set];
 }

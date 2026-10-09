@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Crown } from "lucide-react";
+import { ArrowUpRight, Crown, Play } from "lucide-react";
 import type { SceneDocument } from "@framekit/scene";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
 import { LiveScene } from "@/components/templates/LiveScene";
@@ -74,6 +74,11 @@ export function PremiumTemplatesSection({ filter, shots }: { filter: TemplateFil
                 >
                   {t.pro && <Crown size={11} />} {t.pro ? "Pro" : "Free"}
                 </span>
+                {t.video && (
+                  <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-[10.5px] font-bold text-white shadow backdrop-blur">
+                    <Play size={10} className="fill-white" /> Video
+                  </span>
+                )}
               </div>
               <div className="flex items-start justify-between gap-3 border-t border-white/[0.08] p-4">
                 <div className="min-w-0">
