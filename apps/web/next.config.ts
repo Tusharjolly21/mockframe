@@ -19,18 +19,19 @@ const BASE_HEADERS = [
   { key: "Permissions-Policy", value: "camera=(self), microphone=(self), display-capture=(self), picture-in-picture=(self), geolocation=(), usb=(), bluetooth=()" },
 ];
 
-// retired /mockups/<id> -> closest live /mockups/<id>
+// retired /mockups/<id> -> the closest live family page (the canonical page per
+// lib/deviceSeo.ts, so there's no redirect-then-canonical hop)
 const RETIRED_DEVICE_PAGES: Record<string, string> = {
   "apple-watch-s10": "apple-watch-series-11",
   "apple-watch-ultra-2": "apple-watch-ultra-3",
   "watch-front": "apple-watch-series-11",
-  "ipad-floating": "ipad-pro-2024-psd-silver-2",
+  "ipad-floating": "ipad-pro-2024-psd-silver-1",
   "ipad-angle": "ipad-pro-2024-psd-silver-1",
-  "ipad-duo": "ipad-pro-2024-psd-space-black-2",
-  "ipad-tilt": "ipad-pro-2024-psd-space-black-1",
+  "ipad-duo": "ipad-pro-2024-psd-silver-1",
+  "ipad-tilt": "ipad-pro-2024-psd-silver-1",
   "macbook-pro-16-mockup": "macbook-pro-16",
-  "psd-composite-watch-02": "psd-composite-watch-01",
-  "samsung-s24-ultra-psd-violet": "samsung-s24-ultra-psd-gray",
+  "psd-composite-watch-02": "apple-watch-series-11",
+  "samsung-s24-ultra-psd-violet": "galaxy-s24-ultra",
 };
 
 const nextConfig: NextConfig = {

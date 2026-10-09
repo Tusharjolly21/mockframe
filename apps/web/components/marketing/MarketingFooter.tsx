@@ -30,7 +30,7 @@ const COLS: { title: string; links: [string, string][] }[] = [
       ["/mockups/pixel-9-pro", "Pixel 9 Pro"],
       ["/mockups/macbook-pro-16", "MacBook Pro 16"],
       ["/mockups/ipad-pro-13", "iPad Pro 13"],
-      ["/mockups/apple-watch-ultra-psd-midnight-1", "Apple Watch Ultra"],
+      ["/mockups/psd-scene-watch-ultra-1", "Apple Watch Ultra"],
     ],
   },
   {
@@ -59,6 +59,7 @@ const COLS: { title: string; links: [string, string][] }[] = [
       ["/tools/tweet-screenshot", "X post images"],
       ["/app-store-screenshots", "App Store screenshots"],
       ["/guides", "Guides"],
+      ["/compare", "Compare alternatives"],
       ["/changelog", "Changelog"],
       ["/developers/automations", "Automations"],
       ["/license", "Commercial license"],
