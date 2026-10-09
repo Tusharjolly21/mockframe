@@ -174,7 +174,6 @@ export function ShowcaseProgress() {
                 <figure key={i} className="min-w-0">
                   <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-[#f1f1f5]">
                     {slot.url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <motion.img
                         initial={{ opacity: 0, scale: 1.04 }}
                         animate={{ opacity: 1, scale: 1 }}

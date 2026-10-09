@@ -60,7 +60,7 @@ export const MCP_TOOLS = [
       type: "object",
       properties: {
         screenshots: SCREENSHOTS_SCHEMA,
-        style: { type: "string", enum: [...STORE_SET_STYLES], description: "stride: bold gradients · penny: warm and friendly · hush: calm and dark · habitat: soft pastels. Default stride." },
+        style: { type: "string", enum: [...STORE_SET_STYLES], description: "stride: hot coral, tilted phones · penny: one teal panorama · hush: calm night sky · habitat: soft pastels · tempo: dark with album glows · parla: bright colour per shot · vault: green-black and champagne serif · orbit: indigo panorama · atlas: editorial serif on paper. Default stride." },
         platform: { type: "string", enum: ["ios", "android"], description: "Default ios." },
       },
       required: ["screenshots"],

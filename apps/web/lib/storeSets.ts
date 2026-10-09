@@ -71,6 +71,11 @@ const FONT_WIDTH: Record<string, number> = {
   Outfit: 0.93,
   Sora: 1.1,
   Inter: 1.0,
+  Unbounded: 1.28,
+  "Space Grotesk": 1.02,
+  "Instrument Serif": 0.8,
+  Fraunces: 1.0,
+  Geist: 0.98,
 };
 
 /** rough advance of a string in em, good enough to place wrapped headlines */
@@ -820,7 +825,570 @@ const HABITAT: StoreSet = {
   ],
 };
 
-export const STORE_SETS: StoreSet[] = [STRIDE, PENNY, HUSH, HABITAT];
+
+/* ------------------------- shared staging for the newer sets ------------------------- */
+
+type Lift = { x: number; y: number; w: number; h: number };
+
+/**
+ * The phone + lifted card staging: the phone sits under the headline on one
+ * side, a piece of its own screen floats out over the other side at `at`
+ * (fraction of the canvas height from the phone's top edge).
+ */
+function phoneAndCard(
+  s: ShotBuilder,
+  n: number,
+  crop: Lift,
+  top: number,
+  o: { side?: 1 | -1; at?: number; width?: number; rotate?: number; phoneRotate?: number; variant: string; shadow?: Partial<Shadow>; radius?: number; height?: number },
+) {
+  const side = o.side ?? 1;
+  s.phone(n, { top, height: o.height ?? s.H * s.pick(0.72, 0.78), x: side * s.W * 0.13, rotate: o.phoneRotate ?? side * 4, variant: o.variant, shadow: o.shadow });
+  const width = o.width ?? s.W * 0.72;
+  s.card(n, crop, { x: -side * s.W * 0.11, y: top + s.H * (o.at ?? 0.3) - s.H / 2, width, rotate: o.rotate ?? -side * 3, radius: o.radius ?? 44, shadow: o.shadow });
+}
+
+/* ---------- Tempo: music. Black stage, a new album glow every shot, a lime finale ---------- */
+
+const TEMPO_FONT = "Unbounded";
+const TEMPO_LIME = "#c6ff3d";
+const TEMPO_SHADOW = { color: "#000000", opacity: 0.6 };
+
+function tempoBase(s: ShotBuilder, glow: string, glow2: string, cy = 0.62) {
+  s.background = radial(0.5, cy, [glow, glow2, "#0b0b10", "#060609"]);
+  s.backdrop = { pattern: { kind: "noise", intensity: 0.1, thickness: 0.3, color: "#ffffff" } };
+}
+
+function tempoHead(s: ShotBuilder, text: string, o: { top?: number; bottom?: number; color?: string } = {}) {
+  return s.text(text, {
+    ...(o.bottom !== undefined ? { bottom: o.bottom } : { top: o.top ?? s.pick(220, 140) * s.u }),
+    size: s.pick(96, 86),
+    family: TEMPO_FONT,
+    weight: 700,
+    color: o.color ?? "#ffffff",
+    lineHeight: 1.06,
+    letterSpacing: -0.045,
+  });
+}
+
+function tempoChip(s: ShotBuilder, text: string, top: number, dark = false) {
+  return s.text(text, {
+    top,
+    size: 38,
+    family: "Space Grotesk",
+    weight: 600,
+    letterSpacing: -0.01,
+    chip: true,
+    color: dark ? TEMPO_LIME : "#0b0e02",
+    highlight: { color: dark ? "#0b0e02" : TEMPO_LIME, radius: 999, padX: 28 * s.u, padY: 14 * s.u },
+  });
+}
+
+const TEMPO: StoreSet = {
+  slug: "tempo",
+  app: "tempo",
+  name: "Tempo",
+  kind: "Music streaming",
+  blurb: "A black stage lit by each album's colours, wide type, lime chips and a lime finale.",
+  cardBg: "radial-gradient(circle at 50% 70%,#3fd0c9,#0d5a70 30%,#0b0b10 70%)",
+  ink: "#ffffff",
+  shots: [
+    {
+      name: "Music for every moment",
+      draw: (s) => {
+        tempoBase(s, "#3fd0c9", "#0d5a70");
+        const chip = tempoChip(s, "100 million songs", s.pick(220, 140) * s.u);
+        const head = tempoHead(s, "Music for\nevery\nmoment", { top: chip.bottom + 44 * s.u });
+        const top = head.bottom + s.pick(110, 60) * s.u;
+        phoneAndCard(s, 1, { x: 18, y: 402, w: 366, h: 215 }, top, { variant: "black-titanium", shadow: TEMPO_SHADOW, at: 0.27 });
+      },
+    },
+    {
+      name: "Now playing",
+      draw: (s) => {
+        tempoBase(s, "#ff8fb1", "#5a2380", 0.55);
+        const head = tempoHead(s, "Play it\nloud");
+        s.phone(2, { top: head.bottom + s.pick(110, 60) * s.u, height: s.H * s.pick(0.78, 0.84), x: -s.W * 0.06, rotate: -6, variant: "black-titanium", shadow: TEMPO_SHADOW });
+      },
+    },
+    {
+      name: "Lyrics",
+      draw: (s) => {
+        tempoBase(s, "#3fd0c9", "#0d5a70", 0.7);
+        const head = tempoHead(s, "Sing every\nword");
+        const top = head.bottom + s.pick(120, 70) * s.u;
+        s.phone(3, { top, height: s.H * s.pick(0.74, 0.8), variant: "black-titanium", shadow: TEMPO_SHADOW });
+        // the line being sung, lifted right across the shot
+        s.card(3, { x: 12, y: 342, w: 378, h: 138 }, { x: 0, y: top + s.H * 0.33 - s.H / 2, width: s.W * 0.92, rotate: -3, radius: 48, shadow: TEMPO_SHADOW });
+      },
+    },
+    {
+      name: "Library",
+      draw: (s) => {
+        tempoBase(s, "#7a2cff", "#2a1260");
+        const head = tempoHead(s, "Everything\nyou love,\none tap away");
+        phoneAndCard(s, 4, { x: 18, y: 202, w: 366, h: 94 }, head.bottom + s.pick(110, 60) * s.u, { side: -1, variant: "black-titanium", shadow: TEMPO_SHADOW, at: 0.17, width: s.W * 0.8 });
+      },
+    },
+    {
+      name: "Discover",
+      draw: (s) => {
+        tempoBase(s, "#ff6a4e", "#5a1a10");
+        const head = tempoHead(s, "Find your\nnext favourite");
+        phoneAndCard(s, 5, { x: 207, y: 319, w: 177, h: 104 }, head.bottom + s.pick(110, 60) * s.u, { variant: "black-titanium", shadow: TEMPO_SHADOW, at: 0.24, width: s.W * 0.5, rotate: -8, radius: 36 });
+      },
+    },
+    {
+      name: "Playlists",
+      draw: (s) => {
+        tempoBase(s, "#ff4fa3", "#3a1060", 0.3);
+        const bottom = s.pick(210, 130) * s.u;
+        const head = tempoHead(s, "Playlists for\nevery mood", { bottom });
+        s.phone(6, { top: -s.H * 0.12, height: head.top - s.pick(110, 70) * s.u + s.H * 0.12, variant: "black-titanium", shadow: TEMPO_SHADOW });
+      },
+    },
+    {
+      name: "Live radio",
+      draw: (s) => {
+        tempoBase(s, "#ffc76e", "#a3361f");
+        const chip = tempoChip(s, "Live now", s.pick(220, 140) * s.u);
+        const head = tempoHead(s, "Radio,\nhosted by\nhumans", { top: chip.bottom + 44 * s.u });
+        phoneAndCard(s, 7, { x: 18, y: 112, w: 366, h: 328 }, head.bottom + s.pick(110, 60) * s.u, { side: -1, variant: "black-titanium", shadow: TEMPO_SHADOW, at: 0.2, width: s.W * 0.66 });
+      },
+    },
+    {
+      name: "Your year",
+      draw: (s) => {
+        s.background = radial(0.5, 0.2, ["#e4ff8c", TEMPO_LIME, "#9ad11a"]);
+        const head = tempoHead(s, "Your year,\nin music", { color: "#0b0e02" });
+        phoneAndCard(s, 8, { x: 18, y: 125, w: 366, h: 226 }, head.bottom + s.pick(110, 60) * s.u, { variant: "black-titanium", shadow: { color: "#1c2a00", opacity: 0.45 }, at: 0.2 });
+      },
+    },
+  ],
+};
+
+/* ---------- Parla: Italian. A bright new colour every shot, chunky type, white chips ---------- */
+
+const PARLA_FONT = "Outfit";
+const PARLA_INK = "#2b1a5e";
+
+function parlaHead(s: ShotBuilder, bg: [string, string], chip: string, text: string, ink = "#ffffff") {
+  s.background = radial(0.5, 0.2, bg);
+  s.backdrop = { pattern: { kind: "dots", intensity: 0.14, thickness: 0.3, color: ink === "#ffffff" ? "#ffffff" : PARLA_INK } };
+  const c = s.text(chip, {
+    top: s.pick(210, 130) * s.u,
+    size: 40,
+    family: PARLA_FONT,
+    weight: 700,
+    letterSpacing: -0.01,
+    chip: true,
+    color: PARLA_INK,
+    highlight: { color: "#ffffff", radius: 999, padX: 30 * s.u, padY: 15 * s.u },
+  });
+  return s.text(text, {
+    top: c.bottom + 40 * s.u,
+    size: s.pick(118, 104),
+    family: PARLA_FONT,
+    weight: 800,
+    color: ink,
+    lineHeight: 1.0,
+    letterSpacing: -0.035,
+  });
+}
+
+const PARLA_SHADOW = { color: PARLA_INK, opacity: 0.28 };
+
+const PARLA: StoreSet = {
+  slug: "parla",
+  app: "parla",
+  name: "Parla",
+  kind: "Language learning",
+  blurb: "Tomato, sunflower, sky and basil: a bright colour per shot, chunky type and lessons lifted out.",
+  cardBg: "linear-gradient(135deg,#ff4d3d,#ffc531 50%,#4aa8ff)",
+  ink: "#ffffff",
+  shots: [
+    {
+      name: "Speak Italian",
+      draw: (s) => {
+        const head = parlaHead(s, ["#ff7a5c", "#ff4d3d"], "5 minutes a day", "Speak Italian.\nFor real.");
+        phoneAndCard(s, 1, { x: 20, y: 506, w: 362, h: 202 }, head.bottom + s.pick(110, 60) * s.u, { variant: "natural-titanium", shadow: PARLA_SHADOW, at: 0.36 });
+      },
+    },
+    {
+      name: "Bite-size lessons",
+      draw: (s) => {
+        const head = parlaHead(s, ["#ffd96b", "#ffc531"], "One sentence at a time", "Bite-size\nlessons", PARLA_INK);
+        phoneAndCard(s, 2, { x: 20, y: 315, w: 362, h: 192 }, head.bottom + s.pick(110, 60) * s.u, { side: -1, variant: "natural-titanium", shadow: PARLA_SHADOW, at: 0.24 });
+      },
+    },
+    {
+      name: "Speaking",
+      draw: (s) => {
+        const head = parlaHead(s, ["#7cc0ff", "#4aa8ff"], "Pronunciation score", "Say it out loud,\nget it right");
+        phoneAndCard(s, 3, { x: 20, y: 394, w: 362, h: 231 }, head.bottom + s.pick(110, 60) * s.u, { variant: "natural-titanium", shadow: PARLA_SHADOW, at: 0.3 });
+      },
+    },
+    {
+      name: "Flashcards",
+      draw: (s) => {
+        const head = parlaHead(s, ["#4fd08f", "#20b26b"], "Spaced repetition", "Words that\nactually stick");
+        phoneAndCard(s, 4, { x: 20, y: 192, w: 362, h: 474 }, head.bottom + s.pick(110, 60) * s.u, { side: -1, variant: "natural-titanium", shadow: PARLA_SHADOW, at: 0.27, width: s.W * 0.56, rotate: 5 });
+      },
+    },
+    {
+      name: "Streaks",
+      draw: (s) => {
+        const head = parlaHead(s, ["#4a2f96", PARLA_INK], "46 days and counting", "Keep your\nstreak alive");
+        phoneAndCard(s, 5, { x: 20, y: 291, w: 362, h: 385 }, head.bottom + s.pick(110, 60) * s.u, { variant: "natural-titanium", shadow: { color: "#000000", opacity: 0.45 }, at: 0.22, width: s.W * 0.66 });
+      },
+    },
+    {
+      name: "Leagues",
+      draw: (s) => {
+        const head = parlaHead(s, ["#ff7a5c", "#ff4d3d"], "Gold league", "Climb the\nweekly league");
+        phoneAndCard(s, 6, { x: 20, y: 323, w: 362, h: 62 }, head.bottom + s.pick(110, 60) * s.u, { side: -1, variant: "natural-titanium", shadow: PARLA_SHADOW, at: 0.22, width: s.W * 0.86, rotate: -2, radius: 36 });
+      },
+    },
+    {
+      name: "AI tutor",
+      draw: (s) => {
+        const head = parlaHead(s, ["#7cc0ff", "#4aa8ff"], "Your AI tutor", "Practise real\nconversations");
+        phoneAndCard(s, 7, { x: 63, y: 473, w: 319, h: 117 }, head.bottom + s.pick(110, 60) * s.u, { variant: "natural-titanium", shadow: PARLA_SHADOW, at: 0.36, width: s.W * 0.7 });
+      },
+    },
+    {
+      name: "Progress",
+      draw: (s) => {
+        const head = parlaHead(s, ["#ffd96b", "#ffc531"], "A2 to B1", "Watch yourself\nget fluent", PARLA_INK);
+        phoneAndCard(s, 8, { x: 20, y: 114, w: 362, h: 214 }, head.bottom + s.pick(110, 60) * s.u, { side: -1, variant: "natural-titanium", shadow: PARLA_SHADOW, at: 0.1 });
+      },
+    },
+  ],
+};
+
+/* ---------- Vault: investing. Green-black, champagne serif, charts lifted out ---------- */
+
+const VAULT_FONT = "Instrument Serif";
+const VAULT_SHADOW = { color: "#000000", opacity: 0.55 };
+const VAULT_GOLD = [
+  { at: 0, color: "#f6ead0" },
+  { at: 1, color: "#d9bd84" },
+];
+
+function vaultBase(s: ShotBuilder, cy = 0.12) {
+  s.background = radial(0.5, cy, ["#1f4234", "#0d1a15", "#050907"]);
+  s.backdrop = { pattern: { kind: "grid", intensity: 0.07, thickness: 0.2, color: "#e8d3a2" } };
+}
+
+function vaultHead(s: ShotBuilder, text: string, o: { top?: number; bottom?: number } = {}) {
+  return s.text(text, {
+    ...(o.bottom !== undefined ? { bottom: o.bottom } : { top: o.top ?? s.pick(220, 140) * s.u }),
+    size: s.pick(136, 120),
+    family: VAULT_FONT,
+    weight: 400,
+    align: "center",
+    lineHeight: 1.0,
+    letterSpacing: -0.02,
+    gradient: VAULT_GOLD,
+  });
+}
+
+const VAULT: StoreSet = {
+  slug: "vault",
+  app: "vault",
+  name: "Vault",
+  kind: "Investing",
+  blurb: "Green-black and champagne, a big serif and live charts lifted out of the screen.",
+  cardBg: "radial-gradient(circle at 50% 10%,#1f4234,#0d1a15 55%,#050907)",
+  ink: "#f6ead0",
+  shots: [
+    {
+      name: "Quiet confidence",
+      draw: (s) => {
+        vaultBase(s);
+        const head = vaultHead(s, "Invest with\nquiet confidence");
+        phoneAndCard(s, 1, { x: 20, y: 247, w: 362, h: 244 }, head.bottom + s.pick(120, 70) * s.u, { variant: "black-titanium", shadow: VAULT_SHADOW, at: 0.16 });
+      },
+    },
+    {
+      name: "Every number",
+      draw: (s) => {
+        vaultBase(s);
+        const head = vaultHead(s, "Every number,\nin plain sight");
+        phoneAndCard(s, 2, { x: 20, y: 434, w: 362, h: 210 }, head.bottom + s.pick(120, 70) * s.u, { side: -1, variant: "black-titanium", shadow: VAULT_SHADOW, at: 0.32 });
+      },
+    },
+    {
+      name: "Buy in a swipe",
+      draw: (s) => {
+        vaultBase(s);
+        const head = vaultHead(s, "Buy in\none swipe");
+        s.phone(3, { top: head.bottom + s.pick(120, 70) * s.u, height: s.H * s.pick(0.74, 0.8), variant: "black-titanium", shadow: VAULT_SHADOW });
+      },
+    },
+    {
+      name: "Movers",
+      draw: (s) => {
+        vaultBase(s);
+        const head = vaultHead(s, "Catch the movers\nas they move");
+        phoneAndCard(s, 4, { x: 20, y: 302, w: 362, h: 220 }, head.bottom + s.pick(120, 70) * s.u, { variant: "black-titanium", shadow: VAULT_SHADOW, at: 0.22 });
+      },
+    },
+    {
+      name: "Diversification",
+      draw: (s) => {
+        vaultBase(s);
+        const head = vaultHead(s, "Know how\nbalanced you are");
+        phoneAndCard(s, 5, { x: 20, y: 236, w: 362, h: 252 }, head.bottom + s.pick(120, 70) * s.u, { side: -1, variant: "black-titanium", shadow: VAULT_SHADOW, at: 0.16 });
+      },
+    },
+    {
+      name: "Dividends",
+      draw: (s) => {
+        vaultBase(s, 0.85);
+        const bottom = s.pick(210, 130) * s.u;
+        const head = vaultHead(s, "Watch your\ndividends grow", { bottom });
+        const h = head.top - s.pick(110, 70) * s.u + s.H * 0.12;
+        s.phone(6, { top: -s.H * 0.12, height: h, x: s.W * 0.12, variant: "black-titanium", shadow: VAULT_SHADOW });
+        s.card(6, { x: 20, y: 118, w: 362, h: 226 }, { x: -s.W * 0.1, y: s.H * 0.02, width: s.W * 0.7, rotate: -3, radius: 44, shadow: VAULT_SHADOW });
+      },
+    },
+    {
+      name: "News",
+      draw: (s) => {
+        vaultBase(s);
+        const head = vaultHead(s, "News that\nmoves markets");
+        phoneAndCard(s, 7, { x: 20, y: 164, w: 362, h: 294 }, head.bottom + s.pick(120, 70) * s.u, { variant: "black-titanium", shadow: VAULT_SHADOW, at: 0.12, width: s.W * 0.66 });
+      },
+    },
+    {
+      name: "Crypto",
+      draw: (s) => {
+        vaultBase(s);
+        const head = vaultHead(s, "Crypto, bought\nslow and kept cold");
+        phoneAndCard(s, 8, { x: 20, y: 521, w: 362, h: 186 }, head.bottom + s.pick(120, 70) * s.u, { side: -1, variant: "black-titanium", shadow: VAULT_SHADOW, at: 0.36 });
+      },
+    },
+  ],
+};
+
+/* ---------- Orbit: tasks. One indigo panorama with orbit rings, a phone across shots 1 and 2 ---------- */
+
+const ORBIT_FONT = "Geist";
+const ORBIT_SHADOW = { color: "#0c0a3a", opacity: 0.45 };
+
+function orbitBase(s: ShotBuilder) {
+  s.background = lin(100, ["#17153f", "#2a2577", "#4f46e5", "#3b34b8", "#221e63", "#4338ca", "#6d5cf0", "#3730a3", "#17153f"]);
+  s.backdrop = { pattern: { kind: "circles", intensity: 0.12, thickness: 0.22, color: "#c7d2fe" } };
+  s.panorama = true;
+}
+
+function orbitHead(s: ShotBuilder, text: string) {
+  return s.text(text, {
+    top: s.pick(220, 140) * s.u,
+    size: s.pick(108, 96),
+    family: ORBIT_FONT,
+    weight: 700,
+    lineHeight: 1.04,
+    letterSpacing: -0.045,
+  });
+}
+
+/** where shot 1 puts the phone it shares with shot 2 */
+function orbitSharedTop(s: ShotBuilder) {
+  const probe = new ShotBuilder(s.platform, s.app);
+  return orbitHead(probe, "Plan your day\nin one place").bottom + s.pick(140, 80) * s.u;
+}
+
+const ORBIT: StoreSet = {
+  slug: "orbit",
+  app: "orbit",
+  name: "Orbit",
+  kind: "Tasks and planning",
+  blurb: "One indigo panorama with orbit rings across all eight, and a calendar phone that spans the first two.",
+  cardBg: "linear-gradient(100deg,#17153f,#4f46e5 45%,#221e63)",
+  ink: "#ffffff",
+  shots: [
+    {
+      name: "Plan your day",
+      draw: (s) => {
+        orbitBase(s);
+        orbitHead(s, "Plan your day\nin one place");
+        const top = orbitSharedTop(s);
+        s.phone(1, { top, height: s.H * s.pick(0.72, 0.78), x: -s.W * 0.08, variant: "black-titanium", shadow: ORBIT_SHADOW });
+        // the week view starts here and carries on into shot 2
+        s.phone(2, { top: top + s.H * 0.06, height: s.H * s.pick(0.72, 0.78), x: s.W * 0.56, rotate: 0, variant: "black-titanium", shadow: ORBIT_SHADOW });
+        s.card(1, { x: 18, y: 205, w: 366, h: 167 }, { x: -s.W * 0.02, y: top + s.H * 0.2 - s.H / 2, width: s.W * 0.78, rotate: -3, radius: 48, shadow: ORBIT_SHADOW });
+      },
+    },
+    {
+      name: "Your week",
+      draw: (s) => {
+        orbitBase(s);
+        orbitHead(s, "Your week,\nat a glance");
+        const top = orbitSharedTop(s) + s.H * 0.06;
+        s.phone(2, { top, height: s.H * s.pick(0.72, 0.78), x: -s.W * 0.44, variant: "black-titanium", shadow: ORBIT_SHADOW });
+        // today's column, lifted out tall
+        s.card(2, { x: 184, y: 261, w: 66, h: 525 }, { x: s.W * 0.1, y: top + s.H * 0.36 - s.H / 2, width: s.W * 0.22, rotate: 4, radius: 30, shadow: ORBIT_SHADOW });
+      },
+    },
+    {
+      name: "Projects",
+      draw: (s) => {
+        orbitBase(s);
+        const head = orbitHead(s, "Projects that\nship on time");
+        phoneAndCard(s, 3, { x: 200, y: 309, w: 172, h: 248 }, head.bottom + s.pick(140, 80) * s.u, { side: -1, variant: "black-titanium", shadow: ORBIT_SHADOW, at: 0.26, width: s.W * 0.46, rotate: 5, radius: 40 });
+      },
+    },
+    {
+      name: "Focus",
+      draw: (s) => {
+        orbitBase(s);
+        const head = orbitHead(s, "Focus mode,\nbuilt in");
+        phoneAndCard(s, 4, { x: 18, y: 547, w: 366, h: 149 }, head.bottom + s.pick(140, 80) * s.u, { variant: "black-titanium", shadow: ORBIT_SHADOW, at: 0.46 });
+      },
+    },
+    {
+      name: "Task details",
+      draw: (s) => {
+        orbitBase(s);
+        const head = orbitHead(s, "Every detail,\nin one task");
+        phoneAndCard(s, 5, { x: 18, y: 287, w: 366, h: 288 }, head.bottom + s.pick(140, 80) * s.u, { side: -1, variant: "black-titanium", shadow: ORBIT_SHADOW, at: 0.3, width: s.W * 0.68 });
+      },
+    },
+    {
+      name: "Quick add",
+      draw: (s) => {
+        orbitBase(s);
+        const head = orbitHead(s, "Type it.\nOrbit sorts it.");
+        phoneAndCard(s, 6, { x: 18, y: 116, w: 366, h: 206 }, head.bottom + s.pick(140, 80) * s.u, { variant: "black-titanium", shadow: ORBIT_SHADOW, at: 0.12, width: s.W * 0.8 });
+      },
+    },
+    {
+      name: "Stats",
+      draw: (s) => {
+        orbitBase(s);
+        const head = orbitHead(s, "See what you\nget done");
+        const top = head.bottom + s.pick(140, 80) * s.u;
+        phoneAndCard(s, 7, { x: 18, y: 162, w: 366, h: 324 }, top, { side: -1, variant: "black-titanium", shadow: ORBIT_SHADOW, at: 0.22, width: s.W * 0.66 });
+        s.card(7, { x: 18, y: 496, w: 178, h: 103 }, { x: -s.W * 0.2, y: top + s.H * 0.44 - s.H / 2, width: s.W * 0.4, rotate: 4, radius: 36, shadow: ORBIT_SHADOW });
+      },
+    },
+    {
+      name: "Widgets",
+      draw: (s) => {
+        orbitBase(s);
+        const head = orbitHead(s, "Your day, on\nyour home screen");
+        const top = head.bottom + s.pick(140, 80) * s.u;
+        phoneAndCard(s, 8, { x: 24, y: 64, w: 354, h: 338 }, top, { variant: "black-titanium", shadow: ORBIT_SHADOW, at: 0.18, width: s.W * 0.6 });
+        s.card(8, { x: 24, y: 435, w: 162, h: 162 }, { x: -s.W * 0.26, y: top + s.H * 0.42 - s.H / 2, width: s.W * 0.34, rotate: -6, radius: 44, shadow: ORBIT_SHADOW });
+      },
+    },
+  ],
+};
+
+/* ---------- Atlas: travel. Editorial serif on paper, navy and orange interludes ---------- */
+
+const ATLAS_FONT = "Fraunces";
+const ATLAS_NAVY = "#0f1b2d";
+const ATLAS_ORANGE = "#ff5a1f";
+
+function atlasHead(s: ShotBuilder, tone: "paper" | "navy" | "orange" | "sky", kicker: string, text: string) {
+  const bg = { paper: ["#ffffff", "#f1ede6"], navy: ["#1d2d47", ATLAS_NAVY], orange: ["#ff8a52", ATLAS_ORANGE], sky: ["#f2f7ff", "#d9e7fb"] }[tone];
+  const ink = tone === "navy" || tone === "orange" ? "#ffffff" : ATLAS_NAVY;
+  s.background = radial(0.2, 0.08, bg);
+  if (tone === "paper" || tone === "sky") s.backdrop = { pattern: { kind: "topography", intensity: 0.08, thickness: 0.3, color: ATLAS_NAVY } };
+  const k = s.text(kicker, {
+    top: s.pick(220, 140) * s.u,
+    size: 38,
+    family: "Inter",
+    weight: 600,
+    letterSpacing: -0.005,
+    color: tone === "orange" ? "#ffffff" : tone === "navy" ? "#ffb08f" : ATLAS_ORANGE,
+  });
+  return s.text(text, {
+    top: k.bottom + 26 * s.u,
+    size: s.pick(118, 104),
+    family: ATLAS_FONT,
+    weight: 600,
+    color: ink,
+    lineHeight: 1.02,
+    letterSpacing: -0.035,
+  });
+}
+
+const ATLAS_SHADOW = { color: ATLAS_NAVY, opacity: 0.26 };
+const ATLAS_SHADOW_DARK = { color: "#000000", opacity: 0.5 };
+
+const ATLAS: StoreSet = {
+  slug: "atlas",
+  app: "atlas",
+  name: "Atlas",
+  kind: "Travel planner",
+  blurb: "An editorial serif on warm paper, with navy and orange shots in between and tickets lifted out.",
+  cardBg: "linear-gradient(135deg,#f1ede6,#ffffff 45%,#ff8a52)",
+  ink: ATLAS_NAVY,
+  shots: [
+    {
+      name: "Every trip, planned",
+      draw: (s) => {
+        const head = atlasHead(s, "paper", "Lisbon, 18 to 24 October", "Every trip,\nbeautifully\nplanned.");
+        phoneAndCard(s, 1, { x: 20, y: 182, w: 362, h: 345 }, head.bottom + s.pick(110, 60) * s.u, { variant: "natural-titanium", shadow: ATLAS_SHADOW, at: 0.2, width: s.W * 0.66 });
+      },
+    },
+    {
+      name: "Boarding pass",
+      draw: (s) => {
+        const head = atlasHead(s, "navy", "Works offline", "Your boarding\npass, ready");
+        phoneAndCard(s, 2, { x: 20, y: 164, w: 362, h: 459 }, head.bottom + s.pick(110, 60) * s.u, { side: -1, variant: "black-titanium", shadow: ATLAS_SHADOW_DARK, at: 0.24, width: s.W * 0.58, rotate: 5 });
+      },
+    },
+    {
+      name: "Itinerary",
+      draw: (s) => {
+        const head = atlasHead(s, "paper", "Day 2 of 7", "Days that\nplan themselves");
+        phoneAndCard(s, 3, { x: 88, y: 339, w: 294, h: 188 }, head.bottom + s.pick(110, 60) * s.u, { variant: "natural-titanium", shadow: ATLAS_SHADOW, at: 0.3, width: s.W * 0.66 });
+      },
+    },
+    {
+      name: "Map",
+      draw: (s) => {
+        const head = atlasHead(s, "sky", "12 saved places", "Everything you\nsaved, on a map");
+        phoneAndCard(s, 4, { x: 10, y: 432, w: 382, h: 345 }, head.bottom + s.pick(110, 60) * s.u, { side: -1, variant: "natural-titanium", shadow: ATLAS_SHADOW, at: 0.4, width: s.W * 0.68 });
+      },
+    },
+    {
+      name: "Stay",
+      draw: (s) => {
+        const head = atlasHead(s, "paper", "Confirmed", "Your stay,\nin your pocket");
+        phoneAndCard(s, 5, { x: 20, y: 402, w: 362, h: 352 }, head.bottom + s.pick(110, 60) * s.u, { variant: "natural-titanium", shadow: ATLAS_SHADOW, at: 0.4, width: s.W * 0.64 });
+      },
+    },
+    {
+      name: "Explore",
+      draw: (s) => {
+        const head = atlasHead(s, "orange", "Weekend escapes", "Where to\nnext?");
+        phoneAndCard(s, 6, { x: 20, y: 283, w: 175, h: 235 }, head.bottom + s.pick(110, 60) * s.u, { side: -1, variant: "natural-titanium", shadow: { color: "#6b1d00", opacity: 0.4 }, at: 0.28, width: s.W * 0.44, rotate: 6, radius: 40 });
+      },
+    },
+    {
+      name: "Budget",
+      draw: (s) => {
+        const head = atlasHead(s, "paper", "Split with friends", "Shared costs,\nno maths");
+        phoneAndCard(s, 7, { x: 20, y: 166, w: 362, h: 313 }, head.bottom + s.pick(110, 60) * s.u, { variant: "natural-titanium", shadow: ATLAS_SHADOW, at: 0.2, width: s.W * 0.66 });
+      },
+    },
+    {
+      name: "Packing",
+      draw: (s) => {
+        const head = atlasHead(s, "navy", "Packing list", "Pack for the\nweather you’ll get");
+        phoneAndCard(s, 8, { x: 20, y: 215, w: 362, h: 217 }, head.bottom + s.pick(110, 60) * s.u, { side: -1, variant: "black-titanium", shadow: ATLAS_SHADOW_DARK, at: 0.18 });
+      },
+    },
+  ],
+};
+
+export const STORE_SETS: StoreSet[] = [STRIDE, PENNY, HUSH, HABITAT, TEMPO, PARLA, VAULT, ORBIT, ATLAS];
 
 export function storeSetBySlug(slug: string): StoreSet | undefined {
   return STORE_SETS.find((set) => set.slug === slug);

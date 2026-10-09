@@ -9,7 +9,7 @@ export const FIGMA_MAX_FRAMES = 8;
 /** stays under Vercel's 4.5 MB body limit; the plugin re-exports smaller frames */
 export const FIGMA_MAX_FRAME_BYTES = 4 * 1024 * 1024;
 export const FIGMA_IMPORT_TTL_MS = 24 * 60 * 60 * 1000;
-export const FIGMA_STORE_SETS = ["stride", "penny", "hush", "habitat"] as const;
+export const FIGMA_STORE_SETS = ["stride", "penny", "hush", "habitat", "tempo", "parla", "vault", "orbit", "atlas"] as const;
 
 export type FigmaImageType = "image/png" | "image/jpeg";
 export type FigmaImportMode = "devices" | "set";

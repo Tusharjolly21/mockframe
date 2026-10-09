@@ -224,7 +224,8 @@ function tile(
   const imgAr = img.width / img.height;
   const boxAr = box.w / box.h;
   let crop = { x: 0, y: 0, w: 1, h: 1 };
-  let { x, y, w, h } = box;
+  const { x, y } = box;
+  let { w, h } = box;
   if (o.fit === "contain") {
     // shrink the box to the image's own shape, pinned to the box's top-left
     if (imgAr > boxAr) h = w / imgAr;

@@ -111,7 +111,7 @@ const MOCKUP_FIELDS: [string, string][] = [
 
 const STORE_FIELDS: [string, string][] = [
   ["type", '"store-set"'],
-  ["style", "stride (bold gradients), penny (warm), hush (calm and dark) or habitat (soft pastels). Default stride."],
+  ["style", "stride (bold gradients), penny (teal panorama), hush (calm and dark), habitat (soft pastels), tempo (dark with album glows), parla (bright colours), vault (green-black and champagne), orbit (indigo panorama) or atlas (editorial serif). Default stride."],
   ["platform", '"ios" for App Store size (1320 × 2868) or "android" for Google Play (1080 × 1920). Default ios.'],
   ["screenshots", "Phone screenshots, in order: the first goes in the first shot, and so on. Fewer than 8 repeat to fill the set."],
 ];

@@ -7,7 +7,7 @@
 
 export const API_MAX_SCREENSHOTS = 8;
 export const API_RESULT_TTL_MS = 24 * 60 * 60 * 1000;
-export const STORE_SET_STYLES = ["stride", "penny", "hush", "habitat"] as const;
+export const STORE_SET_STYLES = ["stride", "penny", "hush", "habitat", "tempo", "parla", "vault", "orbit", "atlas"] as const;
 export type StoreSetStyle = (typeof STORE_SET_STYLES)[number];
 /** "Make it pretty" looks, by position (see lib/prettify.ts) */
 export const LOOK_NAMES = ["deep", "glow", "soft", "aurora", "duotone", "studio"] as const;
