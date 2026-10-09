@@ -74,70 +74,74 @@ function SceneRendererImpl({
         ...style,
       }}
     >
-      {/* background layer (filterable). The --fk-bg-* variables are set on the
-          scene element by the animation tools (parallax, live backgrounds) for
-          the length of a preview or export; unset, they change nothing. */}
-      <div
-        style={{
-          position: "absolute",
-          inset: -blurPad,
-          pointerEvents: "none",
-          filter: bgFilter ? `${bgFilter} hue-rotate(var(--fk-bg-hue, 0deg))` : "hue-rotate(var(--fk-bg-hue, 0deg))",
-          transform: BG_MOTION_TRANSFORM,
-          ...backgroundToCss(bg, canvas.panoramaBackground ? panoramaIdx : undefined, canvas.panoramaBackground ? panoramaTotal : undefined),
-        }}
-      >
-        {bg.type === "image" && (() => {
-          const asset = resolveAsset(bg.assetId);
-          if (!asset) return null;
-          return (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={asset.url}
-              alt=""
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: bg.fit,
-                filter: bg.blur ? `blur(${bg.blur}px)` : undefined,
-                opacity: bg.opacity,
-              }}
-              crossOrigin="anonymous"
-            />
-          );
+      {/* everything behind the subject: hidden (--fk-bg-opacity: 0) for
+          transparent video exports, which keep only devices, text and stickers */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: "var(--fk-bg-opacity, 1)" as unknown as number }}>
+        {/* background layer (filterable). The --fk-bg-* variables are set on the
+            scene element by the animation tools (parallax, live backgrounds) for
+            the length of a preview or export; unset, they change nothing. */}
+        <div
+          style={{
+            position: "absolute",
+            inset: -blurPad,
+            pointerEvents: "none",
+            filter: bgFilter ? `${bgFilter} hue-rotate(var(--fk-bg-hue, 0deg))` : "hue-rotate(var(--fk-bg-hue, 0deg))",
+            transform: BG_MOTION_TRANSFORM,
+            ...backgroundToCss(bg, canvas.panoramaBackground ? panoramaIdx : undefined, canvas.panoramaBackground ? panoramaTotal : undefined),
+          }}
+        >
+          {bg.type === "image" && (() => {
+            const asset = resolveAsset(bg.assetId);
+            if (!asset) return null;
+            return (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={asset.url}
+                alt=""
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: bg.fit,
+                  filter: bg.blur ? `blur(${bg.blur}px)` : undefined,
+                  opacity: bg.opacity,
+                }}
+                crossOrigin="anonymous"
+              />
+            );
+          })()}
+        </div>
+
+        {/* Portrait blur — a depth-of-field copy of the background, sharp at the
+            focal point and blurred toward the edges (painted over the crisp bg). */}
+        {backdrop?.portrait?.mode === "blur" && (() => {
+          const { blurPx, mask } = portraitBlur(backdrop.portrait);
+          const common: CSSProperties = {
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            filter: `blur(${blurPx}px)`,
+            WebkitMaskImage: mask,
+            maskImage: mask,
+          };
+          if (bg.type === "image") {
+            const asset = resolveAsset(bg.assetId);
+            if (!asset) return null;
+            return (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={asset.url} alt="" crossOrigin="anonymous" style={{ ...common, transform: BG_MOTION_TRANSFORM, width: "100%", height: "100%", objectFit: bg.fit, opacity: bg.opacity }} />
+            );
+          }
+          return <div style={{ ...common, transform: BG_MOTION_TRANSFORM, ...backgroundToCss(bg, canvas.panoramaBackground ? panoramaIdx : undefined, canvas.panoramaBackground ? panoramaTotal : undefined) }} />;
         })()}
+
+        {/* Portrait stage — spotlight glow + floor, behind the subject */}
+        {backdrop?.portrait?.mode === "stage" && <div style={stageStyle(backdrop.portrait)} />}
+
+        {/* Pattern — repeating decoration behind the subject */}
+        {backdrop?.pattern && <div style={patternStyle(backdrop.pattern)} />}
       </div>
-
-      {/* Portrait blur — a depth-of-field copy of the background, sharp at the
-          focal point and blurred toward the edges (painted over the crisp bg). */}
-      {backdrop?.portrait?.mode === "blur" && (() => {
-        const { blurPx, mask } = portraitBlur(backdrop.portrait);
-        const common: CSSProperties = {
-          position: "absolute",
-          inset: 0,
-          pointerEvents: "none",
-          filter: `blur(${blurPx}px)`,
-          WebkitMaskImage: mask,
-          maskImage: mask,
-        };
-        if (bg.type === "image") {
-          const asset = resolveAsset(bg.assetId);
-          if (!asset) return null;
-          return (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={asset.url} alt="" crossOrigin="anonymous" style={{ ...common, transform: BG_MOTION_TRANSFORM, width: "100%", height: "100%", objectFit: bg.fit, opacity: bg.opacity }} />
-          );
-        }
-        return <div style={{ ...common, transform: BG_MOTION_TRANSFORM, ...backgroundToCss(bg, canvas.panoramaBackground ? panoramaIdx : undefined, canvas.panoramaBackground ? panoramaTotal : undefined) }} />;
-      })()}
-
-      {/* Portrait stage — spotlight glow + floor, behind the subject */}
-      {backdrop?.portrait?.mode === "stage" && <div style={stageStyle(backdrop.portrait)} />}
-
-      {/* Pattern — repeating decoration behind the subject */}
-      {backdrop?.pattern && <div style={patternStyle(backdrop.pattern)} />}
 
       {[...scene.layers].sort((a, b) => {
         const aBackground = a.type === "sticker" && "assetId" in a && a.placement === "background";

@@ -227,3 +227,56 @@ export function downloadBlob(blob: Blob, name: string): void {
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
+
+/**
+ * A writer for TRANSPARENT video: VP9 with an alpha channel in WebM, which
+ * Chrome, Edge and Firefox play with a see-through background (drop it on a
+ * web page over any colour). mediabunny splits each frame into colour and
+ * alpha streams. There's no H.264/MP4 path for alpha, so this returns null
+ * where VP9 alpha can't be encoded (e.g. Safari), and callers say so.
+ */
+export async function createTransparentVideoWriter(width: number, height: number, fps: number): Promise<VideoWriter | null> {
+  if (typeof VideoEncoder === "undefined" || typeof VideoFrame === "undefined") return null;
+  const mb = await import("mediabunny");
+  const bitrate = videoBitrate(width, height, fps);
+  if (!(await mb.canEncodeVideo("vp9", { width, height, bitrate, alpha: "keep" }).catch(() => false))) return null;
+
+  const target = new mb.BufferTarget();
+  const output = new mb.Output({ format: new mb.WebMOutputFormat(), target });
+  const source = new mb.VideoSampleSource({ codec: "vp9", bitrate, alpha: "keep", keyFrameInterval: 2 });
+  output.addVideoTrack(source, { frameRate: fps });
+  await output.start();
+  let index = 0;
+  let closed = false;
+
+  return {
+    width,
+    height,
+    fps,
+    container: "webm",
+    async addFrame(src) {
+      const sample = new mb.VideoSample(src, { timestamp: index / fps, duration: 1 / fps });
+      try {
+        await source.add(sample);
+      } finally {
+        sample.close();
+      }
+      index++;
+    },
+    // loops aren't repeated here: alpha packets can't be cloned like the opaque
+    // path's, and a seamless loop plays fine once — players loop it
+    async finish() {
+      if (!index) throw new Error("The encoder produced no frames");
+      source.close();
+      await output.finalize();
+      closed = true;
+      if (!target.buffer) throw new Error("Muxing produced no data");
+      return { blob: new Blob([target.buffer], { type: "video/webm" }), ext: "webm" as const, hasAudio: false };
+    },
+    close() {
+      if (closed) return;
+      closed = true;
+      void output.cancel().catch(() => {});
+    },
+  };
+}

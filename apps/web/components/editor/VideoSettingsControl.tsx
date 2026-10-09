@@ -110,3 +110,27 @@ export function VideoSettingsControl({ disabled = false }: { disabled?: boolean 
     </div>
   );
 }
+
+/** Transparent-background video (WebM with alpha) for the Motion and Zoom exports. */
+export function TransparentVideoToggle({ disabled = false }: { disabled?: boolean }) {
+  const [settings, update] = useVideoSettings();
+  const on = !!settings.transparent;
+  return (
+    <button
+      role="switch"
+      aria-checked={on}
+      disabled={disabled}
+      onClick={() => update({ transparent: !on })}
+      title="Export WebM video with a see-through background — drop it onto a web page over any colour (Chrome, Edge, Firefox)"
+      className={`flex items-center gap-2 whitespace-nowrap rounded-lg border px-2.5 py-1 text-[10.5px] font-bold transition-all disabled:opacity-40 ${
+        on ? "border-violet-400/60 bg-violet-500/20 text-white" : "border-white/5 bg-white/5 text-white/55 hover:text-white/80"
+      }`}
+    >
+      <span
+        className="h-3 w-3 rounded-[3px] border border-white/30"
+        style={{ backgroundImage: "conic-gradient(#ffffff55 25%, transparent 0 50%, #ffffff55 0 75%, transparent 0)", backgroundSize: "6px 6px" }}
+      />
+      Transparent video {on ? "on" : "off"}
+    </button>
+  );
+}
