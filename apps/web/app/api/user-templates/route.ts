@@ -3,15 +3,16 @@ import { FieldValue } from "firebase-admin/firestore";
 import { FirebaseConfigError, firebaseSetupHint, firestoreDb } from "@/lib/server/firebaseAdmin";
 import { attachOwnerCookie, getRequestOwner } from "@/lib/server/requestOwner";
 import { requestIsPro } from "@/lib/server/entitlement";
+import { FREE_SAVED_TEMPLATES } from "@/lib/billing/limits";
 
 export const runtime = "nodejs";
 
 /**
- * User scene templates (Pro): a saved snapshot of the whole composition —
+ * User scene templates (3 free, 24 with Pro): a saved snapshot of the whole composition —
  * background, effects, layer positions, text, stickers — with screenshots
  * stripped, so applying one restyles the user's CURRENT shots. Same
  * owner-scoped Firestore + local-cache architecture as drafts/custom devices.
- * Saving requires Pro; loading/deleting stays open so a lapsed subscription
+ * Saving beyond the free three requires Pro; loading/deleting stays open so a lapsed subscription
  * never strands what a user already made.
  */
 
@@ -51,9 +52,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    if (!(await requestIsPro(req))) {
-      return NextResponse.json({ error: "Saving templates is a Pro feature" }, { status: 402 });
-    }
+    const isPro = await requestIsPro(req);
     const owner = await getRequestOwner(req);
     const raw = await req.text();
     if (raw.length > MAX_DOC_BODY) {
@@ -65,8 +64,18 @@ export async function POST(req: NextRequest) {
     }
     const col = collection(owner.ownerId);
     const exists = (await col.doc(tpl.id).get()).exists;
-    if (!exists && (await col.count().get()).data().count >= MAX_TEMPLATES) {
-      return NextResponse.json({ error: `Limit of ${MAX_TEMPLATES} templates reached — delete one first` }, { status: 409 });
+    if (!exists) {
+      const saved = (await col.count().get()).data().count;
+      // updating a template you already have never counts against the limit
+      if (!isPro && saved >= FREE_SAVED_TEMPLATES) {
+        return NextResponse.json(
+          { error: `The free plan keeps ${FREE_SAVED_TEMPLATES} saved templates — upgrade for up to ${MAX_TEMPLATES}, or delete one` },
+          { status: 402 }
+        );
+      }
+      if (saved >= MAX_TEMPLATES) {
+        return NextResponse.json({ error: `Limit of ${MAX_TEMPLATES} templates reached — delete one first` }, { status: 409 });
+      }
     }
     await col.doc(tpl.id).set({
       name: String(tpl.name).slice(0, 60),

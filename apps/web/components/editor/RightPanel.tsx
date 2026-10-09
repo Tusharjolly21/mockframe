@@ -17,6 +17,7 @@ import { applyCombo, COMBOS, isComboScene, isWideLayer } from "@/lib/combos";
 import { useSceneStore, useViewStore } from "@/lib/store";
 import { useEntitlementSync } from "@/lib/billing/client";
 import { openUpgrade } from "@/lib/billing/gate";
+import { FREE_SAVED_TEMPLATES } from "@/lib/billing/limits";
 import { guardProScreens } from "@/lib/billing/screenGate";
 import { applyTemplate, deleteUserTemplate, loadUserTemplates, saveUserTemplate, syncUserTemplatesFromServer, templateFromScene, type UserTemplate } from "@/lib/userTemplates";
 import { loadCustomWatermark } from "@/lib/customWatermark";
@@ -1256,8 +1257,9 @@ function MyTemplates() {
   }, []);
 
   const startSave = () => {
-    if (!isPro) {
-      openUpgrade();
+    // free accounts keep a few; the server enforces the same cap
+    if (!isPro && templates.length >= FREE_SAVED_TEMPLATES) {
+      openUpgrade("More saved templates");
       return;
     }
     setName(`Template ${templates.length + 1}`);
@@ -1279,14 +1281,14 @@ function MyTemplates() {
       <div className="mb-2 flex items-center justify-between">
         <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">
           My templates
-          <span className="rounded-full bg-gradient-to-r from-violet-600 to-cyan-500 px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase text-white">Pro</span>
+          {!isPro && <span className="text-[9.5px] font-medium normal-case tracking-normal text-[#9a9aa4]">{templates.length}/{FREE_SAVED_TEMPLATES} free</span>}
         </h3>
         {!naming && (
           <button
             onClick={startSave}
             className="fk-press flex items-center gap-1 rounded-lg border border-[#e4e4ec] bg-white px-2 py-1 text-[10.5px] font-semibold text-[#17171c] hover:border-[#17171c]"
           >
-            {isPro ? <Plus size={11} /> : <Lock size={10} className="text-[#b9a02c]" />} Save current
+            {isPro || templates.length < FREE_SAVED_TEMPLATES ? <Plus size={11} /> : <Lock size={10} className="text-[#b9a02c]" />} Save current
           </button>
         )}
       </div>

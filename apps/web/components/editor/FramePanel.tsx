@@ -14,7 +14,7 @@ import {
 } from "@icons-pack/react-simple-icons";
 import { findSizePreset, SIZE_CATEGORIES, type SizePreset } from "@/lib/canvasSizes";
 import { ingestFile, resolveAsset } from "@/lib/assets";
-import { BG_CATEGORIES, isProBgCategory, magicSwatches, type BgSwatch } from "@/lib/backgrounds";
+import { BG_CATEGORIES, isProBgCategory, isProBgSwatch, magicSwatches, type BgSwatch } from "@/lib/backgrounds";
 import { openUpgrade, useIsPro } from "@/lib/billing/gate";
 import { extractPalette } from "@/lib/palette";
 import { useSceneStore, useViewStore } from "@/lib/store";
@@ -87,7 +87,7 @@ export function FrameControls() {
   const Swatch = ({ s, catId }: { s: BgSwatch; catId?: string }) => {
     const active = JSON.stringify(s.bg) === bgKey;
     // same gate as BackgroundDetail — Pro collections open the upgrade modal
-    const locked = !isPro && !!catId && isProBgCategory(catId);
+    const locked = !isPro && !!catId && isProBgSwatch(catId, s.id);
     const style: React.CSSProperties =
       s.bg.type === "image"
         ? {
@@ -241,7 +241,7 @@ export function FrameControls() {
             onClick={() => {
               // free users shuffle only within unlocked collections (matches
               // BackgroundDetail) so Shuffle never applies a Pro background
-              const all = BG_CATEGORIES.filter((c) => isPro || !isProBgCategory(c.id)).flatMap((c) => c.swatches);
+              const all = BG_CATEGORIES.flatMap((c) => c.swatches.filter((s) => isPro || !isProBgSwatch(c.id, s.id)));
               const pick = all[Math.floor(Math.random() * all.length)];
               if (pick) setBg(pick.bg);
             }}
@@ -468,9 +468,9 @@ function BackgroundDetail() {
           onClick={() => {
             // free users shuffle only within unlocked collections, so Shuffle
             // never lands on a background they'd then be blocked from keeping
-            const swatches = categories
-              .filter((category) => isPro || !isProBgCategory(category.id))
-              .flatMap((category) => category.swatches);
+            const swatches = categories.flatMap((category) =>
+              category.swatches.filter((swatch) => isPro || !isProBgSwatch(category.id, swatch.id))
+            );
             const pick = swatches[Math.floor(Math.random() * swatches.length)];
             if (pick) setBg(pick.bg);
           }}
@@ -505,15 +505,17 @@ function BackgroundDetail() {
             <div className="grid grid-cols-3 gap-2">
               {category.swatches.map((swatch) => {
                 const active = JSON.stringify(swatch.bg) === JSON.stringify(bg);
+                // the first swatch of a Pro collection is a free sample
+                const swatchLocked = !isPro && isProBgSwatch(category.id, swatch.id);
                 return (
                   <button
                     key={swatch.id}
-                    onClick={() => (locked ? openUpgrade("Premium backgrounds") : setBg(swatch.bg))}
-                    title={locked ? "Premium background — upgrade to use" : swatch.id}
+                    onClick={() => (swatchLocked ? openUpgrade("Premium backgrounds") : setBg(swatch.bg))}
+                    title={swatchLocked ? "Premium background — upgrade to use" : swatch.id}
                     className={`fk-tile relative h-14 rounded-xl border ${active ? "border-[#17171c] shadow-[0_0_0_1.5px_#17171c]" : "border-[#e4e4ec]"}`}
                     style={swatchStyle(swatch)}
                   >
-                    {locked && (
+                    {swatchLocked && (
                       <span className="absolute right-1 top-1 grid h-4 w-4 place-items-center rounded-full bg-black/55 text-white backdrop-blur-sm">
                         <Lock size={9} />
                       </span>

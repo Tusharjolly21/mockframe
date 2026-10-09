@@ -16,10 +16,12 @@ export interface BgCategory {
 }
 
 /**
- * Pro-only background collections — the designer procedural art. Applying one
- * while free opens the upgrade modal; Shuffle skips them for free users. Every
- * solid, gradient, mesh and Unsplash photo stays free, so the free tier still
- * has ~70 backgrounds and every building block. This gates curation, not
+ * Pro background collections — the designer procedural art. Applying a locked
+ * swatch while free opens the upgrade modal; Shuffle skips them for free users.
+ * Every solid, gradient, mesh and Unsplash photo stays free, and so does the
+ * FIRST swatch of every Pro collection (see PRO_BG_FREE_SAMPLES), so the free
+ * tier has ~85 backgrounds, every building block, and a real taste of each
+ * premium look before anyone is asked to pay. This gates curation, not
  * capability — the underlying Background values are ordinary, and a free user
  * can hand-build a similar look. Single source of truth for the gate.
  */
@@ -40,6 +42,35 @@ export const PRO_BG_CATEGORY_IDS = new Set([
 
 export function isProBgCategory(categoryId: string): boolean {
   return PRO_BG_CATEGORY_IDS.has(categoryId);
+}
+
+/** How many swatches at the top of each Pro collection stay free. */
+export const PRO_BG_FREE_SAMPLES = 1;
+
+/**
+ * Is this one swatch locked for free users? Pro collections keep their first
+ * PRO_BG_FREE_SAMPLES swatches free; everything after is Pro. Collections that
+ * aren't Pro are never locked. Takes the swatch id because the position, not the
+ * look, decides — and unknown ids are never locked.
+ */
+export function isProBgSwatch(categoryId: string, swatchId: string): boolean {
+  if (!isProBgCategory(categoryId)) return false;
+  const category = BG_CATEGORIES.find((c) => c.id === categoryId);
+  const index = category?.swatches.findIndex((s) => s.id === swatchId) ?? -1;
+  return index >= PRO_BG_FREE_SAMPLES;
+}
+
+/** Backgrounds a free user can apply, and the total — for marketing copy. */
+export function backgroundCounts(): { total: number; free: number } {
+  let total = 0;
+  let free = 0;
+  for (const category of BG_CATEGORIES) {
+    for (const swatch of category.swatches) {
+      total += 1;
+      if (!isProBgSwatch(category.id, swatch.id)) free += 1;
+    }
+  }
+  return { total, free };
 }
 
 const lin = (id: string, angle: number, colors: string[]): BgSwatch => ({
