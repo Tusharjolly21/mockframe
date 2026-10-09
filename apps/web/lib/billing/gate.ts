@@ -26,7 +26,8 @@ import { useViewStore } from "../store";
  *          photoreal renders, video / GIF / promo video, 4K and 6K output,
  *          full-page capture, custom watermark, one-click batch ZIP, hosted
  *          share links, up to 24 saved templates and the team library,
- *          39-language store sets, recorder export, the render API + MCP.
+ *          39-language store sets, deploy refresh for store packs, recorder
+ *          export, the render API + MCP.
  */
 
 export function useIsPro(): boolean {
