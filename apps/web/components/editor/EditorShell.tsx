@@ -7,6 +7,7 @@ import { track, trackOnce } from "@/lib/analytics";
 import { confirmCheckoutReturn } from "@/lib/billing/client";
 import { ingestFile } from "@/lib/assets";
 import { loadCustomDevices, syncCustomDevicesFromServer } from "@/lib/customDevices";
+import { syncBrandKitFromServer } from "@/lib/brand";
 import { buildDeviceScene, buildScreenScene, deviceForScreenshot, isScreenApp } from "@/lib/deviceScene";
 import { takeParkedScreenshot } from "@/lib/handoff";
 import { planFigmaScenes } from "@/lib/figmaOpen";
@@ -153,6 +154,8 @@ export function EditorShell({
   useEffect(() => {
     loadCustomDevices();
     void syncCustomDevicesFromServer();
+    // the brand kit follows the account the same way (newest edit wins)
+    void syncBrandKitFromServer();
   }, []);
 
   // Deep-link: /editor?device=<id> (from the /mockups pSEO pages) opens a fresh

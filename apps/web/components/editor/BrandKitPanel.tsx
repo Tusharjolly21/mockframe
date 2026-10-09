@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Palette, Upload } from "lucide-react";
-import { ingestFile, resolveAsset } from "@/lib/assets";
-import { brandTheme, loadBrandKit, saveBrandKit, type BrandKit } from "@/lib/brand";
+import { ingestFile, onAssetsChange, resolveAsset } from "@/lib/assets";
+import { brandTheme, loadBrandKit, onBrandChange, saveBrandKit, syncBrandKitFromServer, type BrandKit } from "@/lib/brand";
 import { applyTheme } from "@/lib/themes";
 import { addAppIcon } from "@/lib/sceneOps";
 import { useSceneStore, useViewStore } from "@/lib/store";
@@ -18,6 +18,22 @@ export function BrandKitPanel({ onToast }: { onToast: (msg: string) => void }) {
   const setScene = useSceneStore((s) => s.setScene);
   const select = useViewStore((s) => s.select);
   const bumpAssets = useViewStore((s) => s.bumpAssets);
+  const [, setAssetTick] = useState(0);
+
+  // a cloud sync can land while the popover is open (kit edited on another
+  // device) — follow it, and re-render once the synced logo URL is registered
+  useEffect(() => {
+    void syncBrandKitFromServer();
+    const offBrand = onBrandChange(() => {
+      const latest = loadBrandKit();
+      if (latest) setKit(latest);
+    });
+    const offAssets = onAssetsChange(() => setAssetTick((t) => t + 1));
+    return () => {
+      offBrand();
+      offAssets();
+    };
+  }, []);
 
   function persist(next: BrandKit) {
     setKit(next);
@@ -103,7 +119,9 @@ export function BrandKitPanel({ onToast }: { onToast: (msg: string) => void }) {
         >
           Add logo to scene
         </button>
-        <p className="pt-0.5 text-center text-[10px] leading-4 text-[#9a9aa4]">Promo videos use your accent automatically.</p>
+        <p className="pt-0.5 text-center text-[10px] leading-4 text-[#9a9aa4]">
+          Promo videos and launch kits use your accent automatically. Saved to your account, so it follows you to every device.
+        </p>
       </div>
     </div>
   );

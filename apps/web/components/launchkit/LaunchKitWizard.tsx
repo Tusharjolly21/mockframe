@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, ArrowRight, Check, Download, Globe, Loader2, PartyPopper, Sparkles, Upload } from "lucide-react";
-import { loadBrandKit } from "@/lib/brand";
+import { loadBrandKit, syncBrandKitFromServer } from "@/lib/brand";
 import { firebaseFetch } from "@/lib/firebaseClient";
 import { KIT_SURFACES, type LaunchCopy, type LaunchKitDoc, slugifyAppName } from "@/lib/launchkit/types";
 import { openUpgrade, useIsPro } from "@/lib/billing/gate";
@@ -49,7 +49,18 @@ export function LaunchKitWizard() {
   const [appName, setAppName] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
-  const [accent, setAccent] = useState(() => loadBrandKit()?.accent ?? "#7c3aed");
+  const [accent, setAccentState] = useState(() => loadBrandKit()?.accent ?? "#7c3aed");
+  // once the user picks an accent here, a late cloud sync must not overwrite it
+  const accentTouched = useRef(false);
+  const setAccent = (v: string) => {
+    accentTouched.current = true;
+    setAccentState(v);
+  };
+  useEffect(() => {
+    void syncBrandKitFromServer().then((kit) => {
+      if (kit && !accentTouched.current) setAccentState(kit.accent);
+    });
+  }, []);
   const [icon, setIcon] = useState<Media | null>(null);
   const [shots, setShots] = useState<Media[]>([]);
   const [links, setLinks] = useState({ site: "", appstore: "", play: "" });
