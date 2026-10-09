@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BG_CATEGORIES, isProBgCategory } from "@/lib/backgrounds";
+import { BG_CATEGORIES, backgroundCounts, isProBgCategory } from "@/lib/backgrounds";
 
 // The same export (three phones, Showcase layout, 1920 × 1440) with only the
 // background changed. Collection names match the editor's Backgrounds tabs.
@@ -12,8 +12,7 @@ const LOOKS = [
   { id: "earth", collection: "Earth", src: "/home/style-earth.webp", swatch: "/home/swatch-earth.webp" },
 ] as const;
 
-const TOTAL = BG_CATEGORIES.reduce((n, c) => n + c.swatches.length, 0);
-const FREE = BG_CATEGORIES.filter((c) => !isProBgCategory(c.id)).reduce((n, c) => n + c.swatches.length, 0);
+const { total: TOTAL, free: FREE } = backgroundCounts();
 
 export function StyleSwitcher() {
   const [active, setActive] = useState<(typeof LOOKS)[number]["id"]>(LOOKS[0].id);

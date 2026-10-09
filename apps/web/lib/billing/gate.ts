@@ -8,10 +8,25 @@ import { useViewStore } from "../store";
  * UI gates are a courtesy — anything that costs real money (renders,
  * full-page captures) is ALSO enforced server-side.
  *
- * Free tier stays deliberately generous: editor, all devices, custom devices,
- * drafts + cloud sync, bulk export, share links, icons, glare, 1–3× exports,
- * standard URL capture. Pro: watermark-free/custom watermark, video & GIF
- * export, realistic photo renders, 4K/6K exports, full-page capture.
+ * THE SPLIT (decided 2026-10-09 — change this comment and the pricing page
+ * together). The rule: free is the whole creative tool; Pro is what costs us
+ * money to run, what ships commercially, and the premium curation on top.
+ *
+ *  Free  — editor, every device and photo scene, custom devices, drafts and
+ *          cloud sync, themes, icons, glare, clay, fonts and font uploads,
+ *          WhatsApp / WhatsApp group / iMessage screens, 2 premium layouts,
+ *          ~85 backgrounds (every solid, gradient, mesh and Unsplash photo,
+ *          plus the first swatch of every premium collection), 3 saved
+ *          templates, HD export (1×–3×), watermark-free PNG/JPG/WebP,
+ *          single-shot export, standard website capture (25/day), the screen
+ *          recorder, 2 AI generations and 1 store-screenshot pack when
+ *          signed in.
+ *  Pro   — commercial licence, premium background collections, 6 more
+ *          premium layouts and Pro templates, the other chat/DM screens,
+ *          photoreal renders, video / GIF / promo video, 4K and 6K output,
+ *          full-page capture, custom watermark, one-click batch ZIP, hosted
+ *          share links, up to 24 saved templates and the team library,
+ *          39-language store sets, recorder export, the render API + MCP.
  */
 
 export function useIsPro(): boolean {

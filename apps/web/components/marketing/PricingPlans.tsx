@@ -17,9 +17,11 @@ const FREE_FEATURES = [
   "2 premium layouts (Launch Hero, Feature Trio)",
   "WhatsApp & iMessage chat screens",
   "Website capture & app screen templates",
+  "About 85 backgrounds, plus a sample of every premium collection",
   "Themes, icons, glare & annotations",
   "50+ fonts, your own font uploads & clay finishes",
   "Custom devices, drafts & cloud sync",
+  "3 saved templates & the screen recorder",
 ];
 
 // Only list what a paying user can actually DO today. (Custom-device cloud sync
@@ -31,7 +33,7 @@ const PRO_FEATURES = [
   "12 more chat & DM screens",
   "Animated app promo videos (MP4)",
   "Photoreal device renders",
-  "Premium background collections",
+  "Every premium background collection",
   "Video & GIF export — 60 fps, up to 4K",
   "Text animations in video",
   "4K & 6K output",
@@ -39,7 +41,8 @@ const PRO_FEATURES = [
   "Custom-brand watermark",
   "Store screenshots in 39 languages, AI-translated",
   "Screen recordings with auto zoom, up to 4K",
-  "Saved templates & a shared team library",
+  "24 saved templates & a shared team library",
+  "Hosted share links & one-click batch ZIP",
   "Render API + MCP server for Claude & Cursor",
 ];
 

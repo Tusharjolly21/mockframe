@@ -28,7 +28,7 @@ const REASSURANCE = [
 const FAQ: { q: string; a: string }[] = [
   {
     q: "Is MockFrame free?",
-    a: "Yes. The free plan is the full editor — every device frame, backgrounds, WhatsApp and iMessage chat screens, website capture and HD export — and your exports are watermark-free. It's not a time-limited trial.",
+    a: "Yes. The free plan is the full editor — every device frame, about 85 backgrounds, three saved templates, WhatsApp and iMessage chat screens, website capture and HD export — and your exports are watermark-free. It's not a time-limited trial.",
   },
   {
     q: "Do I need to sign up to start?",
@@ -36,7 +36,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "What does Pro add?",
-    a: "Pro unlocks the full chat and DM screen set (Telegram, Instagram, Slack, Discord and more), premium background collections, video and GIF export, 4K and 6K output, full-page website capture, AI translation of store screenshot captions into 39 languages, your own custom-brand watermark, and saved templates. It starts at under $10 a month.",
+    a: "Pro unlocks the full chat and DM screen set (Telegram, Instagram, Slack, Discord and more), every premium background collection (the free plan includes a sample of each), video and GIF export, 4K and 6K output, full-page website capture, one-click batch ZIP exports, hosted share links, AI translation of store screenshot captions into 39 languages, your own custom-brand watermark, and up to 24 saved templates. It starts at under $10 a month.",
   },
   {
     q: "Can I cancel anytime?",
