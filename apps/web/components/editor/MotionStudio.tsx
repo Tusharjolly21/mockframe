@@ -9,6 +9,18 @@ import { exportMotionGif, exportMotionVideo } from "@/lib/motionExport";
 import { useSceneStore, useViewStore, withTransientHistory } from "@/lib/store";
 import { openUpgrade } from "@/lib/billing/gate";
 import { useVideoSettings, VideoSettingsControl } from "./VideoSettingsControl";
+import { applyBgMotion, backgroundPose, clearBgMotion, isRest, type LiveBackground } from "@/lib/backgroundMotion";
+import { LiveBackgroundControl, useLiveBackground } from "./LiveBackgroundControl";
+
+const SCENE_NODE = "#scene-canvas [data-scene-id]";
+
+/** move the background for clip time t: the live background plus the preset's own background move (parallax) */
+function poseBackground(base: SceneDocument, preset: MotionPreset, live: LiveBackground, t: number) {
+  const node = document.querySelector<HTMLElement>(SCENE_NODE);
+  const m = backgroundPose(live, t, base.canvas.width, base.canvas.height, preset.background?.(t));
+  if (isRest(m)) clearBgMotion(node);
+  else applyBgMotion(node, m);
+}
 
 /** pose every moving layer of `base` at clip time t without touching history */
 function poseScene(base: SceneDocument, preset: MotionPreset, t: number) {
@@ -30,6 +42,7 @@ function poseScene(base: SceneDocument, preset: MotionPreset, t: number) {
 
 function restoreScene(base: SceneDocument) {
   useViewStore.getState().setTextTime(null);
+  clearBgMotion(document.querySelector<HTMLElement>(SCENE_NODE));
   const byId = new Map(base.layers.map((l) => [l.id, l.transform]));
   withTransientHistory(() =>
     useSceneStore.setState((st) => ({
@@ -86,6 +99,7 @@ export function MotionStudio() {
   const hasMockup = useSceneStore((s) => s.scene.layers.some((l) => l.type === "mockup" || (l.type === "text" && !!l.animation)));
   const hasTextAnim = useSceneStore((s) => s.scene.layers.some((l) => l.type === "text" && !!l.animation));
   const [videoSettings] = useVideoSettings();
+  const [live] = useLiveBackground();
   const preset = motionPreset(presetId);
 
   const stop = () => {
@@ -112,7 +126,9 @@ export function MotionStudio() {
         stop();
         return;
       }
-      poseScene(base, p, (elapsed % p.durationMs) / p.durationMs);
+      const t = (elapsed % p.durationMs) / p.durationMs;
+      poseScene(base, p, t);
+      poseBackground(base, p, live, t);
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
@@ -134,7 +150,10 @@ export function MotionStudio() {
       node,
       scene: base,
       preset: clip,
-      renderAt: (t: number) => poseScene(base, clip, t),
+      renderAt: (t: number) => {
+        poseScene(base, clip, t);
+        poseBackground(base, clip, live, t);
+      },
       restore: () => restoreScene(base),
       onProgress: (pct: number, label: string) => setBusy({ pct, label }),
     };
@@ -162,7 +181,7 @@ export function MotionStudio() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-4 gap-2 lg:grid-cols-8">
+      <div className="grid grid-cols-5 gap-2 lg:grid-cols-9">
         {MOTION_PRESETS.map((p) => (
           <motion.button
             key={p.id}
@@ -190,6 +209,8 @@ export function MotionStudio() {
           </motion.button>
         ))}
       </div>
+
+      <LiveBackgroundControl disabled={!!busy || playing} />
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
