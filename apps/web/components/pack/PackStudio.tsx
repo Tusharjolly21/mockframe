@@ -135,22 +135,22 @@ export function PackStudio() {
 
   return (
     <div
-      className="flex h-[calc(100vh-0px)] min-h-[560px] flex-col bg-[#0b0b0f] text-white"
+      className="flex min-h-[560px] flex-col bg-[#0b0b0f] text-white md:h-[calc(100vh-0px)]"
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault();
         if (e.dataTransfer.files?.length) void addFiles(Array.from(e.dataTransfer.files));
       }}
     >
-      <header className="flex items-center gap-3 border-b border-white/10 bg-[#101014] px-4 py-2.5">
+      <header className="flex flex-wrap items-center gap-3 border-b border-white/10 bg-[#101014] px-4 py-2.5">
         <input
           value={pack.appName}
           onChange={(e) => update((p) => ({ ...p, appName: e.target.value.slice(0, 60) }))}
           placeholder="Your app name"
-          className="w-56 rounded-md border border-white/10 bg-black/30 px-2.5 py-1.5 text-sm outline-none focus:border-violet-500"
+          className="w-full rounded-md border border-white/10 bg-black/30 px-2.5 py-1.5 text-sm sm:w-56 outline-none focus:border-violet-500"
         />
         <span className="text-xs text-white/40">{pack.screens.length}/10 screens · autosaved</span>
-        <div className="ml-auto flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 sm:ml-auto">
           {exporting && progress && (
             <span className="text-xs text-white/60">Rendering {progress.done}/{progress.total}…</span>
           )}
@@ -224,7 +224,7 @@ export function PackStudio() {
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         <ScreenStrip />
         <PackPreview />
         <PackInspector />

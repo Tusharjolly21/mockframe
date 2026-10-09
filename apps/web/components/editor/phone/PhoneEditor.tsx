@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Check, Download, History, ImagePlus, Loader2, MessageSquare, Monitor, Shuffle } from "lucide-react";
+import { Check, Download, History, ImagePlus, Loader2, MessageSquare, Monitor, Shuffle, X } from "lucide-react";
 import { backgroundToCss, SceneRenderer } from "@framekit/renderer";
 import { getDevice, previewDataUri } from "@framekit/devices";
 import type { MockupLayer, SceneDocument } from "@framekit/scene";
@@ -17,17 +17,32 @@ import { latestSceneDraft, timeAgo, type DraftRecord } from "@/lib/drafts";
 import { exportFileName, renderSceneBlob } from "@/lib/export";
 import { ensureSceneFonts } from "@/lib/fonts";
 import { extractPalette } from "@/lib/palette";
-import { buildPhoneScene, devicesForShot, PHONE_SIZES, phoneExportScale, stylePhoneScene, type PhoneShot, type PhoneStyle } from "@/lib/phoneEditor";
+import { buildPhoneScene, devicesForShot, PHONE_MAX_EXTRAS, PHONE_SIZES, phoneExportScale, stylePhoneScene, withCards, withExtras, type PhoneExtra, type PhoneShot, type PhoneStyle } from "@/lib/phoneEditor";
+import { PRESET_CROPS, type Crop, type LiftStyle } from "@/lib/liftCard";
+import { QUICK_DEVICES } from "@/lib/lineup";
+import { findCards } from "../LiftCards";
 import { prettyLooks } from "@/lib/prettify";
 import { useSceneStore, useViewStore } from "@/lib/store";
 
-type Tab = "look" | "device" | "background" | "size";
+type Tab = "look" | "device" | "lineup" | "cards" | "background" | "size";
 const TABS: { id: Tab; label: string }[] = [
   { id: "look", label: "Look" },
   { id: "device", label: "Device" },
+  { id: "lineup", label: "Add devices" },
+  { id: "cards", label: "Cards" },
   { id: "background", label: "Background" },
   { id: "size", label: "Size" },
 ];
+
+const CARD_STYLES: { id: LiftStyle; label: string }[] = [
+  { id: "pop", label: "Pop" },
+  { id: "tilt", label: "Tilted" },
+  { id: "glass", label: "Glass" },
+  { id: "flat", label: "Outline" },
+];
+
+const sizeOf = (id: string) => resolveAsset(id);
+const sameCrop = (a: Crop, b: Crop) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.w - b.w) + Math.abs(a.h - b.h) < 0.002;
 
 const FREE_BGS: BgSwatch[] = BG_CATEGORIES.filter((c) => c.id === "gradient" || c.id === "solid").flatMap((c) => c.swatches);
 
@@ -39,6 +54,9 @@ interface Choices {
   deviceId: string;
   sizeId: string;
   style: PhoneStyle;
+  extras?: PhoneExtra[];
+  cards?: Crop[];
+  cardStyle?: LiftStyle;
 }
 
 /** The last choices for a screenshot, so a resumed draft looks the way it was left. */
@@ -94,6 +112,12 @@ export function PhoneEditor({ onFullEditor }: { onFullEditor: () => void }) {
   // null while the screenshot's colours are being read
   const [palette, setPalette] = useState<string[] | null>(null);
   const [tab, setTab] = useState<Tab>("look");
+  const [extras, setExtras] = useState<PhoneExtra[]>([]);
+  const [cards, setCards] = useState<Crop[]>([]);
+  const [cardStyle, setCardStyle] = useState<LiftStyle>("pop");
+  const [found, setFound] = useState<Crop[] | null>(null);
+  // the extra device the next picked photo goes into (null: the main screenshot)
+  const extraTarget = useRef<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -112,6 +136,9 @@ export function PhoneEditor({ onFullEditor }: { onFullEditor: () => void }) {
       setDeviceId(saved.deviceId);
       setSizeId(saved.sizeId);
       setStyle(saved.style);
+      setExtras((saved.extras ?? []).filter((e) => getDevice(e.deviceId) && (!e.shotId || resolveAsset(e.shotId))));
+      setCards(saved.cards ?? []);
+      setCardStyle(saved.cardStyle ?? "pop");
       return;
     }
     const options = devicesForShot(found.shot.width, found.shot.height);
@@ -119,8 +146,8 @@ export function PhoneEditor({ onFullEditor }: { onFullEditor: () => void }) {
   }, [storeScene, shot]);
 
   useEffect(() => {
-    if (shot) saveChoices({ shotId: shot.id, deviceId, sizeId, style });
-  }, [shot, deviceId, sizeId, style]);
+    if (shot) saveChoices({ shotId: shot.id, deviceId, sizeId, style, extras, cards, cardStyle });
+  }, [shot, deviceId, sizeId, style, extras, cards, cardStyle]);
 
   // the last autosaved mockup, offered on the empty screen
   const [draft, setDraft] = useState<DraftRecord | null>(null);
@@ -150,8 +177,24 @@ export function PhoneEditor({ onFullEditor }: { onFullEditor: () => void }) {
     };
   }, [shotUrl]);
 
+  useEffect(() => {
+    if (!shotUrl) return;
+    let alive = true;
+    setFound(null);
+    findCards(shotUrl)
+      .then((c) => alive && setFound(c))
+      .catch(() => alive && setFound([]));
+    return () => {
+      alive = false;
+    };
+  }, [shotUrl]);
+
   const base = useMemo(() => (shot ? buildPhoneScene(shot, deviceId, sizeId) : null), [shot, deviceId, sizeId]);
-  const scene = useMemo(() => (base && palette ? stylePhoneScene(base, style, palette) : base), [base, style, palette]);
+  const scene = useMemo(() => {
+    const styled = base && palette ? stylePhoneScene(base, style, palette) : base;
+    if (!styled || !shot) return styled;
+    return withCards(withExtras(styled, extras, shot.id, sizeOf), cards, cardStyle, sizeOf);
+  }, [base, style, palette, extras, cards, cardStyle, shot]);
   const round = style.kind === "look" ? style.round : 0;
   const looks = useMemo(() => (base && palette ? prettyLooks(base, palette, round) : []), [base, palette, round]);
 
@@ -179,7 +222,14 @@ export function PhoneEditor({ onFullEditor }: { onFullEditor: () => void }) {
     if (!file || !file.type.startsWith("image/")) return;
     try {
       const asset = await ingestFile(file);
+      const target = extraTarget.current;
+      extraTarget.current = null;
+      if (target) {
+        setExtras((list) => list.map((e) => (e.key === target ? { ...e, shotId: asset.id } : e)));
+        return;
+      }
       const next = { id: asset.id, width: asset.width, height: asset.height };
+      setCards([]);
       setShot(next);
       setDeviceId(devicesForShot(next.width, next.height)[0]);
       setStyle({ kind: "look", index: 0, round: 0 });
@@ -344,7 +394,7 @@ export function PhoneEditor({ onFullEditor }: { onFullEditor: () => void }) {
       </div>
 
       <div className="shrink-0 border-t border-white/[0.08] bg-[#111115] pb-[max(12px,env(safe-area-inset-bottom))]">
-        <div role="tablist" className="flex gap-1 px-3 pt-2.5">
+        <div role="tablist" className="flex gap-1 overflow-x-auto px-3 pt-2.5 [scrollbar-width:none]">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -352,7 +402,7 @@ export function PhoneEditor({ onFullEditor }: { onFullEditor: () => void }) {
               role="tab"
               aria-selected={tab === t.id}
               onClick={() => setTab(t.id)}
-              className={`flex-1 rounded-full py-2 text-[12.5px] font-semibold ${tab === t.id ? "bg-white text-zinc-950" : "text-zinc-400"}`}
+              className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-[12.5px] font-semibold ${tab === t.id ? "bg-white text-zinc-950" : "text-zinc-400"}`}
             >
               {t.label}
             </button>
@@ -389,6 +439,100 @@ export function PhoneEditor({ onFullEditor }: { onFullEditor: () => void }) {
                 </Tile>
               );
             })}
+
+          {tab === "lineup" && (
+            <>
+              {extras.map((e) => {
+                const d = getDevice(e.deviceId)!;
+                const own = e.shotId ? resolveAsset(e.shotId)?.url : undefined;
+                return (
+                  <div key={e.key} className="relative shrink-0">
+                    <Tile
+                      wide
+                      active
+                      label={own ? d.name : "Tap for photo"}
+                      onClick={() => {
+                        extraTarget.current = e.key;
+                        fileRef.current?.click();
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={previewDataUri(d)} alt="" className="max-h-[68px] max-w-[76px] object-contain" />
+                    </Tile>
+                    <button
+                      type="button"
+                      aria-label={`Remove ${d.name}`}
+                      onClick={() => setExtras((list) => list.filter((x) => x.key !== e.key))}
+                      className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-white text-zinc-950 shadow"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                );
+              })}
+              {extras.length < PHONE_MAX_EXTRAS ? (
+                QUICK_DEVICES.map((q) => {
+                  const d = getDevice(q.id);
+                  if (!d) return null;
+                  return (
+                    <Tile
+                      key={q.id}
+                      label={`+ ${q.label}`}
+                      active={false}
+                      onClick={() => {
+                        setExtras((list) => [...list, { key: `${q.id}-${Date.now().toString(36)}`, deviceId: q.id, shotId: null }]);
+                        track("device_added", { device_id: q.id, via: "phone" });
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={previewDataUri(d)} alt="" className="max-h-[60px] max-w-[60px] object-contain opacity-80" />
+                    </Tile>
+                  );
+                })
+              ) : (
+                <p className="self-center px-2 text-[12.5px] text-zinc-500">Up to {PHONE_MAX_EXTRAS + 1} devices. Remove one to add another.</p>
+              )}
+            </>
+          )}
+
+          {tab === "cards" && (
+            <>
+              {(found && found.length ? found : found ? PRESET_CROPS.map((p) => p.crop) : []).map((c, i) => {
+                const on = cards.some((x) => sameCrop(x, c));
+                return (
+                  <Tile
+                    key={i}
+                    wide
+                    active={on}
+                    label={on ? "Lifted" : "Lift"}
+                    onClick={() => setCards((list) => (on ? list.filter((x) => !sameCrop(x, c)) : [...list, c].slice(-3)))}
+                  >
+                    <span
+                      aria-hidden
+                      className="block w-[80px] rounded-md shadow-md"
+                      style={{
+                        aspectRatio: `${c.w * shot.width}/${c.h * shot.height}`,
+                        maxHeight: 76,
+                        backgroundImage: `url(${shotUrl})`,
+                        backgroundSize: `${100 / c.w}% ${100 / c.h}%`,
+                        backgroundPosition: `${c.w >= 1 ? 0 : (c.x / (1 - c.w)) * 100}% ${c.h >= 1 ? 0 : (c.y / (1 - c.h)) * 100}%`,
+                      }}
+                    />
+                    {on && <Check size={15} className="absolute right-1.5 top-1.5 rounded-full bg-white p-0.5 text-zinc-950" />}
+                  </Tile>
+                );
+              })}
+              {!found && <p className="py-8 text-[13px] text-zinc-500">Finding cards in your screenshot…</p>}
+              {found &&
+                CARD_STYLES.map((cs) => (
+                  <Tile key={cs.id} active={cardStyle === cs.id} label={cs.label} onClick={() => setCardStyle(cs.id)}>
+                    <span
+                      className={`block h-8 w-12 rounded-md bg-white/80 ${cs.id === "tilt" ? "-rotate-6" : ""} ${cs.id === "flat" ? "border-2 border-white bg-white/20" : "shadow-[0_8px_18px_rgba(0,0,0,0.5)]"} ${cs.id === "glass" ? "bg-white/30 backdrop-blur" : ""}`}
+                    />
+                  </Tile>
+                ))}
+            </>
+          )}
 
           {tab === "background" &&
             swatches.map((sw) => {

@@ -1,5 +1,7 @@
 import { getDevice } from "@framekit/devices";
-import type { Background, SceneDocument } from "@framekit/scene";
+import { createMockupLayer, type Background, type SceneDocument } from "@framekit/scene";
+import { addLiftedCard, type Crop, type LiftStyle } from "./liftCard";
+import { arrangeLineup, type SizeOf } from "./lineup";
 import { buildDeviceScene, deviceForScreenshot } from "./deviceScene";
 import { prettyLooks } from "./prettify";
 
@@ -97,4 +99,44 @@ export function stylePhoneScene(scene: SceneDocument, style: PhoneStyle, palette
 export function phoneExportScale(scene: SceneDocument): number {
   const px = scene.canvas.width * scene.canvas.height;
   return px * 4 <= 12_000_000 ? 2 : Math.max(1, Math.floor(Math.sqrt(12_000_000 / px) * 10) / 10);
+}
+
+/* --------------------------- more devices and cards --------------------------- */
+
+export interface PhoneExtra {
+  key: string;
+  deviceId: string;
+  /** the screenshot in this device; null shows the main one */
+  shotId: string | null;
+}
+
+export const PHONE_MAX_EXTRAS = 3;
+
+/** Add the extra devices beside the main one and line them all up, fitted to the canvas. */
+export function withExtras(scene: SceneDocument, extras: PhoneExtra[], mainShotId: string, sizeOf: SizeOf): SceneDocument {
+  if (!extras.length) return scene;
+  const layers = extras.flatMap((e) => {
+    const d = getDevice(e.deviceId);
+    if (!d) return [];
+    const layer = createMockupLayer({
+      deviceId: e.deviceId,
+      frameHeight: d.frame.height,
+      canvasHeight: scene.canvas.height,
+      media: { assetId: e.shotId ?? mainShotId, kind: "image", fit: "cover", offsetX: 0, offsetY: 0, scale: 1 },
+    });
+    return [{ ...layer, id: `extra-${e.key}` }];
+  });
+  return arrangeLineup({ ...scene, layers: [...scene.layers, ...layers] }, sizeOf);
+}
+
+/** Lift each crop of the main screenshot out of its device as a floating card. */
+export function withCards(scene: SceneDocument, cards: Crop[], style: LiftStyle, sizeOf: SizeOf): SceneDocument {
+  const main = scene.layers.find((l) => l.type === "mockup" && !l.id.startsWith("extra-"));
+  if (!main || !cards.length) return scene;
+  let out = scene;
+  cards.forEach((crop, i) => {
+    const side = cards.length > 1 ? (i % 2 ? "left" : "right") : "auto";
+    out = addLiftedCard(out, main.id, crop, sizeOf, { style, side }).scene;
+  });
+  return out;
 }

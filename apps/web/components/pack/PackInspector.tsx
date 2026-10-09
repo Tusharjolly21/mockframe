@@ -82,7 +82,7 @@ export function PackInspector() {
   }
 
   return (
-    <aside className="w-72 shrink-0 overflow-y-auto border-l border-white/10 bg-[#101014] text-sm text-white/85">
+    <aside className="w-full shrink-0 overflow-y-auto border-t border-white/10 md:w-72 md:border-l md:border-t-0 bg-[#101014] text-sm text-white/85">
       <Section title="Style">
         <div className="grid grid-cols-2 gap-2">
           {PACK_STYLE_IDS.map((id) => (

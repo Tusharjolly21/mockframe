@@ -19,6 +19,10 @@ import { ColorRow, Section, Seg, SliderRow } from "./ui";
 import { canRotateDevice } from "@framekit/renderer";
 import { CaptureUrlDialog } from "./CaptureUrlDialog";
 import { DevicePicker } from "./DevicePicker";
+import { LiftCards } from "./LiftCards";
+import { isLiftedCard } from "@/lib/liftCard";
+import { AddDeviceButton, ArrangeLineupButton, arrangeableCount } from "./AddDevice";
+import { arrangeLineup, estimateBox, matchPhysicalScale } from "@/lib/lineup";
 import { MediaEditor } from "./MediaEditor";
 import { ScreenStudio, isTemplateCard } from "./ScreenStudio";
 import { FrameControls } from "./FramePanel";
@@ -131,15 +135,20 @@ function PhoneSlots({
   activeId: string;
   onSelect: (id: string | null) => void;
 }) {
+  const scene = useSceneStore((s) => s.scene);
   if (layers.length === 0) return null;
   return (
     <section className="border-b border-[#ececf2] px-3 pb-3 pt-2">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#8a8a94]">Screenshots</h3>
-        <span className="text-[10px] font-medium text-[#a0a0aa]">{layers.length} on this canvas</span>
+        {arrangeableCount(scene) > 1 ? (
+          <ArrangeLineupButton />
+        ) : (
+          <span className="text-[10px] font-medium text-[#a0a0aa]">{layers.length} on this canvas</span>
+        )}
       </div>
       <div className="grid grid-cols-3 gap-1.5">
-        {layers.slice(0, 3).map((layer, index) => {
+        {layers.map((layer, index) => {
           const device = layer.deviceId ? getDevice(layer.deviceId) : undefined;
           const asset = layer.media ? resolveAsset(layer.media.assetId) : undefined;
           const active = layer.id === activeId;
@@ -167,11 +176,12 @@ function PhoneSlots({
                   <span className="h-7 w-10 rounded bg-white shadow-sm" />
                 )}
               </span>
-              <span className="mt-1 block truncate text-[10px] font-semibold text-[#31313a]">{device ? SLOT_LABEL[device.category] ?? "Device" : "Screenshot"} {index + 1}</span>
+              <span className="mt-1 block truncate text-[10px] font-semibold text-[#31313a]">{isLiftedCard(layer) ? "Card" : device ? SLOT_LABEL[device.category] ?? "Device" : "Screenshot"} {index + 1}</span>
               <span className="block truncate text-[9px] text-[#92929d]">{layer.media ? "Screenshot set" : "Add screenshot"}</span>
             </motion.button>
           );
         })}
+        <AddDeviceButton />
       </div>
     </section>
   );
@@ -293,11 +303,28 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
               ...(fullBleed && l.shadow ? { shadow: { ...l.shadow, opacity: 0 } } : {}),
             });
             if (applyMode === "all" && deviceLayerCount > 1) {
-              setScene((s) => ({
-                ...s,
-                canvas: { ...s.canvas, width: canvasWidth, height: canvasHeight, background: presentation.background, backdrop: presentation.backdrop },
-                layers: s.layers.map((l) => (l.type === "mockup" ? applyToLayer(l as MockupLayer) : l)),
-              }));
+              // every screen in the same device: line them up rather than stacking them in the middle
+              setScene((s) => {
+                const next = {
+                  ...s,
+                  canvas: { ...s.canvas, width: canvasWidth, height: canvasHeight, background: presentation.background, backdrop: presentation.backdrop },
+                  layers: s.layers.map((l) => (l.type === "mockup" ? applyToLayer(l as MockupLayer) : l)),
+                };
+                return fullBleed ? next : arrangeLineup(next, (id) => resolveAsset(id));
+              });
+            } else if (deviceLayerCount > 1 && !fullBleed && next.category !== "scene") {
+              // one device among several: swap it in place at the same real-world scale and keep the canvas
+              setScene((s) => {
+                const sizeOf = (id: string) => resolveAsset(id);
+                const prev = s.layers.find((l) => l.id === layer.id) as MockupLayer | undefined;
+                if (!prev) return s;
+                const swapped: MockupLayer = { ...prev, deviceId, frameVariant: variantId };
+                swapped.transform = { ...prev.transform, scale: matchPhysicalScale(prev, swapped, sizeOf) };
+                const out = { ...s, layers: s.layers.map((l) => (l.id === layer.id ? swapped : l)) };
+                const b = estimateBox(swapped, out.canvas, sizeOf);
+                const spills = !b || b.l < 0 || b.t < 0 || b.r > out.canvas.width || b.b > out.canvas.height;
+                return spills ? arrangeLineup(out, sizeOf) : out;
+              });
             } else {
               setScene((s) => ({
                 ...s,
@@ -626,6 +653,8 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
         />
       </MaybeSection>
       )}
+
+      {tab === "screen" && !isTemplate && !renderMeta && layer.media && <LiftCards layer={layer} />}
 
       {/* Screen Studio builds generated screens & template cards. It's irrelevant
           for a plain uploaded photo / realistic-render, so hide it there. */}

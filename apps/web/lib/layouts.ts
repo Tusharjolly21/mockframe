@@ -1,5 +1,6 @@
 "use client";
 
+import { isLiftedCard } from "./liftCard";
 import { getDevice } from "@framekit/devices";
 import { createId, type MockupLayer, type SceneDocument } from "@framekit/scene";
 
@@ -195,8 +196,9 @@ function baseScale(layer: MockupLayer, canvasHeight: number): number {
  * Non-mockup layers (text, stickers) are untouched.
  */
 export function applyLayout(scene: SceneDocument, preset: LayoutPreset): SceneDocument {
-  const mockups = scene.layers.filter((l): l is MockupLayer => l.type === "mockup");
-  const others = scene.layers.filter((l) => l.type !== "mockup");
+  // lifted cards stay where they are, in front
+  const mockups = scene.layers.filter((l): l is MockupLayer => l.type === "mockup" && !isLiftedCard(l));
+  const others = scene.layers.filter((l) => l.type !== "mockup" || isLiftedCard(l));
   if (mockups.length === 0) return scene;
 
   const n = preset.slots.length;

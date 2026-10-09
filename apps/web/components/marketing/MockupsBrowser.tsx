@@ -97,7 +97,7 @@ export function MockupsBrowser({ items }: { items: MockupItem[] }) {
           <p className="text-[13px] font-medium text-zinc-500">
             {shown.length} mockup{shown.length === 1 ? "" : "s"}
           </p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {shown.map((d) => (
               <Card key={d.id} d={d} />
             ))}
@@ -116,7 +116,7 @@ export function MockupsBrowser({ items }: { items: MockupItem[] }) {
               <p className="mt-1 max-w-xl text-[13.5px] leading-relaxed text-zinc-500">{g.meta.blurb}</p>
             </Reveal>
 
-            <RevealGroup className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <RevealGroup className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {g.items.map((d) => (
                 <RevealItem key={d.id}>
                   <Card d={d} />

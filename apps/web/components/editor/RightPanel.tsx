@@ -1,5 +1,6 @@
 "use client";
 
+import { isLiftedCard } from "@/lib/liftCard";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { getDevice } from "@framekit/devices";
@@ -55,7 +56,7 @@ export function RightPanel() {
     return () => window.removeEventListener("mousedown", onDown);
   }, [settingsOpen]);
 
-  const mockups = scene.layers.filter((l): l is MockupLayer => l.type === "mockup");
+  const mockups = scene.layers.filter((l): l is MockupLayer => l.type === "mockup" && !isLiftedCard(l));
   const arity = (Math.min(3, Math.max(1, mockups.filter((l) => !isWideLayer(l)).length)) as 1 | 2 | 3) ?? 1;
   // standalone cards (tweets, code, promo) aren't devices, so layouts don't apply
   const hideLayouts = mockups.some((layer) => !layer.deviceId && !!layer.media && isScreenAsset(layer.media.assetId));
@@ -1107,8 +1108,8 @@ function restage(scene: SceneDocument, presetId: string): SceneDocument {
   if (!preset) return scene;
   const phones = phonesOnly(scene);
   // going down in count keeps the first shots, so a solo layout is solo
-  const keep = new Set(phones.layers.filter((l) => l.type === "mockup").slice(0, preset.slots.length).map((l) => l.id));
-  const trimmed = { ...phones, layers: phones.layers.filter((l) => l.type !== "mockup" || keep.has(l.id)) };
+  const keep = new Set(phones.layers.filter((l) => l.type === "mockup" && !isLiftedCard(l)).slice(0, preset.slots.length).map((l) => l.id));
+  const trimmed = { ...phones, layers: phones.layers.filter((l) => l.type !== "mockup" || keep.has(l.id) || isLiftedCard(l)) };
   return applyLayout(trimmed, preset);
 }
 
@@ -1144,7 +1145,7 @@ function LayoutPicker({
   onApply: (next: SceneDocument, id: string) => void;
 }) {
   const combo = isComboScene(scene);
-  const phoneCount = Math.min(3, Math.max(1, scene.layers.filter((l) => l.type === "mockup" && !isWideLayer(l)).length));
+  const phoneCount = Math.min(3, Math.max(1, scene.layers.filter((l) => l.type === "mockup" && !isWideLayer(l) && !isLiftedCard(l)).length));
   const current: LayoutTab = combo || !countsEnabled ? "web" : (String(phoneCount) as LayoutTab);
   const [tab, setTab] = useState<LayoutTab>(current);
   // follow the scene when it changes underneath (undo, templates, device picks)

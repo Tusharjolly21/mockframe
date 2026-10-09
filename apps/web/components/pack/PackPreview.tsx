@@ -80,13 +80,13 @@ export function PackPreview() {
 
   return (
     <div className="flex min-w-0 flex-1 flex-col">
-      <div className="flex gap-1 border-b border-white/10 bg-[#101014] px-4 py-2">
+      <div className="flex gap-1 overflow-x-auto border-b border-white/10 bg-[#101014] px-4 py-2 [scrollbar-width:none]">
         {PACK_TARGET_IDS.map((id) =>
           pack.targets[id] ? (
             <button
               key={id}
               onClick={() => setActiveTarget(id)}
-              className={`rounded-full px-3 py-1 text-xs transition ${
+              className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs transition ${
                 activeTarget === id ? "bg-violet-600 text-white" : "text-white/60 hover:bg-white/10"
               }`}
             >
@@ -99,7 +99,7 @@ export function PackPreview() {
             <button
               key={`launch:${id}`}
               onClick={() => setActiveTarget(`launch:${id}`)}
-              className={`rounded-full px-3 py-1 text-xs transition ${
+              className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs transition ${
                 activeTarget === `launch:${id}` ? "bg-violet-600 text-white" : "text-white/60 hover:bg-white/10"
               }`}
             >
@@ -121,7 +121,7 @@ export function PackPreview() {
           </select>
         )}
       </div>
-      <div ref={paneRef} className="flex flex-1 items-center justify-center overflow-hidden bg-[#17171c] p-6">
+      <div ref={paneRef} className="flex min-h-[56vh] flex-1 items-center justify-center overflow-hidden bg-[#17171c] p-4 md:min-h-0 md:p-6">
         <div
           style={{
             width: scene.canvas.width * fit,

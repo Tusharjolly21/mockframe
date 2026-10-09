@@ -176,13 +176,14 @@ export function MakePrettyButton() {
         setOpen(true);
       }}
       title="Make it pretty: finished looks in your screenshot's colours"
+      aria-label="Make it pretty"
       // .fk-card's background beats utility classes, so the open state drops it
-      className={`pointer-events-auto flex cursor-pointer items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-semibold transition-colors ${
+      className={`pointer-events-auto flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-full px-4 py-2.5 text-[13px] min-[1360px]:px-5 font-semibold transition-colors ${
         open ? "border border-violet-600 bg-violet-600 text-white shadow-[0_0_12px_rgba(139,92,246,0.4)]" : "fk-card text-[#17171c]"
       }`}
     >
       <Wand2 size={15} className={open ? "text-white" : "text-violet-600"} />
-      Make it pretty
+      <span className="hidden min-[1360px]:inline">Make it pretty</span>
     </motion.button>
   );
 }
