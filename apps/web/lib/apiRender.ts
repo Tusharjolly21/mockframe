@@ -19,11 +19,13 @@ interface JobBase {
   screenshots: string[];
   format: RenderFormat;
   scale: 1 | 2;
+  /** keep each image within these (the Figma plugin): JPEG past maxBytes, smaller past maxEdge */
+  limit?: { maxBytes: number; maxEdge: number };
 }
 
 export interface MockupJob extends JobBase {
   kind: "mockup";
-  /** a device id, or "auto" for the one that fits each screenshot */
+  /** a device id, "auto" for the one that fits each screenshot, or "frameless" */
   device: string;
   /** index into LOOK_NAMES, or null to keep the device's own background */
   look: number | null;
@@ -41,6 +43,8 @@ export interface RenderedImage {
   name: string;
   width: number;
   height: number;
+  /** pixels per scene unit, which a limit can bring under the job's scale */
+  scale?: number;
   dataUrl: string;
 }
 

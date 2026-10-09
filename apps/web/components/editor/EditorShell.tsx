@@ -25,7 +25,8 @@ import { BottomBar } from "./BottomBar";
 import { CanvasStage } from "./CanvasStage";
 import { LeftPanel } from "./LeftPanel";
 import { LooksTray, MakePrettyButton, openLooks } from "./MakePretty";
-import { ShowcaseButton, ShowcaseProgress } from "./Showcase";
+import { SendToFigma } from "./SendToFigma";
+import { ShowcaseButton, ShowcaseProgress, makeShowcase } from "./Showcase";
 import { RightPanel } from "./RightPanel";
 import { ExportNextSteps } from "./ExportNextSteps";
 import { PhoneEditor } from "./phone/PhoneEditor";
@@ -51,6 +52,7 @@ export function EditorShell({
   remixId,
   openDroppedOnLoad = false,
   figmaImportId,
+  figmaShowcase = false,
   fromTemplate = false,
   embedded = false,
 }: {
@@ -69,6 +71,8 @@ export function EditorShell({
   openDroppedOnLoad?: boolean;
   /** /editor?figma=<id>: frames sent from the Figma plugin */
   figmaImportId?: string;
+  /** &showcase=1: make a Showcase from the first Figma frame once it's in */
+  figmaShowcase?: boolean;
   /** a template page already loaded a scene, so skip the first-run picker */
   fromTemplate?: boolean;
   embedded?: boolean;
@@ -239,7 +243,9 @@ export function EditorShell({
         // putting the frame in is a real edit, so autosave keeps it
         setScene(() => first.scene);
         window.dispatchEvent(new CustomEvent("framekit:fit"));
-        if (shots.length === 1) openLooks(false);
+        // the showcase waits a beat for the canvas to mount the first frame
+        if (manifest.mode !== "set" && (figmaShowcase || manifest.showcase)) setTimeout(() => void makeShowcase("figma"), 300);
+        else if (shots.length === 1) openLooks(false);
         track("figma_import_opened", { frames: frames.length, mode: manifest.mode });
         trackOnce("first_media_added", { source: "figma" });
         if (manifest.mode === "set" && !filled) say("Store sets need phone-shaped frames, so the sample screens stayed. Send them as In devices instead.");
@@ -249,7 +255,7 @@ export function EditorShell({
         say(e instanceof Error ? e.message : "Your Figma frames couldn't be loaded");
       }
     })();
-  }, [figmaImportId, setScene]);
+  }, [figmaImportId, figmaShowcase, setScene]);
 
   // Deep-link: /editor?screen=<app> (from the /tools chat-screen generator
   // pages) opens an iPhone pre-loaded with that app's default chat screen.
@@ -567,6 +573,7 @@ export function EditorShell({
       <div className="pointer-events-none absolute inset-3 z-20">
         {/* top row */}
         {!embedded && <div className="absolute left-0 top-0"><LogoChip /></div>}
+        {!embedded && figmaImportId && <div className="absolute right-0 top-0"><SendToFigma importId={figmaImportId} /></div>}
         <div className="absolute left-1/2 top-0 -translate-x-1/2">
           <Toolbar />
         </div>

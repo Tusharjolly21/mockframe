@@ -6,11 +6,12 @@ import { flushSync } from "react-dom";
 import { toCanvas } from "html-to-image";
 import { SceneRenderer } from "@framekit/renderer";
 import { getDevice } from "@framekit/devices";
-import type { SceneDocument } from "@framekit/scene";
+import { createMockupLayer, createScene, type SceneDocument } from "@framekit/scene";
 import { ingestFile, resolveAsset, type GuestAsset } from "@/lib/assets";
 import type { RenderJob, RenderedImage } from "@/lib/apiRender";
 import { buildDeviceScene, deviceForScreenshot } from "@/lib/deviceScene";
 import { planFigmaScenes } from "@/lib/figmaOpen";
+import { blobToDataUrl, fitImage } from "@/lib/fitImage";
 import { ensureSceneFonts } from "@/lib/fonts";
 import { extractPalette } from "@/lib/palette";
 import { canPrettify, prettyLooks } from "@/lib/prettify";
@@ -31,9 +32,8 @@ async function scenesFor(job: RenderJob, assets: GuestAsset[]): Promise<{ name: 
   const out: { name: string; scene: SceneDocument }[] = [];
   for (const [i, asset] of assets.entries()) {
     const deviceId = job.device !== "auto" && getDevice(job.device) ? job.device : deviceForScreenshot(asset.width, asset.height);
-    const base = buildDeviceScene(deviceId);
-    if (!base) continue;
-    let scene = placeAsset(base, asset, {}).scene;
+    const base = job.device === "frameless" ? null : buildDeviceScene(deviceId);
+    let scene = base ? placeAsset(base, asset, {}).scene : framelessScene(asset);
     if (job.look !== null && canPrettify(scene)) {
       const palette = await extractPalette(asset.url).catch(() => [] as string[]);
       scene = prettyLooks(scene, palette, 0)[job.look]?.scene ?? scene;
@@ -43,9 +43,19 @@ async function scenesFor(job: RenderJob, assets: GuestAsset[]): Promise<{ name: 
   return out;
 }
 
+/** The screenshot on its own, with a margin around it. */
+function framelessScene(asset: GuestAsset): SceneDocument {
+  const pad = Math.round(Math.max(asset.width, asset.height) * 0.12);
+  const scene = createScene({ width: asset.width + pad * 2, height: asset.height + pad * 2 });
+  const layer = createMockupLayer({ deviceId: null, media: { assetId: asset.id, kind: "image", fit: "cover", offsetX: 0, offsetY: 0, scale: 1 } });
+  layer.cornerRadius = Math.round(Math.min(asset.width, asset.height) * 0.03);
+  scene.layers.push(layer);
+  return scene;
+}
+
 const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-async function rasterize(scene: SceneDocument, job: RenderJob): Promise<{ dataUrl: string; width: number; height: number }> {
+async function rasterize(scene: SceneDocument, job: RenderJob): Promise<{ dataUrl: string; width: number; height: number; scale: number }> {
   const { width: W, height: H } = scene.canvas;
   const host = document.createElement("div");
   host.style.cssText = `position:fixed;left:0;top:0;width:${W}px;height:${H}px;overflow:hidden`;
@@ -67,8 +77,9 @@ async function rasterize(scene: SceneDocument, job: RenderJob): Promise<{ dataUr
     );
     await frame();
     const node = host.querySelector<HTMLElement>("[data-scene-id]") ?? host;
-    const width = Math.round(W * job.scale);
-    const height = Math.round(H * job.scale);
+    const scale = job.limit ? Math.min(job.scale, Math.floor((job.limit.maxEdge / Math.max(W, H)) * 1000) / 1000) : job.scale;
+    const width = Math.round(W * scale);
+    const height = Math.round(H * scale);
     const canvas = await toCanvas(node, {
       pixelRatio: 1,
       canvasWidth: width,
@@ -76,7 +87,11 @@ async function rasterize(scene: SceneDocument, job: RenderJob): Promise<{ dataUr
       backgroundColor: job.format === "jpeg" ? "#ffffff" : undefined,
       style: { transform: "none" },
     });
-    return { dataUrl: canvas.toDataURL(`image/${job.format}`, job.format === "jpeg" ? 0.9 : undefined), width, height };
+    if (job.limit) {
+      const fit = await fitImage(canvas, job.limit.maxBytes);
+      return { dataUrl: await blobToDataUrl(fit.blob), width: fit.width, height: fit.height, scale: scale * fit.scale };
+    }
+    return { dataUrl: canvas.toDataURL(`image/${job.format}`, job.format === "jpeg" ? 0.9 : undefined), width, height, scale };
   } finally {
     root.unmount();
     host.remove();

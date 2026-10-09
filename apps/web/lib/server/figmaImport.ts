@@ -1,12 +1,14 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { FirebaseConfigError } from "./firebaseAdmin";
 import { tempRead, tempSave } from "./tempStore";
-import { isExpired, isImportId, type FigmaImageType, type FigmaImportManifest } from "../figmaImport";
+import { isExpired, isImportId, upsertResult, type FigmaImageType, type FigmaImportManifest, type FigmaResult } from "../figmaImport";
 
 /**
  * Storage for Figma plugin imports: a manifest plus one file per frame under
- * figma-imports/<id>/ (see tempStore). They're read once, within a day; a
- * bucket lifecycle rule on that prefix can delete them after that.
+ * figma-imports/<id>/ (see tempStore), and the images going back to Figma
+ * under figma-imports/<id>/results/. They're used within a day; a bucket
+ * lifecycle rule on that prefix can delete them after that.
  */
 
 const dir = (id: string) => `figma-imports/${id}`;
@@ -30,6 +32,31 @@ export async function saveFrame(id: string, n: number, data: Buffer, type: Figma
 
 export async function readFrame(id: string, n: number) {
   return tempRead(`${dir(id)}/${n}`);
+}
+
+/** What has been sent back to Figma for this import, by slot. */
+export async function readResults(id: string): Promise<FigmaResult[]> {
+  const hit = await tempRead(`${dir(id)}/results.json`);
+  return hit ? (JSON.parse(hit.data.toString("utf8")) as FigmaResult[]) : [];
+}
+
+/**
+ * Keep images for Figma and list them. One writer at a time per import (the
+ * editor sends its shots one after another), so read-modify-write is enough.
+ */
+export async function saveResults(id: string, items: { n: number; name: string; width: number; height: number; scale: number; data: Buffer; type: FigmaImageType }[]): Promise<FigmaResult[]> {
+  let results = await readResults(id);
+  for (const item of items) {
+    await tempSave(`${dir(id)}/results/${item.n}`, item.data, item.type);
+    const hash = createHash("sha256").update(item.data).digest("hex").slice(0, 32);
+    results = upsertResult(results, { n: item.n, name: item.name, width: item.width, height: item.height, scale: item.scale, hash });
+  }
+  await tempSave(`${dir(id)}/results.json`, Buffer.from(JSON.stringify(results)), "application/json");
+  return results;
+}
+
+export async function readResult(id: string, n: number) {
+  return tempRead(`${dir(id)}/results/${n}`);
 }
 
 /** The plugin's UI runs in a sandboxed iframe (origin "null"), so these

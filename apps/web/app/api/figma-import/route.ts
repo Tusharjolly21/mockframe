@@ -16,7 +16,7 @@ export function OPTIONS() {
 
 /**
  * POST /api/figma-import — the Figma plugin starts an import. Body:
- * { mode: "devices" | "set", set?, platform?, frames: [{ name, width, height }] }.
+ * { mode: "devices" | "set", set?, platform?, showcase?, frames: [{ name, width, height }] }.
  * Returns the id to upload frames to, and the editor URL to open after.
  */
 export async function POST(req: NextRequest) {
@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
     if (!quota.allowed) return corsJson({ error: "That's a lot of imports today. Try again tomorrow." }, { status: 429 });
     const id = randomUUID();
     await saveManifest({ id, createdAt: Date.now(), ...parsed.value });
-    return corsJson({ id, editorUrl: new URL(`/editor?figma=${id}`, req.nextUrl.origin).toString() });
+    const editorUrl = new URL(`/editor?figma=${id}${parsed.value.showcase ? "&showcase=1" : ""}`, req.nextUrl.origin).toString();
+    return corsJson({ id, editorUrl });
   } catch (err) {
     return figmaErrorResponse(err, "create");
   }
