@@ -4,7 +4,7 @@ import { getFontEmbedCSS, toCanvas } from "html-to-image";
 import { applyPalette, GIFEncoder, quantize } from "gifenc";
 import type { SceneDocument } from "@framekit/scene";
 import { drawDisclosure, loadDisclosure } from "./disclosure";
-import { createVideoWriter, downloadBlob } from "./videoEncode";
+import { createTransparentVideoWriter, createVideoWriter, downloadBlob } from "./videoEncode";
 import { DEFAULT_VIDEO_SETTINGS, videoBitrate, videoSize, type VideoSettings } from "./videoSettings";
 
 /**
@@ -79,8 +79,15 @@ export async function exportMotionVideo(o: MotionExportOpts & { settings?: Video
   const count = Math.max(2, Math.round((o.preset.durationMs / 1000) * fps));
   const disclosure = loadDisclosure();
 
-  const writer = await createVideoWriter(W, H, fps);
-  if (!writer) return recordMotionVideo(o, W, H, fps, count);
+  const transparent = !!settings.transparent;
+  const writer = transparent ? await createTransparentVideoWriter(W, H, fps) : await createVideoWriter(W, H, fps);
+  if (!writer) {
+    // MediaRecorder can't keep alpha, so there is no fallback for transparent clips
+    if (transparent) throw new Error("Transparent video needs Chrome, Edge or Firefox");
+    return recordMotionVideo(o, W, H, fps, count);
+  }
+  // transparent: hide everything behind the subject for the length of the capture
+  if (transparent) o.node.style.setProperty("--fk-bg-opacity", "0");
   try {
     let last: HTMLCanvasElement | null = null;
     await captureFrames(
@@ -100,11 +107,12 @@ export async function exportMotionVideo(o: MotionExportOpts & { settings?: Video
     }
     o.onProgress?.(0.96, "Finishing video…");
     const { blob, ext } = await writer.finish({ repeat: o.preset.kind === "loop" ? 2 : 1 });
-    download(blob, `mockframe-${o.preset.id}-${W}x${H}-${fps}fps.${ext}`);
+    download(blob, `mockframe-${o.preset.id}-${W}x${H}-${fps}fps${transparent ? "-transparent" : ""}.${ext}`);
     o.onProgress?.(1, "Done");
     return ext;
   } finally {
     writer.close();
+    if (transparent) o.node.style.removeProperty("--fk-bg-opacity");
   }
 }
 

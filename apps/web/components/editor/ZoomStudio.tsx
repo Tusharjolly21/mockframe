@@ -18,7 +18,7 @@ import {
 import { exportMotionGif, exportMotionVideo } from "@/lib/motionExport";
 import { useSceneStore, useViewStore, withTransientHistory } from "@/lib/store";
 import { openUpgrade } from "@/lib/billing/gate";
-import { useVideoSettings, VideoSettingsControl } from "./VideoSettingsControl";
+import { TransparentVideoToggle, useVideoSettings, VideoSettingsControl } from "./VideoSettingsControl";
 import { applyBgMotion, backgroundPose, clearBgMotion, isRest, type LiveBackground } from "@/lib/backgroundMotion";
 import { LiveBackgroundControl, useLiveBackground } from "./LiveBackgroundControl";
 
@@ -295,7 +295,10 @@ export function ZoomStudio() {
         </div>
       )}
 
-      <LiveBackgroundControl disabled={!!busy || playing} />
+      <div className="flex items-center justify-between gap-3">
+        <LiveBackgroundControl disabled={!!busy || playing || !!videoSettings.transparent} />
+        <TransparentVideoToggle disabled={!!busy || playing} />
+      </div>
 
       {/* actions */}
       <div className="flex items-center justify-between">

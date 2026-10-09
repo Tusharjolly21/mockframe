@@ -10,6 +10,8 @@ export type VideoResolution = "720p" | "1080p" | "1440p" | "2160p";
 export interface VideoSettings {
   fps: VideoFps;
   resolution: VideoResolution;
+  /** WebM with a see-through background (VP9 alpha); only exporters that support it read this */
+  transparent?: boolean;
 }
 
 export const DEFAULT_VIDEO_SETTINGS: VideoSettings = { fps: 60, resolution: "1080p" };
