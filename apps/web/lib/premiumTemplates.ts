@@ -12,7 +12,11 @@ import {
   type SceneDocument,
   type Shadow,
   type TextLayer,
+  type ZoomShot,
 } from "@framekit/scene";
+import type { MotionPresetId } from "./motion";
+import type { LiveBackground } from "./backgroundMotion";
+import { zoomClipDuration } from "./cameraZoom";
 
 /**
  * Premium layouts: complete, ready-to-post compositions for the moments an
@@ -36,7 +40,25 @@ export interface PremiumTemplate {
   pro: boolean;
   /** gallery card background behind the preview */
   cardBg: string;
+  /**
+   * Video templates open with their animation ready: a motion preset (Motion
+   * tab) or camera zooms (Zoom tab), plus a live background. Stored on the
+   * scene's timeline, so it survives drafts and share links.
+   */
+  video?: { tab: "motion" | "zoom"; live: LiveBackground };
   build: () => SceneDocument;
+}
+
+/** Prefixes for the timeline's free-form `presets` list. */
+export const MOTION_PRESET_TAG = "motion:";
+export const LIVE_BG_TAG = "live:";
+
+/** The motion preset and live background a scene was set up with (templates), if any. */
+export function sceneMotionSetup(scene: SceneDocument): { preset?: MotionPresetId; live?: LiveBackground } {
+  const tags = scene.timeline?.presets ?? [];
+  const preset = tags.find((t) => t.startsWith(MOTION_PRESET_TAG))?.slice(MOTION_PRESET_TAG.length) as MotionPresetId | undefined;
+  const live = tags.find((t) => t.startsWith(LIVE_BG_TAG))?.slice(LIVE_BG_TAG.length) as LiveBackground | undefined;
+  return { ...(preset ? { preset } : {}), ...(live ? { live } : {}) };
 }
 
 /* --------------------------------- builder ---------------------------------- */
@@ -162,6 +184,44 @@ class Composer {
     return layer;
   }
 
+  /** A frameless screenshot (no device), sized by its on-canvas width. */
+  frameless(assetId: string, o: { x?: number; y?: number; width: number; naturalWidth: number; radius?: number; tiltX?: number; tiltY?: number; rotate?: number; shadow?: Partial<Shadow> | null }): MockupLayer {
+    const layer: MockupLayer = {
+      type: "mockup",
+      id: this.id("shot"),
+      deviceId: null,
+      screenshotStyle: "default",
+      cornerRadius: o.radius ?? 20,
+      media: { assetId, kind: "image", fit: "cover", offsetX: 0, offsetY: 0, scale: 1 },
+      transform: {
+        ...IDENTITY_TRANSFORM,
+        x: Math.round(o.x ?? 0),
+        y: Math.round(o.y ?? 0),
+        scale: Math.round((o.width / o.naturalWidth) * 10000) / 10000,
+        rotate: o.rotate ?? 0,
+        tiltX: o.tiltX ?? 0,
+        tiltY: o.tiltY ?? 0,
+      },
+      shadow: o.shadow === null ? null : { ...SHADOW, ...o.shadow },
+    };
+    this.layers.push(layer);
+    return layer;
+  }
+
+  /** a straight arrow; rotate 180 points left */
+  pointer(o: { x: number; y: number; scale: number; rotate?: number; tint: string }) {
+    this.layers.push({
+      type: "sticker",
+      id: this.id("pointer"),
+      stickerId: "annot-arrow-straight",
+      tint: o.tint,
+      transform: { ...IDENTITY_TRANSFORM, x: o.x, y: o.y, scale: o.scale, rotate: o.rotate ?? 0 },
+    });
+  }
+
+  /** video templates: a motion preset and/or camera zooms, plus a live background */
+  motion: { preset?: MotionPresetId; live?: LiveBackground; zooms?: Omit<ZoomShot, "id">[] } = {};
+
   arrow(o: { x: number; y: number; scale: number; rotate?: number; tint: string }) {
     this.layers.push({
       type: "sticker",
@@ -181,6 +241,17 @@ class Composer {
     });
     scene.layers = this.layers;
     scene.template = { id: slug, pro };
+    const { preset, live, zooms } = this.motion;
+    if (preset || live || zooms?.length) {
+      const shots = (zooms ?? []).map((z) => ({ ...z, id: this.id("zoom") }));
+      scene.timeline = {
+        durationMs: zoomClipDuration(shots),
+        fps: 30,
+        tracks: [],
+        presets: [...(preset ? [MOTION_PRESET_TAG + preset] : []), ...(live ? [LIVE_BG_TAG + live] : [])],
+        ...(shots.length ? { zooms: shots } : {}),
+      };
+    }
     return scene;
   }
 }
@@ -335,6 +406,157 @@ function reelCover(): SceneDocument {
   return c.build("reel-cover", true);
 }
 
+/* ------------------------- the 2026 collection (Pro) ------------------------ */
+/* Ten originals: six stills and four video templates that open with their
+   motion ready. Each takes its look from the app it's dressed in — a sleep
+   app at night, a fitness app as a Swiss poster, a finance app as a spec
+   sheet — rather than one house style. */
+
+/** focus point of a device for camera zooms, as fractions of the canvas */
+const focus = (W: number, H: number, x: number, y: number) => ({ x: Math.round(((W / 2 + x) / W) * 1000) / 1000, y: Math.round(((H / 2 + y) / H) * 1000) / 1000 });
+
+function lateShift(): SceneDocument {
+  const c = new Composer(1080, 1350);
+  // moonlight from the top right, slatted window light across the room
+  c.background = radial(0.82, 0.12, ["#2a3a72", "#141e45", "#070b1d"]);
+  c.backdrop = { overlay: { kind: "blinds", intensity: 0.3 } };
+  c.text("Made for\nlate nights.", { top: 112, left: 84, width: 900, size: 118, family: "Newsreader", weight: 400, italic: true, color: "#f4ead7", lineHeight: 0.98, letterSpacing: -0.025 });
+  c.text("Sleep sounds that fade out with you.", { top: 382, left: 88, width: 560, size: 32, family: "Newsreader", weight: 400, color: "#aeb6d6", lineHeight: 1.3, letterSpacing: -0.005 });
+  c.device(PHONE, sample("hush", 2), { x: 190, y: 400, height: 1180, rotate: -8, tiltY: 8, variant: "black-titanium", shadow: { distance: 90, softness: 150, opacity: 0.6, color: "#02040c" } });
+  c.text("Hush", { top: 1238, left: 88, width: 200, size: 34, family: "Newsreader", weight: 600, color: "#f4ead7", letterSpacing: -0.01 });
+  return c.build("late-shift", true);
+}
+
+function signalPoster(): SceneDocument {
+  const c = new Composer(1080, 1350);
+  c.background = { type: "solid", color: "#e63b2e" };
+  c.backdrop = { pattern: { kind: "grid", intensity: 0.07, thickness: 0.2, color: "#ffffff" } };
+  c.text("Move\nmore.", { top: 64, left: 62, width: 980, size: 252, family: "Archivo Black", weight: 400, uppercase: true, color: "#ffffff", lineHeight: 0.86, letterSpacing: -0.035 });
+  c.text("Stride turns every walk into progress you can see.", { top: 566, left: 68, width: 370, lines: 3, size: 30, family: "Schibsted Grotesk", weight: 500, color: "#ffe3de", lineHeight: 1.3, letterSpacing: -0.01 });
+  c.device(PHONE, sample("stride", 1), { x: 200, y: 440, height: 1100, shadow: { distance: 60, softness: 110, opacity: 0.35, color: "#5a0d07" } });
+  c.text("Free on iOS and Android", { top: 1236, left: 68, width: 420, size: 24, family: "Schibsted Grotesk", weight: 700, color: "#ffffff", letterSpacing: 0 });
+  return c.build("signal-poster", true);
+}
+
+function glassSlab(): SceneDocument {
+  const c = new Composer(1600, 900);
+  c.background = { type: "mesh-gradient", seed: 7, colors: ["#0f3b3a", "#1c6d63", "#b9e6a1", "#0d2b45"] };
+  c.backdrop = { pattern: { kind: "noise", intensity: 0.14, thickness: 0.4, color: "#ffffff" } };
+  c.text("Calm software\nfor busy teams.", { top: 236, left: 96, width: 620, size: 72, family: "Syne", weight: 700, color: "#f1fff4", lineHeight: 1.02, letterSpacing: -0.03 });
+  c.text("One quiet workspace for docs, tasks and decisions.", { top: 424, left: 98, width: 430, lines: 2, size: 22, family: "Geist", weight: 400, color: "#cfe9df", lineHeight: 1.45, letterSpacing: -0.005 });
+  c.text("Start free", { top: 536, left: 98, size: 19, family: "Geist", weight: 600, color: "#0f3b3a", chipWidth: 150, letterSpacing: 0, highlight: { color: "#c7f0a8", radius: 999, padX: 26, padY: 14 } });
+  c.frameless(sample("web", 1, "desktop"), { x: 370, y: 30, width: 780, naturalWidth: 2400, radius: 18, tiltY: -14, tiltX: 5, shadow: { distance: 70, softness: 140, opacity: 0.45, color: "#04191a" } });
+  return c.build("glass-slab", true);
+}
+
+function twoTone(): SceneDocument {
+  const c = new Composer(1920, 1080);
+  c.background = {
+    type: "linear-gradient",
+    angle: 90,
+    stops: [
+      { at: 0, color: "#d7dfcc" },
+      { at: 0.5, color: "#d7dfcc" },
+      { at: 0.5, color: "#1d3a2f" },
+      { at: 1, color: "#1d3a2f" },
+    ],
+  };
+  c.text("Plan it.", { top: 112, x: -480, align: "center", width: 800, size: 132, family: "Fraunces", weight: 600, color: "#1d3a2f", letterSpacing: -0.03 });
+  c.text("Do it.", { top: 112, x: 480, align: "center", width: 800, size: 132, family: "Fraunces", weight: 600, italic: true, color: "#d7dfcc", letterSpacing: -0.03 });
+  c.device(PHONE, sample("habitat", 3), { x: -175, y: 235, height: 860, rotate: -4, tiltY: 18, shadow: { opacity: 0.32, color: "#0e1f18" } });
+  c.device(PHONE, sample("habitat", 1), { x: 175, y: 205, height: 900, rotate: 4, tiltY: -18, shadow: { opacity: 0.5, color: "#050d0a" } });
+  return c.build("two-tone", true);
+}
+
+function fieldNotes(): SceneDocument {
+  const c = new Composer(1600, 900);
+  c.background = radial(0.62, 0.5, ["#262a33", "#17191f", "#0e0f13"]);
+  c.backdrop = { pattern: { kind: "grid", intensity: 0.06, thickness: 0.2, color: "#8b93a7" } };
+  c.text("Every detail,\nconsidered.", { top: 282, left: 92, width: 540, size: 66, family: "Space Grotesk", weight: 700, color: "#f2f4f8", lineHeight: 1.04, letterSpacing: -0.03 });
+  c.text("Penny keeps your money organised, private and ready offline.", { top: 450, left: 94, width: 420, lines: 2, size: 22, family: "Space Grotesk", weight: 400, color: "#9aa3b5", lineHeight: 1.45, letterSpacing: -0.005 });
+  c.device(PHONE, sample("penny", 1), { x: 190, y: 20, height: 780, shadow: { distance: 50, softness: 120, opacity: 0.6, color: "#000000" } });
+  // callouts to the right of the phone, each with a pointer back toward it
+  const notes = ["Works offline", "Face ID lock", "Home-screen widgets"];
+  notes.forEach((label, i) => {
+    const top = 244 + i * 170;
+    c.text(label, { top, left: 1268, size: 20, family: "Geist Mono", weight: 500, color: "#e7ecf5", chipWidth: 230, letterSpacing: 0, highlight: { color: "#2a2e38", radius: 8, padX: 14, padY: 9 } });
+    c.pointer({ x: 1206 - 800, y: top + 19 - 450, scale: 0.34, rotate: 180, tint: "#8fb4ff" });
+  });
+  return c.build("field-notes", true);
+}
+
+function fanned(): SceneDocument {
+  const c = new Composer(1080, 1920);
+  // sunrise rising from the bottom edge
+  c.background = radial(0.5, 1.0, ["#ffb36b", "#ff5e7e", "#5b21b6"]);
+  c.text("Three screens.\nOne habit.", { top: 150, left: 80, width: 920, size: 92, family: "Unbounded", weight: 800, color: "#ffffff", lineHeight: 1.02, letterSpacing: -0.035 });
+  c.text("Stride turns small steps into streaks.", { top: 372, left: 84, width: 860, size: 32, family: "Unbounded", weight: 400, color: "#ffe4ec", lineHeight: 1.3, letterSpacing: -0.01 });
+  c.device(PHONE, sample("stride", 2), { x: -270, y: 270, height: 900, rotate: -14, shadow: { opacity: 0.4, color: "#3b0a3f" } });
+  c.device(PHONE, sample("stride", 3), { x: 270, y: 270, height: 900, rotate: 14, shadow: { opacity: 0.4, color: "#3b0a3f" } });
+  c.device(PHONE, sample("stride", 1), { x: 0, y: 210, height: 1000, shadow: { distance: 80, softness: 140, opacity: 0.5, color: "#2a0838" } });
+  c.text("Try it free", { top: 1730, align: "center", size: 30, family: "Unbounded", weight: 600, color: "#5b21b6", letterSpacing: -0.01, highlight: { color: "#ffffff", radius: 999, padX: 40, padY: 22 } });
+  return c.build("fanned", true);
+}
+
+/* --------------------------------- video ---------------------------------- */
+
+function zoomTour(): SceneDocument {
+  const c = new Composer(1920, 1080);
+  c.background = radial(0.5, 0.0, ["#2b3445", "#151a24", "#0b0e14"]);
+  c.backdrop = { overlay: { kind: "top-light", intensity: 0.3 } };
+  c.text("Everywhere you work.", { top: 86, align: "center", width: 1400, size: 64, family: "Red Hat Display", weight: 700, color: "#f3f6fb", letterSpacing: -0.025 });
+  c.device(LAPTOP, sample("web", 1, "desktop"), { x: -170, y: 120, height: 640, variant: "silver", shadow: { distance: 50, softness: 120, opacity: 0.5, color: "#000000" } });
+  c.device(PHONE, sample("penny", 3), { x: 540, y: 180, height: 620, shadow: { distance: 50, softness: 110, opacity: 0.55, color: "#000000" } });
+  const phone = focus(1920, 1080, 540, 160);
+  const laptop = focus(1920, 1080, -170, 80);
+  c.motion = {
+    live: "drift",
+    zooms: [
+      { startMs: 600, holdMs: 1600, ...phone, zoom: 2.1, tilt: -6 },
+      { startMs: 3700, holdMs: 1800, ...laptop, zoom: 1.7, tilt: 0 },
+    ],
+  };
+  return c.build("zoom-tour", true);
+}
+
+function turntable(): SceneDocument {
+  const c = new Composer(1080, 1080);
+  c.background = radial(0.5, 0.48, ["#3d2152", "#1a0f26", "#09060e"]);
+  c.backdrop = { overlay: { kind: "top-light", intensity: 0.3 } };
+  c.text("Lumen", { top: 64, align: "center", width: 900, size: 60, family: "Bricolage Grotesque", weight: 800, color: "#f3e8ff", letterSpacing: -0.035 });
+  c.text("Sleep better tonight.", { top: 140, align: "center", width: 900, size: 26, family: "Bricolage Grotesque", weight: 500, color: "#c4b5fd", letterSpacing: -0.01 });
+  c.device(PHONE, sample("hush", 1), { x: 0, y: 90, height: 800, tiltX: 6, variant: "black-titanium", shadow: { distance: 60, softness: 140, opacity: 0.6, color: "#6d28d9" } });
+  c.motion = { preset: "orbit", live: "hue" };
+  return c.build("turntable", true);
+}
+
+function depthStory(): SceneDocument {
+  const c = new Composer(1080, 1920);
+  c.background = { type: "mesh-gradient", seed: 23, colors: ["#0f2f2a", "#1e5c4a", "#e2c48f", "#0b1f1c"] };
+  c.backdrop = { pattern: { kind: "topography", intensity: 0.12, thickness: 0.3, color: "#ffffff" } };
+  c.text("Go deeper.", { top: 168, align: "center", width: 1000, size: 164, family: "Instrument Serif", weight: 400, color: "#f6efe0", letterSpacing: -0.02 });
+  c.text("Habitat turns tiny routines into a life you like.", { top: 372, align: "center", width: 760, lines: 2, size: 42, family: "Instrument Serif", weight: 400, italic: true, color: "#d9e6dc", lineHeight: 1.2, letterSpacing: -0.005 });
+  c.device(PHONE, sample("habitat", 2), { x: 0, y: 290, height: 1180, shadow: { distance: 90, softness: 150, opacity: 0.55, color: "#03100d" } });
+  c.motion = { preset: "parallax", live: "breathe" };
+  return c.build("depth-story", true);
+}
+
+function featureTour(): SceneDocument {
+  const c = new Composer(1920, 1080);
+  c.background = { type: "solid", color: "#e7ebf0" };
+  c.backdrop = { pattern: { kind: "crosses", intensity: 0.5, thickness: 0.05, color: "#b6bfcc" } };
+  c.text("A quick tour", { top: 80, left: 100, width: 700, size: 54, family: "Geist", weight: 700, color: "#111827", letterSpacing: -0.035 });
+  c.text("Three things Penny does better.", { top: 152, left: 102, width: 700, size: 24, family: "Geist", weight: 400, color: "#4b5563", letterSpacing: -0.01 });
+  const xs = [-520, 0, 520];
+  const screens = [1, 2, 4];
+  xs.forEach((x, i) => c.device(PHONE, sample("penny", screens[i]), { x, y: 130, height: 760, shadow: { distance: 40, softness: 90, opacity: 0.22, color: "#334155" } }));
+  c.motion = {
+    live: "off",
+    zooms: xs.map((x, i) => ({ startMs: 500 + i * 2900, holdMs: 1300, ...focus(1920, 1080, x, 100), zoom: 1.9, tilt: 0 })),
+  };
+  return c.build("feature-tour", true);
+}
+
 export const PREMIUM_TEMPLATES: PremiumTemplate[] = [
   { slug: "launch-hero", name: "Launch Hero", use: "Website hero · X / LinkedIn", blurb: "Big headline, store buttons and one tilted phone on a soft mesh.", width: 1600, height: 900, pro: false, cardBg: "linear-gradient(135deg,#efe9ff,#ffe8d6 55%,#fbe3f1)", build: launchHero },
   { slug: "feature-trio", name: "Feature Trio", use: "Landing page · slides", blurb: "Three phones, three captions — your best features at a glance.", width: 1920, height: 1080, pro: false, cardBg: "radial-gradient(circle at 50% 18%,#1f9d78,#0c6b5a 55%,#06403a)", build: featureTrio },
@@ -344,6 +566,17 @@ export const PREMIUM_TEMPLATES: PremiumTemplate[] = [
   { slug: "before-after", name: "Before / After", use: "Redesign reveal · X", blurb: "A split comparison that sells the redesign in one glance.", width: 1600, height: 1000, pro: true, cardBg: "linear-gradient(90deg,#e9eaee 50%,#5b4bff 50%)", build: beforeAfter },
   { slug: "whats-new", name: "What's New", use: "Release notes · Instagram", blurb: "Version pill, tilted phone and three feature chips for every update.", width: 1080, height: 1350, pro: true, cardBg: "radial-gradient(circle at 50% 30%,#1e3a8a,#0f1d4a 55%,#070d24)", build: whatsNew },
   { slug: "reel-cover", name: "Reel Cover", use: "Reels · TikTok · Stories", blurb: "Loud stacked type and an oversized phone, built for 9:16 feeds.", width: 1080, height: 1920, pro: true, cardBg: "radial-gradient(circle at 30% 20%,#3b82f6,#1d4ed8 55%,#1e1b8f)", build: reelCover },
+  // the 2026 collection
+  { slug: "late-shift", name: "Late Shift", use: "Instagram · 4:5", blurb: "Moonlit navy, slatted window light and an italic serif for night-time apps.", width: 1080, height: 1350, pro: true, cardBg: "radial-gradient(circle at 82% 12%,#2a3a72,#141e45 55%,#070b1d)", build: lateShift },
+  { slug: "signal-poster", name: "Signal Poster", use: "Instagram · posters", blurb: "Swiss-style signal red, a headline that fills the frame, one confident phone.", width: 1080, height: 1350, pro: true, cardBg: "#e63b2e", build: signalPoster },
+  { slug: "glass-slab", name: "Glass Slab", use: "Website hero · 16:9", blurb: "A frameless web app floating in a deep-green mesh, with room for your pitch.", width: 1600, height: 900, pro: true, cardBg: "linear-gradient(135deg,#0f3b3a,#1c6d63 55%,#b9e6a1)", build: glassSlab },
+  { slug: "two-tone", name: "Two Tone", use: "Slides · landing page", blurb: "A hard split down the middle and two phones turning toward each other.", width: 1920, height: 1080, pro: true, cardBg: "linear-gradient(90deg,#d7dfcc 50%,#1d3a2f 50%)", build: twoTone },
+  { slug: "field-notes", name: "Field Notes", use: "X / LinkedIn · feature post", blurb: "A graphite spec sheet: your phone, three callouts and a calm headline.", width: 1600, height: 900, pro: true, cardBg: "radial-gradient(circle at 62% 50%,#262a33,#17191f 55%,#0e0f13)", build: fieldNotes },
+  { slug: "fanned", name: "Fanned", use: "Stories · 9:16", blurb: "Three phones fanned out over a sunrise gradient, with a bold rounded headline.", width: 1080, height: 1920, pro: true, cardBg: "radial-gradient(circle at 50% 100%,#ffb36b,#ff5e7e 50%,#5b21b6)", build: fanned },
+  { slug: "zoom-tour", name: "Zoom Tour", use: "Video · product demo", blurb: "Laptop and phone; the camera zooms into each in turn over a drifting backdrop.", width: 1920, height: 1080, pro: true, cardBg: "radial-gradient(circle at 50% 0%,#2b3445,#151a24 55%,#0b0e14)", video: { tab: "zoom", live: "drift" }, build: zoomTour },
+  { slug: "turntable", name: "Turntable", use: "Video · square loop", blurb: "One phone turning slowly under a spotlight while the colours shift.", width: 1080, height: 1080, pro: true, cardBg: "radial-gradient(circle at 50% 48%,#3d2152,#1a0f26 55%,#09060e)", video: { tab: "motion", live: "hue" }, build: turntable },
+  { slug: "depth-story", name: "Depth Story", use: "Video · Reels · 9:16", blurb: "Parallax depth: the phone sways while the contoured backdrop breathes behind it.", width: 1080, height: 1920, pro: true, cardBg: "linear-gradient(160deg,#0f2f2a,#1e5c4a 55%,#e2c48f)", video: { tab: "motion", live: "breathe" }, build: depthStory },
+  { slug: "feature-tour", name: "Feature Tour", use: "Video · walkthrough", blurb: "Three screens in a row; the camera visits each one, left to right.", width: 1920, height: 1080, pro: true, cardBg: "#e7ebf0", video: { tab: "zoom", live: "off" }, build: featureTour },
 ];
 
 export function premiumTemplateBySlug(slug: string): PremiumTemplate | undefined {
