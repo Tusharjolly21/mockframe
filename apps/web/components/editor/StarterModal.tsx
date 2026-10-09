@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { Clapperboard, Layers, MessageSquare, Smartphone, Sparkles, Wand2, X } from "lucide-react";
+import { Clapperboard, GalleryVerticalEnd, Layers, MessageSquare, Smartphone, Sparkles, Wand2, X } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { ingestFile } from "@/lib/assets";
 import { buildScreenScene } from "@/lib/deviceScene";
@@ -11,6 +11,7 @@ import type { ScreenApp } from "@/lib/screens/types";
 import { placeAsset } from "@/lib/sceneOps";
 import { useDraftsUi } from "@/lib/drafts";
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
+import { makeShowcase } from "./Showcase";
 
 const SEEN_KEY = "fk-starter-seen";
 
@@ -23,6 +24,8 @@ const SEEN_KEY = "fk-starter-seen";
 export function StarterModal({ deepLinked, embedded }: { deepLinked: boolean; embedded: boolean }) {
   const [open, setOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  // the upload is for a showcase set, not just a styled screenshot
+  const showcaseNext = useRef(false);
   const setScene = useSceneStore((s) => s.setScene);
   const select = useViewStore((s) => s.select);
   const bumpAssets = useViewStore((s) => s.bumpAssets);
@@ -146,7 +149,22 @@ export function StarterModal({ deepLinked, embedded }: { deepLinked: boolean; em
             </button>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-600">Welcome to MockFrame</p>
             <h2 className="mt-1 text-[22px] font-semibold tracking-[-0.02em] text-[#17171c]">What do you want to make?</h2>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <button
+              onClick={() => {
+                track("starter_choice", { choice: "showcase" });
+                showcaseNext.current = true;
+                fileRef.current?.click();
+              }}
+              className="fk-press group mt-5 flex w-full items-center gap-4 overflow-hidden rounded-xl bg-[#17171c] p-4 text-left text-white transition-colors hover:bg-[#25252d]"
+            >
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-600"><GalleryVerticalEnd size={22} /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[14px] font-semibold">One screenshot, a whole showcase</span>
+                <span className="mt-0.5 block text-[12px] leading-5 text-white/65">Upload once. Get a poster, a before / after and four finished shots, all editable.</span>
+              </span>
+              <span className="hidden shrink-0 rounded-lg bg-white px-3 py-1.5 text-[12px] font-semibold text-[#17171c] sm:block">Upload screenshot</span>
+            </button>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {TILES.map((t) => (
                 <button
                   key={t.title}
@@ -186,6 +204,8 @@ export function StarterModal({ deepLinked, embedded }: { deepLinked: boolean; em
         onChange={async (e) => {
           const f = e.target.files?.[0];
           e.target.value = "";
+          const showcase = showcaseNext.current;
+          showcaseNext.current = false;
           if (!f) return;
           const asset = await ingestFile(f);
           bumpAssets();
@@ -193,6 +213,7 @@ export function StarterModal({ deepLinked, embedded }: { deepLinked: boolean; em
           setScene(() => r.scene);
           select(r.layerId);
           dismiss();
+          if (showcase) setTimeout(() => makeShowcase("starter"), 200);
         }}
       />
       {typeof document !== "undefined" ? createPortal(ui, document.body) : null}

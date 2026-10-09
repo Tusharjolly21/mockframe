@@ -25,6 +25,7 @@ import { BottomBar } from "./BottomBar";
 import { CanvasStage } from "./CanvasStage";
 import { LeftPanel } from "./LeftPanel";
 import { LooksTray, MakePrettyButton, openLooks } from "./MakePretty";
+import { ShowcaseButton, ShowcaseProgress } from "./Showcase";
 import { RightPanel } from "./RightPanel";
 import { ExportNextSteps } from "./ExportNextSteps";
 import { PhoneEditor } from "./phone/PhoneEditor";
@@ -585,6 +586,7 @@ export function EditorShell({
           <div className="flex items-end gap-2">
             <BottomBar />
             <MakePrettyButton />
+            <ShowcaseButton />
             <AnimatePanel />
           </div>
         </div>
@@ -609,6 +611,7 @@ export function EditorShell({
       <ExportNextSteps />
       <ShortcutsSheet />
       <StarterModal embedded={embedded} deepLinked={deepLinked} />
+      <ShowcaseProgress />
       <ResumeDraftCard embedded={embedded} deepLinked={deepLinked} />
     </div>
   );
