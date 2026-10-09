@@ -39,6 +39,7 @@ export function SendToFigma({ importId }: { importId: string }) {
   const count = useShotBatchStore((s) => Math.max(1, Math.min(FIGMA_MAX_RESULTS, s.shots.length)));
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [sent, setSent] = useState(false);
+  const pro = useViewStore((s) => s.removeWatermark);
 
   const send = async () => {
     if (progress) return;
@@ -46,8 +47,13 @@ export function SendToFigma({ importId }: { importId: string }) {
     const batch = useShotBatchStore.getState();
     batch.syncActive(current);
     const all = useShotBatchStore.getState().shots;
-    const shots = (all.length ? all : [{ id: current.id, name: "Mockup", scene: current }]).slice(0, FIGMA_MAX_RESULTS);
+    const every = (all.length ? all : [{ id: current.id, name: "Mockup", scene: current }]).slice(0, FIGMA_MAX_RESULTS);
     const isPro = useViewStore.getState().removeWatermark;
+    // sending the whole batch at once is Pro, like the batch ZIP; free sends the shot on screen
+    const activeId = useShotBatchStore.getState().activeId;
+    const onlyActive = !isPro && every.length > 1;
+    const shots = onlyActive ? every.filter((s) => s.id === activeId).slice(0, 1) : every;
+    if (!shots.length) return;
     // the same gate as exporting: Pro templates and chat screens need Pro
     if (!guardProScreens(shots.map((s) => s.scene), isPro)) return;
 
@@ -56,7 +62,7 @@ export function SendToFigma({ importId }: { importId: string }) {
     setProgress({ done: 0, total: shots.length });
     try {
       for (const [i, shot] of shots.entries()) {
-        const { body, scale } = await renderForFigma(shot.scene, i, shots.length, !isPro);
+        const { body, scale } = await renderForFigma(shot.scene, onlyActive ? every.indexOf(shot) : i, every.length, !isPro);
         const query = new URLSearchParams({ name: shot.name, scale: String(scale) });
         const res = await fetch(`/api/figma-import/${encodeURIComponent(importId)}/results/${slots[shot.id]}?${query}`, { method: "PUT", body });
         if (!res.ok) {
@@ -66,7 +72,8 @@ export function SendToFigma({ importId }: { importId: string }) {
         setProgress({ done: i + 1, total: shots.length });
       }
       track("figma_sent_back", { shots: shots.length });
-      if (all.length > FIGMA_MAX_RESULTS) toast(`Sent the first ${FIGMA_MAX_RESULTS} shots to Figma`);
+      if (onlyActive) toast(`Sent this shot to Figma. Sending all ${every.length} at once comes with Pro.`);
+      else if (all.length > FIGMA_MAX_RESULTS) toast(`Sent the first ${FIGMA_MAX_RESULTS} shots to Figma`);
       else toast(shots.length === 1 ? "Sent to Figma. It lands on your page while the plugin is open." : `Sent ${shots.length} shots to Figma. They land on your page while the plugin is open.`);
       setSent(true);
       setTimeout(() => setSent(false), 2400);
@@ -89,7 +96,7 @@ export function SendToFigma({ importId }: { importId: string }) {
     >
       {progress ? <Loader2 size={15} className="animate-spin text-violet-600" /> : sent ? <Check size={15} className="text-emerald-600" /> : <Figma size={15} className="text-violet-600" />}
       {progress ? `Sending ${Math.min(progress.done + 1, progress.total)} of ${progress.total}…` : sent ? "Sent to Figma" : "Send to Figma"}
-      {!progress && !sent && count > 1 && <span className="text-[11px] font-medium text-[#8a8a94]">{count} shots</span>}
+      {!progress && !sent && count > 1 && pro && <span className="text-[11px] font-medium text-[#8a8a94]">{count} shots</span>}
     </motion.button>
   );
 }
