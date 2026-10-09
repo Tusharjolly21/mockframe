@@ -30,7 +30,7 @@ const STEPS = [
 const FAQ = [
   {
     q: "Are these device mockups free?",
-    a: "Yes. Every device frame and the full editor are free, with no watermark, for personal use. Pro adds 6K export, video and GIF export, premium backgrounds and a commercial license for store listings, ads and client work.",
+    a: "Yes. Every device frame and the full editor are free, with no watermark, for personal use. Pro adds 6K export, video and GIF export, premium backgrounds and a commercial license for ads, client work and store listings beyond your first free pack.",
   },
   {
     q: "What's the difference between a frame and a photoreal scene?",

@@ -190,7 +190,7 @@ export default function AppStoreScreenshotSizesPage() {
         </Link>{" "}
         takes 3–10 raw screenshots and one design and exports the 6.3-inch, 6.9-inch and 6.5-inch iPhone sets, iPad
         13-inch, Google Play phone screenshots and the feature graphic in one zip, with a README that says which folder
-        goes in which App Store Connect slot. You can export your first full pack free to try it.
+        goes in which App Store Connect slot. Your first full pack is free and can be used for one real release.
       </P>
       <P>
         Comparing tools? See{" "}

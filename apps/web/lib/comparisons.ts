@@ -100,7 +100,7 @@ export const COMPARISONS: Comparison[] = [
     faq: [
       {
         q: "Is MockFrame a free AppScreens alternative?",
-        a: "You can try it free: designing and previewing is free, and your first full pack export — every required App Store and Google Play size in one zip — is free with a free account. Publishing screenshots in a store listing is commercial use, which needs the Pro license; Pro also unlocks unlimited packs and starts at under $10 a month.",
+        a: "You can try it free: designing and previewing is free, and your first full pack export — every required App Store and Google Play size in one zip — is free with a free account. That first pack is licensed for one real store release; further packs and other commercial use need the Pro license, which starts at under $10 a month.",
       },
       {
         q: "What does MockFrame do that AppScreens doesn't?",
@@ -211,7 +211,7 @@ export const COMPARISONS: Comparison[] = [
       },
       {
         q: "Can I use MockFrame mockups commercially?",
-        a: "Yes, on Pro, which includes a commercial license. The free plan is for personal use.",
+        a: "Yes, on Pro, which includes a commercial license. The free plan is for personal use, apart from your first store pack, which can ship in one real release.",
       },
     ],
     cta: { href: "/editor", label: "Open the mockup editor" },
@@ -289,7 +289,7 @@ export const COMPARISONS: Comparison[] = [
     faq: [
       {
         q: "Is MockFrame a free AppLaunchpad alternative?",
-        a: "You can try it free: designing and previewing is free, and your first full pack export with every required App Store and Google Play size is free with a free account, without a watermark. Using screenshots in a store listing is commercial use, which needs Pro ($9.99 a month); Pro also unlocks unlimited packs.",
+        a: "You can try it free: designing and previewing is free, and your first full pack export with every required App Store and Google Play size is free with a free account, without a watermark. That first pack is licensed for one real store release; more packs and other commercial use need Pro ($9.99 a month).",
       },
       {
         q: "Which has more templates?",

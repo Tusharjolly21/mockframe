@@ -88,11 +88,11 @@ export function deviceFaq(device: Device, o: { name: string; base: string; ratio
   faq.push(
     {
       q: `Can I use the ${o.base} mockup for App Store screenshots?`,
-      a: "Yes. For a single image, export from the editor at the size you need; for a full listing, the App Store screenshot generator exports every required App Store and Google Play size from one design. Store listings are commercial use, so they need the Pro license.",
+      a: "Yes. For a single image, export from the editor at the size you need; for a full listing, the App Store screenshot generator exports every required App Store and Google Play size from one design. Your first full pack is free and can be used for one real store release; more packs need the Pro license.",
     },
     {
       q: "Can I use the mockups commercially?",
-      a: "The free plan is for personal use. Pro includes a commercial license for client work, ads, app store listings and products you sell.",
+      a: "The free plan is for personal use, plus one store screenshot pack for a real release. Pro includes a commercial license for client work, ads, app store listings and products you sell.",
     }
   );
   return faq;
