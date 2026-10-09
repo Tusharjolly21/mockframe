@@ -19,6 +19,20 @@ const BASE_HEADERS = [
   { key: "Permissions-Policy", value: "camera=(self), microphone=(self), display-capture=(self), picture-in-picture=(self), geolocation=(), usb=(), bluetooth=()" },
 ];
 
+// retired /mockups/<id> -> closest live /mockups/<id>
+const RETIRED_DEVICE_PAGES: Record<string, string> = {
+  "apple-watch-s10": "apple-watch-series-11",
+  "apple-watch-ultra-2": "apple-watch-ultra-3",
+  "watch-front": "apple-watch-series-11",
+  "ipad-floating": "ipad-pro-2024-psd-silver-2",
+  "ipad-angle": "ipad-pro-2024-psd-silver-1",
+  "ipad-duo": "ipad-pro-2024-psd-space-black-2",
+  "ipad-tilt": "ipad-pro-2024-psd-space-black-1",
+  "macbook-pro-16-mockup": "macbook-pro-16",
+  "psd-composite-watch-02": "psd-composite-watch-01",
+  "samsung-s24-ultra-psd-violet": "samsung-s24-ultra-psd-gray",
+};
+
 const nextConfig: NextConfig = {
   // firebase-admin is on Next's default server-externals list, but Vercel's
   // function loader can't require() its ESM-only jose dependency (via
@@ -46,6 +60,18 @@ const nextConfig: NextConfig = {
       // keyword ("app store screenshot generator") and split ranking signal
       // across two URLs; the pack studio page is the canonical target.
       { source: "/tools/app-store-screenshot", destination: "/app-store-screenshots", permanent: true },
+      // Retired device pages. Google discovered these URLs from the first sitemap
+      // (July) and still has them queued as "Discovered - currently not indexed".
+      // Some now render a replacement device under the old URL (duplicate content)
+      // and the retired watch ids 404. A permanent redirect to the closest live
+      // page consolidates them and lets Search Console close the entries.
+      // Keep in step with REMOVED_DEVICE_IDS / LEGACY_DEVICE_REPLACEMENTS in
+      // packages/devices/src/index.ts.
+      ...Object.entries(RETIRED_DEVICE_PAGES).map(([from, to]) => ({
+        source: `/mockups/${from}`,
+        destination: `/mockups/${to}`,
+        permanent: true,
+      })),
     ];
   },
   async rewrites() {
