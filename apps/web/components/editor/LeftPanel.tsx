@@ -16,6 +16,7 @@ import { enterAdjust, withCrop } from "@/lib/adjust";
 import { cameraFor } from "@/lib/layouts";
 import { openUpgrade } from "@/lib/billing/gate";
 import { ColorRow, Section, Seg, SliderRow } from "./ui";
+import { canRotateDevice } from "@framekit/renderer";
 import { CaptureUrlDialog } from "./CaptureUrlDialog";
 import { DevicePicker } from "./DevicePicker";
 import { MediaEditor } from "./MediaEditor";
@@ -658,6 +659,20 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
               );
             })}
           </div>
+        </Section>
+      )}
+
+      {tab === "device" && device && canRotateDevice(device) && (
+        <Section title="Orientation">
+          <Seg
+            id="device-orientation"
+            options={[
+              { value: "portrait", label: "Portrait" },
+              { value: "landscape", label: "Landscape" },
+            ]}
+            value={layer.orientation ?? "portrait"}
+            onChange={(orientation) => patch({ orientation: orientation === "portrait" ? undefined : orientation })}
+          />
         </Section>
       )}
 

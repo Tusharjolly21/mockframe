@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { getDevice } from "@framekit/devices";
 import type { MockupLayer } from "@framekit/scene";
-import { mediaCrop, mediaPlacement, plateToBoxDelta, plateWarp, quadMatrix3d, quadSize, uncroppedBox } from "@framekit/renderer";
+import { isLandscape, mediaCrop, mediaPlacement, plateToBoxDelta, plateWarp, quadMatrix3d, quadSize, uncroppedBox } from "@framekit/renderer";
 import { Check, Minus, Plus, RotateCcw } from "lucide-react";
 import { resolveAsset } from "@/lib/assets";
 import {
@@ -50,6 +50,9 @@ function geometry(layer: MockupLayer, zoom: number): { geo: Geo; url: string } |
   }
   const device = getDevice(layer.deviceId);
   if (!device) return null;
+  // landscape devices render the screenshot counter-rotated; on-canvas
+  // pan/zoom isn't rotation-aware yet, so Fill/Fit from the panel apply instead
+  if (isLandscape(layer, device)) return null;
   if (device.plate) {
     const pw = plateWarp(device);
     const p = mediaPlacement({ x: 0, y: 0, width: pw.sw, height: pw.sh }, asset, media);

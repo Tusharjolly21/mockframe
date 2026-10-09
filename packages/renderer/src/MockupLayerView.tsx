@@ -588,7 +588,13 @@ export function MockupLayerView({
   const rect = frame.screenRect;
   const clipId = `fkclip_${device.id}_${layer.id}`;
   const asset = layer.media ? resolveAsset(layer.media.assetId) : undefined;
-  const placed = asset && layer.media ? mediaPlacement(rect, asset, layer.media) : null;
+  // landscape: the device turns 90° counter-clockwise and the screenshot is
+  // laid out in the turned screen (w↔h) and counter-rotated, so it reads upright
+  const landscape = isLandscape(layer, device);
+  const mediaRect = landscape ? landscapeScreenRect(rect) : rect;
+  const placed = asset && layer.media ? mediaPlacement(mediaRect, asset, layer.media) : null;
+  const screenCx = rect.x + rect.width / 2;
+  const screenCy = rect.y + rect.height / 2;
   const crop = layer.media ? mediaCrop(layer.media) : null;
 
   // decorative ring around the frame (border feature); radius approximates the
@@ -604,7 +610,9 @@ export function MockupLayerView({
 
   return (
     <div data-layer-content="true" style={tiltStyle}>
-      <div style={borderStyle}>
+      {/* landscape turns the device here; the editor's selection measures this
+          turned box (data-select-anchor) instead of the untouched portrait layout box */}
+      <div data-select-anchor={landscape ? "" : undefined} style={landscape ? { ...borderStyle, transform: "rotate(-90deg)" } : borderStyle}>
       <div style={{ position: "relative" }}>
       {/* ⊕ anchor at the true screen centre (frame coords map 1:1 to CSS px here) */}
       <div data-screen-anchor style={{ position: "absolute", left: rect.x + rect.width / 2, top: rect.y + rect.height / 2, width: 0, height: 0 }} />
@@ -630,10 +638,11 @@ export function MockupLayerView({
         </clipPath>
         <g clipPath={`url(#${clipId})`}>
           {placed && asset ? (
+            <g transform={landscape ? `rotate(90 ${screenCx} ${screenCy})` : undefined}>
             <>
               {/* letterbox fill behind contain-fit media */}
               {layer.media?.bg && (
-                <rect x={rect.x} y={rect.y} width={rect.width} height={rect.height} fill={layer.media.bg} />
+                <rect x={mediaRect.x} y={mediaRect.y} width={mediaRect.width} height={mediaRect.height} fill={layer.media.bg} />
               )}
               {crop && !isFullCrop(crop) ? (
                 // cropped: a nested viewport shows just the crop window of the source
@@ -659,6 +668,7 @@ export function MockupLayerView({
                 />
               )}
             </>
+            </g>
           ) : (
             <ScreenPlaceholder device={device} layerId={layer.id} />
           )}
@@ -710,6 +720,22 @@ export function MockupLayerView({
 }
 
 export const MockupLayerViewMemo = memo(MockupLayerView);
+
+/** Devices that can be turned sideways: framed (SVG) phones and tablets. */
+export function canRotateDevice(device: Device): boolean {
+  return !device.plate && (device.category === "phone" || device.category === "tablet");
+}
+
+export function isLandscape(layer: Pick<MockupLayer, "orientation">, device: Device): boolean {
+  return layer.orientation === "landscape" && canRotateDevice(device);
+}
+
+/** The screen rect turned 90° about its centre (w↔h): where a landscape screenshot is laid out. */
+export function landscapeScreenRect(rect: { x: number; y: number; width: number; height: number }) {
+  const cx = rect.x + rect.width / 2;
+  const cy = rect.y + rect.height / 2;
+  return { x: cx - rect.height / 2, y: cy - rect.width / 2, width: rect.height, height: rect.width };
+}
 
 interface InteractiveBlurZoneProps {
   zone: { x: number; y: number; w: number; h: number };
