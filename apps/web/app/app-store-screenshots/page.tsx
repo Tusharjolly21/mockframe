@@ -66,7 +66,7 @@ const FAQ = [
   },
   {
     q: "Is it free?",
-    a: "Building and previewing is free, and your first full pack export is free with a free account. Using the screenshots in a store listing is commercial use, which needs the Pro license; Pro also includes unlimited packs.",
+    a: "Building and previewing is free, and your first full pack export is free with a free account. That first pack is licensed for one real store release; more packs and other commercial use need Pro, which also includes unlimited packs.",
   },
   {
     q: "Do I need design skills?",

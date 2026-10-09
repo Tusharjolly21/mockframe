@@ -12,7 +12,7 @@ import { formatPrice, perMonthPrice, yearlySavingsPct } from "@/lib/billing/plan
 // worth more than hiding it as a Pro bullet.
 const FREE_FEATURES = [
   "Watermark-free exports — always",
-  "Personal & non-commercial use",
+  "Personal use, plus your first store pack for one real release",
   "Every device frame + the full editor",
   "2 premium layouts (Launch Hero, Feature Trio)",
   "WhatsApp & iMessage chat screens",

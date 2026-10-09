@@ -20,6 +20,7 @@ const HIGHLIGHTS = [
   { title: "No attribution", body: "No credit line, link or watermark required." },
   { title: "No royalties", body: "Use an export as often as you like, anywhere." },
   { title: "Never expires", body: "What you exported on Pro stays licensed if you cancel." },
+  { title: "One free release", body: "Your first store pack on a free account can ship in a real store listing." },
 ];
 
 const SECTIONS: { title: string; body: (string | { list: string[] })[] }[] = [
@@ -27,7 +28,7 @@ const SECTIONS: { title: string; body: (string | { list: string[] })[] }[] = [
     title: "The short version",
     body: [
       "Images, videos and GIFs you export while you're on MockFrame Pro are yours to use for personal and commercial purposes, worldwide, with no attribution and no royalties. Cancelling Pro never takes back rights to anything you exported while subscribed.",
-      "Exports made on the Free plan are licensed for personal and non-commercial use only.",
+      "Exports made on the Free plan are licensed for personal and non-commercial use only, with one exception: the first store screenshot pack you export on a free account may be used commercially for one real release of your app.",
     ],
   },
   {
@@ -48,7 +49,8 @@ const SECTIONS: { title: string; body: (string | { list: string[] })[] }[] = [
   {
     title: "The Free plan",
     body: [
-      "Free exports are watermark-free and yours to use for personal and non-commercial purposes: exploring ideas, school and learning projects, and sharing hobby work that doesn't earn money. Anything that promotes or sells a product or service — a store listing, an ad, a company website, client work — needs a Pro license.",
+      "Free exports are watermark-free and yours to use for personal and non-commercial purposes: exploring ideas, school and learning projects, and sharing hobby work that doesn't earn money. Anything else that promotes or sells a product or service — an ad, a company website, client work — needs a Pro license.",
+      "The exception is your first store screenshot pack. The one full App Store and Google Play pack a free account can export is licensed for commercial use in one real release: the store listing of one app, including the updates and localized versions of that listing made from the same pack. A second pack, or screenshots for a different app or for client work, needs Pro.",
       "Made something on Free that you now want to use commercially? Upgrade and export it again: exports made while you're on Pro are covered.",
     ],
   },

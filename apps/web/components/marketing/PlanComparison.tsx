@@ -45,7 +45,7 @@ const GROUPS: { title: string; rows: [label: string, free: Cell, pro: Cell][] }[
     rows: [
       ["Image export", "Up to 3×", "Up to 6K"],
       ["Watermark", "None", "None, or your logo"],
-      ["License", "Personal use", "Commercial use"],
+      ["License", "Personal use, plus your first store pack for one release", "Commercial use"],
       ["Autosave, drafts and cloud sync", true, true],
       ["Saved templates and a shared team library", false, true],
       ["Render API and MCP server for Claude and Cursor", false, "500 requests a day"],

@@ -37,7 +37,7 @@ const SECTIONS = [
 const FAQ = [
   {
     q: "What is the best free App Store screenshot generator?",
-    a: "It depends on how much you'll export. MockFrame's free plan exports your first full store pack — every required App Store and Google Play size — with no watermark, though publishing it in a store listing needs the Pro commercial license. Previewed's free plan exports unlimited 2D images at 720p under a Creative Commons attribution license. fastlane frameit and Figma templates are free but take more manual work.",
+    a: "It depends on how much you'll export. MockFrame's free plan exports your first full store pack — every required App Store and Google Play size — with no watermark, and that pack is licensed for one real store release; more packs need the Pro commercial license. Previewed's free plan exports unlimited 2D images at 720p under a Creative Commons attribution license. fastlane frameit and Figma templates are free but take more manual work.",
   },
   {
     q: "Do I need a paid tool to make App Store screenshots?",
@@ -79,7 +79,7 @@ export default function BestGeneratorsPage() {
         caption="App Store screenshot generators compared"
         head={["Tool", "Best for", "Free option", "Paid"]}
         rows={[
-          ["MockFrame", "Every store size from one design, AI captions, fastlane", "First full pack free to try (personal-use license)", "$9.99/mo or $59.99/yr, commercial license"],
+          ["MockFrame", "Every store size from one design, AI captions, fastlane", "First full pack free, licensed for one real release", "$9.99/mo or $59.99/yr, commercial license"],
           ["AppLaunchpad", "Huge template library", "Limited exports and assets", "Pro subscription, local-currency pricing"],
           ["AppScreens", "Teams, extra storefronts", "Trial of the editor", "Subscription (see appscreens.com)"],
           ["Previewed", "3D device renders and video", "Unlimited 720p, CC attribution", "$9.99 one-time (10 exports) or $19/mo billed yearly"],
@@ -117,7 +117,7 @@ export default function BestGeneratorsPage() {
         items={[
           "Strengths: one design to every required size; AI-written captions; translation into 39 store languages on Pro; the same plan covers device mockups, promo videos and screen recordings.",
           "Weaknesses: eight pack styles rather than hundreds of templates; Apple and Google only (no Microsoft or Amazon storefronts).",
-          "Price: your first full pack exports free to try; Pro ($9.99 a month or $59.99 a year) adds the commercial license a store listing needs, plus unlimited packs.",
+          "Price: your first full pack exports free and can ship in one real release; Pro ($9.99 a month or $59.99 a year) adds the commercial license for further packs and other uses, plus unlimited packs.",
         ]}
       />
 
