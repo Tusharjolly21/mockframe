@@ -26,5 +26,11 @@
     "width": 1250,
     "height": 1502
   },
-  "backdrop": "#f5f5f5"
+  "backdrop": "#f5f5f5",
+  "content": [
+    932,
+    502,
+    1836,
+    2058
+  ]
 }

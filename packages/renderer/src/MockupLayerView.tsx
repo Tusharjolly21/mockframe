@@ -539,6 +539,21 @@ export function MockupLayerView({
       <div data-layer-content="true" style={tiltStyle}>
         <div style={{ position: "relative", width: plate.width, height: plate.height }}>
           <div data-screen-anchor style={{ position: "absolute", left: scx, top: scy, width: 0, height: 0 }} />
+          {/* the visible subject of a mostly-transparent cut-out plate: the editor's
+              selection box hugs this instead of the whole (canvas-sized) plate */}
+          {plate.contentRect && (
+            <div
+              data-select-anchor
+              style={{
+                position: "absolute",
+                left: plate.contentRect.x,
+                top: plate.contentRect.y,
+                width: plate.contentRect.width,
+                height: plate.contentRect.height,
+                pointerEvents: "none",
+              }}
+            />
+          )}
           {under && plateImg}
           {/* Photoshop's rounded screen opening is an irregular raster mask, not
               the Smart Object transform rectangle. Apply it in plate space. */}

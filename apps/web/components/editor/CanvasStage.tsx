@@ -99,7 +99,10 @@ export function CanvasStage() {
       selectedIds.flatMap((id) => {
         const node = host.querySelector(`[data-layer-id="${id}"]`);
         if (!node) return [];
-        const r = (node as HTMLElement).getBoundingClientRect();
+        // full-bleed photo scenes are canvas-sized but mostly transparent: hug
+        // the device itself (the renderer marks it), like every other mockup
+        const target = node.querySelector("[data-select-anchor]") ?? node;
+        const r = (target as HTMLElement).getBoundingClientRect();
         return [{ id, x: r.left - hostRect.left, y: r.top - hostRect.top, w: r.width, h: r.height }];
       })
     );
