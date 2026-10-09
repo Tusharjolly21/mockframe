@@ -54,7 +54,7 @@ export const COMPARISONS: Comparison[] = [
     keywords: ["appscreens alternative", "appscreens app store screenshot generator", "app store screenshot generator", "free app store screenshot generator", "appscreens vs mockframe"],
     h1: "AppScreens alternative: MockFrame for App Store screenshots",
     intro:
-      "AppScreens is one of the most established App Store screenshot generators, and if you sell into many storefronts it earns its subscription. MockFrame takes a different angle: get an indie developer or small team from raw simulator captures to a submission-ready zip — every required Apple and Google size, framed and captioned — in a few minutes, with the first full pack free and AI that writes the set for you from a one-sentence description.",
+      "AppScreens is one of the most established App Store screenshot generators, and if you sell into many storefronts it earns its subscription. MockFrame takes a different angle: get an indie developer or small team from raw simulator captures to a submission-ready zip — every required Apple and Google size, framed and captioned — in a few minutes, with your first full pack free to export and AI that writes the set for you from a one-sentence description.",
     rows: [
       {
         dim: "Getting a full set out",
@@ -87,7 +87,7 @@ export const COMPARISONS: Comparison[] = [
     pickMockframe: [
       "You ship to Apple and Google and want one zip with every required size, captioned and framed.",
       "You want AI to draft the whole screenshot narrative before you touch an editor.",
-      "You’d rather pay under $10 a month — or nothing for your first release.",
+      "You’d rather pay under $10 a month, and try a full pack free before paying.",
       "You also need device mockups, chat screenshots or an app promo video for launch.",
     ],
     pickThem: [
@@ -100,7 +100,7 @@ export const COMPARISONS: Comparison[] = [
     faq: [
       {
         q: "Is MockFrame a free AppScreens alternative?",
-        a: "Yes for your first release: designing and previewing is free, and your first full pack export — every required App Store and Google Play size in one zip — is free with a free account. Unlimited packs are part of Pro, which starts at under $10 a month.",
+        a: "You can try it free: designing and previewing is free, and your first full pack export — every required App Store and Google Play size in one zip — is free with a free account. Publishing screenshots in a store listing is commercial use, which needs the Pro license; Pro also unlocks unlimited packs and starts at under $10 a month.",
       },
       {
         q: "What does MockFrame do that AppScreens doesn't?",
@@ -289,7 +289,7 @@ export const COMPARISONS: Comparison[] = [
     faq: [
       {
         q: "Is MockFrame a free AppLaunchpad alternative?",
-        a: "For your first release, yes: designing and previewing is free, and your first full pack export with every required App Store and Google Play size is free with a free account, without a watermark. Unlimited packs are part of Pro at $9.99 a month.",
+        a: "You can try it free: designing and previewing is free, and your first full pack export with every required App Store and Google Play size is free with a free account, without a watermark. Using screenshots in a store listing is commercial use, which needs Pro ($9.99 a month); Pro also unlocks unlimited packs.",
       },
       {
         q: "Which has more templates?",

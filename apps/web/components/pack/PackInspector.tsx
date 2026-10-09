@@ -258,7 +258,7 @@ export function PackInspector() {
           <label key={id} className="mb-1.5 flex items-center gap-2 text-[12px] text-white/70">
             <input
               type="checkbox"
-              checked={pack.targets[id]}
+              checked={!!pack.targets[id]}
               onChange={(e) => update((p) => ({ ...p, targets: { ...p.targets, [id]: e.target.checked } }))}
             />
             {PACK_TARGETS[id].label}

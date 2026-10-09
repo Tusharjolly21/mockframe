@@ -5,20 +5,27 @@ import { PackStudio } from "@/components/pack/PackStudio";
 import { socialMeta } from "@/lib/site";
 import { safeJsonLd } from "@/lib/jsonLd";
 
+const DESCRIPTION =
+  "Upload your screenshots once and export every App Store size Apple asks for in 2026 — 6.3″, 6.9″, 6.5″ and iPad — plus Google Play and the feature graphic, framed and captioned.";
+
 export const metadata: Metadata = {
-  title: "Free App Store Screenshot Generator",
-  description: "Upload your screenshots once and export App Store 6.9″ and 6.5″, Google Play and feature graphic sizes — framed, captioned and ready to submit.",
+  title: "Free App Store Screenshot Generator (2026 Sizes)",
+  description: DESCRIPTION,
   keywords: ["app store screenshot generator", "app screenshot generator", "app screenshot maker", "ios app screenshot generator", "app store screenshot creator", "generate app screenshots", "google play screenshot generator", "app store screenshot sizes"],
   alternates: { canonical: "/app-store-screenshots" },
-  ...socialMeta({ path: "/app-store-screenshots", title: "Free App Store Screenshot Generator — MockFrame", description: "Upload your screenshots once and export App Store 6.9″ and 6.5″, Google Play and feature graphic sizes — framed, captioned and ready to submit." }),
+  ...socialMeta({ path: "/app-store-screenshots", title: "Free App Store Screenshot Generator (2026 Sizes) — MockFrame", description: DESCRIPTION }),
 };
+
+/** When SIZES was last checked against Apple's and Google's published specs. */
+const SIZES_CHECKED = "October 9, 2026";
 
 /** Required store sizes, kept in one place so copy and schema stay in sync. */
 const SIZES = [
-  { store: "Apple App Store", device: "iPhone 6.9-inch", size: "1320 × 2868", note: "Required — iPhone 16 Pro Max class" },
-  { store: "Apple App Store", device: "iPhone 6.5-inch", size: "1284 × 2778", note: "Required — older large iPhones" },
-  { store: "Apple App Store", device: "iPad 13-inch", size: "2064 × 2752", note: "Required if you ship an iPad build" },
-  { store: "Google Play", device: "Phone", size: "1080 × 1920", note: "2–8 phone screenshots" },
+  { store: "Apple App Store", device: "iPhone 6.3-inch", size: "1206 × 2622", note: "Required — the iPhone slot Apple's spec lists as required (iPhone 17 and 17 Pro class)" },
+  { store: "Apple App Store", device: "iPhone 6.9-inch", size: "1320 × 2868", note: "Largest iPhones (iPhone 17 Pro Max class)" },
+  { store: "Apple App Store", device: "iPhone 6.5-inch", size: "1284 × 2778", note: "Only required if you don't provide 6.9-inch" },
+  { store: "Apple App Store", device: "iPad 13-inch", size: "2064 × 2752", note: "Required if your app runs on iPad" },
+  { store: "Google Play", device: "Phone", size: "1080 × 1920", note: "2–8 screenshots; 4+ at 1080 px or larger to be eligible for promotion" },
   { store: "Google Play", device: "Feature graphic", size: "1024 × 500", note: "Shown at the top of your listing" },
 ] as const;
 
@@ -47,15 +54,19 @@ const FAQ = [
   },
   {
     q: "What sizes does the pack include?",
-    a: "Apple App Store 6.9-inch (1320×2868) and 6.5-inch (1284×2778) portrait PNGs, optional iPad 13-inch (2064×2752), Google Play phone screenshots (1080×1920) and the 1024×500 feature graphic. Every size is generated from the same design so the set stays consistent.",
+    a: "Apple App Store 6.3-inch (1206×2622), 6.9-inch (1320×2868) and 6.5-inch (1284×2778) portrait PNGs, optional iPad 13-inch (2064×2752), Google Play phone screenshots (1080×1920) and the 1024×500 feature graphic. Every size is generated from the same design so the set stays consistent.",
   },
   {
     q: "Can I use it as an iOS app screenshot generator only?",
-    a: "Yes. If you only ship to the Apple App Store, generate just the iPhone 6.9-inch and 6.5-inch sizes (and iPad if you have an iPad build) and skip the Google Play sizes. The app store screenshot creator lets you pick exactly which stores and sizes go in the zip.",
+    a: "Yes. If you only ship to the Apple App Store, generate just the iPhone sizes (and iPad if you have an iPad build) and skip the Google Play sizes. The app store screenshot creator lets you pick exactly which stores and sizes go in the zip.",
+  },
+  {
+    q: "Which iPhone screenshot size does Apple require in 2026?",
+    a: "Apple's screenshot specification lists the 6.3-inch display (iPhone with Dynamic Island, medium) as the required iPhone size, accepting 1206×2622 or 1179×2556. 6.9-inch images can't be uploaded into that slot, so the pack renders 6.3-inch separately from the same design. 6.9-inch and 6.5-inch sets are included for the larger-display slots.",
   },
   {
     q: "Is it free?",
-    a: "Building and previewing is free. Your first full pack export is free with a free account; unlimited packs are part of Pro.",
+    a: "Building and previewing is free, and your first full pack export is free with a free account. Using the screenshots in a store listing is commercial use, which needs the Pro license; Pro also includes unlimited packs.",
   },
   {
     q: "Do I need design skills?",
@@ -87,8 +98,13 @@ export default function AppStoreScreenshotsPage() {
         {/* required sizes reference */}
         <h2 className="mt-14 text-xl font-bold text-white">Required App Store &amp; Google Play screenshot sizes</h2>
         <p className="mt-3 text-white/60">
-          These are the current sizes the app store screenshot creator outputs. Every size is rendered at full
-          resolution so text stays crisp on the store listing.
+          These are the sizes the app store screenshot creator outputs, checked against Apple&apos;s and Google&apos;s
+          published specifications on {SIZES_CHECKED}. Every size is rendered at full resolution so text stays crisp on
+          the store listing. For every accepted size, orientation and upload rule, see the{" "}
+          <Link href="/guides/app-store-screenshot-sizes" className="text-violet-300 underline-offset-2 hover:underline">
+            App Store screenshot sizes guide
+          </Link>
+          .
         </p>
         <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
           <table className="w-full text-left text-[13.5px]">
@@ -150,8 +166,11 @@ export default function AppStoreScreenshotsPage() {
             ["/mockups/iphone-16-pro", "iPhone 16 Pro mockup"],
             ["/mockups", "All device mockups"],
             ["/tools/app-promo-video-maker", "App promo video maker"],
+            ["/guides/app-store-screenshot-sizes", "App Store screenshot sizes (2026)"],
+            ["/guides/best-app-store-screenshot-generators", "Best App Store screenshot generators"],
             ["/guides/design-app-store-screenshots", "Guide: design a screenshot set"],
             ["/compare/appscreens", "MockFrame vs AppScreens"],
+            ["/compare/applaunchpad", "MockFrame vs AppLaunchpad"],
           ].map(([href, label]) => (
             <li key={href}>
               <Link
