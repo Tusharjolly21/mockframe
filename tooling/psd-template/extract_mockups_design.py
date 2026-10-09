@@ -206,9 +206,18 @@ def extract(psd_path: Path, out: Path, scale: float, index: int = 0, cutout: boo
         for l in bg_layers:
             l.visible = False
         subject = render(psd)
-        backdrop = "#%02x%02x%02x" % tuple(int(round(float(c) * 255)) for c in only_bg[8, 8])
         shade = np.clip(1.0 - (with_shadow / np.maximum(only_bg, 1e-3)).mean(axis=2), 0.0, 1.0)
         a_sub = subject[..., 3]
+        # Some PSDs' shadow layers darken the WHOLE photo, not just the contact
+        # shadow. Kept as alpha, that floor becomes a dark veil over the entire
+        # plate and shows as a box on any other background. Fold it into the
+        # backdrop colour instead and keep only the shadow above it.
+        floor = float(np.median(shade[a_sub < 0.01])) if (a_sub < 0.01).any() else 0.0
+        if floor > 0.03:
+            shade = np.clip((shade - floor) / (1.0 - floor), 0.0, 1.0)
+        else:
+            floor = 0.0
+        backdrop = "#%02x%02x%02x" % tuple(int(round(float(c) * (1.0 - floor) * 255)) for c in only_bg[8, 8])
         # the shadow only counts where the subject does not already cover it
         alpha_all = a_sub + (1.0 - a_sub) * shade
         base_premult = subject[..., :3] * a_sub[..., None]

@@ -81,6 +81,12 @@ export interface RasterPlate {
    * behind the device. This is the original backdrop colour, used as the default.
    */
   backdrop?: string;
+  /**
+   * Box around the visible subject in plate px. Cut-out full-bleed plates are
+   * mostly transparent, so the editor draws the selection around this rather
+   * than the whole plate. Absent = the whole plate is the subject.
+   */
+  contentRect?: { x: number; y: number; width: number; height: number };
   /** small preview image for picker tiles (the plate itself can be 4000px wide) */
   thumb?: string;
 }

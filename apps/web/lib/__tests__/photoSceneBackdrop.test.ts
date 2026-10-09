@@ -22,4 +22,17 @@ describe("photo scenes with an editable backdrop", () => {
     const chair = getDevice("psd-scene-macbook-chair-1")!;
     expect(chair.plate?.backdrop).toBeUndefined();
   });
+
+  it("mark the solid subject so the editor's selection hugs the device, not the whole plate", () => {
+    for (const d of cutouts) {
+      const r = d.plate!.contentRect;
+      expect(r, d.id).toBeDefined();
+      expect(r!.x).toBeGreaterThanOrEqual(0);
+      expect(r!.y).toBeGreaterThanOrEqual(0);
+      expect(r!.x + r!.width).toBeLessThanOrEqual(d.plate!.width);
+      expect(r!.y + r!.height).toBeLessThanOrEqual(d.plate!.height);
+      // a box as big as the plate would be the bug this fixes
+      expect(r!.width * r!.height, d.id).toBeLessThan(d.plate!.width * d.plate!.height);
+    }
+  });
 });
