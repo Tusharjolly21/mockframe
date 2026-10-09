@@ -20,7 +20,8 @@ export type MotionPresetId =
   | "rise"
   | "zoom-in"
   | "spin-reveal"
-  | "flip-in";
+  | "flip-in"
+  | "parallax";
 
 export interface MotionDelta {
   x?: number;
@@ -39,6 +40,12 @@ export interface MotionPreset {
   durationMs: number;
   /** p: 0..1 progress for this layer (already staggered), H: canvas height */
   sample: (p: number, H: number) => MotionDelta;
+  /**
+   * Optional background move at clip progress t, as fractions of the canvas
+   * size (x of width, y of height). Drives depth presets like parallax, where
+   * the background travels against the devices.
+   */
+  background?: (t: number) => { x: number; y: number };
 }
 
 const TAU = Math.PI * 2;
@@ -126,6 +133,16 @@ export const MOTION_PRESETS: MotionPreset[] = [
       const e = intro(p, easeOutBack);
       return { tiltX: (1 - e) * 40, scale: 0.86 + 0.14 * intro(p) };
     },
+  },
+  {
+    id: "parallax",
+    label: "Parallax",
+    hint: "Devices and background at different depths",
+    kind: "loop",
+    durationMs: 5000,
+    sample: (p, H) => ({ x: Math.sin(p * TAU) * H * 0.035, tiltY: Math.sin(p * TAU) * -9, tiltX: Math.cos(p * TAU) * 3 }),
+    // the far plane moves less, and the other way
+    background: (t) => ({ x: -Math.sin(t * TAU) * 0.022, y: Math.cos(t * TAU) * 0.008 - 0.008 }),
   },
 ];
 

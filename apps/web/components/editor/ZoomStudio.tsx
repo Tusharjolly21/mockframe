@@ -19,12 +19,18 @@ import { exportMotionGif, exportMotionVideo } from "@/lib/motionExport";
 import { useSceneStore, useViewStore, withTransientHistory } from "@/lib/store";
 import { openUpgrade } from "@/lib/billing/gate";
 import { useVideoSettings, VideoSettingsControl } from "./VideoSettingsControl";
+import { applyBgMotion, backgroundPose, clearBgMotion, isRest, type LiveBackground } from "@/lib/backgroundMotion";
+import { LiveBackgroundControl, useLiveBackground } from "./LiveBackgroundControl";
 
 const SCENE_NODE = "#scene-canvas [data-scene-id]";
 
 /** pose every layer under the camera at time t, without touching undo history */
-function poseAt(base: SceneDocument, zooms: ZoomShot[], tMs: number) {
+function poseAt(base: SceneDocument, zooms: ZoomShot[], tMs: number, live: LiveBackground = "off", durationMs = 1) {
   useViewStore.getState().setTextTime(tMs);
+  const node = document.querySelector<HTMLElement>(SCENE_NODE);
+  const bg = backgroundPose(live, tMs / durationMs, base.canvas.width, base.canvas.height);
+  if (isRest(bg)) clearBgMotion(node);
+  else applyBgMotion(node, bg);
   const poses = sampleCameraScene(base, zooms, tMs);
   withTransientHistory(() =>
     useSceneStore.setState((st) => ({
@@ -35,6 +41,7 @@ function poseAt(base: SceneDocument, zooms: ZoomShot[], tMs: number) {
 
 function restore(base: SceneDocument) {
   useViewStore.getState().setTextTime(null);
+  clearBgMotion(document.querySelector<HTMLElement>(SCENE_NODE));
   const byId = new Map(base.layers.map((l) => [l.id, l.transform]));
   withTransientHistory(() =>
     useSceneStore.setState((st) => ({
@@ -88,6 +95,7 @@ export function ZoomStudio() {
   const [playhead, setPlayhead] = useState<number | null>(null);
   const [busy, setBusy] = useState<null | { pct: number; label: string }>(null);
   const [videoSettings] = useVideoSettings();
+  const [live] = useLiveBackground();
   const baseRef = useRef<SceneDocument | null>(null);
   const rafRef = useRef(0);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -125,7 +133,7 @@ export function ZoomStudio() {
         stop();
         return;
       }
-      poseAt(base, list, t);
+      poseAt(base, list, t, live, dur);
       setPlayhead(t);
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -150,7 +158,7 @@ export function ZoomStudio() {
       node,
       scene: base,
       preset: { id: "video-zoom", kind: "intro" as const, durationMs: dur },
-      renderAt: (t: number) => poseAt(base, list, t * dur),
+      renderAt: (t: number) => poseAt(base, list, t * dur, live, dur),
       restore: () => restore(base),
       onProgress: (pct: number, label: string) => setBusy({ pct, label }),
     };
@@ -286,6 +294,8 @@ export function ZoomStudio() {
           </button>
         </div>
       )}
+
+      <LiveBackgroundControl disabled={!!busy || playing} />
 
       {/* actions */}
       <div className="flex items-center justify-between">

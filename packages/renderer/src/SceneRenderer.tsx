@@ -7,6 +7,9 @@ import { AnnotationGraphic } from "./annotations";
 import type { ResolveAsset } from "./types";
 import { blockAnimStyle, pieceAnimStyle, splitPieces, textAnimProgress, typewriterCount } from "./textAnim";
 
+/** background motion hook: translate/scale driven by CSS variables (see the background layer) */
+const BG_MOTION_TRANSFORM = "translate(var(--fk-bg-x, 0px), var(--fk-bg-y, 0px)) scale(var(--fk-bg-scale, 1))";
+
 /**
  * The one renderer. A pure function of the scene document — it runs in the
  * browser editor, in headless Chromium for exports, and in JSDOM for tests.
@@ -71,13 +74,16 @@ function SceneRendererImpl({
         ...style,
       }}
     >
-      {/* background layer (filterable) */}
+      {/* background layer (filterable). The --fk-bg-* variables are set on the
+          scene element by the animation tools (parallax, live backgrounds) for
+          the length of a preview or export; unset, they change nothing. */}
       <div
         style={{
           position: "absolute",
           inset: -blurPad,
           pointerEvents: "none",
-          filter: bgFilter,
+          filter: bgFilter ? `${bgFilter} hue-rotate(var(--fk-bg-hue, 0deg))` : "hue-rotate(var(--fk-bg-hue, 0deg))",
+          transform: BG_MOTION_TRANSFORM,
           ...backgroundToCss(bg, canvas.panoramaBackground ? panoramaIdx : undefined, canvas.panoramaBackground ? panoramaTotal : undefined),
         }}
       >
@@ -121,10 +127,10 @@ function SceneRendererImpl({
           if (!asset) return null;
           return (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={asset.url} alt="" crossOrigin="anonymous" style={{ ...common, width: "100%", height: "100%", objectFit: bg.fit, opacity: bg.opacity }} />
+            <img src={asset.url} alt="" crossOrigin="anonymous" style={{ ...common, transform: BG_MOTION_TRANSFORM, width: "100%", height: "100%", objectFit: bg.fit, opacity: bg.opacity }} />
           );
         }
-        return <div style={{ ...common, ...backgroundToCss(bg, canvas.panoramaBackground ? panoramaIdx : undefined, canvas.panoramaBackground ? panoramaTotal : undefined) }} />;
+        return <div style={{ ...common, transform: BG_MOTION_TRANSFORM, ...backgroundToCss(bg, canvas.panoramaBackground ? panoramaIdx : undefined, canvas.panoramaBackground ? panoramaTotal : undefined) }} />;
       })()}
 
       {/* Portrait stage — spotlight glow + floor, behind the subject */}
