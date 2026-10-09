@@ -59,7 +59,7 @@ const setSlot = (i: number, url: string) =>
   useShowcaseUi.setState((s) => ({ slots: s.slots.map((slot, j) => (j === i ? { ...slot, url } : slot)) }));
 
 /** Build the set from the screenshot on the canvas and open its poster. */
-export async function makeShowcase(via: "pill" | "starter" = "pill") {
+export async function makeShowcase(via: "pill" | "starter" | "figma" = "pill") {
   if (useShowcaseUi.getState().running) return;
   const current = useSceneStore.getState().scene;
   const raw = heroImage(current);

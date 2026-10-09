@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { ArrowRight, Clock, Smartphone, Store } from "lucide-react";
+import { ArrowRight, Clock, GalleryVerticalEnd, Repeat2, Smartphone, Store } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { DownloadPlugin } from "@/components/marketing/figma/DownloadPlugin";
 import { socialMeta } from "@/lib/site";
 
-const TITLE = "Figma Mockup Plugin: send frames to device mockups and App Store sets";
+const TITLE = "Figma Mockup Plugin: device mockups and App Store sets, right in Figma";
 const DESCRIPTION =
-  "The MockFrame Figma plugin sends the frames you select into realistic device mockups, or a full App Store or Google Play screenshot set, in one click.";
+  "The free MockFrame Figma plugin puts the frames you select in realistic device mockups right on your canvas, or opens them in the editor as an App Store set and sends the finished shots back to Figma.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -24,14 +24,17 @@ function PluginStill() {
   return (
     <div aria-hidden className="relative grid items-center gap-6 sm:grid-cols-[minmax(0,260px)_auto_minmax(0,1fr)]">
       <div className="rounded-xl border border-black/10 bg-white text-[#1e1e1e] shadow-[0_30px_60px_rgba(0,0,0,.45)]">
-        <div className="border-b border-[#e6e6e6] px-4 pb-2.5 pt-3.5">
-          <p className="text-[12.5px] font-semibold">Send to Mockframe</p>
-          <p className="text-[11px] text-[#6b6b6b]">Put frames in a device, or turn them into a store listing set.</p>
+        <div className="px-4 pb-1 pt-3.5">
+          <p className="text-[12.5px] font-semibold">Mockframe</p>
+          <div className="mt-2 flex rounded-md bg-[#f5f5f5] p-0.5 text-[11px]">
+            <span className="flex-1 rounded px-2 py-1 text-center text-[#6b6b6b]">Mockup here</span>
+            <span className="flex-1 rounded bg-white px-2 py-1 text-center font-semibold shadow-[0_0_0_1px_#e6e6e6]">Open in editor</span>
+          </div>
         </div>
         <div className="grid grid-cols-3 gap-2.5 px-4 py-3">
           {FRAMES.map((src, i) => (
             <div key={src} className="min-w-0">
-              <div className="grid h-[86px] place-items-center overflow-hidden rounded-md border border-[#e6e6e6] bg-[#f5f5f5]">
+              <div className="grid h-[86px] place-items-center overflow-hidden rounded-md border border-[#6d4aff] bg-[#f5f5f5] shadow-[0_0_0_1px_#6d4aff]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt="" className="max-h-full" />
               </div>
@@ -44,8 +47,9 @@ function PluginStill() {
           <div className="flex rounded-md bg-[#f5f5f5] p-0.5 text-[11px]">
             <span className="flex-1 rounded px-2 py-1 text-center text-[#6b6b6b]">In devices</span>
             <span className="flex-1 rounded bg-white px-2 py-1 text-center font-semibold shadow-[0_0_0_1px_#e6e6e6]">Store set</span>
+            <span className="flex-1 rounded px-2 py-1 text-center text-[#6b6b6b]">Showcase</span>
           </div>
-          <span className="rounded-md bg-[#6d4aff] py-2 text-center text-[11.5px] font-semibold text-white">Send 3 frames to Mockframe</span>
+          <span className="rounded-md bg-[#6d4aff] py-2 text-center text-[11.5px] font-semibold text-white">Open as a store set</span>
         </div>
       </div>
       <ArrowRight className="mx-auto hidden text-zinc-500 sm:block" size={22} />
@@ -62,7 +66,30 @@ function PluginStill() {
 const STEPS = [
   { title: "Download and unzip", body: "You get a folder called mockframe-figma-plugin with three files in it." },
   { title: "Import it in Figma", body: "In the Figma desktop app, open the main menu, then Plugins, Development, Import plugin from manifest, and pick manifest.json from that folder." },
-  { title: "Select frames and send", body: "Select up to 8 frames, run Plugins, Development, Mockframe, and press Send. The editor opens in your browser with them in." },
+  { title: "Select frames and run it", body: "Select up to 8 frames, or a section, then run Plugins, Development, Mockframe. Make mockups right there, or open them in the editor. Quick mockup of selection skips the panel." },
+];
+
+const FEATURES = [
+  {
+    icon: Smartphone,
+    title: "Mockups right in Figma",
+    body: "Pick Auto or one of eleven devices, from iPhone 17 Pro to a Safari window, and one of six looks. The mockups are made in the cloud and land in a section next to your frames, at 2x. Free, 30 times a day.",
+  },
+  {
+    icon: Repeat2,
+    title: "Send to Figma from the editor",
+    body: "Open your frames in the editor, style every shot, then press Send to Figma. Each shot lands on your page while the plugin is open, and sending again swaps the images in place.",
+  },
+  {
+    icon: Store,
+    title: "Store listing sets",
+    body: "Pick one of nine styles and your phone frames fill all eight App Store or Google Play screenshots, captions and all. Change the words, then export the set or send it back to Figma. Store sets are part of Pro.",
+  },
+  {
+    icon: GalleryVerticalEnd,
+    title: "Showcase",
+    body: "Open a frame as a showcase and it becomes a poster, a before and after, and four finished shots, ready to edit and send back.",
+  },
 ];
 
 export default function FigmaPluginPage() {
@@ -74,10 +101,10 @@ export default function FigmaPluginPage() {
         <div className="max-w-2xl">
           <p className="text-[14px] font-medium text-zinc-400">MockFrame for Figma</p>
           <h1 className="mt-3 text-[40px] font-semibold leading-[1.03] tracking-[-0.035em] sm:text-[58px]">
-            Your frames, in a real device, without exporting a thing.
+            Your frames, in a real device, without leaving Figma.
           </h1>
           <p className="mt-5 max-w-xl text-[16px] leading-7 text-zinc-400">
-            Select frames in Figma and send them to MockFrame. They open in the device that fits their shape, or as an App Store or Google Play listing set, ready to style and export.
+            Select frames and get device mockups placed right next to them. Or open them in MockFrame as an App Store or Google Play set or a showcase, then send the finished shots straight back to your file.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
             <DownloadPlugin />
@@ -92,20 +119,13 @@ export default function FigmaPluginPage() {
       </section>
 
       <section className="mx-auto grid max-w-6xl gap-4 px-6 pb-20 md:grid-cols-2">
-        <article className="rounded-2xl border border-white/10 bg-[#101116] p-7">
-          <Smartphone size={22} className="text-cyan-300" />
-          <h2 className="mt-5 text-[22px] font-semibold tracking-[-0.02em]">In devices</h2>
-          <p className="mt-2 text-[14px] leading-6 text-zinc-400">
-            Phone frames go in an iPhone, tablet frames in an iPad, desktop frames in a MacBook or browser. Send several and each becomes its own shot, switchable under the canvas and exported together.
-          </p>
-        </article>
-        <article className="rounded-2xl border border-white/10 bg-[#101116] p-7">
-          <Store size={22} className="text-cyan-300" />
-          <h2 className="mt-5 text-[22px] font-semibold tracking-[-0.02em]">As a store listing set</h2>
-          <p className="mt-2 text-[14px] leading-6 text-zinc-400">
-            Pick one of four styles and your phone frames fill all eight App Store or Google Play screenshots, captions and all. Change the words, then export the set as one zip.
-          </p>
-        </article>
+        {FEATURES.map(({ icon: Icon, title, body }) => (
+          <article key={title} className="rounded-2xl border border-white/10 bg-[#101116] p-7">
+            <Icon size={22} className="text-cyan-300" />
+            <h2 className="mt-5 text-[22px] font-semibold tracking-[-0.02em]">{title}</h2>
+            <p className="mt-2 text-[14px] leading-6 text-zinc-400">{body}</p>
+          </article>
+        ))}
       </section>
 
       <section id="install" className="mx-auto max-w-6xl scroll-mt-24 px-6 pb-24">
@@ -122,7 +142,7 @@ export default function FigmaPluginPage() {
         </ol>
         <p className="mt-8 flex items-start gap-2 text-[13px] leading-6 text-zinc-500">
           <Clock size={15} className="mt-1 shrink-0" />
-          Frames you send can be opened in the editor for 24 hours, then the link expires. The plugin reads only the frames you select.
+          Frames you send, and the shots that come back, expire after 24 hours. The plugin reads only the frames you select, and only opens mockframe.app.
         </p>
       </section>
 

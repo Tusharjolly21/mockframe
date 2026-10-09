@@ -6,9 +6,16 @@
   "ui": "ui.html",
   "editorType": ["figma"],
   "documentAccess": "dynamic-page",
+  "menu": [
+    { "name": "Open Mockframe", "command": "open" },
+    { "name": "Quick mockup of selection", "command": "quick" }
+  ],
+  "relaunchButtons": [
+    { "command": "open", "name": "Mockframe", "multipleSelection": true }
+  ],
   "networkAccess": {
     "allowedDomains": ["https://mockframe.app"],
     "devAllowedDomains": ["http://localhost:3000"],
-    "reasoning": "Uploads the frames you choose to Mockframe so they open in the editor."
+    "reasoning": "Uploads the frames you choose to Mockframe, which puts them in device mockups, and downloads the finished images to place on your page."
   }
 }

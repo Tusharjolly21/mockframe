@@ -20,8 +20,8 @@ export const metadata: Metadata = {
 export default async function EditorPage({
   searchParams,
 }: {
-  searchParams: Promise<{ device?: string; screen?: string; calibrate?: string; upgrade?: string; capture?: string; plan?: string; promo?: string; replay?: string; remix?: string; drop?: string; figma?: string; subscription_id?: string; status?: string }>;
+  searchParams: Promise<{ device?: string; screen?: string; calibrate?: string; upgrade?: string; capture?: string; plan?: string; promo?: string; replay?: string; remix?: string; drop?: string; figma?: string; showcase?: string; subscription_id?: string; status?: string }>;
 }) {
-  const { device, screen, calibrate, upgrade, capture, plan, promo, replay, remix, drop, figma, subscription_id, status } = await searchParams;
-  return <EditorShell initialDeviceId={device} initialScreenApp={screen} openCalibrate={calibrate === "1"} openUpgradeOnLoad={upgrade === "1"} upgradePlan={plan} checkoutReturn={upgrade === "success" ? { subscriptionId: subscription_id, status } : undefined} openCaptureOnLoad={capture === "1"} openPromoOnLoad={promo === "1"} openReplayOnLoad={replay === "1"} remixId={remix} openDroppedOnLoad={drop === "1"} figmaImportId={figma} />;
+  const { device, screen, calibrate, upgrade, capture, plan, promo, replay, remix, drop, figma, showcase, subscription_id, status } = await searchParams;
+  return <EditorShell initialDeviceId={device} initialScreenApp={screen} openCalibrate={calibrate === "1"} openUpgradeOnLoad={upgrade === "1"} upgradePlan={plan} checkoutReturn={upgrade === "success" ? { subscriptionId: subscription_id, status } : undefined} openCaptureOnLoad={capture === "1"} openPromoOnLoad={promo === "1"} openReplayOnLoad={replay === "1"} remixId={remix} openDroppedOnLoad={drop === "1"} figmaImportId={figma} figmaShowcase={showcase === "1"} />;
 }
