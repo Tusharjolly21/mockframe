@@ -1,4 +1,8 @@
 import { Easing } from "remotion";
+import { loadFont } from "@remotion/google-fonts/Inter";
+
+// Embed Inter so every render host (Lambda included) draws the same type.
+const { fontFamily: INTER } = loadFont("normal", { weights: ["500", "700", "800"], subsets: ["latin"] });
 
 /** Shared motion + colour helpers so every template feels like one product. */
 
@@ -54,8 +58,7 @@ export function velBlur(now: number, prev: number, k = 0.6, max = 10): number {
   return Math.min(max, Math.abs(now - prev) * k);
 }
 
-/** A shared, modern type stack. Inter is loaded by the app shell and present on
- *  most render hosts; the fallbacks keep previews and local renders looking
- *  right. (For Lambda, embed Inter as a font file — see DEPLOY.md.) */
+/** A shared, modern type stack: embedded Inter first (see loadFont above), with
+ *  system fallbacks for the instant before the font file arrives. */
 export const FONT_STACK =
-  '"Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+  `"${INTER}", ` + '"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';

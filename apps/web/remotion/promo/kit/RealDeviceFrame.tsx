@@ -61,7 +61,9 @@ export const RealDeviceFrame: React.FC<{
   glare?: number;
   /** extra CSS (e.g. a drop-shadow filter) on the 3D wrapper */
   style?: React.CSSProperties;
-}> = ({ deviceId, width, screenshot, variant, rotateX = 0, rotateY = 0, rotateZ = 0, scale = 1, perspective = 2600, zoom = 1, panY = 0, glare = 0, style }) => {
+  /** content laid over the screen glass (clipped to it), moving with the device */
+  screenOverlay?: React.ReactNode;
+}> = ({ deviceId, width, screenshot, variant, rotateX = 0, rotateY = 0, rotateZ = 0, scale = 1, perspective = 2600, zoom = 1, panY = 0, glare = 0, style, screenOverlay }) => {
   const device = getDevice(deviceId) ?? getDevice("iphone-16-pro");
 
   const frameW = device ? device.plate?.width ?? device.frame.width : 1;
@@ -137,6 +139,22 @@ export const RealDeviceFrame: React.FC<{
                 </svg>
               )}
             </>
+          )}
+          {screenOverlay && (
+            <div
+              style={{
+                position: "absolute",
+                left: device.frame.screenRect.x * s,
+                top: device.frame.screenRect.y * s,
+                width: device.frame.screenRect.width * s,
+                height: device.frame.screenRect.height * s,
+                borderRadius: device.screen.cornerRadius * s,
+                overflow: "hidden",
+                pointerEvents: "none",
+              }}
+            >
+              {screenOverlay}
+            </div>
           )}
           {glare > 0 && (
             <div

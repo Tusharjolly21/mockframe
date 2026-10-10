@@ -3,7 +3,7 @@ import { PromoProjectSchema } from "../types";
 import { createPromoProject, getPromoTemplate, PROMO_TEMPLATE_IDS, PROMO_TEMPLATES } from "../registry";
 
 describe("promo registry", () => {
-  it("ships the six templates", () => {
+  it("ships the ten templates", () => {
     expect(PROMO_TEMPLATE_IDS).toEqual([
       "rise-reveal",
       "spin-showcase",
@@ -11,6 +11,10 @@ describe("promo registry", () => {
       "scroll-story",
       "tilt-parallax",
       "quick-cut",
+      "abstract-stack",
+      "desktop-studio",
+      "ui-showcase",
+      "everywhere",
     ]);
   });
 

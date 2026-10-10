@@ -104,6 +104,66 @@ export const PROMO_TEMPLATES: PromoTemplateMeta[] = [
     defaultBackground: "ember",
     defaultAccent: "#fb923c",
   },
+  {
+    id: "abstract-stack",
+    name: "Abstract Stack",
+    tagline: "3D shapes + every device",
+    description:
+      "Real 3D glossy shapes assemble into a sculpture, then a laptop, tablet and phone land on it in sequence under a slow camera orbit.",
+    textSlots: [
+      { key: "headline", label: "Headline", placeholder: "One app. Every screen.", maxLen: 40 },
+      { key: "caption", label: "Caption", placeholder: "Designed for the way you work", maxLen: 60 },
+    ],
+    defaultDurationInFrames: 10 * s,
+    defaultBackground: "midnight",
+    defaultAccent: "#8b5cf6",
+  },
+  {
+    id: "desktop-studio",
+    name: "Desktop Studio",
+    tagline: "Realistic laptop hero",
+    description:
+      "A camera sweep to a MacBook on a glossy studio floor; the display powers on and magnified UI details float out of the screen.",
+    textSlots: [
+      { key: "headline", label: "Headline", placeholder: "Your desk, upgraded", maxLen: 40 },
+      { key: "caption", label: "Caption", placeholder: "Powerful tools in a calm interface", maxLen: 60 },
+      { key: "feature", label: "Feature chip", placeholder: "Now on macOS & Windows", maxLen: 30 },
+    ],
+    defaultDurationInFrames: 10 * s,
+    defaultBackground: "graphite",
+    defaultAccent: "#38bdf8",
+  },
+  {
+    id: "ui-showcase",
+    name: "UI Showcase",
+    tagline: "Isometric screen wall",
+    description:
+      "Opens on an isometric wall of your screens gliding in columns, dives through it to a hero phone ringed by zoomed UI panels.",
+    textSlots: [
+      { key: "headline", label: "Headline", placeholder: "Crafted down to the pixel", maxLen: 40 },
+      { key: "feature1", label: "Feature 1", placeholder: "Smart dashboards", maxLen: 26 },
+      { key: "feature2", label: "Feature 2", placeholder: "Real-time sync", maxLen: 26 },
+      { key: "feature3", label: "Feature 3", placeholder: "Dark mode", maxLen: 26 },
+    ],
+    defaultDurationInFrames: 10 * s,
+    defaultBackground: "violet-glow",
+    defaultAccent: "#f472b6",
+  },
+  {
+    id: "everywhere",
+    name: "Everywhere Lineup",
+    tagline: "Phone, tablet, desktop",
+    description:
+      "Laptop, tablet and phone rise onto a mirrored studio floor among orbiting 3D shapes; screens cut in unison and a CTA lands.",
+    textSlots: [
+      { key: "headline", label: "Headline", placeholder: "Works on every screen", maxLen: 40 },
+      { key: "caption", label: "Caption", placeholder: "Seamless on every device", maxLen: 60 },
+      { key: "cta", label: "Call to action", placeholder: "Try it free", maxLen: 24 },
+    ],
+    defaultDurationInFrames: 10 * s,
+    defaultBackground: "aurora",
+    defaultAccent: "#22d3ee",
+  },
 ];
 
 export const PROMO_TEMPLATE_IDS = PROMO_TEMPLATES.map((t) => t.id);

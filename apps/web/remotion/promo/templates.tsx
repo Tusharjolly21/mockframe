@@ -7,6 +7,10 @@ import { FeaturePop } from "./compositions/FeaturePop";
 import { ScrollStory } from "./compositions/ScrollStory";
 import { TiltParallax } from "./compositions/TiltParallax";
 import { QuickCut } from "./compositions/QuickCut";
+import { AbstractStack } from "./compositions/AbstractStack";
+import { DesktopStudio } from "./compositions/DesktopStudio";
+import { UIShowcase } from "./compositions/UIShowcase";
+import { Everywhere } from "./compositions/Everywhere";
 
 /** One component per registry id. Used by the <Player> preview (client) and the
  *  Remotion Root (Lambda/CLI). Keys are validated against the registry at module
@@ -18,6 +22,10 @@ export const PROMO_COMPONENTS: Record<string, FC<PromoInputProps>> = {
   "scroll-story": ScrollStory,
   "tilt-parallax": TiltParallax,
   "quick-cut": QuickCut,
+  "abstract-stack": AbstractStack,
+  "desktop-studio": DesktopStudio,
+  "ui-showcase": UIShowcase,
+  everywhere: Everywhere,
 };
 
 for (const id of PROMO_TEMPLATE_IDS) {
