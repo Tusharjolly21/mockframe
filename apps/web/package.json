@@ -31,6 +31,7 @@
     "@remotion/renderer": "^4.0.489",
     "@sparticuz/chromium-min": "149.0.0",
     "@turf/turf": "^7.3.5",
+    "@vercel/blob": "^2.8.1",
     "dodopayments-checkout": "^2.0.0",
     "firebase": "^12.16.0",
     "firebase-admin": "^14.1.0",
