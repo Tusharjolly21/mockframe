@@ -44,7 +44,7 @@ const SECTIONS: { title: string; body: (string | { list: string[] })[] }[] = [
   {
     title: "Analytics & tracking",
     body: [
-      "We use Google Analytics to measure visits, feature usage, and conversion events so we can improve MockFrame. We do not use Meta pixels, advertising trackers, or session-recording tools.",
+      "With your consent, we use Google Analytics to measure visits, feature usage, and conversion events so we can improve MockFrame. We do not use Meta pixels, advertising trackers, or session-recording tools.",
       "Google may process basic device, browser, approximate location, and usage information under its own privacy terms. Our hosting (Vercel) and backend (Google Firebase) also keep standard operational server logs such as IP address, request path, and timestamps to run and secure the service.",
     ],
   },
@@ -58,7 +58,7 @@ const SECTIONS: { title: string; body: (string | { list: string[] })[] }[] = [
   {
     title: "Cookies",
     body: [
-      "We set functional cookies for your sign-in session and anonymous guest id so guest work carries over when you sign up. Google Analytics may also set or read analytics identifiers. We do not set advertising cookies.",
+      "We set functional cookies for your sign-in session and anonymous guest id so guest work carries over when you sign up. Google Analytics sets analytics cookies only after you accept them in the cookie banner; if you decline, it stays off. You can change your choice any time with “Cookie settings” in the footer. We do not set advertising cookies.",
     ],
   },
   {
