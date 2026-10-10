@@ -36,7 +36,7 @@ export function planFigmaScenes(manifest: Pick<FigmaImportManifest, "mode" | "se
     return { shots: shots.map((s, i) => ({ id: createId(), name: s.name, scene: scenes[i], base: s.scene })), filled };
   }
   const planned = frames.flatMap((f) => {
-    const base = buildDeviceScene(deviceForScreenshot(f.asset.width, f.asset.height));
+    const base = buildDeviceScene(deviceForScreenshot(f.asset.width, f.asset.height, { preferIphone: true }));
     if (!base) return [];
     return [{ id: createId(), name: f.name, scene: placeAsset(base, f.asset, {}).scene, base }];
   });
