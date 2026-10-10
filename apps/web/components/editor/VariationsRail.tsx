@@ -35,7 +35,7 @@ function Thumb({ scene }: { scene: SceneDocument }) {
   return (
     <div ref={ref} className="pointer-events-none w-full overflow-hidden rounded-xl" style={{ height: w ? scene.canvas.height * s : 56 }}>
       {w > 0 && visible && (
-        <div style={{ transform: `scale(${s})`, transformOrigin: "0 0", width: scene.canvas.width }}>
+        <div style={{ zoom: s, width: scene.canvas.width }}>
           <StaticScenePreview scene={scene} />
         </div>
       )}

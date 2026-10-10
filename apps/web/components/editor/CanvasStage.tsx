@@ -689,16 +689,19 @@ export function CanvasStage() {
       onDragLeave={() => setDropHint(false)}
       onDrop={onDrop}
     >
-      {/* zoom/pan wrapper — a view concern that never touches the document */}
+      {/* zoom/pan wrapper — a view concern that never touches the document.
+          CSS zoom, not transform: scale(): under a scale() every tilted device is
+          composited at full canvas size (thousands of px), which stalled the GPU
+          and left the editor flickering or blank after an aspect change. zoom lays
+          the scene out at its on-screen size; getBoundingClientRect, offsetWidth
+          and computed styles read the same as before. left/top are in zoomed px. */}
       <div
         id="scene-canvas"
         style={{
           position: "absolute",
-          left: 0,
-          top: 0,
-          transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-          transformOrigin: "0 0",
-          willChange: "transform",
+          left: pan.x / zoom,
+          top: pan.y / zoom,
+          zoom,
         }}
       >
         <div

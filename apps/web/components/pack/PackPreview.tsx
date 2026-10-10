@@ -128,7 +128,7 @@ export function PackPreview() {
             height: scene.canvas.height * fit,
           }}
         >
-          <div style={{ transform: `scale(${fit})`, transformOrigin: "top left" }}>
+          <div style={{ zoom: fit }}>
             <SceneRenderer
               scene={scene}
               resolveAsset={resolveAsset}

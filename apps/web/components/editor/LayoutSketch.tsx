@@ -30,7 +30,8 @@ export function LayoutSketch({ scene, base, className = "" }: { scene: SceneDocu
   const mockups = scene.layers.filter((l): l is MockupLayer => l.type === "mockup");
   return (
     <div ref={ref} className={`relative overflow-hidden ${className}`} style={{ ...backgroundStyle(scene), aspectRatio: `${W} / ${H}` }} aria-hidden>
-      <div style={{ position: "absolute", left: 0, top: 0, width: W, height: H, transform: `scale(${k})`, transformOrigin: "0 0" }}>
+      {/* zoom, not transform: scale — the tilted silhouettes would otherwise be composited at full canvas size */}
+      <div style={{ position: "absolute", left: 0, top: 0, width: W, height: H, zoom: k }}>
         {mockups.map((layer) => (
           <Silhouette key={layer.id} layer={layer} canvasH={H} refScale={(base?.layers.find((l) => l.id === layer.id) ?? base?.layers.find((l) => l.type === "mockup"))?.transform.scale} />
         ))}
