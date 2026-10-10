@@ -145,9 +145,13 @@ export function buildScreenScene(app: ScreenApp): SceneDocument | null {
  * (phone, iPad, MacBook, or a browser window for tall full-page web
  * captures). Never a photo scene.
  */
-export function deviceForScreenshot(width: number, height: number): string {
+export function deviceForScreenshot(width: number, height: number, opts: { preferIphone?: boolean } = {}): string {
   const exact = suggestDevice(width, height);
-  if (exact && (exact.category === "phone" || exact.category === "tablet") && !exact.id.includes("psd")) return exact.id;
+  if (exact && (exact.category === "phone" || exact.category === "tablet") && !exact.id.includes("psd")) {
+    // a design frame's size says nothing about the brand: keep phones as iPhones
+    if (opts.preferIphone && exact.category === "phone" && exact.brand !== "apple") return "iphone-17-pro";
+    return exact.id;
+  }
   const ar = width / height;
   if (ar < 0.4 && width >= 1600) return "safari-browser"; // full-page desktop capture
   if (ar < 0.58) return "iphone-17-pro";
