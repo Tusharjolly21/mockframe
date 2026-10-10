@@ -2,16 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { LayoutGrid, LogOut, User as UserIcon } from "lucide-react";
+import { LogOut, Settings2, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useEntitlementSync } from "@/lib/billing/client";
+import { useIsPro } from "@/lib/billing/gate";
 import { AuthModal } from "./AuthModal";
 
 /**
- * Header account control: "Sign in" for guests, avatar + menu (profile, scenes,
- * sign out) for a real account. Hidden entirely when Firebase auth isn't configured.
+ * Header account control: "Sign in" for guests, avatar + menu (email, sign out)
+ * for a real account. Hidden entirely when Firebase auth isn't configured.
  */
-export function AccountButton({ onDark = false }: { onDark?: boolean }) {
+export function AccountButton() {
   const { configured, loading, account, signOut } = useAuth();
+  useEntitlementSync();
+  const pro = useIsPro();
   const [modal, setModal] = useState(false);
   const [menu, setMenu] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -32,7 +36,7 @@ export function AccountButton({ onDark = false }: { onDark?: boolean }) {
       <>
         <button
           onClick={() => setModal(true)}
-          className={`fk-press ml-0.5 rounded-lg px-3 py-1.5 text-[12.5px] font-semibold ${onDark ? "border border-white/15 text-zinc-200 hover:bg-white/10" : "bg-[#17171c] text-white hover:bg-black"}`}
+          className="fk-press ml-0.5 rounded-lg bg-[#17171c] px-3 py-1.5 text-[12.5px] font-semibold text-white hover:bg-black"
         >
           Sign in
         </button>
@@ -70,13 +74,16 @@ export function AccountButton({ onDark = false }: { onDark?: boolean }) {
             </div>
           </div>
           <div className="my-1 h-px bg-[#f0f0f3]" />
-          <Link href="/profile" onClick={() => setMenu(false)} className="fk-press flex w-full items-center gap-2 px-3 py-2 text-left text-[12.5px] font-medium text-[#4a4a55] hover:bg-black/[0.04]">
-            <UserIcon size={14} /> Your profile
+          <Link
+            href="/account"
+            target="_blank"
+            rel="noopener"
+            onClick={() => setMenu(false)}
+            className="fk-press flex w-full items-center gap-2 px-3 py-2 text-left text-[12.5px] font-medium text-[#4a4a55] hover:bg-black/[0.04]"
+          >
+            <Settings2 size={14} /> Account and plan
+            <span className={`ml-auto rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${pro ? "bg-[#17171c] text-white" : "bg-[#f0f0f5] text-[#6b6b76]"}`}>{pro ? "Pro" : "Free"}</span>
           </Link>
-          <Link href="/dashboard" onClick={() => setMenu(false)} className="fk-press flex w-full items-center gap-2 px-3 py-2 text-left text-[12.5px] font-medium text-[#4a4a55] hover:bg-black/[0.04]">
-            <LayoutGrid size={14} /> My scenes
-          </Link>
-          <div className="my-1 h-px bg-[#f0f0f3]" />
           <button
             onClick={async () => {
               setMenu(false);
