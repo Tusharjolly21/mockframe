@@ -76,14 +76,14 @@ export function Seg<T extends string>({
   id: string;
 }) {
   return (
-    <div className="mb-3 grid auto-cols-fr grid-flow-col gap-0.5 rounded-xl bg-[#ececf2] p-1">
+    <div className="mb-3 grid gap-0.5 rounded-xl bg-[#ececf2] p-1" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
       {options.map((o) => {
         const active = value === o.value;
         return (
           <button
             key={o.value}
             aria-pressed={active}
-            className={`fk-press relative rounded-lg px-2 py-1.5 text-xs font-medium ${
+            className={`fk-press relative min-w-0 whitespace-nowrap rounded-lg px-1.5 py-1.5 text-[11.5px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-[#17171c]/30 ${
               active ? "text-[#17171c]" : "text-[#8a8a94] hover:text-[#4a4a55]"
             }`}
             onClick={() => onChange(o.value)}

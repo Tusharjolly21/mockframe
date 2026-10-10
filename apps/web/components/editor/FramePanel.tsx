@@ -429,17 +429,6 @@ function BackgroundDetail() {
 
   return (
     <div className="pb-2">
-      <div className="mb-3 grid grid-cols-2 gap-2">
-        <button
-          onClick={() => setBg({ type: "transparent" })}
-          className={`fk-press rounded-xl border px-2 py-2 text-[11px] font-semibold ${bg.type === "transparent" ? "border-[#17171c] bg-[#17171c] text-white" : "border-[#e4e4ec] bg-white text-[#3c3c46]"}`}
-        >
-          No backdrop
-        </button>
-        <button onClick={() => fileRef.current?.click()} className="fk-press rounded-xl border border-[#e4e4ec] bg-white px-2 py-2 text-[11px] font-semibold text-[#3c3c46]">
-          Upload image
-        </button>
-      </div>
       <Seg
         id="background-library"
         options={[
@@ -451,34 +440,46 @@ function BackgroundDetail() {
         value={tab}
         onChange={(value) => setTab(value as typeof tab)}
       />
-      <div className="mb-3 grid grid-cols-2 gap-2">
-        <button
-          onClick={() => {
-            // a tasteful colorful default, not the first solid (which was always
-            // plain white). Pick a random gradient so "Auto" actually does
-            // something; free-tier safe (the gradient collection is never Pro).
-            const gradients = BG_CATEGORIES.find((category) => category.id === "gradient")?.swatches ?? [];
-            const pick = gradients[Math.floor(Math.random() * gradients.length)];
-            if (pick) setBg(pick.bg);
-          }}
-          className="fk-press rounded-xl border border-[#e4e4ec] bg-white py-2 text-[11px] font-semibold"
-        >
-          <Sparkles size={13} className="mr-1 inline text-amber-500" /> Auto
-        </button>
-        <button
-          onClick={() => {
-            // free users shuffle only within unlocked collections, so Shuffle
-            // never lands on a background they'd then be blocked from keeping
-            const swatches = categories.flatMap((category) =>
-              category.swatches.filter((swatch) => isPro || !isProBgSwatch(category.id, swatch.id))
-            );
-            const pick = swatches[Math.floor(Math.random() * swatches.length)];
-            if (pick) setBg(pick.bg);
-          }}
-          className="fk-press rounded-xl border border-[#e4e4ec] bg-white py-2 text-[11px] font-semibold"
-        >
-          Shuffle
-        </button>
+      <div className="mb-3 grid grid-cols-4 gap-1.5">
+        {[
+          { label: "None", icon: <Ban size={14} />, on: bg.type === "transparent", run: () => setBg({ type: "transparent" }) },
+          { label: "Upload", icon: <ImageIcon size={14} />, on: false, run: () => fileRef.current?.click() },
+          {
+            label: "Auto",
+            icon: <Sparkles size={14} className="text-amber-500" />,
+            on: false,
+            // a tasteful colourful default; the gradient collection is never Pro
+            run: () => {
+              const gradients = BG_CATEGORIES.find((category) => category.id === "gradient")?.swatches ?? [];
+              const pick = gradients[Math.floor(Math.random() * gradients.length)];
+              if (pick) setBg(pick.bg);
+            },
+          },
+          {
+            label: "Shuffle",
+            icon: <ArrowUpDown size={14} className="rotate-90" />,
+            on: false,
+            // free users shuffle only within unlocked collections
+            run: () => {
+              const swatches = categories.flatMap((category) =>
+                category.swatches.filter((swatch) => isPro || !isProBgSwatch(category.id, swatch.id))
+              );
+              const pick = swatches[Math.floor(Math.random() * swatches.length)];
+              if (pick) setBg(pick.bg);
+            },
+          },
+        ].map((b) => (
+          <button
+            key={b.label}
+            onClick={b.run}
+            className={`fk-press flex flex-col items-center gap-1 rounded-xl border py-2 text-[10.5px] font-semibold ${
+              b.on ? "border-[#17171c] bg-[#17171c] text-white" : "border-[#e4e4ec] bg-white text-[#3c3c46]"
+            }`}
+          >
+            {b.icon}
+            {b.label}
+          </button>
+        ))}
       </div>
       {tab === "wallpapers" && (
         <UnsplashPhotos
@@ -492,7 +493,7 @@ function BackgroundDetail() {
         const locked = !isPro && isProBgCategory(category.id);
         return (
           <div key={category.id} className="mb-4">
-            <div className="mb-2 flex items-center justify-between">
+            <div className={`mb-2 flex items-center justify-between ${categories.length === 1 && !locked ? "hidden" : ""}`}>
               <p className="flex items-center gap-1 text-[12px] font-bold text-[#17171c]">
                 {category.label}
                 {locked && (
