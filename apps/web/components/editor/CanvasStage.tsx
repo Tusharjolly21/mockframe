@@ -16,6 +16,10 @@ type Drag =
   | {
       kind: "move";
       id: string; // the layer under the pointer (snap reference)
+      /** pointer position on screen at press: a move only starts after a few px, so clicks never nudge */
+      startClientX: number;
+      startClientY: number;
+      armed: boolean;
       startCX: number;
       startCY: number;
       starts: Record<string, { x: number; y: number }>; // all selected layers move together
@@ -26,7 +30,21 @@ type Drag =
       snapXs?: number[];
       snapYs?: number[];
     }
-  | { kind: "scale"; id: string; centerX: number; centerY: number; startDist: number; scale: number; currentScale: number }
+  | {
+      kind: "scale";
+      id: string;
+      centerX: number;
+      centerY: number;
+      /** the fixed point the corner handle scales away from (screen px); the centre when none */
+      anchorX: number;
+      anchorY: number;
+      startDist: number;
+      scale: number;
+      currentScale: number;
+      /** canvas-px shift that keeps the anchor corner still */
+      currentDX: number;
+      currentDY: number;
+    }
   | { kind: "rotate"; id: string; centerX: number; centerY: number; startAngle: number; rotate: number; currentRotate: number }
   | { kind: "tilt"; id: string; startX: number; startY: number; tiltX: number; tiltY: number; currentTiltX: number; currentTiltY: number };
 
@@ -41,12 +59,17 @@ export function CanvasStage() {
   const [overlayBoxes, setOverlayBoxes] = useState<{ id: string; x: number; y: number; w: number; h: number }[]>([]);
   const [guides, setGuides] = useState<{ xs: number[]; ys: number[] }>({ xs: [], ys: [] });
   const [dragging, setDragging] = useState(false);
+  const [hoverId, setHoverId] = useState<string | null>(null);
+  const [hoverBox, setHoverBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const [marquee, setMarquee] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   const [dropHint, setDropHint] = useState(false);
   // ⊕ buttons centered on empty device screens (PostSpark's add-media affordance)
   const [emptyBoxes, setEmptyBoxes] = useState<{ id: string; x: number; y: number }[]>([]);
   const emptyPickRef = useRef<HTMLInputElement>(null);
   const emptyBtnRefs = useRef(new Map<string, HTMLButtonElement>());
   const emptyTargetRef = useRef<string | null>(null);
+  /** when the last move-drag ended, so the ⊕ button can tell a drag that began on it from a click */
+  const dragEndedAt = useRef(0);
 
   /* ------------------------------ fit to view ------------------------------ */
   // insets keep the scene clear of the floating panels (and of the filmstrip
@@ -201,13 +224,40 @@ export function CanvasStage() {
   const layerNode = (id: string): HTMLElement | null =>
     containerRef.current?.querySelector<HTMLElement>(`[data-layer-id="${id}"]`) ?? null;
 
+  /** The box a layer visibly occupies on screen: its device (for transparent photo-scene plates) or the whole layer. */
+  const hugRect = (id: string): DOMRect | null => {
+    const node = layerNode(id);
+    if (!node) return null;
+    const target = (node.querySelector("[data-select-anchor]") as HTMLElement | null) ?? node;
+    return target.getBoundingClientRect();
+  };
+
+  /**
+   * The layer a pointer is really over. Elements under the pointer are walked
+   * top to bottom; a layer whose visible box (not its transparent plate)
+   * doesn't contain the point is skipped, so full-bleed photo scenes no longer
+   * swallow every click and the device underneath can be grabbed.
+   */
+  const hitLayer = (clientX: number, clientY: number): string | null => {
+    const seen = new Set<string>();
+    for (const el of document.elementsFromPoint(clientX, clientY)) {
+      const id = el.closest?.("[data-layer-id]")?.getAttribute("data-layer-id");
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      const r = hugRect(id);
+      if (!r || (clientX >= r.left - 2 && clientX <= r.right + 2 && clientY >= r.top - 2 && clientY <= r.bottom + 2)) return id;
+    }
+    return null;
+  };
+
   const setDragStyle = (id: string, vars: Record<string, string>) => {
     const node = layerNode(id);
     if (!node) return;
     for (const [name, value] of Object.entries(vars)) node.style.setProperty(name, value);
     const overlay = containerRef.current?.querySelector<HTMLElement>(`[data-layer-overlay="${id}"]`);
     if (overlay && vars["--fk-drag-x"] !== undefined) {
-      overlay.style.transform = `translate(${parseFloat(vars["--fk-drag-x"]) * zoom}px, ${parseFloat(vars["--fk-drag-y"] ?? "0") * zoom}px)`;
+      const sc = vars["--fk-drag-scale"] !== undefined ? ` scale(${vars["--fk-drag-scale"]})` : "";
+      overlay.style.transform = `translate(${parseFloat(vars["--fk-drag-x"]) * zoom}px, ${parseFloat(vars["--fk-drag-y"] ?? "0") * zoom}px)${sc}`;
     } else if (overlay && vars["--fk-drag-scale"] !== undefined) {
       overlay.style.transform = `scale(${vars["--fk-drag-scale"]})`;
     } else if (overlay && vars["--fk-drag-rotate"] !== undefined) {
@@ -233,6 +283,11 @@ export function CanvasStage() {
       const d = dragRef.current;
       if (!d) return;
       if (d.kind === "move") {
+        // a press only becomes a drag after a few px, so a click never nudges anything
+        if (!d.armed) {
+          if (Math.hypot(e.clientX - d.startClientX, e.clientY - d.startClientY) < 4) return;
+          d.armed = true;
+        }
         const pt = toCanvasPt(e.clientX, e.clientY);
         const anchor = d.starts[d.id];
         let dx = pt.x - d.startCX;
@@ -275,11 +330,15 @@ export function CanvasStage() {
         return;
       }
       if (d.kind === "scale") {
-        const dist = Math.hypot(e.clientX - d.centerX, e.clientY - d.centerY);
+        const dist = Math.hypot(e.clientX - d.anchorX, e.clientY - d.anchorY);
         const factor = dist / d.startDist;
         const next = Math.min(10, Math.max(0.02, d.scale * factor));
         d.currentScale = Math.round(next * 1000) / 1000;
-        setDragStyle(d.id, { "--fk-drag-scale": String(d.currentScale / d.scale) });
+        const f = d.currentScale / d.scale;
+        // the box grows away from the anchor corner: shift the centre to keep that corner still
+        d.currentDX = ((d.centerX - d.anchorX) * (f - 1)) / zoom;
+        d.currentDY = ((d.centerY - d.anchorY) * (f - 1)) / zoom;
+        setDragStyle(d.id, { "--fk-drag-scale": String(f), "--fk-drag-x": `${d.currentDX}px`, "--fk-drag-y": `${d.currentDY}px` });
         return;
       }
       if (d.kind === "rotate") {
@@ -311,16 +370,22 @@ export function CanvasStage() {
         content?.style.setProperty("--fk-drag-tilt-y", `${tiltY - d.tiltY}deg`);
       }
     };
+    let cancelled = false;
     const onUp = () => {
       const finished = dragRef.current;
       dragRef.current = null;
       setGuides({ xs: [], ys: [] });
       setDragging(false);
       sceneTemporal.getState().resume();
-      if (finished) {
+      if (finished && cancelled) {
+        // Esc mid-drag: put everything back where it was
+        if (finished.kind === "move") for (const id of Object.keys(finished.starts)) clearDragStyle(id);
+        else clearDragStyle(finished.id);
+      } else if (finished) {
         // a plain click (pointer down and up with nothing changed) must not write: it would push an undo
         // entry, spin up an autosave draft and dismiss the "resume your draft" card
         if (finished.kind === "move") {
+          if (finished.armed) dragEndedAt.current = performance.now();
           if (finished.currentX !== 0 || finished.currentY !== 0) {
             setScene((s) => ({
               ...s,
@@ -332,7 +397,10 @@ export function CanvasStage() {
           for (const id of Object.keys(finished.starts)) clearDragStyle(id);
         } else if (finished.kind === "scale") {
           if (finished.currentScale !== finished.scale) {
-            updateLayer(finished.id, (l) => ({ ...l, transform: { ...l.transform, scale: finished.currentScale } }));
+            updateLayer(finished.id, (l) => ({
+              ...l,
+              transform: { ...l.transform, scale: finished.currentScale, x: Math.round((l.transform.x + finished.currentDX) * 10) / 10, y: Math.round((l.transform.y + finished.currentDY) * 10) / 10 },
+            }));
           }
           clearDragStyle(finished.id);
         } else if (finished.kind === "rotate") {
@@ -349,18 +417,27 @@ export function CanvasStage() {
       }
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      window.removeEventListener("keydown", onKeyDrag);
+    };
+    const onKeyDrag = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      cancelled = true;
+      onUp();
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    window.addEventListener("keydown", onKeyDrag);
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
     // clicking away from the screenshot being adjusted finishes adjusting
     if (adjustId) exitAdjust();
-    const layerEl = (e.target as Element).closest?.("[data-layer-id]");
-    if (layerEl) {
-      const id = layerEl.getAttribute("data-layer-id")!;
+    const hitId = hitLayer(e.clientX, e.clientY);
+    if (hitId) {
+      const id = hitId;
       // 3D mode: drag rotates the mockup in 3D instead of moving it
       if (threeD) {
         const layer = scene.layers.find((l) => l.id === id);
@@ -403,6 +480,9 @@ export function CanvasStage() {
       beginDrag({
         kind: "move",
         id,
+        startClientX: e.clientX,
+        startClientY: e.clientY,
+        armed: false,
         startCX: pt.x,
         startCY: pt.y,
         starts,
@@ -413,15 +493,75 @@ export function CanvasStage() {
         snapYs: [0, H / 2, H, ...others.flatMap((b) => [b.t, (b.t + b.b) / 2, b.b])],
       });
     } else {
-      // empty area: just deselect — the canvas itself never moves
-      select(null);
+      // empty area: a click deselects, a drag draws a selection box (⇧ adds to the selection)
+      beginMarquee(e);
     }
+  };
+
+  /** Rubber-band selection over empty canvas. */
+  const beginMarquee = (e: React.PointerEvent) => {
+    const host = containerRef.current;
+    if (!host) return;
+    const hr = host.getBoundingClientRect();
+    const x0 = e.clientX - hr.left;
+    const y0 = e.clientY - hr.top;
+    const base = e.shiftKey ? useViewStore.getState().selectedIds : [];
+    let moved = false;
+    const rectOf = (ev: PointerEvent) => ({ x0, y0, x1: ev.clientX - hr.left, y1: ev.clientY - hr.top });
+    const hitsIn = (box: { x0: number; y0: number; x1: number; y1: number }) => {
+      const l = Math.min(box.x0, box.x1) + hr.left;
+      const r = Math.max(box.x0, box.x1) + hr.left;
+      const t = Math.min(box.y0, box.y1) + hr.top;
+      const b = Math.max(box.y0, box.y1) + hr.top;
+      const ids = scene.layers
+        .filter((layer) => {
+          const rect = hugRect(layer.id);
+          return !!rect && rect.right >= l && rect.left <= r && rect.bottom >= t && rect.top <= b;
+        })
+        .map((layer) => layer.id);
+      // a group is picked up whole
+      const groups = new Set(scene.layers.filter((layer) => ids.includes(layer.id) && layer.group).map((layer) => layer.group));
+      return [...new Set([...ids, ...scene.layers.filter((layer) => layer.group && groups.has(layer.group)).map((layer) => layer.id)])];
+    };
+    const onMove = (ev: PointerEvent) => {
+      const box = rectOf(ev);
+      if (!moved && Math.hypot(box.x1 - box.x0, box.y1 - box.y0) < 4) return;
+      moved = true;
+      setMarquee(box);
+      useViewStore.setState({ selectedIds: [...new Set([...base, ...hitsIn(box)])] });
+    };
+    const done = () => {
+      if (!moved) select(null);
+      setMarquee(null);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", done);
+      window.removeEventListener("pointercancel", done);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", done);
+    window.addEventListener("pointercancel", done);
+  };
+
+  /** Hover feedback: outline the layer under the pointer so it's clear what a click will grab. */
+  const hoverRaf = useRef(0);
+  const onPointerMoveHover = (e: React.PointerEvent) => {
+    if (dragRef.current || e.buttons) return;
+    const { clientX, clientY } = e;
+    cancelAnimationFrame(hoverRaf.current);
+    hoverRaf.current = requestAnimationFrame(() => {
+      const id = hitLayer(clientX, clientY);
+      setHoverId((cur) => (cur === id ? cur : id));
+      const host = containerRef.current?.getBoundingClientRect();
+      const r = id && host ? hugRect(id) : null;
+      setHoverBox(r && host ? { x: r.left - host.left, y: r.top - host.top, w: r.width, h: r.height } : null);
+    });
   };
 
   const beginHandleDrag = (
     e: React.PointerEvent,
     kind: "scale" | "rotate",
-    box: { id: string; x: number; y: number; w: number; h: number }
+    box: { id: string; x: number; y: number; w: number; h: number },
+    corner?: "nw" | "ne" | "sw" | "se"
   ) => {
     e.stopPropagation();
     if (!containerRef.current) return;
@@ -431,14 +571,25 @@ export function CanvasStage() {
     const centerX = host.left + box.x + box.w / 2;
     const centerY = host.top + box.y + box.h / 2;
     if (kind === "scale") {
+      // corner handles scale away from the opposite corner (hold ⌥ for from-centre); a turned or
+      // tilted layer's on-screen box isn't its real corner, so those scale about their centre
+      const t = layer.transform;
+      const straight = t.rotate === 0 && t.tiltX === 0 && t.tiltY === 0;
+      const fromCorner = !!corner && straight && !e.altKey;
+      const anchorX = fromCorner ? host.left + box.x + (corner!.includes("w") ? box.w : 0) : centerX;
+      const anchorY = fromCorner ? host.top + box.y + (corner!.includes("n") ? box.h : 0) : centerY;
       beginDrag({
         kind,
         id: box.id,
         centerX,
         centerY,
-        startDist: Math.max(4, Math.hypot(e.clientX - centerX, e.clientY - centerY)),
-        scale: layer.transform.scale,
-        currentScale: layer.transform.scale,
+        anchorX,
+        anchorY,
+        startDist: Math.max(4, Math.hypot(e.clientX - anchorX, e.clientY - anchorY)),
+        scale: t.scale,
+        currentScale: t.scale,
+        currentDX: 0,
+        currentDY: 0,
       });
     } else {
       beginDrag({
@@ -485,12 +636,18 @@ export function CanvasStage() {
         backgroundImage: "radial-gradient(rgba(20,20,60,0.07) 1px, transparent 1px)",
         backgroundSize: "22px 22px",
         touchAction: "none",
-        cursor: threeD ? "grab" : undefined,
+        cursor: threeD ? "grab" : hoverId && selectedIds.includes(hoverId) ? "move" : hoverId ? "pointer" : undefined,
       }}
       onPointerDown={onPointerDown}
+      onPointerMove={onPointerMoveHover}
+      onPointerLeave={() => {
+        cancelAnimationFrame(hoverRaf.current);
+        setHoverId(null);
+        setHoverBox(null);
+      }}
       onDoubleClick={(e) => {
         // double-click a screenshot to adjust it on the canvas
-        const id = (e.target as Element).closest?.("[data-layer-id]")?.getAttribute("data-layer-id");
+        const id = hitLayer(e.clientX, e.clientY);
         const layer = id ? scene.layers.find((l) => l.id === id) : undefined;
         if (id && !threeD && canAdjust(layer)) enterAdjust(id);
       }}
@@ -547,6 +704,22 @@ export function CanvasStage() {
         ))}
       </div>
 
+      {/* hover outline: what a click would grab */}
+      {hoverBox && hoverId && !dragging && !selectedIds.includes(hoverId) && (
+        <div
+          className="pointer-events-none absolute rounded-[3px] border-[1.5px] border-violet-500/60 bg-violet-500/[0.06]"
+          style={{ left: hoverBox.x, top: hoverBox.y, width: hoverBox.w, height: hoverBox.h }}
+        />
+      )}
+
+      {/* rubber-band selection box */}
+      {marquee && (
+        <div
+          className="pointer-events-none absolute z-20 border border-violet-500 bg-violet-500/10"
+          style={{ left: Math.min(marquee.x0, marquee.x1), top: Math.min(marquee.y0, marquee.y1), width: Math.abs(marquee.x1 - marquee.x0), height: Math.abs(marquee.y1 - marquee.y0) }}
+        />
+      )}
+
       {/* selection chrome — app overlay, never inside the renderer */}
       {overlayBoxes.filter((box) => box.id !== adjustId).map((box) => (
         <div
@@ -558,16 +731,18 @@ export function CanvasStage() {
           {(["nw", "ne", "sw", "se"] as const).map((corner) => (
             <div
               key={corner}
-              onPointerDown={(e) => beginHandleDrag(e, "scale", box)}
-              className="pointer-events-auto absolute h-3 w-3 rounded-[3px] border-2 border-violet-500 bg-white"
+              onPointerDown={(e) => beginHandleDrag(e, "scale", box, corner)}
+              className="pointer-events-auto absolute grid h-6 w-6 place-items-center"
               style={{
-                left: corner.includes("w") ? -7 : undefined,
-                right: corner.includes("e") ? -7 : undefined,
-                top: corner.includes("n") ? -7 : undefined,
-                bottom: corner.includes("s") ? -7 : undefined,
+                left: corner.includes("w") ? -13 : undefined,
+                right: corner.includes("e") ? -13 : undefined,
+                top: corner.includes("n") ? -13 : undefined,
+                bottom: corner.includes("s") ? -13 : undefined,
                 cursor: corner === "nw" || corner === "se" ? "nwse-resize" : "nesw-resize",
               }}
-            />
+            >
+              <span className="h-3 w-3 rounded-[3px] border-2 border-violet-500 bg-white shadow-sm" />
+            </div>
           ))}
           <div
             onPointerDown={(e) => beginHandleDrag(e, "rotate", box)}
@@ -601,10 +776,11 @@ export function CanvasStage() {
           title="Add screenshot — click, or drag an image in"
           onClick={(e) => {
             e.stopPropagation();
+            // a drag that started on the ⊕ moves the device; only a real click adds a screenshot
+            if (performance.now() - dragEndedAt.current < 400) return;
             emptyTargetRef.current = b.id;
             emptyPickRef.current?.click();
           }}
-          onPointerDown={(e) => e.stopPropagation()}
           className="fk-press absolute z-10 grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-[#17171c] shadow-[0_6px_20px_rgba(20,20,40,0.3)] ring-1 ring-black/5 hover:scale-105"
           style={{ left: b.x, top: b.y }}
         >

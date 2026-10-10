@@ -21,6 +21,7 @@ import { CaptureUrlDialog } from "./CaptureUrlDialog";
 import { DevicePicker } from "./DevicePicker";
 import { LiftCards } from "./LiftCards";
 import { isLiftedCard } from "@/lib/liftCard";
+import { removeLayer } from "@/lib/sceneOps";
 import { AddDeviceButton, ArrangeLineupButton, arrangeableCount } from "./AddDevice";
 import { arrangeLineup, estimateBox, matchPhysicalScale } from "@/lib/lineup";
 import { MediaEditor } from "./MediaEditor";
@@ -108,7 +109,10 @@ export function LeftPanel() {
             <MockupControls layer={target} />
           </>
         ) : (
-          <p className="px-4 py-8 text-center text-xs text-[#9a9aa4]">Add a device to get started.</p>
+          <div className="flex flex-col items-center gap-3 px-4 py-8 text-center">
+            <p className="text-xs text-[#9a9aa4]">No device on the canvas.</p>
+            <AddDeviceButton compact />
+          </div>
         )
       ) : step === "style" ? (
         <FrameControls />
@@ -136,6 +140,12 @@ function PhoneSlots({
   onSelect: (id: string | null) => void;
 }) {
   const scene = useSceneStore((s) => s.scene);
+  const setScene = useSceneStore((s) => s.setScene);
+  const onRemove = (id: string) => {
+    setScene((sc) => removeLayer(sc, id));
+    useViewStore.setState((v) => ({ selectedIds: v.selectedIds.filter((x) => x !== id) }));
+    window.dispatchEvent(new CustomEvent("framekit:toast", { detail: "Device removed — ⌘Z to undo" }));
+  };
   if (layers.length === 0) return null;
   return (
     <section className="border-b border-[#ececf2] px-3 pb-3 pt-2">
@@ -153,14 +163,18 @@ function PhoneSlots({
           const asset = layer.media ? resolveAsset(layer.media.assetId) : undefined;
           const active = layer.id === activeId;
           return (
-            <motion.button
+            <motion.div
               key={layer.id}
               layout
               initial={{ opacity: 0, y: 18, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ type: "spring", stiffness: 420, damping: 28 }}
+              className="group/slot relative min-w-0"
+            >
+            <button
+              type="button"
               onClick={() => onSelect(layer.id)}
-              className={`fk-press min-w-0 rounded-lg border p-1.5 text-left ${
+              className={`fk-press w-full min-w-0 rounded-lg border p-1.5 text-left ${
                 active ? "border-[#17171c] bg-[#f4f4f8] shadow-[0_0_0_1px_#17171c]" : "border-[#e4e4ec] bg-white hover:border-[#a9a9b3]"
               }`}
               title={`Edit screen ${index + 1}`}
@@ -178,11 +192,56 @@ function PhoneSlots({
               </span>
               <span className="mt-1 block truncate text-[10px] font-semibold text-[#31313a]">{isLiftedCard(layer) ? "Card" : device ? SLOT_LABEL[device.category] ?? "Device" : "Screenshot"} {index + 1}</span>
               <span className="block truncate text-[9px] text-[#92929d]">{layer.media ? "Screenshot set" : "Add screenshot"}</span>
-            </motion.button>
+            </button>
+            <button
+              type="button"
+              onClick={() => onRemove(layer.id)}
+              aria-label={`Remove screen ${index + 1}`}
+              title="Remove this device (⌘Z undoes it)"
+              className={`fk-press absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full border border-[#e4e4ec] bg-white text-[#6b6b76] shadow-sm hover:border-[#c0392b] hover:bg-[#c0392b] hover:text-white focus-visible:opacity-100 ${active ? "opacity-100" : "opacity-0 group-hover/slot:opacity-100"}`}
+            >
+              <X size={11} strokeWidth={2.6} />
+            </button>
+            </motion.div>
           );
         })}
         <AddDeviceButton />
       </div>
+    </section>
+  );
+}
+
+/** Address and tab title of a browser frame, plus the window style. */
+function BrowserControls({ layer, onChange }: { layer: MockupLayer; onChange: (p: Partial<MockupLayer>) => void }) {
+  const device = layer.deviceId ? getDevice(layer.deviceId) : undefined;
+  if (!device) return null;
+  const hasTabs = device.id !== "safari-browser" && device.id !== "arc-browser";
+  return (
+    <section className="mx-3 mt-3 rounded-xl border border-[#e4e4ec] bg-white p-2.5">
+      <h3 className="text-[12px] font-bold text-[#17171c]">Browser window</h3>
+      <p className="mt-0.5 text-[10.5px] leading-snug text-[#858590]">What the address bar and tab say. Light, dark and Windows styles are in the picker above.</p>
+      <label className="mt-2 block text-[10.5px] font-semibold text-[#6b6b76]">
+        Address
+        <input
+          value={layer.browserUrl ?? ""}
+          onChange={(e) => onChange({ browserUrl: e.target.value || undefined })}
+          placeholder={device.urlBarText ?? "yourapp.com"}
+          spellCheck={false}
+          className="mt-1 w-full rounded-lg border border-[#e4e4ec] bg-white px-2.5 py-1.5 text-[12px] font-normal text-[#17171c] outline-none focus:border-[#17171c]"
+        />
+      </label>
+      {hasTabs && (
+        <label className="mt-2 block text-[10.5px] font-semibold text-[#6b6b76]">
+          Tab title
+          <input
+            value={layer.browserTitle ?? ""}
+            onChange={(e) => onChange({ browserTitle: e.target.value || undefined })}
+            placeholder="MockFrame"
+            maxLength={60}
+            className="mt-1 w-full rounded-lg border border-[#e4e4ec] bg-white px-2.5 py-1.5 text-[12px] font-normal text-[#17171c] outline-none focus:border-[#17171c]"
+          />
+        </label>
+      )}
     </section>
   );
 }
@@ -339,6 +398,8 @@ function MockupControls({ layer }: { layer: MockupLayer }) {
         />
       </div>
       )}
+
+      {tab === "device" && device?.category === "browser" && <BrowserControls layer={layer} onChange={patch} />}
 
       {tab === "position" && <TransformControls layer={layer} />}
 

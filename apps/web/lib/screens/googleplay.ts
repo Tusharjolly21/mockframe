@@ -1,6 +1,20 @@
 "use client";
 
-import { esc, storeShotTile, systemFont, textBlock, truncate, wrapText } from "./common";
+import { SH, SW, esc, homeIndicator, glyph, statusBar, storeShotTile, systemFont, textBlock, textWidth, truncate, wrapText } from "./common";
+import {
+  ARROW_FWD,
+  BOOKMARK_ADD,
+  SHARE,
+  STAR,
+  SHOT_RATIO,
+  appIcon,
+  blurb,
+  clampLines,
+  playShot,
+  playTheme,
+  ratingDist,
+  stars,
+} from "./web/gp-shots";
 import type { GooglePlayDoc } from "./types";
 
 /* ------------------------------ standalone card ------------------------------
@@ -57,7 +71,7 @@ function renderGooglePlayCard(doc: GooglePlayDoc, avatarUrl?: string): string {
   <clipPath id="gp-icon-clip"><rect x="${ix}" y="${iy}" width="${ic}" height="${ic}" rx="20"/></clipPath>
   <clipPath id="gp-card-clip"><rect x="${x}" y="${y}" width="${CARD_W}" height="${CARD_H}" rx="28"/></clipPath>
 </defs>
-<rect x="${x}" y="${y}" width="${CARD_W}" height="${CARD_H}" rx="28" fill="${dark ? "#1f1f1f" : "#ffffff"}" filter="url(#gp-card-sh)"/>
+<rect x="${x}" y="${y}" width="${CARD_W}" height="${CARD_H}" rx="28" fill="${dark ? "#1f1f1f" : "#ffffff"}"/>
 ${avatarUrl
     ? `<image href="${avatarUrl}" x="${ix}" y="${iy}" width="${ic}" height="${ic}" preserveAspectRatio="xMidYMid slice" clip-path="url(#gp-icon-clip)"/>`
     : `<rect x="${ix}" y="${iy}" width="${ic}" height="${ic}" rx="20" fill="url(#gp-icon)"/>` +
@@ -76,234 +90,124 @@ ${stat(2, "", doc.contentRating, `<rect x="${x + 14 + colW * 2.5 - 11}" y="${sta
 }
 
 export function googlePlayCardSize(doc: GooglePlayDoc): { width: number; height: number } {
+  void doc;
   return { width: 402, height: CARD_H + 28 };
 }
 
 export function renderGooglePlay(doc: GooglePlayDoc, avatarUrl?: string): string {
   if (doc.standalone) return renderGooglePlayCard(doc, avatarUrl);
-  const isDark = !!doc.dark;
-  const width = 402;
-  const height = doc.standalone ? googlePlayCardSize(doc).height : 874;
-  
-  const marginX = 20;
-  const marginY = 16;
-  const cardW = width - marginX * 2;
-  
-  const font = systemFont("android");
-  const textPrimary = isDark ? "#ffffff" : "#202124";
-  const textSecondary = isDark ? "#9aa0a6" : "#5f6368";
-  const appBg = isDark ? "#121212" : "#ffffff";
-  const cardBg = isDark ? "#202124" : "#ffffff";
-  const cardStroke = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
-  const shadowColor = isDark ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.08)";
-  const playGreen = "#01875f";
-  const dividerColor = isDark ? "#303134" : "#e8eaed";
-  
-  const iconSize = doc.standalone ? 64 : 72;
-  const iconClipId = "gp-clip";
-  
-  const getIconDrawing = (ix: number, iy: number) => avatarUrl
-    ? `
-      <defs>
-        <clipPath id="${iconClipId}">
-          <rect x="${ix}" y="${iy}" width="${iconSize}" height="${iconSize}" rx="14"/>
-        </clipPath>
-      </defs>
-      <image href="${avatarUrl}" x="${ix}" y="${iy}" width="${iconSize}" height="${iconSize}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${iconClipId})"/>
-    `
-    : `
-      <defs>
-        <linearGradient id="gp-grad-${iconClipId}" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#01875f"/>
-          <stop offset="100%" stop-color="#004d34"/>
-        </linearGradient>
-      </defs>
-      <rect x="${ix}" y="${iy}" width="${iconSize}" height="${iconSize}" rx="14" fill="url(#gp-grad-${iconClipId})"/>
-      <text x="${ix + iconSize / 2}" y="${iy + iconSize / 2 + 10}" font-family="${font}" font-size="${doc.standalone ? 28 : 32}" font-weight="900" fill="#ffffff" text-anchor="middle">${esc(doc.title.slice(0,1).toUpperCase())}</text>
-    `;
+  const dark = !!doc.dark || !!doc.chrome.dark;
+  const platform = doc.chrome.platform === "android" ? "android" : "ios";
+  const th = playTheme(dark);
+  const font = systemFont("android"); // Play is Google Sans / Roboto on every OS
+  const { ink, sub, line, green } = th;
+  const pad = 16;
+  let out = `<rect width="${SW}" height="${SH}" fill="${th.bg}"/>`;
 
-  const renderStandaloneCard = (x: number, y: number) => `
-    <g>
-      <defs>
-        <filter id="googleplay-shadow" x="-8%" y="-8%" width="116%" height="120%">
-          <feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="${shadowColor}" flood-opacity="0.15"/>
-        </filter>
-      </defs>
-      
-      <!-- Base Card Container -->
-      <rect x="${x - 4}" y="${y}" width="${cardW + 8}" height="${googlePlayCardSize(doc).height - y * 2}" rx="20" fill="${cardBg}" stroke="${cardStroke}" stroke-width="0.5" filter="url(#googleplay-shadow)"/>
-      
-      <!-- App Icon -->
-      ${getIconDrawing(x + 12, y + 16)}
-      
-      <!-- App Title -->
-      <text x="${x + 88}" y="${y + 34}" font-family="${font}" font-size="16" font-weight="700" fill="${textPrimary}" letter-spacing="-0.1">${esc(doc.title)}</text>
-      
-      <!-- App Developer -->
-      <text x="${x + 88}" y="${y + 51}" font-family="${font}" font-size="12.5" font-weight="600" fill="${playGreen}">${esc(doc.developer)}</text>
-      
-      <!-- App Sub-labels (Ads / In-app purchases) -->
-      <text x="${x + 88}" y="${y + 65}" font-family="${font}" font-size="10" font-weight="500" fill="${textSecondary}">Contains ads · In-app purchases</text>
-      
-      <!-- Install button (Full Width in card) -->
-      <rect x="${x + 12}" y="${y + 86}" width="${cardW - 16}" height="32" rx="16" fill="${playGreen}"/>
-      <text x="${x + cardW / 2}" y="${y + 107}" font-family="${font}" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">Install</text>
-      
-      <!-- Horizontal Divider -->
-      <line x1="${x + 12}" y1="${y + 138}" x2="${x + cardW - 12}" y2="${y + 138}" stroke="${dividerColor}" stroke-width="0.5"/>
-      
-      <!-- Summary metrics row -->
-      <g transform="translate(${x}, ${y + 146})">
-        <!-- Rating Column -->
-        <g transform="translate(10, 0)">
-          <text x="45" y="14" font-family="${font}" font-size="13" font-weight="700" fill="${textPrimary}" text-anchor="middle">${doc.ratingValue.toFixed(1)} ★</text>
-          <text x="45" y="28" font-family="${font}" font-size="9.5" font-weight="600" fill="${textSecondary}" text-anchor="middle">${esc(doc.ratingCount)}</text>
-        </g>
-        
-        <line x1="110" y1="4" x2="110" y2="28" stroke="${dividerColor}" stroke-width="0.5"/>
-        
-        <!-- Size Column -->
-        <g transform="translate(118, 0)">
-          <text x="45" y="14" font-family="${font}" font-size="13" font-weight="700" fill="${textPrimary}" text-anchor="middle">${esc(doc.appSize)}</text>
-          <text x="45" y="28" font-family="${font}" font-size="9.5" font-weight="600" fill="${textSecondary}" text-anchor="middle">Verify size</text>
-        </g>
-        
-        <line x1="218" y1="4" x2="218" y2="28" stroke="${dividerColor}" stroke-width="0.5"/>
-        
-        <!-- Content Rating Column -->
-        <g transform="translate(226, 0)">
-          <circle cx="45" cy="10" r="7" fill="none" stroke="${textPrimary}" stroke-width="1.2"/>
-          <text x="45" y="13" font-family="${font}" font-size="9" font-weight="700" fill="${textPrimary}" text-anchor="middle">3</text>
-          <text x="45" y="28" font-family="${font}" font-size="9.5" font-weight="600" fill="${textSecondary}" text-anchor="middle">${esc(doc.contentRating)}</text>
-        </g>
-      </g>
-    </g>
-  `;
+  // ---- top app bar: back / search / more
+  const barY = 44;
+  const cy = barY + 28;
+  out += `<g fill="none" stroke="${ink}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+    `<path d="M${pad + 14} ${cy}H${pad + 2}M${pad + 8} ${cy - 6}l-6 6 6 6"/>` +
+    `<circle cx="${SW - 74}" cy="${cy - 1.5}" r="6.5"/><path d="M${SW - 69} ${cy + 3.5}l6 6"/></g>` +
+    `<g fill="${ink}"><circle cx="${SW - 26}" cy="${cy - 7}" r="1.9"/><circle cx="${SW - 26}" cy="${cy}" r="1.9"/><circle cx="${SW - 26}" cy="${cy + 7}" r="1.9"/></g>`;
 
-  if (doc.standalone) {
-    return `
-      <g>
-        ${renderStandaloneCard(marginX, marginY)}
-      </g>
-    `;
+  // ---- header: icon + title / developer / ads line
+  const hy = barY + 64;
+  const icon = 72;
+  const tx = pad + icon + 16;
+  const maxT = SW - tx - pad;
+  const titleLines = wrapText(doc.title, 22, maxT).slice(0, 3);
+  out += appIcon("gpi", pad, hy, icon, doc.title, avatarUrl, font, ink);
+  const t0 = hy + 20;
+  out += textBlock(titleLines, { font, x: tx, y: t0, size: 22, lineHeight: 27, color: ink, weight: 500 });
+  const devY = t0 + titleLines.length * 27 + 2;
+  out += `<text x="${tx}" y="${devY}" font-family="${font}" font-size="14" font-weight="500" fill="${green}">${esc(truncate(doc.developer, 14, maxT))}</text>`;
+  out += `<text x="${tx}" y="${devY + 19}" font-family="${font}" font-size="12" fill="${sub}">Contains ads · In-app purchases</text>`;
+  const headBottom = Math.max(hy + icon, devY + 28);
+
+  // ---- stats row: rating | size | rated for
+  const statY = headBottom + 32;
+  const colW = (SW - pad * 2) / 3;
+  const rating = Math.min(5, Math.max(0, doc.ratingValue)).toFixed(1);
+  const age = (doc.contentRating.match(/\d+\+?/)?.[0] ?? "3+").replace(/^(\d+)$/, "$1+");
+  const colX = (i: number) => pad + colW * i + colW / 2;
+  const statText = (i: number, top: string, bottom: string) =>
+    (top ? `<text x="${colX(i)}" y="${statY}" font-family="${font}" font-size="15" font-weight="500" fill="${ink}" text-anchor="middle">${top}</text>` : "") +
+    `<text x="${colX(i)}" y="${statY + 21}" font-family="${font}" font-size="12" fill="${sub}" text-anchor="middle">${esc(truncate(bottom, 12, colW - 12))}</text>`;
+  out += statText(0, `${rating}`, doc.ratingCount);
+  out += glyph(STAR, colX(0) + textWidthApprox(rating, 15) / 2 + 9, statY - 5.5, 13, ink);
+  out += statText(1, "", doc.appSize) + `<g fill="none" stroke="${ink}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(${colX(1) - 9} ${statY - 17})"><path d="M9 1.5v11M4.5 8.5l4.500 4.500 4.500-4.500M2 17h14"/></g>`;
+  out += statText(2, "", doc.contentRating) + `<rect x="${colX(2) - 11}" y="${statY - 17}" width="22" height="19" rx="3.5" fill="none" stroke="${ink}" stroke-width="1.5"/><text x="${colX(2)}" y="${statY - 2.5}" font-family="${font}" font-size="10.5" font-weight="700" fill="${ink}" text-anchor="middle">${esc(age)}</text>`;
+  for (const i of [1, 2]) out += `<rect x="${pad + colW * i}" y="${statY - 16}" width="1" height="38" fill="${line}"/>`;
+
+  // ---- Install + share / wishlist
+  const btnY = statY + 42;
+  out += `<rect x="${pad}" y="${btnY}" width="${SW - pad * 2}" height="40" rx="20" fill="${green}"/>` +
+    `<text x="${SW / 2}" y="${btnY + 25.5}" font-family="${font}" font-size="15" font-weight="500" fill="${th.onGreen}" text-anchor="middle">Install</text>`;
+  const rowY = btnY + 40 + 26;
+  out += glyph(SHARE, pad + 48, rowY, 20, green) + `<text x="${pad + 64}" y="${rowY + 5}" font-family="${font}" font-size="14" font-weight="500" fill="${green}">Share</text>`;
+  out += glyph(BOOKMARK_ADD, SW / 2 + 28, rowY, 20, green) + `<text x="${SW / 2 + 44}" y="${rowY + 5}" font-family="${font}" font-size="14" font-weight="500" fill="${green}">Add to wishlist</text>`;
+
+  // ---- screenshots: filled tiles, ~2.4 visible
+  const shotW = 128;
+  const shotH = shotW * SHOT_RATIO;
+  const shotY = rowY + 26;
+  for (let i = 0; i < 4; i++) out += playShot(i, pad + i * (shotW + 8), shotY, shotW, font);
+
+  // ---- About this app
+  const h2 = (y: number, text: string) =>
+    `<text x="${pad}" y="${y}" font-family="${font}" font-size="18" font-weight="500" fill="${ink}">${esc(text)}</text>` + glyph(ARROW_FWD, SW - pad - 12, y - 6, 20, ink);
+  let y = shotY + shotH + 34;
+  out += h2(y, "About this app");
+  const desc = clampLines(blurb(doc.title), 14, SW - pad * 2, 3);
+  out += textBlock(desc, { font, x: pad, y: y + 28, size: 14, lineHeight: 20, color: sub });
+  y += 28 + desc.length * 20 + 6;
+  const chips = ["Health & Fitness", "#3 top free in health"];
+  let cxp = pad;
+  for (const c of chips) {
+    const w = textWidthApprox(c, 13) + 28;
+    out += `<rect x="${cxp}" y="${y}" width="${w}" height="32" rx="16" fill="none" stroke="${line}"/><text x="${cxp + w / 2}" y="${y + 20.5}" font-family="${font}" font-size="13" fill="${ink}" text-anchor="middle">${esc(c)}</text>`;
+    cxp += w + 8;
   }
+  y += 32 + 34;
 
-  const renderHeaderOnly = (x: number, y: number) => `
-    <g>
-      <!-- App Icon -->
-      ${getIconDrawing(x, y)}
-      
-      <!-- App Title -->
-      <text x="${x + 88}" y="${y + 24}" font-family="${font}" font-size="17" font-weight="700" fill="${textPrimary}" letter-spacing="-0.1">${esc(doc.title)}</text>
-      
-      <!-- App Developer -->
-      <text x="${x + 88}" y="${y + 42}" font-family="${font}" font-size="13" font-weight="600" fill="${playGreen}">${esc(doc.developer)}</text>
-    </g>
-  `;
+  // ---- Data safety
+  out += h2(y, "Data safety");
+  const ds = clampLines("Safety starts with understanding how developers collect and share your data. Data privacy and security practices may vary based on your use, region and age.", 13, SW - pad * 2, 2);
+  out += textBlock(ds, { font, x: pad, y: y + 26, size: 13, lineHeight: 18, color: sub });
+  const cardY = y + 26 + ds.length * 18 + 8;
+  out += `<rect x="${pad}" y="${cardY}" width="${SW - pad * 2}" height="150" rx="12" fill="none" stroke="${line}"/>`;
+  const dsRows: Array<[string, string]> = [["No data shared with third parties", "Learn more about how developers declare sharing"], ["No data collected", "Learn more about how developers declare collection"]];
+  dsRows.forEach(([a, b], i) => {
+    const ry = cardY + 28 + i * 52;
+    out += glyph("M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z", pad + 28, ry, 20, sub);
+    out += `<text x="${pad + 52}" y="${ry - 2}" font-family="${font}" font-size="13.5" fill="${ink}">${esc(a)}</text><text x="${pad + 52}" y="${ry + 15}" font-family="${font}" font-size="12" fill="${sub}">${esc(truncate(b, 12, 290))}</text>`;
+  });
 
-  return `
-    <rect width="${width}" height="${height}" fill="${appBg}"/>
-    
-    <!-- Top Nav Header -->
-    <g transform="translate(0, 56)">
-      <!-- Back Arrow -->
-      <path d="M30,24 L16,24 M22,18 L16,24 L22,30" stroke="${textPrimary}" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      
-      <!-- Search & Options icons -->
-      <circle cx="${width - 66}" cy="24" r="7" stroke="${textPrimary}" stroke-width="2" fill="none"/>
-      <line x1="${width - 61}" y1="29" x2="${width - 56}" y2="34" stroke="${textPrimary}" stroke-width="2" stroke-linecap="round"/>
-      
-      <circle cx="${width - 24}" cy="16" r="1.5" fill="${textPrimary}"/>
-      <circle cx="${width - 24}" cy="24" r="1.5" fill="${textPrimary}"/>
-      <circle cx="${width - 24}" cy="32" r="1.5" fill="${textPrimary}"/>
-    </g>
-    
-    <!-- Active Header content -->
-    ${renderHeaderOnly(marginX, 110)}
-    
-    <!-- Stats Row (Google Play style) -->
-    <g transform="translate(0, 206)">
-      <!-- Rating Column -->
-      <g transform="translate(42, 0)">
-        <text x="30" y="16" font-family="${font}" font-size="13" font-weight="700" fill="${textPrimary}" text-anchor="middle">${doc.ratingValue.toFixed(1)} ★</text>
-        <text x="30" y="32" font-family="${font}" font-size="10" font-weight="600" fill="${textSecondary}" text-anchor="middle">${esc(doc.ratingCount)}</text>
-      </g>
-      
-      <line x1="116" y1="8" x2="116" y2="34" stroke="${dividerColor}" stroke-width="0.5"/>
-      
-      <!-- Size Column -->
-      <g transform="translate(130, 0)">
-        <text x="30" y="16" font-family="${font}" font-size="13" font-weight="700" fill="${textPrimary}" text-anchor="middle">${esc(doc.appSize)}</text>
-        <text x="30" y="32" font-family="${font}" font-size="10" font-weight="600" fill="${textSecondary}" text-anchor="middle">Verify size</text>
-      </g>
-      
-      <line x1="206" y1="8" x2="206" y2="34" stroke="${dividerColor}" stroke-width="0.5"/>
-      
-      <!-- Content Rating Column -->
-      <g transform="translate(220, 0)">
-        <circle cx="30" cy="12" r="8" fill="none" stroke="${textPrimary}" stroke-width="1.5"/>
-        <text x="30" y="15" font-family="${font}" font-size="9.5" font-weight="700" fill="${textPrimary}" text-anchor="middle">3</text>
-        <text x="30" y="32" font-family="${font}" font-size="10" font-weight="600" fill="${textSecondary}" text-anchor="middle">${esc(doc.contentRating)}</text>
-      </g>
-    </g>
-    
-    <!-- Install button (Full Width) -->
-    <rect x="${marginX}" y="264" width="${cardW}" height="38" rx="19" fill="${playGreen}"/>
-    <text x="${width / 2}" y="288" font-family="${font}" font-size="14.5" font-weight="700" fill="#ffffff" text-anchor="middle">Install</text>
-    
-    <!-- Screenshots Carousel -->
-    <g transform="translate(${marginX}, 325)">
-      <!-- Previews -->
-      <rect x="0" y="0" width="102" height="182" rx="10" fill="${isDark ? "#202124" : "#f1f3f4"}" stroke="${dividerColor}" stroke-width="0.5"/>
-      <rect x="116" y="0" width="102" height="182" rx="10" fill="${isDark ? "#202124" : "#f1f3f4"}" stroke="${dividerColor}" stroke-width="0.5"/>
-      <rect x="232" y="0" width="102" height="182" rx="10" fill="${isDark ? "#202124" : "#f1f3f4"}" stroke="${dividerColor}" stroke-width="0.5"/>
-      
-      <!-- Dummy graphics inside previews -->
-      <rect x="15" y="40" width="72" height="8" rx="2" fill="${isDark ? "#3c4043" : "#dadce0"}"/>
-      <rect x="15" y="60" width="52" height="6" rx="1.5" fill="${isDark ? "#3c4043" : "#dadce0"}"/>
-      <circle cx="51" cy="118" r="18" fill="${isDark ? "#3c4043" : "#dadce0"}"/>
-      
-      <rect x="131" y="40" width="72" height="8" rx="2" fill="${isDark ? "#3c4043" : "#dadce0"}"/>
-      <rect x="131" y="60" width="52" height="6" rx="1.5" fill="${isDark ? "#3c4043" : "#dadce0"}"/>
-      <circle cx="167" cy="118" r="18" fill="${isDark ? "#3c4043" : "#dadce0"}"/>
-      
-      <rect x="247" y="40" width="72" height="8" rx="2" fill="${isDark ? "#3c4043" : "#dadce0"}"/>
-      <rect x="247" y="60" width="52" height="6" rx="1.5" fill="${isDark ? "#3c4043" : "#dadce0"}"/>
-      <circle cx="283" cy="118" r="18" fill="${isDark ? "#3c4043" : "#dadce0"}"/>
-    </g>
-    
-    <!-- About this app -->
-    <g transform="translate(${marginX}, 535)">
-      <text x="0" y="16" font-family="${font}" font-size="15" font-weight="700" fill="${textPrimary}">About this app</text>
-      <path d="M${cardW - 8},8 L${cardW},14 L${cardW - 8},20" stroke="${textSecondary}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <text x="0" y="38" font-family="${font}" font-size="12" font-weight="400" fill="${textSecondary}">Most Powerful Eye Exercises to Improve Eyesight...</text>
-      
-      <!-- Category Badge Chip -->
-      <rect x="0" y="56" width="112" height="26" rx="13" fill="none" stroke="${dividerColor}" stroke-width="1"/>
-      <text x="56" y="73" font-family="${font}" font-size="11.5" font-weight="600" fill="${textSecondary}" text-anchor="middle">Health &amp; Fitness</text>
-    </g>
-    
-    <!-- Ratings & Reviews -->
-    <g transform="translate(${marginX}, 660)">
-      <text x="0" y="16" font-family="${font}" font-size="15" font-weight="700" fill="${textPrimary}">Ratings and reviews</text>
-      <path d="M${cardW - 8},8 L${cardW},14 L${cardW - 8},20" stroke="${textSecondary}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      
-      <!-- Big rating display -->
-      <text x="0" y="58" font-family="${font}" font-size="44" font-weight="700" fill="${textPrimary}">4.6</text>
-      <!-- Mini green stars -->
-      <text x="0" y="76" font-family="${font}" font-size="12" font-weight="700" fill="${playGreen}">★★★★★</text>
-      
-      <!-- Bar chart layout -->
-      <g transform="translate(100, 24)" fill="${isDark ? "#3c4043" : "#e8eaed"}" stroke="none">
-        <rect x="0" y="0" width="150" height="6" rx="3" fill="${playGreen}"/>
-        <rect x="0" y="10" width="150" height="6" rx="3" fill="${playGreen}" opacity="0.6"/>
-        <rect x="0" y="20" width="150" height="6" rx="3"/>
-        <rect x="0" y="30" width="150" height="6" rx="3"/>
-        <rect x="0" y="40" width="150" height="6" rx="3"/>
-      </g>
-    </g>
-    
-    <!-- Navigation gesture line -->
-    <rect x="${width / 2 - 40}" y="864" width="80" height="4" rx="2" fill="${textPrimary}" opacity="0.25"/>
-  `;
+  // ---- Ratings and reviews
+  y = cardY + 150 + 40;
+  out += h2(y, "Ratings and reviews");
+  const dist = ratingDist(doc.ratingValue);
+  const by = y + 30;
+  out += `<text x="${pad}" y="${by + 40}" font-family="${font}" font-size="56" font-weight="400" fill="${ink}">${rating}</text>`;
+  out += stars(pad + 2, by + 52, 5, 12, green, th.dark ? "#444746" : "#dadce0", doc.ratingValue);
+  out += `<text x="${pad + 2}" y="${by + 82}" font-family="${font}" font-size="12" fill="${sub}">${esc(doc.ratingCount)}</text>`;
+  const bx = 130;
+  const bw = SW - pad - bx;
+  dist.forEach((p, i) => {
+    const yy = by + 4 + i * 16;
+    out += `<text x="${bx - 10}" y="${yy + 8}" font-family="${font}" font-size="11.5" fill="${sub}" text-anchor="end">${5 - i}</text><rect x="${bx}" y="${yy + 2}" width="${bw}" height="8" rx="4" fill="${th.dark ? "#2b2c2e" : "#e8eaed"}"/><rect x="${bx}" y="${yy + 2}" width="${Math.max(6, bw * p / dist[0] * 0.92).toFixed(1)}" height="8" rx="4" fill="${green}"/>`;
+  });
+
+  // ---- system bars drawn last so scrolled content slides under them
+  out = `<defs><clipPath id="gp-scr"><rect width="${SW}" height="${SH}"/></clipPath></defs><g clip-path="url(#gp-scr)">${out}</g>`;
+  out += statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: ink, platform });
+  out += homeIndicator(dark ? "#e3e3e3" : "#1f1f1f", platform);
+  return out;
+}
+
+/** Cheap width estimate for centering short labels (same metric as common.textWidth). */
+function textWidthApprox(s: string, size: number): number {
+  return textWidth(s, size);
 }

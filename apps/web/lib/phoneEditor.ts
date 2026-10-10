@@ -40,7 +40,7 @@ export interface PhoneShot {
 const PHONES = ["iphone-17-pro", "iphone-17-pro-max", "iphone-17-air", "iphone-16", "pixel-10-pro", "galaxy-s25-ultra", "nothing-phone-3", "oneplus-13"];
 const TABLETS = ["ipad-pro-11", "ipad-pro-13", "ipad-air", "ipad-mini", "galaxy-tab-s10-ultra", "pixel-tablet"];
 const TABLETS_WIDE = ["ipad-pro-13-landscape", "macbook-air-13", "macbook-pro-14", "safari-browser", "chrome-browser"];
-const DESKTOPS = ["macbook-pro-14", "macbook-air-15", "macbook-pro-16", "imac-24", "studio-display", "safari-browser", "chrome-browser", "arc-browser"];
+const DESKTOPS = ["macbook-pro-14", "macbook-air-15", "macbook-pro-16", "safari-browser", "chrome-browser", "arc-browser"];
 
 /** Devices worth offering for a screenshot of this shape, best first. */
 export function devicesForShot(width: number, height: number): string[] {

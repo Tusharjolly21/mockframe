@@ -9,15 +9,19 @@ import { esc, SW } from "./common";
  * Bluesky / X-post templates so every template gets every frame for free.
  */
 
-export type FrameStyle = "none" | "macos" | "safari" | "card" | "stack" | "stack2" | "arc" | "windows";
+export type FrameStyle = "none" | "macos" | "safari" | "chrome" | "terminal" | "card" | "glass" | "outline" | "stack" | "stack2" | "arc" | "windows";
 
-export const FRAME_STYLES: FrameStyle[] = ["none", "macos", "safari", "card", "stack", "stack2", "arc", "windows"];
+export const FRAME_STYLES: FrameStyle[] = ["none", "macos", "safari", "chrome", "terminal", "arc", "windows", "card", "glass", "outline", "stack", "stack2"];
 
 export const FRAME_LABELS: Record<FrameStyle, string> = {
   none: "None",
   macos: "macOS",
   safari: "Safari",
+  chrome: "Chrome",
+  terminal: "Terminal",
   card: "Card",
+  glass: "Glass",
+  outline: "Outline",
   stack: "Stack",
   stack2: "Stack 2",
   arc: "Arc",
@@ -50,6 +54,8 @@ const RX_DEFAULT = 15;
 
 function barHeight(style: FrameStyle): number {
   if (style === "safari") return 46;
+  if (style === "chrome") return 74;
+  if (style === "terminal") return 34;
   if (style === "macos") return 40;
   if (style === "windows") return 34;
   if (style === "arc") return 34;
@@ -84,6 +90,38 @@ function drawBar(style: FrameStyle, th: FrameTheme, x: number, y: number, w: num
       `<path d="M${x + w - 32} ${cy - 6} v12 m-6 -6 h12" stroke="${th.barText}" stroke-width="1.6" stroke-linecap="round"/>`
     );
   }
+  if (style === "chrome") {
+    // tab strip (a tab that joins the toolbar) over a toolbar with the address pill
+    const tabH = 36;
+    const toolbarY = y + tabH;
+    const tabX = x + 74;
+    const tabW = Math.min(210, w - 150);
+    const tabFill = th.dark ? "#35363a" : "#ffffff";
+    const pill = th.dark ? "#202124" : "#f1f3f4";
+    const ink = th.barText;
+    const pillX = x + 96;
+    const pillW = w - 96 - 52;
+    return (
+      dots(x + 18, y + tabH / 2 + 1) +
+      `<path d="M${tabX} ${toolbarY} v-${tabH - 18} a9 9 0 0 1 9 -9 h${tabW - 18} a9 9 0 0 1 9 9 v${tabH - 18} Z" fill="${tabFill}"/>` +
+      `<circle cx="${tabX + 20}" cy="${y + tabH / 2 + 1}" r="6" fill="#8ab4f8"/>` +
+      `<text font-family="Roboto,system-ui,sans-serif" font-size="11.5" fill="${ink}" x="${tabX + 34}" y="${y + tabH / 2 + 5}">${title.slice(0, 26)}</text>` +
+      `<path d="M${tabX + tabW - 22} ${y + tabH / 2 - 3} l6 6 m0 -6 l-6 6" stroke="${ink}" stroke-width="1.3" stroke-linecap="round" opacity="0.7"/>` +
+      `<rect x="${x}" y="${toolbarY}" width="${w}" height="${h - tabH}" fill="${tabFill}"/>` +
+      `<path d="M${x + 24} ${toolbarY + 19} l-6 -6 6 -6 M${x + 18} ${toolbarY + 13} h12" fill="none" stroke="${ink}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 6)"/>` +
+      `<path d="M${x + 52} ${toolbarY + 14} a6 6 0 1 0 2 5 m-1 -7 l-1 3 -3 -1" fill="none" stroke="${ink}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` +
+      `<rect x="${pillX}" y="${toolbarY + 6}" width="${pillW}" height="26" rx="13" fill="${pill}"/>` +
+      `<rect x="${pillX + 12}" y="${toolbarY + 16}" width="7" height="6" rx="1.2" fill="none" stroke="${ink}" stroke-width="1.2"/>` +
+      `<text font-family="Roboto,system-ui,sans-serif" font-size="12" fill="${ink}" x="${pillX + 28}" y="${toolbarY + 23}">${title}</text>` +
+      `<circle cx="${x + w - 26}" cy="${toolbarY + 13}" r="1.6" fill="${ink}"/><circle cx="${x + w - 26}" cy="${toolbarY + 19}" r="1.6" fill="${ink}"/><circle cx="${x + w - 26}" cy="${toolbarY + 25}" r="1.6" fill="${ink}"/>`
+    );
+  }
+  if (style === "terminal") {
+    return (
+      dots(x + 18, cy) +
+      `<text font-family="'SF Mono',ui-monospace,Menlo,Consolas,monospace" font-size="11.5" fill="${th.barText}" text-anchor="middle" x="${x + w / 2}" y="${cy + 4}">${title}</text>`
+    );
+  }
   if (style === "windows") {
     return (
       `<text font-family="'Segoe UI',system-ui,sans-serif" font-size="12" fill="${th.barText}" x="${x + 14}" y="${cy + 4}">${title}</text>` +
@@ -106,12 +144,40 @@ function drawBar(style: FrameStyle, th: FrameTheme, x: number, y: number, w: num
 }
 
 /** Optional per-card look overrides (pika-style Roundness / Shadow sliders). */
-export type FrameLook = { radius?: number; shadow?: number };
+export type FrameLook = {
+  radius?: number;
+  shadow?: number;
+  /** inset around the content for Card / Glass (px) */
+  pad?: number;
+  /** text in the title bar / address bar (overrides the card's own) */
+  title?: string;
+  /** window bar colour: follow the card (auto), or force light / dark */
+  bar?: "auto" | "light" | "dark";
+};
 
-export function renderFramed(style: FrameStyle, th: FrameTheme, draw: ContentDrawer, viewportW: number = SW, look?: FrameLook): FramedResult {
+/** The shared frame options every framed card stores on its doc. */
+export interface FrameOptions {
+  cardRadius?: number;
+  cardShadow?: number;
+  framePad?: number;
+  frameTitle?: string;
+  frameBar?: "auto" | "light" | "dark";
+}
+
+export function frameLookOf(doc: FrameOptions): FrameLook {
+  return { radius: doc.cardRadius, shadow: doc.cardShadow, pad: doc.framePad, title: doc.frameTitle, bar: doc.frameBar };
+}
+
+export function renderFramed(style: FrameStyle, theme: FrameTheme, draw: ContentDrawer, viewportW: number = SW, look?: FrameLook): FramedResult {
+  let th = theme;
   const RX = Math.max(0, Math.min(40, look?.radius ?? RX_DEFAULT));
   const barH = barHeight(style);
-  const pad = style === "card" ? 18 : 0; // Card style insets the content
+  const defaultPad = style === "card" ? 18 : style === "glass" ? 14 : 0;
+  const pad = style === "card" || style === "glass" ? Math.max(0, Math.min(48, look?.pad ?? defaultPad)) : 0; // Card / Glass inset the content
+  if (look?.title !== undefined && look.title !== "") th = { ...th, title: look.title };
+  if (look?.bar === "dark") th = { ...th, barBg: "#202124", barText: "#a8abb3", dark: true };
+  else if (look?.bar === "light") th = { ...th, barBg: "#f4f4f6", barText: "#6b6b76", dark: false };
+  if (style === "terminal") th = { ...th, barBg: look?.bar === "light" ? "#e9e9ee" : "#2b2c30", barText: look?.bar === "light" ? "#55565c" : "#a9acb4" };
   const stackDR = style === "stack" ? 10 : 0; // down-right peek
   const stack2 = style === "stack2";
   const topRoom = stack2 ? 12 : 0;
@@ -129,8 +195,8 @@ export function renderFramed(style: FrameStyle, th: FrameTheme, draw: ContentDra
   const cardH = barH + pad + contentH + pad;
   const totalH = cardY + cardH + stackDR + M;
 
-  // shadow: 0 = none, 1 = default soft, up to 2 = dramatic
-  const sh = Math.max(0, Math.min(2, look?.shadow ?? 1));
+  // shadow: 0 = none (the default: no halo unless the user adds one), 1 = soft, up to 2 = dramatic
+  const sh = Math.max(0, Math.min(2, look?.shadow ?? 0));
   const shAlpha = (th.dark ? 0.5 : 0.2) * sh;
   const shadow = th.dark ? `rgba(0,0,0,${shAlpha.toFixed(3)})` : `rgba(20,20,45,${shAlpha.toFixed(3)})`;
   const shadowFilter = sh > 0.001 ? `filter:drop-shadow(0 ${(14 * sh).toFixed(1)}px ${(38 * sh).toFixed(1)}px ${shadow})` : "";
@@ -148,16 +214,30 @@ export function renderFramed(style: FrameStyle, th: FrameTheme, draw: ContentDra
   }
 
   // main card + soft shadow
+  const glass = style === "glass";
   if (style !== "none") {
-    parts.push(`<rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="${RX}" fill="${th.cardBg}"${shadowFilter ? ` style="${shadowFilter}"` : ""}/>`);
+    const surface = glass ? (th.dark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.42)") : th.cardBg;
+    parts.push(`<rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="${RX}" fill="${surface}"${shadowFilter ? ` style="${shadowFilter}"` : ""}/>`);
     if (style === "card") {
       parts.push(`<rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="${RX}" fill="none" stroke="${th.dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}" stroke-width="1"/>`);
+    }
+    if (glass) {
+      parts.push(`<rect x="${cardX + 0.5}" y="${cardY + 0.5}" width="${cardW - 1}" height="${cardH - 1}" rx="${RX}" fill="none" stroke="${th.dark ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.85)"}" stroke-width="1"/>`);
+      // the content sits on its own opaque panel inside the frosted ring
+      parts.push(`<rect x="${contentX}" y="${contentY}" width="${contentW}" height="${contentH}" rx="${Math.max(0, RX - Math.min(pad, 8))}" fill="${th.cardBg}"/>`);
+    }
+    if (style === "outline") {
+      // a hairline ring floating just outside the card
+      parts.push(`<rect x="${cardX - 7}" y="${cardY - 7}" width="${cardW + 14}" height="${cardH + 14}" rx="${RX + 6}" fill="none" stroke="${th.barText}" stroke-opacity="0.55" stroke-width="1.5"/>`);
     }
   }
 
   // content clipped to the rounded card (bar, if any, is painted over its top)
   const clip = "fclip";
-  parts.push(`<defs><clipPath id="${clip}"><rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="${RX}"/></clipPath></defs>`);
+  const clipRect = glass
+    ? `<rect x="${contentX}" y="${contentY}" width="${contentW}" height="${contentH}" rx="${Math.max(0, RX - Math.min(pad, 8))}"/>`
+    : `<rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="${RX}"/>`;
+  parts.push(`<defs><clipPath id="${clip}">${clipRect}</clipPath></defs>`);
   parts.push(`<g clip-path="url(#${clip})">${content}</g>`);
 
   // chrome bar over the content's top strip

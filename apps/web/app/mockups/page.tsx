@@ -38,7 +38,7 @@ const FAQ = [
   },
   {
     q: "Which devices are included?",
-    a: "Current and recent iPhones, iPads, MacBooks, iMac and Studio Display, Apple Watch, Samsung Galaxy phones, foldables, tablets and watches, Google Pixel, OnePlus, Nothing and Xiaomi phones, plus Safari, Chrome and Arc browser windows.",
+    a: "Current and recent iPhones, iPads, MacBooks, Apple Watch, Samsung Galaxy phones, foldables, tablets and watches, Google Pixel, OnePlus, Nothing and Xiaomi phones, plus Safari, Chrome and Arc browser windows.",
   },
   {
     q: "Do I need to resize my screenshot first?",

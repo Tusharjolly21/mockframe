@@ -310,7 +310,6 @@ export const QUICK_DEVICES: { id: string; label: string; category: DeviceCategor
   { id: "pixel-10-pro", label: "Android", category: "phone" },
   { id: "ipad-pro-13", label: "iPad", category: "tablet" },
   { id: "macbook-pro-14", label: "MacBook", category: "laptop" },
-  { id: "imac-24", label: "iMac", category: "desktop" },
-  { id: "apple-watch-series-11", label: "Watch", category: "watch" },
+  { id: "macbook-air-15", label: "Air", category: "laptop" },
   { id: "chrome-browser", label: "Browser", category: "browser" },
 ];

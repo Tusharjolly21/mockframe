@@ -15,8 +15,9 @@ import {
 } from "./common";
 import { BRAND_PATHS } from "./brandMarks";
 import { fontFor } from "./fonts";
-import { renderFramed, type FramedResult } from "./frames";
+import { frameLookOf, renderFramed, type FramedResult } from "./frames";
 import type { SocialPostDoc } from "./types";
+import { renderThreadsPhone } from "./web/th-phone";
 
 /**
  * Social post — Facebook / LinkedIn / Threads, mobile feed-card style. One
@@ -184,7 +185,7 @@ export function renderSocialCard(doc: SocialPostDoc, avatarUrl?: string, lookupU
       return { svg: parts.join("\n"), height: cy - y };
     },
     viewportW,
-    { radius: doc.cardRadius, shadow: doc.cardShadow }
+    frameLookOf(doc)
   );
 }
 
@@ -195,6 +196,7 @@ function xBrandMark(x: number, y: number, size: number, color: string): string {
 }
 
 export function renderSocial(doc: SocialPostDoc, avatarUrl?: string, lookupUrl?: (id: string) => string | undefined): string {
+  if (doc.network === "threads") return renderThreadsPhone(doc, avatarUrl, lookupUrl);
   const platform = doc.chrome.platform ?? "ios";
   const font = fontFor("social", platform);
   const textBlock = (lines: string[], o: Parameters<typeof baseTextBlock>[1]) =>
@@ -202,19 +204,19 @@ export function renderSocial(doc: SocialPostDoc, avatarUrl?: string, lookupUrl?:
   const dark = !!doc.chrome.dark;
   const net = doc.network;
 
-  const accent = net === "facebook" ? "#1877f2" : net === "linkedin" ? "#0a66c2" : dark ? "#ffffff" : "#000000";
+  const accent = net === "linkedin" ? "#0a66c2" : "#1877f2";
   const c = dark
     ? { bg: "#18191a", card: "#242526", text: "#e4e6eb", subtle: "#b0b3b8", hairline: "#3a3b3c", topbar: "#242526" }
     : { bg: "#f0f2f5", card: "#ffffff", text: "#050505", subtle: "#65676b", hairline: "#e4e6eb", topbar: "#ffffff" };
-  // Threads is edge-to-edge (no card), FB/LinkedIn are cards on a gray feed
-  const carded = net !== "threads";
+  // FB/LinkedIn are cards on a gray feed (Threads has its own screen, see web/th-phone.ts)
+  const carded = true;
 
   const parts: string[] = [`<rect width="${SW}" height="${SH}" fill="${carded ? c.bg : c.card}"/>`];
 
   /* top app bar */
   const TB = 92;
   parts.push(
-    `<rect width="${SW}" height="${TB}" fill="${net === "threads" ? c.card : c.topbar}"/>`,
+    `<rect width="${SW}" height="${TB}" fill="${c.topbar}"/>`,
     statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.text, platform }),
     wordmark(net, c.text, accent, font)
   );
@@ -233,19 +235,16 @@ export function renderSocial(doc: SocialPostDoc, avatarUrl?: string, lookupUrl?:
   parts.push(
     `<text font-family="${font}" font-size="15.5" font-weight="700" fill="${c.text}" x="${inX + 56}" y="${nameY}">${esc(doc.name)}</text>`
   );
-  if (doc.verified) parts.push(verifiedSeal(inX + 56 + nameW + 6, nameY - 11, accent === "#000000" ? "#0095f6" : accent));
+  if (doc.verified) parts.push(verifiedSeal(inX + 56 + nameW + 6, nameY - 11, accent));
   // second line: LinkedIn headline / Threads @handle / Facebook time · globe
-  const line2 =
-    net === "linkedin" ? doc.subtitle : net === "threads" ? doc.subtitle : `${doc.time} · 🌎`;
+  const line2 = net === "linkedin" ? doc.subtitle : `${doc.time} · 🌎`;
   parts.push(
     `<text font-family="${font}" font-size="12.5" fill="${c.subtle}" x="${inX + 56}" y="${nameY + 18}">${esc(line2)}</text>`
   );
   if (net === "linkedin")
     parts.push(`<text font-family="${font}" font-size="12" fill="${c.subtle}" x="${inX + 56}" y="${nameY + 34}">${esc(doc.time)} · 🌐</text>`);
-  if (net === "threads")
-    parts.push(`<text font-family="${font}" font-size="12.5" fill="${c.subtle}" text-anchor="end" x="${cardX + cardW - M}" y="${nameY}">${esc(doc.time)}</text>`);
   // "..." menu
-  parts.push(`<text font-family="${font}" font-size="18" font-weight="700" fill="${c.subtle}" text-anchor="end" x="${cardX + cardW - M - (net === "threads" ? 24 : 0)}" y="${nameY - 2}">···</text>`);
+  parts.push(`<text font-family="${font}" font-size="18" font-weight="700" fill="${c.subtle}" text-anchor="end" x="${cardX + cardW - M}" y="${nameY - 2}">···</text>`);
 
   cy = nameY + (net === "linkedin" ? 44 : 30) + GAP;
 
@@ -254,21 +253,7 @@ export function renderSocial(doc: SocialPostDoc, avatarUrl?: string, lookupUrl?:
   parts.push(textBlock(lines, { x: inX, y: cy, size: FONT, lineHeight: LINE_H, color: c.text }));
   cy += lines.length * LINE_H + GAP;
 
-  if (net === "threads") {
-    /* action icons row + counts (X-like) */
-    const ay = cy + 4;
-    parts.push(
-      // heart, comment, repost, share
-      `<path d="M${inX + 9} ${ay + 7} c -7 -4.5 -11 -8.5 -11 -13 a 5.6 5.6 0 0 1 11 -1.7 a 5.6 5.6 0 0 1 11 1.7 c 0 4.5 -4 8.5 -11 13 Z" fill="none" stroke="${c.text}" stroke-width="1.7" stroke-linejoin="round"/>`,
-      `<path d="M${inX + 44} ${ay - 8} a 10 9 0 1 0 -4 8 l 5 1.5 -1.4 -4.6 a 10 9 0 0 0 0.4 -4.9 Z" fill="none" stroke="${c.text}" stroke-width="1.7" stroke-linejoin="round"/>`,
-      `<path d="M${inX + 74} ${ay - 4} v-6 a4 4 0 0 1 4 -4 h9 m-3 -3 l3 3 -3 3 M${inX + 92} ${ay} v6 a4 4 0 0 1 -4 4 h-9 m3 3 l-3 -3 3 -3" fill="none" stroke="${c.text}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`,
-      `<path d="M${inX + 112} ${ay + 2} v-13 m-5 -1 l5 -5 5 5 m-12 8 v9 h14 v-9" fill="none" stroke="${c.text}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`
-    );
-    parts.push(
-      `<text font-family="${font}" font-size="14" fill="${c.subtle}" x="${inX}" y="${ay + 34}">${compact(doc.comments)} replies · ${compact(doc.likes)} likes</text>`,
-      `<rect x="0" y="${ay + 50}" width="${SW}" height="0.5" fill="${c.hairline}"/>`
-    );
-  } else {
+  {
     /* FB / LinkedIn: reaction summary + divider + action buttons */
     parts.push(
       `<circle cx="${inX + 8}" cy="${cy - 4}" r="9" fill="#1877f2"/><path d="M${inX + 4} ${cy - 6} l2.5 3 5 -6" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>`,
@@ -304,29 +289,14 @@ export function renderSocial(doc: SocialPostDoc, avatarUrl?: string, lookupUrl?:
   }
   cy += carded ? 24 : 16;
 
-  /* comments — FB/LinkedIn gray bubble, Threads flat reply */
+  /* comments — gray bubble */
   const comments = doc.commentList ?? [];
   for (let i = 0; i < comments.length; i++) {
     const cm = comments[i];
     const cx = inX;
     parts.push(avatar(cm.user, cx + 16, cy + 4, 16, `soc${i}`, cm.avatar ? lookupUrl?.(cm.avatar) : undefined));
     const lines = wrapText(cm.text, 14.5, cardW - 44 - M, true);
-    if (net === "threads") {
-      // flat: name + @ then text
-      let hx = cx + 42 + textWidth(cm.user, 13.5) + 5;
-      parts.push(
-        `<text font-family="${font}" font-size="13.5" font-weight="700" fill="${c.text}" x="${cx + 42}" y="${cy + 2}">${esc(cm.user)}</text>`
-      );
-      if (cm.verified) {
-        parts.push(verifiedSeal(hx, cy + 2 - 11, c.text));
-        hx += 20;
-      }
-      parts.push(
-        `<text font-family="${font}" font-size="12.5" fill="${c.subtle}" x="${hx}" y="${cy + 2}">${esc(cm.time || "1h")}</text>`
-      );
-      lines.forEach((l, k) => parts.push(`<text font-family="${font}" font-size="14.5" fill="${c.text}" x="${cx + 42}" y="${cy + 20 + k * 19}">${esc(l)}</text>`));
-      cy += 20 + lines.length * 19 + 16;
-    } else {
+    {
       // gray comment bubble with bold name
       const nameW = textWidth(cm.user, 13);
       const badgeW = cm.verified ? 20 : 0;
@@ -338,7 +308,7 @@ export function renderSocial(doc: SocialPostDoc, avatarUrl?: string, lookupUrl?:
         `<text font-family="${font}" font-size="13" font-weight="700" fill="${c.text}" x="${cx + 52}" y="${cy + 6}">${esc(cm.user)}</text>`
       );
       if (cm.verified) {
-        parts.push(verifiedSeal(cx + 52 + nameW + 4, cy + 6 - 11, accent === "#000000" ? "#0095f6" : accent));
+        parts.push(verifiedSeal(cx + 52 + nameW + 4, cy + 6 - 11, accent));
       }
       lines.forEach((l, k) => parts.push(`<text font-family="${font}" font-size="14.5" fill="${c.text}" x="${cx + 52}" y="${cy + 24 + k * 19}">${esc(l)}</text>`));
       // Like · Reply · time row

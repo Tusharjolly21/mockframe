@@ -375,40 +375,108 @@ ${linGrad(`${p}_deck`, deckFill, 0, 0, 0, 1)}
 
 /* ----------------------------- browser generator --------------------------- */
 
+
+/* ------------------------------ browser chrome ------------------------------ */
+
+const BR_FONT = "ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif";
+const brIcon = {
+  back: (x, y, col, o = 1) => `<path d="M${x + 13} ${y} H${x - 13} M${x - 3} ${y - 10} l-10 10 10 10" stroke="${col}" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${o}"/>`,
+  forward: (x, y, col, o = 1) => `<path d="M${x - 13} ${y} H${x + 13} M${x + 3} ${y - 10} l10 10 -10 10" stroke="${col}" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${o}"/>`,
+  reload: (x, y, col) => `<path d="M${x + 12} ${y - 7} A13.5 13.5 0 1 0 ${x + 13} ${y + 3}" stroke="${col}" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M${x + 14} ${y - 17} v11 h-11" stroke="${col}" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+  tune: (x, y, col) => `<g stroke="${col}" stroke-width="3.6" stroke-linecap="round"><path d="M${x - 11} ${y - 6} h22 M${x - 11} ${y + 7} h22"/></g><circle cx="${x + 5}" cy="${y - 6}" r="4.6" fill="${col}"/><circle cx="${x - 5}" cy="${y + 7}" r="4.6" fill="${col}"/>`,
+  star: (x, y, col) => `<path d="M${x} ${y - 14} l4.4 9.4 10.2 1.2 -7.5 7 2 10.1 -9.1 -5 -9.1 5 2 -10.1 -7.5 -7 10.2 -1.2 Z" stroke="${col}" stroke-width="3.4" fill="none" stroke-linejoin="round"/>`,
+  puzzle: (x, y, col) => `<path d="M${x - 12} ${y - 9} h8 a5 5 0 1 1 10 0 h4 v8 a5 5 0 1 1 0 10 v6 h-22 Z" stroke="${col}" stroke-width="3.4" fill="none" stroke-linejoin="round"/>`,
+  kebab: (x, y, col) => `<g fill="${col}"><circle cx="${x}" cy="${y - 12}" r="3.8"/><circle cx="${x}" cy="${y}" r="3.8"/><circle cx="${x}" cy="${y + 12}" r="3.8"/></g>`,
+  lock: (x, y, col) => `<rect x="${x - 9}" y="${y - 2}" width="18" height="14" rx="3.5" fill="${col}"/><path d="M${x - 6} ${y - 2} v-4 a6 6 0 0 1 12 0 v4" stroke="${col}" stroke-width="3.4" fill="none" stroke-linecap="round"/>`,
+  sidebar: (x, y, col) => `<rect x="${x - 17}" y="${y - 12}" width="34" height="24" rx="5" stroke="${col}" stroke-width="3.4" fill="none"/><path d="M${x - 6} ${y - 12} v24" stroke="${col}" stroke-width="3.4"/>`,
+  share: (x, y, col) => `<path d="M${x} ${y + 9} V${y - 14} M${x - 8} ${y - 6} l8 -8 8 8 M${x - 13} ${y - 2} v16 h26 v-16" stroke="${col}" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+  plus: (x, y, col, w = 4) => `<path d="M${x - 10} ${y} h20 M${x} ${y - 10} v20" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`,
+  tabs: (x, y, col) => `<rect x="${x - 7}" y="${y - 7}" width="20" height="20" rx="4" stroke="${col}" stroke-width="3.4" fill="none"/><path d="M${x - 13} ${y + 7} V${y - 13} a4 4 0 0 1 4 -4 h18" stroke="${col}" stroke-width="3.4" fill="none" stroke-linecap="round"/>`,
+};
+
+/** Chrome / Edge / Firefox: tab strip with a real (editable) tab title, nav buttons, address pill, toolbar icons. */
+function tabbedBar({ M, viewW, toolbarH, c, p, winR, pill, win, lights }) {
+  const tx = win ? M + 28 : M + 180;
+  const ty = M + 14;
+  const tw = 540;
+  const by = M + 76;
+  const cy = M + 113; // toolbar row centre
+  const tabShape = pill
+    ? `<rect x="${tx}" y="${ty + 4}" width="${tw}" height="${by - ty - 8}" rx="16" fill="${c.toolbar}"/>`
+    : `<path d="M${tx - 12} ${by} a12 12 0 0 0 12 -12 V${ty + 16} a16 16 0 0 1 16 -16 H${tx + tw - 16} a16 16 0 0 1 16 16 V${by - 12} a12 12 0 0 0 12 12 Z" fill="${c.toolbar}"/>`;
+  const second = tx + tw + 22;
+  const winCtl = win
+    ? `<g stroke="${c.text}" stroke-width="3.2" fill="none" stroke-linecap="round" opacity="0.85"><path d="M${M + viewW - 262} ${M + 38} h22"/><rect x="${M + viewW - 186}" y="${M + 27}" width="22" height="22" rx="3"/><path d="M${M + viewW - 106} ${M + 27} l22 22 m0 -22 l-22 22"/></g>`
+    : "";
+  const urlX = M + 250;
+  const urlW = viewW - 250 - 330;
+  return `
+<path d="${rr(M, M, viewW, toolbarH, { tl: winR, tr: winR, br: 0, bl: 0 })}" fill="${c.tabstrip}"/>
+${lights}
+${tabShape}
+<clipPath id="${p}_tabclip"><rect x="${tx + 62}" y="${ty}" width="${tw - 62 - 62}" height="${by - ty}"/></clipPath>
+<circle cx="${tx + 36}" cy="${ty + 33}" r="14" fill="${c.accentDot}"/>
+<text x="${tx + 36}" y="${ty + 40}" text-anchor="middle" font-family="${BR_FONT}" font-size="19" font-weight="700" fill="#ffffff">M</text>
+<g clip-path="url(#${p}_tabclip)"><text x="${tx + 66}" y="${ty + 41}" font-family="${BR_FONT}" font-size="25" fill="${c.text}" id="fk_tabtitle_${p}">MockFrame</text></g>
+<path d="M${tx + tw - 40} ${ty + 24} l18 18 m0 -18 l-18 18" stroke="${c.textDim}" stroke-width="3.6" stroke-linecap="round"/>
+<path d="M${second - 11} ${ty + 20} v28" stroke="${c.textDim}" stroke-width="2" opacity="0.5"/>
+<circle cx="${second + 28}" cy="${ty + 33}" r="12" fill="${c.textDim}" opacity="0.55"/>
+<text x="${second + 54}" y="${ty + 41}" font-family="${BR_FONT}" font-size="24" fill="${c.textDim}">New tab</text>
+${brIcon.plus(second + 250, ty + 33, c.textDim, 3.6)}
+${winCtl}
+<rect x="${M}" y="${by}" width="${viewW}" height="${toolbarH - 76}" fill="${c.toolbar}"/>
+${brIcon.back(M + 56, cy, c.textDim)}${brIcon.forward(M + 116, cy, c.textDim, 0.45)}${brIcon.reload(M + 176, cy, c.textDim)}
+<rect x="${urlX}" y="${cy - 28}" width="${urlW}" height="56" rx="28" fill="${c.urlbar}"/>
+${brIcon.tune(urlX + 38, cy, c.textDim)}
+<clipPath id="${p}_urlclip"><rect x="${urlX + 70}" y="${cy - 28}" width="${urlW - 140}" height="56"/></clipPath>
+<g clip-path="url(#${p}_urlclip)"><text x="${urlX + 76}" y="${cy + 10}" font-family="${BR_FONT}" font-size="30" fill="${c.text}" id="fk_urltext_${p}">mockframe.app</text></g>
+${brIcon.star(urlX + urlW - 44, cy, c.textDim)}
+${brIcon.puzzle(M + viewW - 250, cy, c.textDim)}
+<circle cx="${M + viewW - 170}" cy="${cy}" r="19" fill="${c.accentDot}"/>
+<text x="${M + viewW - 170}" y="${cy + 8}" text-anchor="middle" font-family="${BR_FONT}" font-size="22" font-weight="700" fill="#ffffff">T</text>
+${brIcon.kebab(M + viewW - 96, cy, c.textDim)}
+<rect x="${M}" y="${M + toolbarH - 2}" width="${viewW}" height="2" fill="${c.divider}"/>`;
+}
+
+/** Safari: sidebar + nav buttons on the left, centred address pill with lock + reload, share / new tab / tab overview on the right. */
+function safariBar({ M, viewW, toolbarH, c, p, winR, lights }) {
+  const cy = M + toolbarH / 2;
+  const pillW = 940;
+  const px = M + viewW / 2 - pillW / 2;
+  return `
+<path d="${rr(M, M, viewW, toolbarH, { tl: winR, tr: winR, br: 0, bl: 0 })}" fill="${c.toolbar}"/>
+${lights}
+${brIcon.sidebar(M + 236, cy, c.textDim)}
+${brIcon.back(M + 330, cy, c.textDim)}${brIcon.forward(M + 392, cy, c.textDim, 0.45)}
+<rect x="${px}" y="${cy - 28}" width="${pillW}" height="56" rx="15" fill="${c.urlbar}"/>
+<clipPath id="${p}_urlclip"><rect x="${px + 70}" y="${cy - 28}" width="${pillW - 140}" height="56"/></clipPath>
+<g clip-path="url(#${p}_urlclip)"><text x="${M + viewW / 2 + 8}" y="${cy + 10}" text-anchor="middle" font-family="${BR_FONT}" font-size="30" fill="${c.text}" id="fk_urltext_${p}">mockframe.app</text></g>
+${brIcon.lock(px + 42, cy - 1, c.textDim)}
+${brIcon.reload(px + pillW - 42, cy, c.textDim)}
+${brIcon.share(M + viewW - 300, cy, c.textDim)}${brIcon.plus(M + viewW - 220, cy, c.textDim, 3.8)}${brIcon.tabs(M + viewW - 140, cy, c.textDim)}
+<rect x="${M}" y="${M + toolbarH - 2}" width="${viewW}" height="2" fill="${c.divider}"/>`;
+}
+
 function browser({ id, variant, viewW, viewH, kind, chrome: c }) {
   const M = 10;
-  const toolbarH = kind === "chrome" ? 150 : (kind === "arc" ? 120 : 104);
+  const tabbed = kind === "chrome" || kind === "firefox";
+  const win = c.controls === "win";
+  const toolbarH = tabbed ? 150 : (kind === "arc" ? 120 : 104);
   const sidebarW = kind === "arc" ? 440 : 0;
   const W = viewW + M * 2 + sidebarW;
   const H = M + toolbarH + viewH + M;
   const p = `fk_${id}_${variant}`;
   const winR = 26;
 
-  const lights = `
-<circle cx="${M + 44}" cy="${M + (kind === "chrome" ? 38 : (kind === "arc" ? 48 : toolbarH / 2))}" r="13" fill="#ff5f57"/>
-<circle cx="${M + 88}" cy="${M + (kind === "chrome" ? 38 : (kind === "arc" ? 48 : toolbarH / 2))}" r="13" fill="#febc2e"/>
-<circle cx="${M + 132}" cy="${M + (kind === "chrome" ? 38 : (kind === "arc" ? 48 : toolbarH / 2))}" r="13" fill="#28c840"/>`;
+  const lightY = M + (tabbed ? 38 : (kind === "arc" ? 48 : toolbarH / 2));
+  const lights = win ? "" : `
+<circle cx="${M + 44}" cy="${lightY}" r="13" fill="#ff5f57"/>
+<circle cx="${M + 88}" cy="${lightY}" r="13" fill="#febc2e"/>
+<circle cx="${M + 132}" cy="${lightY}" r="13" fill="#28c840"/>`;
 
   let toolbar = "";
-  if (kind === "chrome") {
-    const tabW = 520;
-    toolbar = `
-<path d="${rr(M, M, viewW, toolbarH, { tl: winR, tr: winR, br: 0, bl: 0 })}" fill="${c.tabstrip}"/>
-${lights}
-<path d="${rr(M + 180, M + 16, tabW, 60, { tl: 18, tr: 18, br: 0, bl: 0 })}" fill="${c.toolbar}"/>
-<circle cx="${M + 216}" cy="${M + 46}" r="15" fill="${c.accentDot}"/>
-<rect x="${M + 246}" y="${M + 36}" width="300" height="20" rx="10" fill="${c.textDim}"/>
-<rect x="${M}" y="${M + 76}" width="${viewW}" height="${toolbarH - 76}" fill="${c.toolbar}"/>
-<rect x="${M + 170}" y="${M + 88}" width="${viewW - 420}" height="52" rx="26" fill="${c.urlbar}"/>
-<circle cx="${M + 200}" cy="${M + 114}" r="10" fill="none" stroke="${c.textDim}" stroke-width="4"/>
-<text x="${M + 226}" y="${M + 123}" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="30" fill="${c.text}" id="fk_urltext_${p}">mockframe.app</text>
-<g fill="${c.textDim}">
-  <circle cx="${M + 60}" cy="${M + 114}" r="3.6"/><circle cx="${M + 60}" cy="${M + 114}" r="3.6"/>
-  <path d="M${M + 96} ${M + 104} l-12 10 12 10" stroke="${c.textDim}" stroke-width="5" fill="none" stroke-linecap="round"/>
-  <path d="M${M + 124} ${M + 104} l12 10 -12 10" stroke="${c.textDim}" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.45"/>
-  <circle cx="${viewW - M - 150}" cy="${M + 114}" r="4"/><circle cx="${viewW - M - 132}" cy="${M + 114}" r="4"/><circle cx="${viewW - M - 114}" cy="${M + 114}" r="4"/>
-</g>
-<rect x="${M}" y="${M + toolbarH - 2}" width="${viewW}" height="2" fill="${c.divider}"/>`;
+  if (tabbed) {
+    toolbar = tabbedBar({ M, viewW, toolbarH, c, p, winR, pill: kind === "firefox", win, lights });
   } else if (kind === "arc") {
     toolbar = `
 <path d="${rr(M, M, viewW + sidebarW, toolbarH + viewH, winR)}" fill="${c.windowEdge}"/>
@@ -448,16 +516,7 @@ ${lights}
 </g>
 `;
   } else {
-    toolbar = `
-<path d="${rr(M, M, viewW, toolbarH, { tl: winR, tr: winR, br: 0, bl: 0 })}" fill="${c.toolbar}"/>
-${lights}
-<rect x="${M + viewW / 2 - 460}" y="${M + 24}" width="920" height="56" rx="16" fill="${c.urlbar}"/>
-<text x="${M + viewW / 2}" y="${M + 62}" text-anchor="middle" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif" font-size="30" fill="${c.text}" id="fk_urltext_${p}">mockframe.app</text>
-<g stroke="${c.textDim}" stroke-width="5" fill="none" stroke-linecap="round">
-  <path d="M${M + 210} ${M + 40} l-14 12 14 12"/>
-  <path d="M${M + 250} ${M + 40} l14 12 -14 12" opacity="0.45"/>
-</g>
-<rect x="${M}" y="${M + toolbarH - 2}" width="${viewW}" height="2" fill="${c.divider}"/>`;
+    toolbar = safariBar({ M, viewW, toolbarH, c, p, winR, lights });
   }
 
   const body = kind === "arc" ? `
@@ -1443,59 +1502,6 @@ const DEVICES = [
   },
 
   /* ---- watches ---- */
-  {
-    meta: {
-      id: "apple-watch-series-11", name: "Apple Watch Series 11", brand: "apple", category: "watch",
-      released: "2025-09", screen: { width: 416, height: 496, cornerRadius: 96 },
-      aliases: ["apple watch", "apple watch series 11", "apple watch 46mm"], seo: { monthlyQueries: ["apple watch mockup", "apple watch series 11 mockup"] },
-      wallpaper: ["#1e293b", "#020617", "#94a3b8"],
-    },
-    gen: (variant, colors) => appleWatch({ id: "apple-watch-series-11", variant, screenW: 416, screenH: 496, screenR: 96, bezel: 46, caseC: colors.caseC, band: colors.band }),
-    variants: [
-      { id: "jet-black", label: "Jet Black · Black Band", colors: { caseC: [[0, "#4a4a4f"], [0.5, "#16161a"], [1, "#3a3a3f"]], band: [[0, "#141416"], [0.5, "#2a2a2e"], [1, "#141416"]] } },
-      { id: "silver", label: "Silver · Light Blush", colors: { caseC: [[0, "#f3f4f6"], [0.5, "#b9bcc3"], [1, "#e5e7eb"]], band: [[0, "#e8c9c2"], [0.5, "#f3dcd6"], [1, "#e0bfb8"]] } },
-      { id: "rose-gold", label: "Rose Gold · Plum", colors: { caseC: [[0, "#f6d6c8"], [0.5, "#c99a86"], [1, "#ebc3b2"]], band: [[0, "#4b2a3d"], [0.5, "#6a3d57"], [1, "#4b2a3d"]] } },
-    ],
-  },
-  {
-    meta: {
-      id: "apple-watch-ultra-3", name: "Apple Watch Ultra 3", brand: "apple", category: "watch",
-      released: "2025-09", screen: { width: 422, height: 514, cornerRadius: 92 },
-      aliases: ["apple watch ultra", "apple watch ultra 3"], seo: { monthlyQueries: ["apple watch ultra mockup"] },
-      wallpaper: ["#7c2d12", "#020617", "#fdba74"],
-    },
-    gen: (variant, colors) => appleWatch({ id: "apple-watch-ultra-3", variant, screenW: 422, screenH: 514, screenR: 92, bezel: 58, caseC: colors.caseC, band: colors.band, ultra: true }),
-    variants: [
-      { id: "natural-orange", label: "Natural · Orange Alpine", colors: { caseC: [[0, "#e3e0da"], [0.5, "#9d9a93"], [1, "#d1cec7"]], band: [[0, "#d9531e"], [0.5, "#f26b2b"], [1, "#d9531e"]] } },
-      { id: "black-ocean", label: "Black · Ocean Band", colors: { caseC: [[0, "#4a4a4f"], [0.5, "#16161a"], [1, "#3a3a3f"]], band: [[0, "#14161c"], [0.5, "#262a33"], [1, "#14161c"]] } },
-    ],
-  },
-  {
-    meta: {
-      id: "pixel-watch-3", name: "Pixel Watch 3", brand: "google", category: "watch",
-      released: "2024-08", screen: { width: 456, height: 456, cornerRadius: 228 },
-      aliases: ["google pixel watch", "wear os mockup"], seo: { monthlyQueries: ["pixel watch mockup", "wear os watch mockup"] },
-      wallpaper: ["#1e293b", "#020617", "#94a3b8"],
-    },
-    gen: (variant, colors) => roundWatch({ id: "pixel-watch-3", variant, d: 456, bezel: 40, caseC: colors.caseC, band: colors.band }),
-    variants: [
-      { id: "matte-black", label: "Matte Black · Obsidian", colors: { caseC: [[0, "#4a4a4f"], [0.5, "#16161a"], [1, "#3a3a3f"]], band: [[0, "#18181b"], [0.5, "#2a2a2e"], [1, "#18181b"]] } },
-      { id: "polished-silver", label: "Polished Silver · Porcelain", colors: { caseC: [[0, "#f3f4f6"], [0.5, "#b9bcc3"], [1, "#e5e7eb"]], band: [[0, "#e7e2d8"], [0.5, "#f3efe7"], [1, "#e0dacf"]] } },
-    ],
-  },
-  {
-    meta: {
-      id: "galaxy-watch-8-classic", name: "Galaxy Watch8 Classic", brand: "samsung", category: "watch",
-      released: "2025-07", screen: { width: 480, height: 480, cornerRadius: 240 },
-      aliases: ["samsung galaxy watch", "galaxy watch 8"], seo: { monthlyQueries: ["galaxy watch mockup", "samsung watch mockup"] },
-      wallpaper: ["#1e293b", "#020617", "#94a3b8"],
-    },
-    gen: (variant, colors) => roundWatch({ id: "galaxy-watch-8-classic", variant, d: 480, bezel: 90, caseC: colors.caseC, band: colors.band, ring: colors.ring, buttons: 2 }),
-    variants: [
-      { id: "black", label: "Black", colors: { caseC: [[0, "#4a4a4f"], [0.5, "#16161a"], [1, "#3a3a3f"]], band: [[0, "#18181b"], [0.5, "#2a2a2e"], [1, "#18181b"]], ring: "#1a1a1d" } },
-      { id: "white", label: "White", colors: { caseC: [[0, "#f3f4f6"], [0.5, "#b9bcc3"], [1, "#e5e7eb"]], band: [[0, "#ecebe7"], [0.5, "#f7f6f2"], [1, "#e4e2dd"]], ring: "#2a2b2f" } },
-    ],
-  },
 
   /* ---- laptops & desktops ---- */
   {
@@ -1514,35 +1520,6 @@ const DEVICES = [
   },
   {
     meta: {
-      id: "imac-24", name: "iMac 24″", brand: "apple", category: "desktop",
-      released: "2024-11", screen: { width: 4480, height: 2520, cornerRadius: 0 },
-      aliases: ["apple imac", "imac mockup", "desktop mockup"], seo: { monthlyQueries: ["imac mockup", "imac 24 mockup"] },
-      wallpaper: ["#0ea5e9", "#1e3a8a", "#bae6fd"],
-    },
-    gen: (variant, colors) => monitor({ id: "imac-24", variant, kind: "imac", screenW: 4480, screenH: 2520, bezel: 150, chin: 560, glassBezel: 120, frameC: colors.frame, chinC: colors.chin, standC: colors.frame }),
-    variants: [
-      { id: "blue", label: "Blue", colors: { frame: [[0, "#b9d3ec"], [1, "#7fa6cc"]], chin: [[0, "#7fa6cc"], [1, "#4f7fae"]] } },
-      { id: "silver", label: "Silver", colors: { frame: [[0, "#eef0f3"], [1, "#c3c7ce"]], chin: [[0, "#d4d8de"], [1, "#aeb3bb"]] } },
-      { id: "green", label: "Green", colors: { frame: [[0, "#c4e2cc"], [1, "#86b896"]], chin: [[0, "#86b896"], [1, "#58916b"]] } },
-      { id: "pink", label: "Pink", colors: { frame: [[0, "#f6cfd4"], [1, "#d996a0"]], chin: [[0, "#d996a0"], [1, "#b8697a"]] } },
-      { id: "purple", label: "Purple", colors: { frame: [[0, "#d8cfee"], [1, "#a596cf"]], chin: [[0, "#a596cf"], [1, "#7c6aae"]] } },
-    ],
-  },
-  {
-    meta: {
-      id: "studio-display", name: "Studio Display", brand: "apple", category: "desktop",
-      released: "2022-03", screen: { width: 5120, height: 2880, cornerRadius: 0 },
-      aliases: ["apple studio display", "monitor mockup", "pro display"], seo: { monthlyQueries: ["studio display mockup", "monitor mockup"] },
-      wallpaper: ["#4338ca", "#0f172a", "#a5b4fc"],
-    },
-    gen: (variant, colors) => monitor({ id: "studio-display", variant, kind: "studio", screenW: 5120, screenH: 2880, bezel: 150, chin: 150, glassBezel: 130, frameC: colors.frame, chinC: colors.frame, standC: colors.frame }),
-    variants: [
-      { id: "silver", label: "Silver", colors: { frame: [[0, "#e8eaee"], [1, "#b2b6be"]] } },
-      { id: "space-black", label: "Space Black", colors: { frame: [[0, "#4a4a4e"], [1, "#232326"]] } },
-    ],
-  },
-  {
-    meta: {
       id: "chrome-browser", name: "Chrome", brand: "google", category: "browser",
       released: "2026-01",
       screen: { width: 2560, height: 1600, cornerRadius: 0 },
@@ -1553,8 +1530,42 @@ const DEVICES = [
     gen: (variant, colors) =>
       browser({ id: "chrome-browser", variant, viewW: 2560, viewH: 1600, kind: "chrome", chrome: colors }),
     variants: [
-      { id: "light", label: "Light", colors: { tabstrip: "#dee1e6", toolbar: "#ffffff", urlbar: "#f1f3f4", text: "#3c4043", textDim: "#9aa0a6", divider: "#e8eaed", windowEdge: "#c8ccd2", accentDot: "#8ab4f8" } },
-      { id: "dark", label: "Dark", colors: { tabstrip: "#202124", toolbar: "#35363a", urlbar: "#282a2d", text: "#e8eaed", textDim: "#80868b", divider: "#1b1c1e", windowEdge: "#121316", accentDot: "#8ab4f8" } },
+      { id: "light", label: "Light · Mac", colors: { tabstrip: "#dee1e6", toolbar: "#ffffff", urlbar: "#f1f3f4", text: "#3c4043", textDim: "#80868b", divider: "#e8eaed", windowEdge: "#c8ccd2", accentDot: "#1a73e8" } },
+      { id: "dark", label: "Dark · Mac", colors: { tabstrip: "#202124", toolbar: "#35363a", urlbar: "#282a2d", text: "#e8eaed", textDim: "#9aa0a6", divider: "#1b1c1e", windowEdge: "#121316", accentDot: "#8ab4f8" } },
+      { id: "light-windows", label: "Light · Windows", colors: { ...{ tabstrip: "#dee1e6", toolbar: "#ffffff", urlbar: "#f1f3f4", text: "#3c4043", textDim: "#80868b", divider: "#e8eaed", windowEdge: "#c8ccd2", accentDot: "#1a73e8" }, controls: "win" } },
+      { id: "dark-windows", label: "Dark · Windows", colors: { ...{ tabstrip: "#202124", toolbar: "#35363a", urlbar: "#282a2d", text: "#e8eaed", textDim: "#9aa0a6", divider: "#1b1c1e", windowEdge: "#121316", accentDot: "#8ab4f8" }, controls: "win" } },
+    ],
+  },
+  {
+    meta: {
+      id: "edge-browser", name: "Edge", brand: "microsoft", category: "browser",
+      released: "2026-01",
+      screen: { width: 2560, height: 1600, cornerRadius: 0 },
+      aliases: ["edge browser mockup", "microsoft edge frame", "windows browser mockup"],
+      seo: { monthlyQueries: ["edge mockup", "windows browser mockup"] },
+      urlBarText: "mockframe.app",
+    },
+    gen: (variant, colors) =>
+      browser({ id: "edge-browser", variant, viewW: 2560, viewH: 1600, kind: "chrome", chrome: colors }),
+    variants: [
+      { id: "light", label: "Light", colors: { tabstrip: "#e9edf5", toolbar: "#f9fbff", urlbar: "#ffffff", text: "#242424", textDim: "#6e7280", divider: "#dde2ec", windowEdge: "#c6cdda", accentDot: "#0f7b6c", controls: "win" } },
+      { id: "dark", label: "Dark", colors: { tabstrip: "#1b1b1f", toolbar: "#2b2b30", urlbar: "#1f1f23", text: "#f2f2f4", textDim: "#a0a3ad", divider: "#141417", windowEdge: "#0e0e10", accentDot: "#35c2a8", controls: "win" } },
+    ],
+  },
+  {
+    meta: {
+      id: "firefox-browser", name: "Firefox", brand: "mozilla", category: "browser",
+      released: "2026-01",
+      screen: { width: 2560, height: 1600, cornerRadius: 0 },
+      aliases: ["firefox browser mockup", "firefox frame"],
+      seo: { monthlyQueries: ["firefox mockup", "firefox browser frame"] },
+      urlBarText: "mockframe.app",
+    },
+    gen: (variant, colors) =>
+      browser({ id: "firefox-browser", variant, viewW: 2560, viewH: 1600, kind: "firefox", chrome: colors }),
+    variants: [
+      { id: "light", label: "Light", colors: { tabstrip: "#f0f0f4", toolbar: "#ffffff", urlbar: "#f0f0f4", text: "#15141a", textDim: "#5b5b66", divider: "#e0e0e6", windowEdge: "#cfcfd8", accentDot: "#ff7139" } },
+      { id: "dark", label: "Dark", colors: { tabstrip: "#1c1b22", toolbar: "#2b2a33", urlbar: "#1c1b22", text: "#fbfbfe", textDim: "#a8a8b3", divider: "#0c0c0d", windowEdge: "#0c0c0d", accentDot: "#ff9a62" } },
     ],
   },
   {

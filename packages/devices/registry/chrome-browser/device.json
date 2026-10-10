@@ -35,13 +35,23 @@
   "variants": [
     {
       "id": "light",
-      "label": "Light",
+      "label": "Light · Mac",
       "svg": "frame-light.svg"
     },
     {
       "id": "dark",
-      "label": "Dark",
+      "label": "Dark · Mac",
       "svg": "frame-dark.svg"
+    },
+    {
+      "id": "light-windows",
+      "label": "Light · Windows",
+      "svg": "frame-light-windows.svg"
+    },
+    {
+      "id": "dark-windows",
+      "label": "Dark · Windows",
+      "svg": "frame-dark-windows.svg"
     }
   ]
 }

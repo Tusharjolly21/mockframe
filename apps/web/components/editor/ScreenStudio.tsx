@@ -43,6 +43,7 @@ import {
   effectivePlatform,
   encodeScreenAsset,
   fitCardScale,
+  resolveScreenAsset,
   isScreenAsset,
   defaultSocialDoc,
   DATING_LABELS,
@@ -105,6 +106,7 @@ import {
   type FrameStyle,
 } from "@/lib/screens";
 import { WALLPAPERS } from "@/lib/screens/wallpapers";
+import { defaultBrowserUrl, hasWebVersion, isWebDoc } from "@/lib/screens/webPage";
 import { githubCells } from "@/lib/screens/github";
 import { importBlueskyPost } from "@/lib/blueskyImport";
 import { importXPost } from "@/lib/xpostImport";
@@ -241,6 +243,7 @@ function themeIsDark(doc: ScreenDoc): boolean {
 const WINDOW_FRAME_APPS = new Set<ScreenDoc["app"]>(["social", "xpost", "bluesky", "code"]);
 
 export function isTemplateCard(doc: ScreenDoc): boolean {
+  if (isWebDoc(doc)) return false;
   return doc.app === "code" || ((doc.app === "bluesky" || doc.app === "xpost" || doc.app === "social" || doc.app === "ios-notification" || doc.app === "spotify" || doc.app === "appstore" || doc.app === "appstore-promo" || doc.app === "googlemaps" || doc.app === "googleplay") && !!(doc as { standalone?: boolean }).standalone);
 }
 
@@ -266,6 +269,39 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
   // remember the last real device so toggling the frame back restores it
   const lastDeviceRef = useRef(layer.deviceId || "iphone-16-pro");
   if (layer.deviceId) lastDeviceRef.current = layer.deviceId;
+  // the last phone and the last browser, so flipping App <-> Web restores each
+  const lastPhoneRef = useRef("iphone-17-pro");
+  const lastBrowserRef = useRef("chrome-browser");
+  if (layer.deviceId) {
+    if (getDevice(layer.deviceId)?.category === "browser") lastBrowserRef.current = layer.deviceId;
+    else if (getDevice(layer.deviceId)?.category === "phone") lastPhoneRef.current = layer.deviceId;
+  }
+
+  // App <-> Web: the same screen as a phone app or a desktop page. The page
+  // moves into a browser window (and back into a phone), refitted to the canvas.
+  const setWeb = (on: boolean) =>
+    updateLayer(layer.id, (l) => {
+      if (l.type !== "mockup" || !l.media) return l;
+      const d = decodeScreenAsset(l.media.assetId);
+      if (!d || !hasWebVersion(d)) return l;
+      const next = { ...d, web: on, standalone: false } as ScreenDoc;
+      const deviceId = on ? lastBrowserRef.current : lastPhoneRef.current;
+      const dev = getDevice(deviceId);
+      const { width, height } = useSceneStore.getState().scene.canvas;
+      // leave room under a headline when the scene has one
+      const hasText = useSceneStore.getState().scene.layers.some((x) => x.type === "text");
+      const fw = dev?.frame.width ?? 1300;
+      const fh = dev?.frame.height ?? 2700;
+      const share = hasText ? 0.7 : on ? 0.8 : 0.84;
+      const scale = Math.round(Math.min((width * (on ? 0.86 : 0.7)) / fw, (height * share) / fh) * 1000) / 1000;
+      return {
+        ...l,
+        deviceId,
+        browserUrl: on ? defaultBrowserUrl(next) : undefined,
+        transform: { ...l.transform, scale, x: 0, y: hasText ? Math.round(height * 0.07) : 0, rotate: 0, tiltX: 0, tiltY: 0 },
+        media: { ...l.media, assetId: encodeScreenAsset({ ...next, chrome: { ...next.chrome, platform: effectivePlatform(next.app, devicePlatform(deviceId)) } }) },
+      };
+    });
 
   // toggle the phone frame on/off; for charts this also flips the standalone
   // (card) render, atomically with the deviceId so there's no flash
@@ -275,7 +311,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       let media = l.media;
       if (media && isScreenAsset(media.assetId)) {
         const d = decodeScreenAsset(media.assetId);
-        if (d && (d.app === "github" || d.app === "stripe" || d.app === "code" || d.app === "bluesky" || d.app === "xpost" || d.app === "social")) {
+        if (d && !isWebDoc(d) && (d.app === "github" || d.app === "stripe" || d.app === "code" || d.app === "bluesky" || d.app === "xpost" || d.app === "social")) {
           media = { ...media, assetId: encodeScreenAsset({ ...d, standalone: on }) };
         }
       }
@@ -350,6 +386,25 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
         scale: 1,
       },
     }));
+
+  // a doc change that alters the card's size (a new window frame, more inset):
+  // refit so the card keeps the same share of the canvas instead of spilling out
+  const setDocFitted = (next: ScreenDoc) =>
+    updateLayer(layer.id, (l) => {
+      if (l.type !== "mockup") return l;
+      const withPlatform = { ...next, chrome: { ...next.chrome, platform: effectivePlatform(next.app, devPlatform) } } as ScreenDoc;
+      const assetId = encodeScreenAsset(withPlatform);
+      const { width, height } = useSceneStore.getState().scene.canvas;
+      const prev = l.media ? resolveScreenAsset(l.media.assetId) : undefined;
+      // the share of the canvas the card fills now (wider or taller side), kept across the change
+      const fill = prev?.width && prev.height ? Math.min(0.95, Math.max(0.3, Math.max((prev.width * l.transform.scale) / width, (prev.height * l.transform.scale) / height))) : 0.84;
+      const scale = l.deviceId === null ? (fitCardScale(assetId, width, height, fill) ?? l.transform.scale) : l.transform.scale;
+      return {
+        ...l,
+        transform: { ...l.transform, scale },
+        media: { assetId, kind: "image" as const, fit: "cover" as const, offsetX: 0, offsetY: 0, scale: 1 },
+      };
+    });
 
   // keep the screen's platform in sync when the device is swapped
   useEffect(() => {
@@ -427,8 +482,23 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       }`}
       action={removeBtn}
     >
+      {hasWebVersion(doc) && (
+        <div className="mb-3">
+          <span className="mb-1 block text-xs text-[#6b6b76]">Version</span>
+          <Seg
+            id="scr-web"
+            options={[
+              { value: "app", label: "Phone app" },
+              { value: "web", label: "Web page" },
+            ]}
+            value={isWebDoc(doc) ? "web" : "app"}
+            onChange={(v) => setWeb(v === "web")}
+          />
+          {isWebDoc(doc) && <p className="mt-1.5 text-[10px] leading-relaxed text-[#b0b0ba]">A desktop page in a browser window. Pick another browser or laptop under Device.</p>}
+        </div>
+      )}
       {/* shared status-bar chrome — standalone cards draw no status bar */}
-      {doc.app !== "testimonial" && doc.app !== "appstore-promo" && !isStandaloneContent(doc) && (
+      {doc.app !== "testimonial" && doc.app !== "appstore-promo" && !isStandaloneContent(doc) && !isWebDoc(doc) && (
         <div className="mb-3 flex gap-2">
           <Field label="Time" value={doc.chrome.time} onChange={(time) => setDoc({ ...doc, chrome: { ...doc.chrome, time } })} className="w-20" />
           <div className="flex-1">
@@ -445,7 +515,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
       )}
       {/* platform is driven by the device the mockup sits in — n/a for the code card
           or any standalone Template card (there's no device behind a card) */}
-      {doc.app !== "code" && !isStandaloneContent(doc) && (
+      {doc.app !== "code" && !isStandaloneContent(doc) && !isWebDoc(doc) && (
         <div className="mb-3 flex items-center gap-1.5 rounded-lg bg-[#f4f4f8] px-2.5 py-1.5 text-[11px] text-[#6b6b76]">
           <span className="grid h-4 w-4 place-items-center rounded bg-[#17171c] text-[8px] font-bold text-white">
             {devPlatform === "ios" ? "" : "▲"}
@@ -473,7 +543,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
           <Seg
             id="scr-frame"
             options={[
-              { value: "device", label: "Phone" },
+              { value: "device", label: isWebDoc(doc) ? "Browser" : "Phone" },
               { value: "none", label: doc.app === "bluesky" || doc.app === "xpost" || doc.app === "social" || doc.app === "github" || doc.app === "stripe" ? "Card" : "No frame" },
             ]}
             value={frameless ? "none" : "device"}
@@ -489,7 +559,7 @@ export function ScreenStudio({ layer }: { layer: MockupLayer }) {
 
       {/* window frame for the standalone Template cards (Code / Bluesky / X) */}
       {isTemplateCard(doc) && WINDOW_FRAME_APPS.has(doc.app) && (
-        <FrameField value={(doc as { frame?: FrameStyle }).frame ?? "none"} onChange={(frame) => setDoc({ ...doc, frame } as ScreenDoc)} />
+        <FrameField doc={doc as XPostDoc | BlueskyDoc | SocialPostDoc | CodeDoc} setDoc={setDoc} fitFrame={setDocFitted} />
       )}
 
       {AVATAR_APPS.has(doc.app) && (
@@ -699,8 +769,64 @@ function ScreenPicker({
 
 /* --------------------------------- fields ------------------------------------ */
 
-/** Window-frame picker for Template cards — the 8 PostSpark styles. */
-function FrameField({ value, onChange }: { value: FrameStyle; onChange: (f: FrameStyle) => void }) {
+/** Which window styles draw a title / address bar. */
+const BAR_FRAMES = new Set<FrameStyle>(["macos", "safari", "chrome", "terminal", "arc", "windows"]);
+const INSET_FRAMES = new Set<FrameStyle>(["card", "glass"]);
+const FRAME_TITLE_LABEL: Partial<Record<FrameStyle, string>> = {
+  safari: "Address",
+  chrome: "Address",
+  terminal: "Title",
+  windows: "Title",
+};
+
+/** A tiny drawing of each window style for the picker tiles. */
+function FrameGlyph({ style, active }: { style: FrameStyle; active: boolean }) {
+  const ink = active ? "#ffffff" : "#8b8b96";
+  const faint = active ? "rgba(255,255,255,0.35)" : "#d6d6de";
+  const dot = (cx: number, c: string) => <circle key={cx} cx={cx} cy={4.5} r={1.5} fill={c} />;
+  const bar = style === "macos" || style === "safari" || style === "chrome" || style === "terminal" || style === "arc";
+  return (
+    <svg viewBox="0 0 40 28" width="34" height="24" aria-hidden>
+      {style === "stack" && <rect x="5" y="5" width="32" height="20" rx="3" fill={faint} />}
+      {style === "stack2" && <rect x="3" y="3" width="32" height="20" rx="3" fill={faint} transform="rotate(-6 20 14)" />}
+      {style === "outline" && <rect x="1.5" y="1.5" width="37" height="25" rx="5" fill="none" stroke={faint} />}
+      {style === "glass" && <rect x="2" y="2" width="36" height="24" rx="4" fill={faint} />}
+      {style !== "none" && (
+        <rect
+          x={style === "outline" ? 4 : style === "glass" ? 5 : 3}
+          y={style === "outline" ? 4 : style === "glass" ? 5 : 3}
+          width={style === "outline" ? 32 : style === "glass" ? 30 : 32}
+          height={style === "outline" ? 20 : style === "glass" ? 18 : 20}
+          rx="3"
+          fill="none"
+          stroke={ink}
+          strokeWidth="1.3"
+        />
+      )}
+      {style === "none" && <rect x="3" y="3" width="34" height="22" rx="1" fill="none" stroke={faint} strokeDasharray="2 2" />}
+      {bar && <path d="M3 8.5h34" stroke={ink} strokeWidth="1" />}
+      {bar && [7, 11, 15].map((cx) => dot(cx, ink))}
+      {style === "windows" && <path d="M29 4l3 3m0-3l-3 3M24 5.5h2.5" stroke={ink} strokeWidth="1" strokeLinecap="round" />}
+      {style === "chrome" && <rect x="19" y="3.2" width="10" height="2.6" rx="1" fill={faint} />}
+    </svg>
+  );
+}
+
+/** Window-frame controls for Template cards: style, title/address, bar colour, inset, roundness, shadow. */
+function FrameField({
+  doc,
+  setDoc,
+  fitFrame,
+}: {
+  doc: XPostDoc | BlueskyDoc | SocialPostDoc | CodeDoc;
+  setDoc: (d: ScreenDoc) => void;
+  /** change the frame and refit the card to the canvas in one step */
+  fitFrame: (next: ScreenDoc) => void;
+}) {
+  const value = doc.frame ?? "none";
+  const hasBar = BAR_FRAMES.has(value);
+  const patch = (values: Partial<typeof doc>) => setDoc({ ...doc, ...values } as ScreenDoc);
+  const shadowOn = (doc.cardShadow ?? 0) >= 0.05;
   return (
     <div className="mt-3">
       <span className="mb-1.5 block text-xs text-[#6b6b76]">Window frame</span>
@@ -708,15 +834,61 @@ function FrameField({ value, onChange }: { value: FrameStyle; onChange: (f: Fram
         {FRAME_STYLES.map((f) => (
           <button
             key={f}
-            onClick={() => onChange(f)}
-            className={`fk-tile rounded-lg border px-1 py-2 text-[10px] font-semibold ${
+            onClick={() => fitFrame({ ...doc, frame: f } as ScreenDoc)}
+            aria-pressed={value === f}
+            className={`fk-tile flex flex-col items-center gap-0.5 rounded-lg border px-1 pb-1.5 pt-1.5 text-[10px] font-semibold ${
               value === f ? "border-[#17171c] bg-[#17171c] text-white" : "border-[#e8e8ef] bg-white text-[#6b6b76] hover:border-[#c9c9d4]"
             }`}
           >
+            <FrameGlyph style={f} active={value === f} />
             {FRAME_LABELS[f]}
           </button>
         ))}
       </div>
+      <p className="mt-1.5 text-[10px] leading-snug text-[#b0b0ba]">The card resizes to fit the frame you pick, so everything stays inside the canvas.</p>
+      {value !== "none" && (
+        <div className="mt-2.5 space-y-2.5 rounded-xl border border-[#e5e5ed] bg-[#fafafc] p-2.5">
+          {hasBar && (
+            <>
+              <Field label={FRAME_TITLE_LABEL[value] ?? "Window title"} value={doc.frameTitle ?? ""} placeholder="Leave empty for the default" onChange={(frameTitle) => patch({ frameTitle })} />
+              <div>
+                <span className="mb-1 block text-xs text-[#6b6b76]">Title bar</span>
+                <Seg
+                  id="frame-bar"
+                  options={[
+                    { value: "auto", label: "Match" },
+                    { value: "light", label: "Light" },
+                    { value: "dark", label: "Dark" },
+                  ]}
+                  value={doc.frameBar ?? "auto"}
+                  onChange={(frameBar) => fitFrame({ ...doc, frameBar } as ScreenDoc)}
+                />
+              </div>
+            </>
+          )}
+          {INSET_FRAMES.has(value) && (
+            <SliderRow label="Inset" value={doc.framePad ?? (value === "glass" ? 14 : 18)} min={0} max={48} step={1} format={(v) => `${Math.round(v)}px`} onChange={(v) => fitFrame({ ...doc, framePad: Math.round(v) } as ScreenDoc)} />
+          )}
+          <SliderRow label="Roundness" value={doc.cardRadius ?? 15} min={0} max={40} step={1} format={(v) => `${Math.round(v)}px`} onChange={(cardRadius) => patch({ cardRadius: Math.round(cardRadius) })} />
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-[#6b6b76]">Shadow</span>
+            <div className="w-40">
+              <Seg
+                id="frame-shadow"
+                options={[
+                  { value: "off", label: "Off" },
+                  { value: "on", label: "On" },
+                ]}
+                value={shadowOn ? "on" : "off"}
+                onChange={(v) => patch({ cardShadow: v === "off" ? 0 : 1 })}
+              />
+            </div>
+          </div>
+          {shadowOn && (
+            <SliderRow label="Shadow strength" value={doc.cardShadow ?? 1} min={0.1} max={2} step={0.05} format={(v) => `${v.toFixed(2)}×`} onChange={(cardShadow) => patch({ cardShadow: Math.round(cardShadow * 20) / 20 })} />
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -2577,12 +2749,6 @@ function PostLayoutControls({
       )}
       <SliderRow label="Text size" value={doc.postFontSize ?? (doc.app === "xpost" ? 21 : 18)} min={14} max={34} step={1} format={(value) => `${Math.round(value)}px`} onChange={(postFontSize) => patch({ postFontSize: Math.round(postFontSize) })} />
       <SliderRow label="Padding" value={doc.postPadding ?? 16} min={8} max={40} step={1} format={(value) => `${Math.round(value)}px`} onChange={(postPadding) => patch({ postPadding: Math.round(postPadding) })} />
-      {doc.standalone && (
-        <>
-          <SliderRow label="Roundness" value={doc.cardRadius ?? 15} min={0} max={40} step={1} format={(value) => `${Math.round(value)}px`} onChange={(cardRadius) => patch({ cardRadius: Math.round(cardRadius) })} />
-          <SliderRow label="Shadow" value={doc.cardShadow ?? 1} min={0} max={2} step={0.05} format={(value) => (value < 0.05 ? "None" : `${value.toFixed(2)}×`)} onChange={(cardShadow) => patch({ cardShadow: Math.round(cardShadow * 20) / 20 })} />
-        </>
-      )}
     </div>
   );
 }
@@ -2845,17 +3011,17 @@ const TESTIMONIAL_PRESETS: Array<{
   {
     label: "Studio",
     swatch: "linear-gradient(135deg,#ffffff 0 70%,#e9e6ff 70%)",
-    values: { font: "modern", align: "left", quoteStyle: "mark", cardColor: "#ffffff", textColor: "#16181d", accentColor: "#6d5dfc", cardRadius: 28, cardShadow: 1.15 },
+    values: { font: "modern", align: "left", quoteStyle: "mark", cardColor: "#ffffff", textColor: "#16181d", accentColor: "#6d5dfc", cardRadius: 28, cardShadow: 0 },
   },
   {
     label: "Midnight",
     swatch: "linear-gradient(135deg,#111827 0 70%,#34d399 70%)",
-    values: { font: "modern", align: "left", quoteStyle: "line", cardColor: "#111827", textColor: "#f8fafc", accentColor: "#34d399", cardRadius: 24, cardShadow: 1.35 },
+    values: { font: "modern", align: "left", quoteStyle: "line", cardColor: "#111827", textColor: "#f8fafc", accentColor: "#34d399", cardRadius: 24, cardShadow: 0 },
   },
   {
     label: "Editorial",
     swatch: "linear-gradient(135deg,#f7f2e9 0 70%,#bf5b3d 70%)",
-    values: { font: "editorial", align: "center", quoteStyle: "none", cardColor: "#f7f2e9", textColor: "#24201c", accentColor: "#bf5b3d", cardRadius: 12, cardShadow: 0.8 },
+    values: { font: "editorial", align: "center", quoteStyle: "none", cardColor: "#f7f2e9", textColor: "#24201c", accentColor: "#bf5b3d", cardRadius: 12, cardShadow: 0 },
   },
 ];
 

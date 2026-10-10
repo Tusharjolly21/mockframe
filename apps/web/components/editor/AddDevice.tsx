@@ -36,7 +36,7 @@ export function resizeCanvasFitted(scene: SceneDocument, width: number, height: 
   return resizeCanvas(scene, width, height, sizeOf, boxes);
 }
 
-/** "Add device" tile + menu: one tap adds an iPhone, iPad, MacBook, iMac, watch or browser to the same canvas. */
+/** "Add device" tile + menu: one tap adds an iPhone, Android phone, iPad, MacBook or browser to the same canvas. */
 export function AddDeviceButton({ compact = false }: { compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const [arrange, setArrange] = useState(true);

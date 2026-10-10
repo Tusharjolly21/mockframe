@@ -403,9 +403,8 @@ export function EditorShell({
         // replace whatever image sits on the system clipboard so ⌘V pastes these layers
         navigator.clipboard?.writeText("").catch(() => {});
         if (e.key.toLowerCase() === "x") {
-          const removable = selectedIds.filter((id) => useSceneStore.getState().scene.layers.find((l) => l.id === id)?.type !== "mockup");
-          setScene((s) => ({ ...s, layers: s.layers.filter((l) => !removable.includes(l.id)) }));
-          useViewStore.setState({ selectedIds: selectedIds.filter((id) => !removable.includes(id)) });
+          setScene((s) => ({ ...s, layers: s.layers.filter((l) => !selectedIds.includes(l.id)) }));
+          useViewStore.setState({ selectedIds: [] });
         }
         window.dispatchEvent(new CustomEvent("framekit:toast", { detail: `${e.key.toLowerCase() === "x" ? "Cut" : "Copied"} ${n} element${n === 1 ? "" : "s"} · ⌘V to paste` }));
         return;
@@ -466,21 +465,12 @@ export function EditorShell({
       if (selectedIds.length === 0) return;
       if (e.key === "Backspace" || e.key === "Delete") {
         e.preventDefault();
-        // mockups are never deleted from the canvas — only their screenshot is
-        // cleared (removing a device lives in the Layers panel)
-        const scene = useSceneStore.getState().scene;
-        const kept: string[] = [];
-        for (const id of selectedIds) {
-          const layer = scene.layers.find((l) => l.id === id);
-          if (!layer) continue;
-          if (layer.type === "mockup") {
-            if (layer.media) updateLayer(id, (l) => ({ ...l, media: null }));
-            kept.push(id);
-          } else {
-            setScene((s) => removeLayer(s, id));
-          }
-        }
-        useViewStore.setState({ selectedIds: kept });
+        // Delete removes whatever is selected, devices included; ⌘Z brings it back
+        const ids = selectedIds.filter((id) => useSceneStore.getState().scene.layers.some((l) => l.id === id));
+        if (ids.length === 0) return;
+        setScene((s) => ids.reduce((acc, id) => removeLayer(acc, id), s));
+        window.dispatchEvent(new CustomEvent("framekit:toast", { detail: ids.length > 1 ? `Removed ${ids.length} elements — ⌘Z to undo` : "Removed — ⌘Z to undo" }));
+        useViewStore.setState({ selectedIds: [] });
         return;
       }
       if (e.key === "Escape") {

@@ -81,7 +81,7 @@ export function renderIosNotification(doc: IosNotificationDoc, avatarUrl?: strin
   <clipPath id="nbd-${key}"><rect x="${bx}" y="${by}" width="17" height="17" rx="4.6"/></clipPath>
 </defs>
 ${stack}
-<rect x="${x}" y="${y}" width="${CARD_W}" height="${h}" rx="24" fill="url(#nfill-${key})" filter="url(#nsh-${key})"/>
+<rect x="${x}" y="${y}" width="${CARD_W}" height="${h}" rx="24" fill="url(#nfill-${key})"/>
 <rect x="${x + 0.5}" y="${y + 0.5}" width="${CARD_W - 1}" height="${h - 1}" rx="23.5" fill="none" stroke="${dark ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.9)"}" stroke-width="1"/>
 ${avatar}
 ${badge}

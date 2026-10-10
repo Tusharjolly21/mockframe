@@ -20,8 +20,8 @@ const inside = (scene: SceneDocument) =>
   });
 
 describe("arrangeLineup", () => {
-  it("puts a laptop, phone and watch side by side, all inside the canvas", () => {
-    const scene = arrangeLineup(withDevices(["iphone-17-pro", "macbook-pro-14", "apple-watch-series-11"]), sizeOf);
+  it("puts a laptop, phone and tablet side by side, all inside the canvas", () => {
+    const scene = arrangeLineup(withDevices(["iphone-17-pro", "macbook-pro-14", "ipad-pro-13"]), sizeOf);
     expect(inside(scene)).toBe(true);
     const [a, b, c] = scene.layers as MockupLayer[];
     // biggest first in the stack (at the back)

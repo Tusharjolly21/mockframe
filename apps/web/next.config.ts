@@ -22,15 +22,21 @@ const BASE_HEADERS = [
 // retired /mockups/<id> -> the closest live family page (the canonical page per
 // lib/deviceSeo.ts, so there's no redirect-then-canonical hop)
 const RETIRED_DEVICE_PAGES: Record<string, string> = {
-  "apple-watch-s10": "apple-watch-series-11",
-  "apple-watch-ultra-2": "apple-watch-ultra-3",
-  "watch-front": "apple-watch-series-11",
+  "apple-watch-s10": "apple-watch-ultra-psd-midnight-1",
+  "apple-watch-ultra-2": "apple-watch-ultra-psd-midnight-1",
+  "watch-front": "apple-watch-ultra-psd-midnight-1",
   "ipad-floating": "ipad-pro-2024-psd-silver-1",
   "ipad-angle": "ipad-pro-2024-psd-silver-1",
   "ipad-duo": "ipad-pro-2024-psd-silver-1",
   "ipad-tilt": "ipad-pro-2024-psd-silver-1",
   "macbook-pro-16-mockup": "macbook-pro-16",
-  "psd-composite-watch-02": "apple-watch-series-11",
+  "apple-watch-series-11": "apple-watch-ultra-psd-midnight-1",
+  "apple-watch-ultra-3": "apple-watch-ultra-psd-midnight-1",
+  "pixel-watch-3": "apple-watch-ultra-psd-midnight-1",
+  "galaxy-watch-8-classic": "apple-watch-ultra-psd-midnight-1",
+  "imac-24": "macbook-pro-16",
+  "studio-display": "macbook-pro-16",
+  "psd-composite-watch-02": "apple-watch-ultra-psd-midnight-1",
   "samsung-s24-ultra-psd-violet": "galaxy-s24-ultra",
 };
 

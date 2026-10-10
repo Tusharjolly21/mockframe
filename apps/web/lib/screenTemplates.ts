@@ -216,6 +216,8 @@ export function makeTemplateScene(meta: TemplateMeta): SceneDocument {
   // Standalone cards resolve at 3x logical pixels; size each to fill its share
   // of the canvas so it opens composed rather than tiny or cropped.
   layer.transform = { ...layer.transform, scale: fitCardScale(layer.media.assetId, scene.canvas.width, scene.canvas.height, look.fill) ?? 0.6 };
+  // a card sits flat on its background: no halo unless the user adds a shadow (Look > Shadow)
+  layer.shadow = null;
   scene.id = `scene-template-${meta.app}`;
   layer.id = "layer-template";
   scene.layers.push(layer);

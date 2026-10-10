@@ -1,0 +1,47 @@
+{
+  "id": "firefox-browser",
+  "name": "Firefox",
+  "brand": "mozilla",
+  "category": "browser",
+  "released": "2026-01",
+  "screen": {
+    "width": 2560,
+    "height": 1600,
+    "cornerRadius": 0
+  },
+  "aliases": [
+    "firefox browser mockup",
+    "firefox frame"
+  ],
+  "seo": {
+    "monthlyQueries": [
+      "firefox mockup",
+      "firefox browser frame"
+    ]
+  },
+  "urlBarText": "mockframe.app",
+  "frame": {
+    "width": 2580,
+    "height": 1770,
+    "screenRect": {
+      "x": 10,
+      "y": 160,
+      "width": 2560,
+      "height": 1600
+    },
+    "maskPath": "M10 160 H2570 V1734 A26 26 0 0 1 2544 1760 H36 A26 26 0 0 1 10 1734 V160 Z",
+    "overlaySelector": "#overlay"
+  },
+  "variants": [
+    {
+      "id": "light",
+      "label": "Light",
+      "svg": "frame-light.svg"
+    },
+    {
+      "id": "dark",
+      "label": "Dark",
+      "svg": "frame-dark.svg"
+    }
+  ]
+}

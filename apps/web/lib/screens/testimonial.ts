@@ -51,7 +51,7 @@ export function renderTestimonial(doc: TestimonialDoc, avatarUrl?: string): stri
   }
   const maxQuoteH = quoteBottom - quoteTop;
 
-  const shadowStrength = Math.max(0, Math.min(2, doc.cardShadow ?? 1.15));
+  const shadowStrength = Math.max(0, Math.min(2, doc.cardShadow ?? 0));
   const shadowOpacity = (0.19 * shadowStrength).toFixed(3);
   const shadowBlur = (24 * shadowStrength).toFixed(1);
   const shadowY = (15 * shadowStrength).toFixed(1);

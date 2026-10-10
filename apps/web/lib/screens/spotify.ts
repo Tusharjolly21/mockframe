@@ -95,7 +95,7 @@ function player(doc: SpotifyDoc, x: number, y: number, cardH: number, artUrl: st
   <filter id="sp-art-sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#000000" flood-opacity="0.4"/></filter>
   <clipPath id="sp-art-clip"><rect x="${ax}" y="${ay}" width="${art}" height="${art}" rx="14"/></clipPath>
 </defs>
-<rect x="${x}" y="${y}" width="${CARD_W}" height="${cardH}" rx="30" fill="url(#sp-card)" filter="url(#sp-sh)"/>
+<rect x="${x}" y="${y}" width="${CARD_W}" height="${cardH}" rx="30" fill="url(#sp-card)"/>
 <rect x="${x + 0.5}" y="${y + 0.5}" width="${CARD_W - 1}" height="${cardH - 1}" rx="29.5" fill="none" stroke="${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}"/>
 <path d="M${x + 26} ${y + 34} l7 7 7 -7" fill="none" stroke="${ink}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="${cx}" y="${y + 33}" font-family="${font}" font-size="10.5" font-weight="700" fill="${sub}" text-anchor="middle" letter-spacing="1.1">PLAYING FROM ALBUM</text>

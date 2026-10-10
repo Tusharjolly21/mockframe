@@ -393,8 +393,12 @@ function DevicePreview({ device, variantId, compact = false }: { device: Device;
         // shape instead of approximating the hole with a rectangle or polygon.
         maskImage: `url(${device.plate.screenMask})`,
         WebkitMaskImage: `url(${device.plate.screenMask})`,
-        maskSize: "100% 100%",
-        WebkitMaskSize: "100% 100%",
+        // the photo is drawn object-contain: the mask must letterbox exactly the same way,
+        // or the wallpaper spills past the device when the tile box isn't the plate's shape
+        maskSize: "contain",
+        WebkitMaskSize: "contain",
+        maskPosition: "center",
+        WebkitMaskPosition: "center",
         maskRepeat: "no-repeat",
         WebkitMaskRepeat: "no-repeat",
       }

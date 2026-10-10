@@ -1,8 +1,8 @@
 "use client";
 
-import { esc } from "./common";
+import { esc, SW } from "./common";
 import { codeFontFor } from "./fonts";
-import { renderFramed, type FramedResult } from "./frames";
+import { frameLookOf, renderFramed, type FramedResult } from "./frames";
 import type { CodeDoc } from "./types";
 
 /**
@@ -199,5 +199,5 @@ export function renderCode(doc: CodeDoc): FramedResult {
     return { svg: parts.join("\n"), height: PAD_TOP + Math.max(1, lines.length) * lineH + PAD_BOT };
   };
 
-  return renderFramed(doc.frame, { cardBg: th.bg, barBg: th.bar, barText: th.barText, dark: th.dark, title: doc.filename }, draw);
+  return renderFramed(doc.frame, { cardBg: th.bg, barBg: th.bar, barText: th.barText, dark: th.dark, title: doc.filename }, draw, SW, frameLookOf(doc));
 }

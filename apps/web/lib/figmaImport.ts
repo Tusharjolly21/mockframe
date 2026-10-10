@@ -32,8 +32,6 @@ export const FIGMA_DEVICES = [
   { id: "galaxy-s25-ultra", label: "Galaxy S25 Ultra" },
   { id: "ipad-pro-13", label: "iPad Pro 13" },
   { id: "macbook-pro-14", label: "MacBook Pro 14" },
-  { id: "imac-24", label: "iMac 24" },
-  { id: "apple-watch-series-11", label: "Apple Watch Series 11" },
   { id: "chrome-browser", label: "Chrome browser" },
   { id: "safari-browser", label: "Safari browser" },
   { id: "frameless", label: "Frameless" },
