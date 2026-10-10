@@ -125,9 +125,11 @@ export const Sculpture3D: FC<{ accent: string; width: number; height: number; or
   // canvas would shade millions of pixels nobody sees. Match the canvas to the
   // on-screen size there; exports always render at full resolution.
   const rendering = getRemotionEnvironment().isRendering;
+  // the in-browser exporter sets this so frames can be read back from the canvas
+  const captureMode = Boolean((globalThis as { __MF_CAPTURE__?: boolean }).__MF_CAPTURE__);
   const scale = useCurrentScale({ dontThrowIfOutsideOfRemotion: true });
   const screenDpr = typeof window === "undefined" ? 1 : window.devicePixelRatio || 1;
-  const dpr = rendering ? 1 : Math.min(1, Math.max(0.25, scale * screenDpr));
+  const dpr = rendering || captureMode ? 1 : Math.min(1, Math.max(0.25, scale * screenDpr));
 
   return (
     <ThreeCanvas
@@ -135,7 +137,7 @@ export const Sculpture3D: FC<{ accent: string; width: number; height: number; or
       height={height}
       dpr={dpr}
       camera={{ fov: 32, position: [0, 0, 11] }}
-      gl={{ antialias: true, preserveDrawingBuffer: rendering, powerPreference: "high-performance" }}
+      gl={{ antialias: true, preserveDrawingBuffer: rendering || captureMode, powerPreference: "high-performance" }}
       style={{ position: "absolute", inset: 0 }}
     >
       <StudioEnv />

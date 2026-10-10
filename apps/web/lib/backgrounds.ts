@@ -38,6 +38,8 @@ export const PRO_BG_CATEGORY_IDS = new Set([
   "liquid",
   "holo",
   "beams",
+  "foil",
+  "luxe",
 ]);
 
 export function isProBgCategory(categoryId: string): boolean {
@@ -94,6 +96,17 @@ const rad = (id: string, cx: number, cy: number, colors: string[]): BgSwatch => 
     cx,
     cy,
     stops: colors.map((c, i) => ({ at: i / (colors.length - 1), color: c })),
+  },
+});
+
+const con = (id: string, angle: number, cx: number, cy: number, colors: string[]): BgSwatch => ({
+  id,
+  bg: {
+    type: "conic-gradient",
+    angle,
+    cx,
+    cy,
+    stops: colors.map((c, i) => ({ at: colors.length === 1 ? 0 : i / (colors.length - 1), color: c })),
   },
 });
 
@@ -198,6 +211,32 @@ export const BG_CATEGORIES: BgCategory[] = [
     id: "grid",
     label: "Grid",
     swatches: [img("grid-sunset"), img("grid-cyber"), img("grid-mono"), img("grid-acid")],
+  },
+  {
+    id: "foil",
+    label: "Foil",
+    swatches: [
+      con("fo-holo", 20, 0.5, 0.5, ["#c4b5fd", "#f9a8d4", "#fde68a", "#86efac", "#7dd3fc", "#c4b5fd"]),
+      con("fo-oil", 200, 0.3, 0.6, ["#0f172a", "#4338ca", "#06b6d4", "#d946ef", "#f59e0b", "#0f172a"]),
+      con("fo-pearl", 90, 0.62, 0.38, ["#f8fafc", "#e9d5ff", "#bae6fd", "#fef3c7", "#fbcfe8", "#f8fafc"]),
+      con("fo-chrome", 310, 0.5, 0.4, ["#0b0b10", "#6b7280", "#f3f4f6", "#374151", "#d1d5db", "#0b0b10"]),
+      con("fo-ember", 140, 0.4, 0.7, ["#1c0a05", "#c2410c", "#fbbf24", "#9a3412", "#7c2d12", "#1c0a05"]),
+      con("fo-ice", 250, 0.55, 0.45, ["#082f49", "#38bdf8", "#e0f2fe", "#6366f1", "#0ea5e9", "#082f49"]),
+    ],
+  },
+  {
+    id: "luxe",
+    label: "Luxe",
+    swatches: [
+      lin("lx-obsidian", 160, ["#050506", "#16161d", "#2a2a36", "#0b0b10"]),
+      lin("lx-champagne", 145, ["#f7efe2", "#e8d5b5", "#c9a76b", "#f3e6cf"]),
+      lin("lx-bordeaux", 150, ["#1a0509", "#5b0f22", "#9f1d3a", "#2b0711"]),
+      lin("lx-emerald", 155, ["#02130e", "#064e3b", "#10b981", "#042f24"]),
+      lin("lx-sapphire", 150, ["#020617", "#0c1e5b", "#2563eb", "#071033"]),
+      lin("lx-rosegold", 140, ["#2a1a1c", "#b76e79", "#f2c9c0", "#8a4b55"]),
+      rad("lx-vault", 0.5, 0.3, ["#3b3b46", "#14141a", "#050507"]),
+      rad("lx-gilded", 0.5, 0.25, ["#f5deb3", "#b8860b", "#2a1d05"]),
+    ],
   },
   {
     id: "cosmic",

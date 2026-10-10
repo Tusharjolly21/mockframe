@@ -283,6 +283,11 @@ export function FrameControls() {
             />
           </div>
         )}
+        {bg.type === "conic-gradient" && (
+          <div className="mb-2">
+            <SliderRow label="Rotate" value={bg.angle} min={0} max={360} format={(v) => `${Math.round(v)}°`} onChange={(angle) => setBg({ ...bg, angle })} />
+          </div>
+        )}
         {bg.type === "mesh-gradient" && (
           <button
             onClick={() => setBg({ ...bg, seed: (bg.seed * 16807) % 2147483647 })}
@@ -420,7 +425,7 @@ function BackgroundDetail() {
     if (tab === "all") return true;
     if (tab === "textures") return category.id === "texture";
     if (tab === "wallpapers") return ["desktop", "abstract", "earth", "aurora", "bokeh", "grid"].includes(category.id);
-    return ["gradient", "spectral", "prism", "radiant", "cosmic", "mystic", "glass", "refract", "topographic"].includes(category.id);
+    return ["gradient", "foil", "luxe", "spectral", "prism", "radiant", "cosmic", "mystic", "glass", "refract", "topographic"].includes(category.id);
   });
   const swatchStyle = (swatch: BgSwatch): React.CSSProperties =>
     swatch.bg.type === "image"
@@ -827,6 +832,12 @@ const PATTERN_PRESETS: PatternPreset[] = [
   { id: "diamonds", label: "Diamonds", kind: "diamonds", color: "#d8b4fe", intensity: 0.72, thickness: 0.54, rotation: 0, blur: 0, blendMode: "normal", seed: 71, paletteSeed: 0 },
   { id: "mixed-shapes", label: "Mixed Shapes", kind: "mixed-shapes", color: "#d8b4fe", intensity: 0.72, thickness: 0.52, rotation: 0, blur: 0, blendMode: "normal", seed: 83, paletteSeed: 0 },
   { id: "confetti", label: "Confetti", kind: "confetti", color: "#c4b5fd", intensity: 0.76, thickness: 0.5, rotation: 0, blur: 0, blendMode: "normal", seed: 97, paletteSeed: 0 },
+  { id: "hex", label: "Honeycomb", kind: "hex", color: "#ffffff", intensity: 0.28, thickness: 0.4, rotation: 0, blur: 0, blendMode: "soft-light", seed: 1, paletteSeed: 0 },
+  { id: "isometric", label: "Isometric", kind: "isometric", color: "#ffffff", intensity: 0.26, thickness: 0.4, rotation: 0, blur: 0, blendMode: "soft-light", seed: 1, paletteSeed: 0 },
+  { id: "halftone", label: "Halftone", kind: "halftone", color: "#ffffff", intensity: 0.4, thickness: 0.5, rotation: 0, blur: 0, blendMode: "overlay", seed: 1, paletteSeed: 0 },
+  { id: "scanlines", label: "Scanlines", kind: "scanlines", color: "#000000", intensity: 0.22, thickness: 0.4, rotation: 0, blur: 0, blendMode: "multiply", seed: 1, paletteSeed: 0 },
+  { id: "terrazzo", label: "Terrazzo", kind: "terrazzo", color: "#f9a8d4", intensity: 0.7, thickness: 0.5, rotation: 0, blur: 0, blendMode: "normal", seed: 211, paletteSeed: 0 },
+  { id: "plus-grid", label: "Registration", kind: "plus-grid", color: "#ffffff", intensity: 0.32, thickness: 0.4, rotation: 0, blur: 0, blendMode: "soft-light", seed: 1, paletteSeed: 0 },
 ];
 
 const OVERLAY_PRESETS: Array<{ id: string; label: string; kind: OverlayKind; intensity: number }> = [
@@ -848,6 +859,13 @@ const OVERLAY_PRESETS: Array<{ id: string; label: string; kind: OverlayKind; int
   { id: "overlay-branch-deep", label: "Branch deep", kind: "branch", intensity: 0.66 },
   { id: "overlay-palm-soft", label: "Palm soft", kind: "palm", intensity: 0.36 },
   { id: "overlay-palm-deep", label: "Palm deep", kind: "palm", intensity: 0.7 },
+  { id: "overlay-leak", label: "Light leak", kind: "light-leak", intensity: 0.7 },
+  { id: "overlay-leak-soft", label: "Leak soft", kind: "light-leak", intensity: 0.4 },
+  { id: "overlay-prism", label: "Prism", kind: "prism", intensity: 0.7 },
+  { id: "overlay-rays", label: "God rays", kind: "god-rays", intensity: 0.7 },
+  { id: "overlay-bloom", label: "Lens bloom", kind: "lens-bloom", intensity: 0.7 },
+  { id: "overlay-caustics", label: "Caustics", kind: "caustics", intensity: 0.8 },
+  { id: "overlay-gloss", label: "Gloss sweep", kind: "gloss-sweep", intensity: 0.7 },
 ];
 
 /** Strip a backdrop layer's absolute positioning so it can tile a demo swatch. */
@@ -870,11 +888,11 @@ function PatternDetail() {
     const { id: _, label: __, ...nextPattern } = preset;
     patch({ pattern: nextPattern });
   };
-  const randomizedKinds = new Set<PatternKind>(["circles", "dots", "sight", "diamonds", "mixed-shapes", "confetti"]);
+  const randomizedKinds = new Set<PatternKind>(["circles", "dots", "sight", "diamonds", "mixed-shapes", "confetti", "terrazzo"]);
   return (
     <div className="pb-2">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-[10.5px] leading-relaxed text-[#9a9aa4]">Ten full-canvas patterns. Every style stays sharp at any export size.</p>
+        <p className="text-[10.5px] leading-relaxed text-[#9a9aa4]">Sixteen patterns, from confetti to honeycomb and halftone. Every style stays sharp at any export size.</p>
         {pattern && (
           <button onClick={() => patch({ pattern: undefined })} className="fk-press shrink-0 rounded-lg border border-[#e5e5ec] bg-white px-2 py-1 text-[10px] font-semibold text-[#666672]">
             Remove
@@ -1227,7 +1245,12 @@ function SizeSelector() {
   const { width, height } = scene.canvas;
   const active = findSizePreset(width, height);
   // devices and text are refitted so they stay inside the new shape
-  const setSize = (w: number, h: number) => setScene((s) => resizeCanvasFitted(s, w, h));
+  const setSize = (w: number, h: number) => {
+    // measure the DOM once, outside the store updater (updaters must stay pure), then refit after layout
+    const next = resizeCanvasFitted(useSceneStore.getState().scene, w, h);
+    setScene(() => next);
+    requestAnimationFrame(() => window.dispatchEvent(new CustomEvent("framekit:fit")));
+  };
 
   useEffect(() => {
     if (!open) return;

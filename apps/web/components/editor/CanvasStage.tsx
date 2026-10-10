@@ -75,37 +75,63 @@ export function CanvasStage() {
   // insets keep the scene clear of the floating panels (and of the filmstrip
   // a multi-shot set shows above the bottom bar)
   const hasStrip = useShotBatchStore((s) => s.shots.length > 1);
+  // stable renderer props: SceneRenderer is memoised, fresh closures every render defeat it
+  const shotCount = useShotBatchStore((s) => s.shots.length);
+  const shotIdx = useShotBatchStore((s) => s.shots.findIndex((x) => x.scene.id === scene.id));
+  const panoramaIdx = shotIdx >= 0 ? shotIdx : undefined;
+  const panoramaTotal = shotCount > 1 ? shotCount : undefined;
+  const onBlurZonesChange = useCallback(
+    (layerId: string, zones: unknown) => updateLayer(layerId, (l) => ({ ...l, blurZones: zones }) as typeof l),
+    [updateLayer]
+  );
+  // the latest canvas size lives in a ref so `fit` stays referentially stable
+  // (a changing `fit` used to re-subscribe the observer and refit mid-resize)
+  const canvasRef = useRef(scene.canvas);
+  canvasRef.current = scene.canvas;
+  const stripRef = useRef(hasStrip);
+  stripRef.current = hasStrip;
+  const lastFit = useRef({ z: 0, x: 0, y: 0 });
   const fit = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
+    const { width: cw, height: ch } = canvasRef.current;
     const INSET_X = 340;
     const INSET_TOP = 88;
-    const INSET_BOTTOM = hasStrip ? 196 : 84;
+    const INSET_BOTTOM = stripRef.current ? 196 : 84;
     const innerW = el.clientWidth - INSET_X * 2;
     const innerH = el.clientHeight - INSET_TOP - INSET_BOTTOM;
     // a window narrower than both panels leaves a negative inner width: never mirror or hide the canvas
-    const z = Math.max(0.05, Math.min(innerW / scene.canvas.width, innerH / scene.canvas.height));
+    const z = Math.max(0.05, Math.min(innerW / cw, innerH / ch));
+    const x = INSET_X + (innerW - cw * z) / 2;
+    const y = INSET_TOP + (innerH - ch * z) / 2;
+    // sub-pixel differences re-render the whole stage for nothing and read as a wobble
+    const last = lastFit.current;
+    if (Math.abs(last.z - z) < 1e-4 && Math.abs(last.x - x) < 0.25 && Math.abs(last.y - y) < 0.25) return;
+    lastFit.current = { z, x, y };
     setZoom(z);
-    setPan({
-      x: INSET_X + (innerW - scene.canvas.width * z) / 2,
-      y: INSET_TOP + (innerH - scene.canvas.height * z) / 2,
-    });
-  }, [scene.canvas, setPan, setZoom, hasStrip]);
+    setPan({ x, y });
+  }, [setPan, setZoom]);
 
   // The canvas is sticky: always auto-fit and centered. It only re-lays-out
-  // when the canvas dimensions (aspect ratio) or the window change.
+  // when the canvas dimensions (aspect ratio) or the window change. Fits are
+  // coalesced to one per frame so a burst of resize events can't ping-pong.
   useEffect(() => {
+    let raf = 0;
+    const schedule = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(fit);
+    };
     fit();
-    window.addEventListener("framekit:fit", fit);
+    window.addEventListener("framekit:fit", schedule);
     const el = containerRef.current;
-    const ro = el ? new ResizeObserver(fit) : null;
+    const ro = el ? new ResizeObserver(schedule) : null;
     if (el && ro) ro.observe(el);
     return () => {
-      window.removeEventListener("framekit:fit", fit);
+      cancelAnimationFrame(raf);
+      window.removeEventListener("framekit:fit", schedule);
       ro?.disconnect();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene.canvas.width, scene.canvas.height, hasStrip]);
+  }, [fit, scene.canvas.width, scene.canvas.height, hasStrip]);
 
   /* ------------------ selection overlay + ⊕ empty screens ------------------
      One measurement pass for both. DOM rects lie while a layer is mid-entrance
@@ -118,7 +144,10 @@ export function CanvasStage() {
     if (!host) return;
     const hostRect = host.getBoundingClientRect();
 
-    setOverlayBoxes(
+    const same = (a: { id: string; x: number; y: number; w?: number; h?: number }[], b: typeof a) =>
+      a.length === b.length &&
+      a.every((o, i) => o.id === b[i].id && Math.abs(o.x - b[i].x) < 0.5 && Math.abs(o.y - b[i].y) < 0.5 && Math.abs((o.w ?? 0) - (b[i].w ?? 0)) < 0.5 && Math.abs((o.h ?? 0) - (b[i].h ?? 0)) < 0.5);
+    const nextBoxes = (
       selectedIds.flatMap((id) => {
         const node = host.querySelector(`[data-layer-id="${id}"]`);
         if (!node) return [];
@@ -129,8 +158,9 @@ export function CanvasStage() {
         return [{ id, x: r.left - hostRect.left, y: r.top - hostRect.top, w: r.width, h: r.height }];
       })
     );
+    setOverlayBoxes((prev) => (same(prev, nextBoxes) ? prev : nextBoxes));
 
-    setEmptyBoxes(
+    const nextEmpty = (
       scene.layers
         .filter((l) => l.type === "mockup" && l.deviceId && !l.media)
         .flatMap((l) => {
@@ -143,6 +173,7 @@ export function CanvasStage() {
           return [{ id: l.id, x: r.left - hostRect.left + r.width / 2, y: r.top - hostRect.top + r.height / 2 }];
         })
     );
+    setEmptyBoxes((prev) => (same(prev, nextEmpty) ? prev : nextEmpty));
   }, [selectedIds, scene.layers]);
 
   useLayoutEffect(() => {
@@ -667,11 +698,12 @@ export function CanvasStage() {
           top: 0,
           transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
           transformOrigin: "0 0",
+          willChange: "transform",
         }}
       >
         <div
           className={transparent ? "checkerboard" : undefined}
-          style={{ boxShadow: "0 24px 80px rgba(20,20,60,0.22)", borderRadius: 6, overflow: "hidden" }}
+          style={{ boxShadow: "0 24px 80px rgba(20,20,60,0.22)", borderRadius: 6, overflow: "hidden", contain: "layout paint" }}
         >
         <SceneRenderer
           scene={scene}
@@ -679,11 +711,9 @@ export function CanvasStage() {
           animateLayerId={entrance.layerId}
           animationNonce={entrance.nonce}
           textTime={textTime}
-          onBlurZonesChange={(layerId, zones) => {
-            updateLayer(layerId, (l) => ({ ...l, blurZones: zones }));
-          }}
-          panoramaIdx={useShotBatchStore.getState().shots.findIndex((s) => s.scene.id === scene.id) >= 0 ? useShotBatchStore.getState().shots.findIndex((s) => s.scene.id === scene.id) : undefined}
-          panoramaTotal={useShotBatchStore.getState().shots.length > 1 ? useShotBatchStore.getState().shots.length : undefined}
+          onBlurZonesChange={onBlurZonesChange}
+          panoramaIdx={panoramaIdx}
+          panoramaTotal={panoramaTotal}
         />
         </div>
 

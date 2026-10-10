@@ -293,6 +293,90 @@ export function patternStyle(p: Pattern): CSSProperties {
       );
       return { ...base, backgroundImage: tile, backgroundSize: `${size}px ${size}px`, backgroundRepeat: "repeat" };
     }
+    case "hex": {
+      // honeycomb: flat-topped hexagons, 2 rows per tile so edges join seamlessly
+      const r = Math.round(26 + (1 - t) * 30);
+      const w = r * 3;
+      const h = Math.round(r * Math.sqrt(3));
+      const stroke = (0.9 + t * 2.2).toFixed(1);
+      const hex = (cx: number, cy: number) => {
+        const pts = Array.from({ length: 6 }, (_, i) => {
+          const a = (Math.PI / 3) * i;
+          return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`;
+        });
+        return `<polygon points='${pts.join(" ")}'/>`;
+      };
+      const tile = patternTile(
+        `<g fill='none' stroke='${c}' stroke-width='${stroke}' stroke-linejoin='round'>${hex(0, 0)}${hex(w, 0)}${hex(r * 1.5, h / 2)}${hex(0, h)}${hex(w, h)}${hex(r * 1.5, -h / 2)}${hex(r * 1.5, h * 1.5)}</g>`,
+        w,
+        h
+      );
+      return { ...base, backgroundImage: tile, backgroundSize: `${w}px ${h}px`, backgroundRepeat: "repeat" };
+    }
+    case "isometric": {
+      // isometric cube lattice: three families of 30° lines
+      const s = Math.round(44 + (1 - t) * 44);
+      const h = Math.round(s * Math.sqrt(3));
+      const stroke = (0.9 + t * 2).toFixed(1);
+      const tile = patternTile(
+        `<g fill='none' stroke='${c}' stroke-width='${stroke}' stroke-linecap='round'><path d='M0 ${h / 2} L${s} 0 L${s * 2} ${h / 2} M${s} 0 V${h / 2} M0 ${h / 2} L${s} ${h} L${s * 2} ${h / 2} M${s} ${h} V${h / 2}'/></g>`,
+        s * 2,
+        h
+      );
+      return { ...base, backgroundImage: tile, backgroundSize: `${s * 2}px ${h}px`, backgroundRepeat: "repeat" };
+    }
+    case "halftone": {
+      // dot size ramps from top-left to bottom-right: a print-style gradient of dots
+      const size = Math.round(18 + (1 - t) * 14);
+      const tile = patternTile(`<circle cx='${size / 2}' cy='${size / 2}' r='${(size * 0.36).toFixed(1)}' fill='${c}'/>`, size);
+      return {
+        ...base,
+        backgroundImage: tile,
+        backgroundSize: `${size}px ${size}px`,
+        backgroundRepeat: "repeat",
+        WebkitMaskImage: "linear-gradient(135deg, transparent 8%, black 92%)",
+        maskImage: "linear-gradient(135deg, transparent 8%, black 92%)",
+      };
+    }
+    case "scanlines": {
+      const gap = Math.round(5 + (1 - t) * 9);
+      const line = Math.max(1, Math.round(1 + t * 2));
+      return {
+        ...base,
+        backgroundImage: `repeating-linear-gradient(0deg, ${c} 0 ${line}px, transparent ${line}px ${gap}px)`,
+      };
+    }
+    case "terrazzo": {
+      // speckled stone: chips of 3 sizes scattered deterministically, tiled
+      const random = randomFor(p.seed ?? 211);
+      const palette = patternPalette(c, p.paletteSeed);
+      const size = 260;
+      const count = Math.round(26 + t * 22);
+      const chips = Array.from({ length: count }, (_, i) => {
+        const x = random() * size;
+        const y = random() * size;
+        const k = 5 + random() * (6 + t * 12);
+        const rot = random() * 360;
+        const pts = Array.from({ length: 5 }, (_, j) => {
+          const a = (Math.PI * 2 * j) / 5 + random() * 0.7;
+          const rr = k * (0.65 + random() * 0.5);
+          return `${(x + rr * Math.cos(a)).toFixed(1)},${(y + rr * Math.sin(a)).toFixed(1)}`;
+        });
+        return `<polygon points='${pts.join(" ")}' fill='${palette[i % palette.length]}' transform='rotate(${rot.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})'/>`;
+      }).join("");
+      const tile = patternTile(chips, size);
+      return { ...base, backgroundImage: tile, backgroundSize: `${size}px ${size}px`, backgroundRepeat: "repeat" };
+    }
+    case "plus-grid": {
+      const size = Math.round(56 + (1 - t) * 52);
+      const arm = Math.round(4 + t * 7);
+      const stroke = (1 + t * 2).toFixed(1);
+      const tile = patternTile(
+        `<path d='M0 ${arm} V0 H${arm} M${size - arm} 0 H${size} V${arm} M${size} ${size - arm} V${size} H${size - arm} M${arm} ${size} H0 V${size - arm}' fill='none' stroke='${c}' stroke-width='${stroke}' stroke-linecap='square'/>`,
+        size
+      );
+      return { ...base, backgroundImage: tile, backgroundSize: `${size}px ${size}px`, backgroundRepeat: "repeat" };
+    }
     case "noise":
       return { ...base, backgroundImage: noiseUrl(3, 0.7), opacity: p.intensity * 0.5, mixBlendMode: "overlay" };
   }
@@ -348,6 +432,19 @@ const WINDOW_GRID_SHADOW = shadowSvg(
   7
 );
 
+/** Pool-floor light: thresholded turbulence leaves thin bright filaments that read as water caustics. */
+const CAUSTICS = (() => {
+  // two noise fields, each reduced to a thin bright ridge (alpha peaks in a narrow
+  // band of the noise value), crossed so the filaments form a drifting net
+  const ridge = (seed: number, freq: string) =>
+    `<filter id='r${seed}' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='${freq}' numOctaves='2' seed='${seed}'/>` +
+    "<feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  1 0 0 0 0'/>" +
+    "<feComponentTransfer><feFuncA type='table' tableValues='0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 1 0.55 0 0 0 0 0 0 0 0 0 0 0 0 0 0'/></feComponentTransfer></filter>" +
+    `<rect width='900' height='900' filter='url(#r${seed})'/>`;
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='900' height='900'><rect width='900' height='900' fill='#000'/>${ridge(9, "0.011 0.016")}${ridge(23, "0.017 0.012")}</svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+})();
+
 /** Style for the overlay layer (cast light / shadow, rendered on top, blended). */
 export function overlayStyle(o: Overlay): CSSProperties {
   const base: CSSProperties = { position: "absolute", inset: 0, pointerEvents: "none" };
@@ -379,6 +476,58 @@ export function overlayStyle(o: Overlay): CSSProperties {
       return cast(PALM_SHADOW);
     case "window-grid":
       return cast(WINDOW_GRID_SHADOW);
+    case "light-leak":
+      // analogue film light leak: warm amber and rose bleeding in from the edges
+      return {
+        ...base,
+        backgroundImage:
+          "radial-gradient(ellipse 58% 72% at -4% 28%, rgba(255,150,64,0.85), rgba(255,96,64,0.35) 45%, transparent 70%)," +
+          "radial-gradient(ellipse 46% 58% at 104% 84%, rgba(255,64,150,0.62), transparent 68%)," +
+          "radial-gradient(ellipse 34% 40% at 86% -6%, rgba(255,214,128,0.6), transparent 72%)",
+        mixBlendMode: "screen",
+        opacity: I,
+      };
+    case "prism":
+      // a glass prism's spectrum smeared across the frame
+      return {
+        ...base,
+        backgroundImage:
+          "linear-gradient(112deg, transparent 18%, rgba(255,40,140,0.34) 30%, rgba(255,196,40,0.3) 37%, rgba(60,255,176,0.3) 44%, rgba(40,150,255,0.36) 51%, rgba(150,70,255,0.32) 58%, transparent 70%)",
+        mixBlendMode: "screen",
+        opacity: I,
+      };
+    case "god-rays": {
+      const mask = "radial-gradient(ellipse 95% 95% at 16% -8%, black 0%, transparent 78%)";
+      return {
+        ...base,
+        backgroundImage: "repeating-conic-gradient(from 168deg at 16% -8%, rgba(255,255,255,0.7) 0deg 2.2deg, transparent 2.2deg 7.4deg, rgba(255,255,255,0.42) 7.4deg 8.4deg, transparent 8.4deg 14deg)",
+        WebkitMaskImage: mask,
+        maskImage: mask,
+        mixBlendMode: "screen",
+        opacity: I * 0.8,
+      };
+    }
+    case "lens-bloom":
+      // soft bloom with a faint ring flare, like light blooming off glass
+      return {
+        ...base,
+        backgroundImage:
+          "radial-gradient(circle at 78% 20%, rgba(255,255,255,0.9) 0, rgba(255,246,224,0.5) 7%, rgba(255,230,190,0.18) 22%, transparent 46%)," +
+          "radial-gradient(circle at 78% 20%, transparent 0 24%, rgba(255,255,255,0.22) 24.6%, transparent 26.4%)," +
+          "radial-gradient(circle at 24% 80%, rgba(255,255,255,0.28) 0, transparent 14%)",
+        mixBlendMode: "screen",
+        opacity: I,
+      };
+    case "caustics":
+      return { ...base, backgroundImage: CAUSTICS, backgroundSize: "cover", mixBlendMode: "screen", opacity: I * 0.55 };
+    case "gloss-sweep":
+      // a single polished highlight sweeping the glass
+      return {
+        ...base,
+        backgroundImage: "linear-gradient(118deg, transparent 22%, rgba(255,255,255,0.0) 30%, rgba(255,255,255,0.5) 38%, rgba(255,255,255,0.0) 46%, transparent 52%, rgba(255,255,255,0.22) 62%, transparent 70%)",
+        mixBlendMode: "overlay",
+        opacity: I,
+      };
   }
 }
 

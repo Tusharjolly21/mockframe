@@ -46,6 +46,14 @@ export const BackgroundSchema = z.discriminatedUnion("type", [
     stops: z.array(GradientStopSchema).min(2),
   }),
   z.object({
+    type: z.literal("conic-gradient"),
+    /** start angle in degrees */
+    angle: z.number(),
+    cx: z.number().min(0).max(1),
+    cy: z.number().min(0).max(1),
+    stops: z.array(GradientStopSchema).min(2),
+  }),
+  z.object({
     type: z.literal("mesh-gradient"),
     seed: z.number().int(), // deterministic from seed — critical for re-render parity
     colors: z.array(CssColorSchema).min(2).max(8),
@@ -97,6 +105,12 @@ export const BackdropSchema = z.object({
         "crosses",
         "arcs",
         "topography",
+        "hex",
+        "isometric",
+        "halftone",
+        "scanlines",
+        "terrazzo",
+        "plus-grid",
       ]),
       intensity: z.number().min(0).max(1),
       thickness: z.number().min(0).max(1),
@@ -110,7 +124,23 @@ export const BackdropSchema = z.object({
     .optional(),
   overlay: z
     .object({
-      kind: z.enum(["blinds", "window", "diagonal", "spotlight", "top-light", "leaves", "branch", "palm", "window-grid"]),
+      kind: z.enum([
+        "blinds",
+        "window",
+        "diagonal",
+        "spotlight",
+        "top-light",
+        "leaves",
+        "branch",
+        "palm",
+        "window-grid",
+        "light-leak",
+        "prism",
+        "god-rays",
+        "lens-bloom",
+        "caustics",
+        "gloss-sweep",
+      ]),
       intensity: z.number().min(0).max(1),
     })
     .optional(),

@@ -14,6 +14,9 @@ export function backgroundStyle(scene: SceneDocument): CSSProperties {
   if (bg.type === "radial-gradient") {
     return { background: `radial-gradient(circle at ${bg.cx * 100}% ${bg.cy * 100}%, ${bg.stops.map((s) => `${s.color} ${Math.round(s.at * 100)}%`).join(", ")})` };
   }
+  if (bg.type === "conic-gradient") {
+    return { background: `conic-gradient(from ${bg.angle}deg at ${bg.cx * 100}% ${bg.cy * 100}%, ${bg.stops.map((s) => `${s.color} ${Math.round(s.at * 100)}%`).join(", ")})` };
+  }
   if (bg.type === "mesh-gradient") {
     return { background: `linear-gradient(135deg, ${bg.colors.join(", ")})` };
   }
