@@ -231,7 +231,11 @@ export function EditorShell({
           frames.push({ asset: await ingestFile(new File([blob], `${name}.${blob.type === "image/jpeg" ? "jpg" : "png"}`, { type: blob.type })), name });
         }
         if (!frames.length) return say("Your Figma frames couldn't be loaded. Send them again.");
-        const { shots, filled } = planFigmaScenes(manifest, frames);
+        let { shots, filled } = planFigmaScenes(manifest, frames);
+        // none of the frames is phone-shaped: open them as plain device mockups
+        // instead of leaving the store set's sample screens on show
+        const fellBack = manifest.mode === "set" && !filled;
+        if (fellBack) ({ shots, filled } = planFigmaScenes({ ...manifest, mode: "devices" }, frames));
         if (!shots.length) return;
         useViewStore.getState().bumpAssets();
         const [first] = shots;
@@ -244,11 +248,11 @@ export function EditorShell({
         setScene(() => first.scene);
         window.dispatchEvent(new CustomEvent("framekit:fit"));
         // the showcase waits a beat for the canvas to mount the first frame
-        if (manifest.mode !== "set" && (figmaShowcase || manifest.showcase)) setTimeout(() => void makeShowcase("figma"), 300);
+        if ((manifest.mode !== "set" || fellBack) && (figmaShowcase || manifest.showcase)) setTimeout(() => void makeShowcase("figma"), 300);
         else if (shots.length === 1) openLooks(false);
         track("figma_import_opened", { frames: frames.length, mode: manifest.mode });
         trackOnce("first_media_added", { source: "figma" });
-        if (manifest.mode === "set" && !filled) say("Store sets need phone-shaped frames, so the sample screens stayed. Send them as In devices instead.");
+        if (fellBack) say("Store sets need phone-shaped frames, and yours aren't, so they opened as device mockups instead");
         else if (manifest.mode === "set") say(frames.length === 1 ? "Your frame is in all eight shots" : `Your ${frames.length} frames are in all eight shots`);
         else say(shots.length === 1 ? "Your frame from Figma is in" : `${shots.length} frames from Figma, one shot each`);
       } catch (e) {
