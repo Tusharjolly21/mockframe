@@ -140,7 +140,7 @@ export default async function DeviceMockupPage({
             </h1>
             <p className="mt-3 max-w-lg text-[15.5px] leading-relaxed text-zinc-400">
               Drop your screenshot into a pixel-accurate {base} frame, style the background, and export a
-              production-ready image in seconds. Free, online, no watermark.
+              production-ready image in seconds. Free and online.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link

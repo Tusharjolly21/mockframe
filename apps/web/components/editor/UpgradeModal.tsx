@@ -12,7 +12,7 @@ import { track } from "@/lib/analytics";
 import { toast } from "./Toolbar";
 
 // Two rules here:
-//  1. Never sell "remove the watermark" — exports are clean on every tier.
+//  1. Free exports carry a small "Made with MockFrame" badge; Pro removes it.
 //  2. Never list a benefit that doesn't work yet — every line must be
 //     redeemable the moment the payment clears. (Photoreal rendering is now
 //     wired up via the toolbar Sparkles button, so it's listed again.)

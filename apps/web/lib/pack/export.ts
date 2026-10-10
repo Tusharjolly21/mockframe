@@ -7,7 +7,7 @@ import { compilePack, packReadme } from "./compile";
 import type { PackExportVerdict } from "./gate";
 import type { PackDocument } from "./schema";
 
-/** Ask the server whether this export may proceed (and whether it's watermark-free). */
+/** Ask the server whether this export may proceed (and whether it's badge-free). */
 export async function requestPackExport(): Promise<PackExportVerdict> {
   let res: Response;
   try {

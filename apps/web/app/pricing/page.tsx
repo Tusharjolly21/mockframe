@@ -10,9 +10,9 @@ import { safeJsonLd } from "@/lib/jsonLd";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Start free with watermark-free exports. Pro adds the commercial license, premium layouts, 60 fps video up to 4K, realistic renders and team libraries.",
+  description: "Start free with HD exports. Pro adds the commercial license, premium layouts, 60 fps video up to 4K, realistic renders and team libraries.",
   alternates: { canonical: "/pricing" },
-  ...socialMeta({ path: "/pricing", title: "Pricing — MockFrame", description: "Start free with watermark-free exports. Pro adds the commercial license, premium layouts, 60 fps video up to 4K, realistic renders and team libraries." }),
+  ...socialMeta({ path: "/pricing", title: "Pricing — MockFrame", description: "Start free with HD exports. Pro adds the commercial license, premium layouts, 60 fps video up to 4K, realistic renders and team libraries." }),
 };
 
 const REASSURANCE = [
@@ -28,7 +28,7 @@ const REASSURANCE = [
 const FAQ: { q: string; a: string }[] = [
   {
     q: "Is MockFrame free?",
-    a: "Yes. The free plan is the full editor — every device frame, about 85 backgrounds, three saved templates, WhatsApp and iMessage chat screens, website capture and HD export — and your exports are watermark-free. It's not a time-limited trial.",
+    a: "Yes. The free plan is the full editor — every device frame, about 85 backgrounds, three saved templates, WhatsApp and iMessage chat screens, website capture and HD export — and your exports carry a small “Made with MockFrame” badge that Pro removes. It's not a time-limited trial.",
   },
   {
     q: "Do I need to sign up to start?",
@@ -36,7 +36,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "What does Pro add?",
-    a: "Pro unlocks the full chat and DM screen set (Telegram, Instagram, Slack, Discord and more), every premium background collection (the free plan includes a sample of each), video and GIF export, 4K and 6K output, full-page website capture, one-click batch ZIP exports, hosted share links, AI translation of store screenshot captions into 39 languages, your own custom-brand watermark, and up to 24 saved templates. It starts at under $10 a month.",
+    a: "Pro unlocks the full chat and DM screen set (Telegram, Instagram, Slack, Discord and more), every premium background collection (the free plan includes a sample of each), exports without the MockFrame badge, video and GIF export, 4K and 6K output, full-page website capture, one-click batch ZIP exports, hosted share links, AI translation of store screenshot captions into 39 languages, your own custom-brand watermark, and up to 24 saved templates. It starts at under $10 a month.",
   },
   {
     q: "Can I cancel anytime?",

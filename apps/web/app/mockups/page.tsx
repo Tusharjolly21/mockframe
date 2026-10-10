@@ -12,7 +12,7 @@ import Link from "next/link";
 // "100+" style count for titles: rounded down so it never overstates
 const DEVICE_COUNT = `${Math.floor(listDevices().length / 10) * 10}+`;
 const TITLE = `Free Device Mockup Generator: ${DEVICE_COUNT} Devices`;
-const DESCRIPTION = `${DEVICE_COUNT} free, pixel-accurate mockups for iPhone, iPad, MacBook, Apple Watch, Android and browsers, including photoreal scenes. Drop in a screenshot and export with no watermark.`;
+const DESCRIPTION = `${DEVICE_COUNT} free, pixel-accurate mockups for iPhone, iPad, MacBook, Apple Watch, Android and browsers, including photoreal scenes. Drop in a screenshot and export free.`;
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -24,13 +24,13 @@ export const metadata: Metadata = {
 const STEPS = [
   ["Pick a device", "Filter by type, brand or model, or choose a photographed scene for a realistic shot."],
   ["Add your screenshot", "Upload, paste or drop it in. It snaps to the device's native screen resolution."],
-  ["Style and export", "Choose a background and shadow, then export a PNG, JPEG or WebP — no watermark."],
+  ["Style and export", "Choose a background and shadow, then export a PNG, JPEG or WebP, with a small “Made with MockFrame” badge on free exports."],
 ] as const;
 
 const FAQ = [
   {
     q: "Are these device mockups free?",
-    a: "Yes. Every device frame and the full editor are free, with no watermark, for personal use. Pro adds 6K export, video and GIF export, premium backgrounds and a commercial license for ads, client work and store listings beyond your first free pack.",
+    a: "Yes. Every device frame and the full editor are free for personal use, with a small “Made with MockFrame” badge on exports. Pro adds 6K export, video and GIF export, premium backgrounds and a commercial license for ads, client work and store listings beyond your first free pack.",
   },
   {
     q: "What's the difference between a frame and a photoreal scene?",
@@ -100,7 +100,7 @@ export default function MockupsIndexPage() {
         </h1>
         <p className="mt-4 max-w-2xl text-[15.5px] leading-relaxed text-zinc-400">
           {total} free, pixel-accurate device frames. Pick a device, drop in your screenshot, style the background, and
-          export a production-ready image — no design tools, no watermark.
+          export a production-ready image — no design tools needed.
         </p>
       </Reveal>
 

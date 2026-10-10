@@ -139,7 +139,7 @@ export function MobileChatBuilder() {
         </button>
 
         <p className="pt-1 text-center text-[11px] leading-5 text-zinc-600">
-          Free download, no watermark, no sign-up. Have a real screenshot?{" "}
+          Free download with a small “Made with MockFrame” badge, no sign-up. Have a real screenshot?{" "}
           <Link href="/editor" className="text-violet-300">Put it in a device</Link>.
         </p>
       </section>

@@ -49,7 +49,7 @@ const SECTIONS: { title: string; body: (string | { list: string[] })[] }[] = [
   {
     title: "The Free plan",
     body: [
-      "Free exports are watermark-free and yours to use for personal and non-commercial purposes: exploring ideas, school and learning projects, and sharing hobby work that doesn't earn money. Anything else that promotes or sells a product or service — an ad, a company website, client work — needs a Pro license.",
+      "Free exports carry a small “Made with MockFrame” badge and are yours to use for personal and non-commercial purposes: exploring ideas, school and learning projects, and sharing hobby work that doesn't earn money. Anything else that promotes or sells a product or service — an ad, a company website, client work — needs a Pro license.",
       "The exception is your first store screenshot pack. The one full App Store and Google Play pack a free account can export is licensed for commercial use in one real release: the store listing of one app, including the updates and localized versions of that listing made from the same pack. A second pack, or screenshots for a different app or for client work, needs Pro.",
       "Made something on Free that you now want to use commercially? Upgrade and export it again: exports made while you're on Pro are covered.",
     ],

@@ -36,7 +36,7 @@ export function summarizePlan(f: PlanFacts): PlanSummary {
     return {
       pro: false,
       title: "Free",
-      detail: "Every device frame and the full editor, with watermark-free exports.",
+      detail: "Every device frame and the full editor, with HD exports that carry a small “Made with MockFrame” badge.",
       notice: lapsed ? "Your Pro plan isn't active. Pick a plan to get Pro back." : null,
     };
   }

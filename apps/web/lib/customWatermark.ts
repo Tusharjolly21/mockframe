@@ -59,32 +59,22 @@ export function saveCustomWatermark(cfg: CustomWatermarkCfg): void {
   }
 }
 
-/** Watermark options for an export: free tier gets the full MockFrame marks,
- *  Pro gets their custom brand (if enabled) or forensic-only. */
 /**
- * Exports are visually clean on EVERY tier. Free users get the same pixels a
- * paying user gets — no tiles, no badge. The paywall lives on capability
- * (Pro chat screens, video/GIF, 4K/6K, photoreal, full-page capture), not on
- * damaging the artifact: a free user who can post the output is a free user
- * who markets us and eventually needs the resolution.
- *
- * `custom` is the one visible mark left, and it's a Pro *feature* — the user
- * stamping their OWN brand, because they asked for it.
+ * Watermark options for an export. Free exports get one small "Made with
+ * MockFrame" glass badge in the bottom-right corner; Pro exports are clean, or
+ * carry the user's OWN brand mark when they turn it on (`custom`).
  *
  * The invisible forensic layer is FREE-ONLY (see lib/watermark.ts). Free
  * exports are anonymous, so the mark is the only thread back to origin if a
  * fabricated chat screenshot causes harm. A Pro export has a billing record
- * behind it — we already know who made it, so the mark proves nothing we can't
- * already prove, and stamping a paying customer's pixels to learn nothing is a
- * bad trade at any price.
+ * behind it, so stamping a paying customer's pixels would buy nothing and cost
+ * a full pixel pass on exactly the large exports Pro unlocks.
  */
 export function exportWatermarkOpts(isPro: boolean): WatermarkOptions {
   const disclosure = loadDisclosure();
-  if (!isPro) return { tile: false, badge: false, disclosure };
+  if (!isPro) return { tile: false, badge: true, disclosure };
   const cfg = loadCustomWatermark();
-  // forensicKey: null → Pro pixels are byte-for-byte the user's own. Also skips
-  // a full-image ±2/255 pass (~141ms / 75MB at 6K) on exactly the large exports
-  // Pro unlocks.
+  // forensicKey: null → Pro pixels are byte-for-byte the user's own.
   return { tile: false, badge: false, forensicKey: null, custom: cfg.enabled ? cfg : undefined, disclosure };
 }
 

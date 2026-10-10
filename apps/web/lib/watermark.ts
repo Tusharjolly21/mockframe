@@ -3,17 +3,12 @@
 /**
  * Export watermarking.
  *
- * We do NOT brand exports on any tier — free output is pixel-identical to Pro
- * output. The `tile` and `badge` layers below are retained as capabilities but
- * default OFF, and no call site enables them (see exportWatermarkOpts). They
- * exist so the decision stays reversible, not because it's pending.
+ * Free exports carry one small "Made with MockFrame" glass badge in the bottom
+ * corner (`badge`); Pro exports are clean. The diagonal `tile` layer stays OFF
+ * on every tier (tiling destroys the artifact), and exportWatermarkOpts is the
+ * single place that decides which tier gets what.
  *
- * Why: tiling free exports destroys the artifact, so free users never publish,
- * never form the habit, and never reach the point of needing 4K or the Pro chat
- * set — which is where the revenue actually is. The paywall sits on capability
- * instead. Competitors (PostSpark) don't watermark free output at all.
- *
- * What can still ship:
+ * Also available:
  *
  *  1. Invisible forensic watermark — a keyed ±2/255 spread-spectrum pattern in
  *     the blue channel, surviving PNG and mild JPEG/WebP compression. This is
@@ -32,9 +27,9 @@
  */
 
 export interface WatermarkOptions {
-  /** draw the tiled diagonal text layer — off on every tier, see module doc */
+  /** draw the tiled diagonal text layer — off on every tier */
   tile?: boolean;
-  /** draw the corner badge — off on every tier, see module doc */
+  /** draw the "Made with MockFrame" corner badge — on for free exports */
   badge?: boolean;
   /** embed the invisible forensic pattern (key must match detection) */
   forensicKey?: string | null;
@@ -121,47 +116,102 @@ function drawMark(ctx: CanvasRenderingContext2D, x: number, y: number, size: num
   ctx.restore();
 }
 
+/** Average luminance (0..1) of a canvas region, sampled on a coarse grid. */
+function regionLuminance(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): number {
+  try {
+    const sw = Math.max(1, Math.min(24, Math.round(w)));
+    const sh = Math.max(1, Math.min(8, Math.round(h)));
+    const t = document.createElement("canvas");
+    t.width = sw;
+    t.height = sh;
+    const tc = t.getContext("2d");
+    if (!tc) return 0.2;
+    tc.drawImage(ctx.canvas, x, y, w, h, 0, 0, sw, sh);
+    const d = tc.getImageData(0, 0, sw, sh).data;
+    let sum = 0;
+    for (let i = 0; i < d.length; i += 4) sum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+    return sum / (d.length / 4) / 255;
+  } catch {
+    return 0.2;
+  }
+}
+
+/**
+ * The free-tier "Made with MockFrame" mark: a small frosted-glass pill in the
+ * bottom-right corner. It blurs what is behind it, then tints light or dark
+ * to suit the backdrop so it stays legible but quiet on any export.
+ */
 function drawBadge(ctx: CanvasRenderingContext2D, w: number, h: number, brand: string) {
-  const fs = Math.max(15, Math.round(w * 0.017));
-  const pad = Math.round(w * 0.02);
+  const fs = Math.max(13, Math.round(Math.min(w, h * 1.4) * 0.0165));
+  const pad = Math.round(Math.min(w, h) * 0.026);
   ctx.save();
   ctx.textBaseline = "middle";
-  const iconS = fs * 1.55;
-  const gap = fs * 0.6;
-  const padX = fs * 0.95;
-  const padY = fs * 0.62;
-  const fMade = `500 ${fs * 0.92}px Inter, system-ui, sans-serif`;
-  const fBrand = `700 ${fs}px Inter, system-ui, sans-serif`;
+  const iconS = fs * 1.5;
+  const gap = fs * 0.55;
+  const padL = fs * 0.5;
+  const padR = fs * 0.95;
+  const padY = fs * 0.4;
+  const fMade = `500 ${fs * 0.88}px Inter, system-ui, sans-serif`;
+  const fBrand = `650 ${fs}px Inter, system-ui, sans-serif`;
   ctx.font = fMade;
   const w1 = ctx.measureText("Made with ").width;
   ctx.font = fBrand;
   const w2 = ctx.measureText(brand).width;
-  const bw = padX * 2 + iconS + gap + w1 + w2;
+  const bw = padL + iconS + gap + w1 + w2 + padR;
   const bh = iconS + padY * 2;
   const bx = w - pad - bw;
   const by = h - pad - bh;
+  const r = bh / 2;
 
-  // refined pill: soft dark glass + hairline border
+  const light = regionLuminance(ctx, bx, by, bw, bh) > 0.62;
+
+  // frosted glass: blurred copy of what's underneath, clipped to the pill
+  const under = document.createElement("canvas");
+  under.width = Math.ceil(bw);
+  under.height = Math.ceil(bh);
+  const uc = under.getContext("2d");
+  ctx.save();
   ctx.beginPath();
-  ctx.roundRect(bx, by, bw, bh, bh / 2);
-  ctx.fillStyle = "rgba(9,9,12,0.66)";
-  ctx.fill();
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  ctx.roundRect(bx, by, bw, bh, r);
+  ctx.clip();
+  if (uc) {
+    uc.drawImage(ctx.canvas, bx, by, bw, bh, 0, 0, bw, bh);
+    ctx.filter = `blur(${Math.max(6, fs * 0.7)}px) saturate(1.4)`;
+    ctx.drawImage(under, bx - 1, by - 1, bw + 2, bh + 2);
+    ctx.filter = "none";
+  }
+  const glass = ctx.createLinearGradient(bx, by, bx, by + bh);
+  if (light) {
+    glass.addColorStop(0, "rgba(255,255,255,0.62)");
+    glass.addColorStop(1, "rgba(255,255,255,0.40)");
+  } else {
+    glass.addColorStop(0, "rgba(28,28,38,0.55)");
+    glass.addColorStop(1, "rgba(10,10,16,0.62)");
+  }
+  ctx.fillStyle = glass;
+  ctx.fillRect(bx, by, bw, bh);
+  ctx.restore();
+
+  // hairline edge with a brighter top, like a glass rim
+  const rim = ctx.createLinearGradient(bx, by, bx, by + bh);
+  rim.addColorStop(0, light ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.28)");
+  rim.addColorStop(1, light ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.08)");
+  ctx.beginPath();
+  ctx.roundRect(bx + 0.5, by + 0.5, bw - 1, bh - 1, r);
+  ctx.lineWidth = Math.max(1, fs * 0.06);
+  ctx.strokeStyle = rim;
   ctx.stroke();
 
-  const ix = bx + padX;
-  const iy = by + (bh - iconS) / 2;
-  drawMark(ctx, ix, iy, iconS);
+  drawMark(ctx, bx + padL, by + (bh - iconS) / 2, iconS);
 
-  const tx = ix + iconS + gap;
-  const cy = by + bh / 2 + 0.5;
+  const tx = bx + padL + iconS + gap;
+  const cy = by + bh / 2 + fs * 0.03;
   ctx.textAlign = "left";
   ctx.font = fMade;
-  ctx.fillStyle = "rgba(255,255,255,0.62)";
+  ctx.fillStyle = light ? "rgba(20,20,30,0.62)" : "rgba(255,255,255,0.68)";
   ctx.fillText("Made with ", tx, cy);
   ctx.font = fBrand;
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = light ? "#14141c" : "#ffffff";
   ctx.fillText(brand, tx + w1, cy);
   ctx.restore();
 }
@@ -370,8 +420,7 @@ async function drawCustomWatermark(
 
 /** Bake watermark layers into an export canvas, in place. */
 export async function applyWatermark(canvas: HTMLCanvasElement, opts: WatermarkOptions = {}): Promise<HTMLCanvasElement> {
-  // tile/badge default OFF: an export that forgets to pass opts must come out
-  // clean, never branded.
+  // tile/badge default OFF here; exportWatermarkOpts turns the badge on for free.
   const { tile = false, badge = false, forensicKey = FORENSIC_KEY, brand = "MockFrame", custom, disclosure } = opts;
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas;

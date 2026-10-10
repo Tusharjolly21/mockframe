@@ -173,7 +173,7 @@ export const TOOL_PAGES: ToolPage[] = [
       ["Honest by default", "One click adds a “fictional” disclosure label, so recreated chats are clearly marked as mockups."],
     ],
     faq: [
-      ["Is it free to use?", "Yes. The WhatsApp screen is free with no sign-up. Watermark-free image export is included; Pro adds video/GIF export and 4K/6K output."],
+      ["Is it free to use?", "Yes. The WhatsApp screen is free with no sign-up. Image export is included, with a small “Made with MockFrame” badge that Pro removes; Pro adds video/GIF export and 4K/6K output."],
       ["Can I set delivered, read and blue ticks?", "Yes — choose single grey, double grey or double blue ticks per message, along with the timestamp and contact status."],
       ["Does it support light and dark mode?", "Both. Switch the chat between WhatsApp's light and dark themes, and pick the wallpaper behind the bubbles."],
       ["Is it okay to create a fake WhatsApp chat?", "For demos, tutorials, UI design and marketing, yes. A one-click “fictional” label marks the mockup so it isn't mistaken for a real conversation — don't use recreations to deceive or impersonate."],
@@ -299,7 +299,7 @@ export const TOOL_PAGES: ToolPage[] = [
     faq: [
       ["Can I set a 🔥 streak count?", "Yes. Set the friend name and the streak number that sits next to it in the header."],
       ["Which status lines are supported?", "Delivered, Opened, Received and Screenshot — each with the correct Snapchat colour so the status reads correctly per message."],
-      ["Is it free?", "Yes, the Snapchat screen is free with no account, and image export is watermark-free."],
+      ["Is it free?", "Yes, the Snapchat screen is free with no account, and image export is included, with a small “Made with MockFrame” badge that Pro removes."],
       ["Can I use it as a Snapchat ad mockup generator?", "Yes — the Snapchat screen has a dedicated Ad view: full-screen creative with the brand row, “Sponsored” label, headline and the yellow swipe-up CTA pill. Upload your creative, set the CTA text and export at 9:16 to storyboard ad concepts before anything goes into Ads Manager."],
     ],
     related: ["fake-instagram-dm-generator", "fake-imessage-generator", "fake-messenger-chat-generator"],

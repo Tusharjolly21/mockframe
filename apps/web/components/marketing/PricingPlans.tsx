@@ -7,11 +7,9 @@ import { ArrowRight, Check } from "lucide-react";
 import { SolarIcon } from "./SolarIcon";
 import { formatPrice, perMonthPrice, yearlySavingsPct } from "@/lib/billing/plans";
 
-// Clean exports lead the free list on purpose — it's the first objection a
-// visitor has about any tool in this category, and answering it up front is
-// worth more than hiding it as a Pro bullet.
+// The free list leads with what exports look like: HD, with one small badge.
 const FREE_FEATURES = [
-  "Watermark-free exports — always",
+  "HD exports with a small “Made with MockFrame” badge",
   "Personal use, plus your first store pack for one real release",
   "Every device frame + the full editor",
   "2 premium layouts (Launch Hero, Feature Trio)",
@@ -38,6 +36,7 @@ const PRO_FEATURES = [
   "Text animations in video",
   "4K & 6K output",
   "Full-page website capture",
+  "Exports without the MockFrame badge",
   "Custom-brand watermark",
   "Store screenshots in 39 languages, AI-translated",
   "Screen recordings with auto zoom, up to 4K",
@@ -74,7 +73,7 @@ export function PricingPlans() {
         <p className="mt-7 text-[40px] font-semibold leading-none">
           $0
         </p>
-        <p className="mt-2 text-[13px] text-zinc-500">No watermark · no account required</p>
+        <p className="mt-2 text-[13px] text-zinc-500">No account required</p>
         <ul className="mt-8 space-y-3">
           {FREE_FEATURES.map((f) => (
             <li key={f} className="flex items-start gap-2.5 text-[13.5px] text-zinc-300">
