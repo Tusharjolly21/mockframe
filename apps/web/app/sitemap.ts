@@ -26,6 +26,7 @@ const UPDATED = {
   changelog: new Date("2026-07-14"),
   guides: new Date("2026-10-09"), // reference articles listed on the index
   templates: new Date("2026-10-07"), // premium layouts + photoreal collections
+  videoTemplates: new Date("2026-10-10"), // promo video gallery (3D + multi-device)
   devices: new Date(DEVICE_PAGES_UPDATED), // per-device FAQ, "Free" titles, scene galleries
   recorder: new Date("2026-10-07"), // auto-zoom screen recorder launch
   figma: new Date("2026-10-07"), // Figma plugin launch
@@ -45,6 +46,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/launch-kit`, lastModified: UPDATED.launchKit, changeFrequency: "weekly", priority: 0.9 },
     // /chat is intentionally omitted — a noindexed mobile builder (the WhatsApp / iMessage tool pages carry the SEO)
     { url: `${SITE_URL}/templates`, lastModified: UPDATED.templates, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${SITE_URL}/templates/video`, lastModified: UPDATED.videoTemplates, changeFrequency: "weekly", priority: 0.8 },
     { url: `${SITE_URL}/pricing`, lastModified: UPDATED.pricing, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/developers/api`, lastModified: UPDATED.developers, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/developers/embed`, lastModified: UPDATED.developers, changeFrequency: "monthly", priority: 0.7 },

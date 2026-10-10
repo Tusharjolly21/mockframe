@@ -66,12 +66,14 @@ const Label = ({ children }: { children: React.ReactNode }) => (
   <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{children}</p>
 );
 
-export default function PromoPanel({ onClose }: { onClose: () => void }) {
+export default function PromoPanel({ onClose, initialTemplateId }: { onClose: () => void; initialTemplateId?: string }) {
   const isPro = useIsPro();
-  const [step, setStep] = useState(0);
+  // arriving from a template card (/templates/video) skips straight to adding screens
+  const startTemplate = initialTemplateId && getPromoTemplate(initialTemplateId) ? initialTemplateId : null;
+  const [step, setStep] = useState(startTemplate ? 1 : 0);
   const [media, setMedia] = useState<PromoMedia[]>([]);
   const [project, setProject] = useState<PromoProject>(() => {
-    const base = createPromoProject("rise-reveal", []);
+    const base = createPromoProject(startTemplate ?? "rise-reveal", []);
     const brand = loadBrandKit();
     return brand ? { ...base, accent: brand.accent } : base;
   });

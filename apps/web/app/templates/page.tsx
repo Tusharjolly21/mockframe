@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ArrowUpRight, Crown, LayoutGrid, Link2, MonitorSmartphone, SearchX, Smartphone, Sparkles, Store } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Clapperboard, Crown, LayoutGrid, Link2, MonitorSmartphone, SearchX, Smartphone, Sparkles, Store } from "lucide-react";
 import {
   CARD_LOOKS,
   TEMPLATES,
@@ -32,6 +32,7 @@ import {
   type TemplateFilter,
 } from "@/lib/templateSearch";
 import { PREMIUM_TEMPLATES } from "@/lib/premiumTemplates";
+import { PROMO_TEMPLATES } from "@/lib/promo/registry";
 import { STORE_SETS } from "@/lib/storeSets";
 import { APP_SCREEN_TEMPLATES, APP_TEMPLATE_CATEGORIES, type AppTemplateCategory } from "@/lib/appScreenTemplates";
 import { encodeScreenAsset, resolveScreenAsset } from "@/lib/screens";
@@ -194,13 +195,14 @@ export default function TemplatesPage() {
             <p className="relative mt-4 max-w-xl text-[15px] leading-relaxed text-zinc-400">
               Premium launch layouts, store listing sets, realistic app screens, data cards and photoreal device scenes. Every template opens fully editable, so you only swap in what is yours.
             </p>
-            <nav aria-label="Template sections" className="relative mt-8 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            <nav aria-label="Template sections" className="relative mt-8 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {[
                 { href: "#premium", icon: Crown, label: "Premium layouts", meta: `${PREMIUM_TEMPLATES.length} layouts · ${PREMIUM_TEMPLATES.filter((t) => !t.pro).length} free` },
                 { href: "#store-sets", icon: Store, label: "Store listing sets", meta: `${STORE_SETS.length} sets · 8 shots each` },
                 { href: "#app-screens", icon: Smartphone, label: "App screens", meta: `${APP_SCREEN_TEMPLATES.length} screens` },
                 { href: "#content-cards", icon: LayoutGrid, label: "Content cards", meta: `${TEMPLATES.length} cards` },
                 { href: "#device-scenes", icon: MonitorSmartphone, label: "Device scenes", meta: `${groups.length} collections` },
+                { href: "/templates/video", icon: Clapperboard, label: "Video templates", meta: `${PROMO_TEMPLATES.length} animated ads · New` },
               ].map(({ href, icon: Icon, label, meta }) => (
                 <a
                   key={href}
@@ -231,6 +233,40 @@ export default function TemplatesPage() {
             </button>
           </div>
         )}
+
+        {!filtering && <Reveal>
+          <Link
+            href="/templates/video"
+            className="group relative mt-10 grid overflow-hidden rounded-[24px] border border-white/10 bg-[#101116] transition-colors hover:border-white/25 lg:grid-cols-[0.9fr_1.1fr]"
+          >
+            <div aria-hidden className="pointer-events-none absolute -left-20 -top-24 h-[340px] w-[340px] rounded-full bg-[radial-gradient(circle,rgba(139,92,246,.3),transparent_65%)]" />
+            <div className="relative flex flex-col justify-center p-6 sm:p-9 lg:p-12">
+              <p className="inline-flex w-fit items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[12px] font-medium text-zinc-300">
+                <Clapperboard size={13} className="text-violet-300" /> Video templates
+                <span className="ml-1 rounded-full bg-white px-1.5 text-[10px] font-bold uppercase text-zinc-950">New</span>
+              </p>
+              <h2 className="mt-5 text-[28px] font-semibold leading-tight tracking-[-0.03em] sm:text-[36px]">Animated app ads, with real 3D and every device.</h2>
+              <p className="mt-3 max-w-md text-[14px] leading-6 text-zinc-400">
+                {PROMO_TEMPLATES.length} promo video templates for Reels, TikTok and YouTube. Drop in your screenshots and export an MP4.
+              </p>
+              <span className="mt-7 inline-flex w-fit items-center gap-2 rounded-full bg-white px-5 py-2.5 text-[13.5px] font-semibold text-zinc-950 transition-colors group-hover:bg-zinc-200">
+                See the video templates <ArrowRight size={15} />
+              </span>
+            </div>
+            <div className="relative flex items-end justify-center gap-3 overflow-hidden px-6 pt-8 sm:gap-4 lg:pt-10">
+              {["abstract-stack", "everywhere", "desktop-studio", "ui-showcase"].map((id, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={id}
+                  src={`/templates/video/${id}.webp`}
+                  alt=""
+                  loading="lazy"
+                  className={`aspect-[9/16] w-[23%] max-w-[170px] rounded-t-2xl border border-b-0 border-white/15 object-cover shadow-[0_-10px_40px_rgba(0,0,0,.5)] transition-transform duration-500 ${i % 2 ? "translate-y-6 group-hover:translate-y-3" : "group-hover:-translate-y-2"}`}
+                />
+              ))}
+            </div>
+          </Link>
+        </Reveal>}
 
         <PremiumTemplatesSection filter={filter} shots={shots} />
 
