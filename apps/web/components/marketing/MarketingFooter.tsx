@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SITE_NAME } from "@/lib/site";
 import { BrandMark } from "./BrandMark";
 import { FeedbackButton } from "./FeedbackButton";
+import { CookieSettingsLink } from "./CookieSettingsLink";
 
 const COLS: { title: string; links: [string, string][] }[] = [
   {
@@ -92,6 +93,11 @@ export function MarketingFooter() {
                   </Link>
                 </li>
               ))}
+              {col.links.some(([href]) => href === "/privacy") && (
+                <li>
+                  <CookieSettingsLink />
+                </li>
+              )}
             </ul>
           </div>
         ))}

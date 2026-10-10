@@ -4,6 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { safeJsonLd } from "@/lib/jsonLd";
+import { CookieBanner } from "@/components/CookieBanner";
+import { CONSENT_KEY } from "@/lib/consent";
 
 const GOOGLE_ANALYTICS_ID = "G-CN1PEZYM0L";
 // Only the production host reports to GA; Vercel previews and localhost don't.
@@ -95,6 +97,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             })();
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
+            // Consent Mode v2: nothing is stored until the visitor accepts in the
+            // cookie banner (components/CookieBanner.tsx). A saved choice is
+            // applied before the first hit.
+            gtag('consent', 'default', {
+              analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
+              wait_for_update: 500
+            });
+            try {
+              if (localStorage.getItem('${CONSENT_KEY}') === 'granted') gtag('consent', 'update', { analytics_storage: 'granted' });
+            } catch (e) {}
             gtag('js', new Date());
             gtag('config', '${GOOGLE_ANALYTICS_ID}');
           `}
@@ -118,6 +130,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: safeJsonLd(ORG_AND_SITE_JSONLD) }}
         />
         <AuthProvider>{children}</AuthProvider>
+        <CookieBanner />
       </body>
     </html>
   );
