@@ -37,7 +37,7 @@ import { APP_SCREEN_TEMPLATES, APP_TEMPLATE_CATEGORIES, type AppTemplateCategory
 import { encodeScreenAsset, resolveScreenAsset } from "@/lib/screens";
 
 const appScreenMatches = (filter: TemplateFilter) =>
-  APP_SCREEN_TEMPLATES.filter((t) => matchesTemplate(filter, { text: [t.label, t.blurb, t.category, t.app, "app screen phone"], uses: APP_SCREEN_USES[t.category] ?? [] }));
+  APP_SCREEN_TEMPLATES.filter((t) => matchesTemplate(filter, { text: [t.label, t.blurb, t.category, t.app, "app screen phone", t.web ? "web browser desktop" : ""], uses: APP_SCREEN_USES[t.category] ?? [] }));
 
 /** "App screenshots": phone + editable app screen templates, filterable by kind. */
 function AppScreenTemplates({ filter }: { filter: TemplateFilter }) {
@@ -86,14 +86,31 @@ function AppScreenTemplates({ filter }: { filter: TemplateFilter }) {
               {t.headline ? (
                 <p className="mb-3 text-center text-[13px] font-extrabold tracking-tight" style={{ color: t.ink ?? "#ffffff" }}>{t.headline}</p>
               ) : null}
-              <div className="w-[52%] shrink-0 rounded-[22px] bg-zinc-900 p-[5px] shadow-[0_18px_30px_rgba(0,0,0,.35)] ring-1 ring-white/20 transition-transform duration-300 group-hover:-translate-y-1">
-                {previews[t.slug] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={previews[t.slug]!} alt={`${t.label} screen`} className="w-full rounded-[18px]" />
-                ) : (
-                  <div className="aspect-[402/874] w-full rounded-[18px] bg-white/10" />
-                )}
-              </div>
+              {t.web ? (
+                <div className="mt-3 w-full shrink-0 overflow-hidden rounded-[10px] bg-zinc-100 shadow-[0_18px_30px_rgba(0,0,0,.35)] ring-1 ring-white/20 transition-transform duration-300 group-hover:-translate-y-1">
+                  <div className="flex h-[18px] items-center gap-1 bg-zinc-200 px-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#ff5f57]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#febc2e]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#28c840]" />
+                    <span className="ml-2 h-2.5 flex-1 truncate rounded-full bg-white px-2 text-[6px] leading-[10px] text-zinc-500">{t.browserUrl}</span>
+                  </div>
+                  {previews[t.slug] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={previews[t.slug]!} alt={`${t.label} page`} className="block w-full" />
+                  ) : (
+                    <div className="aspect-[16/10] w-full bg-zinc-200" />
+                  )}
+                </div>
+              ) : (
+                <div className="w-[52%] shrink-0 rounded-[22px] bg-zinc-900 p-[5px] shadow-[0_18px_30px_rgba(0,0,0,.35)] ring-1 ring-white/20 transition-transform duration-300 group-hover:-translate-y-1">
+                  {previews[t.slug] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={previews[t.slug]!} alt={`${t.label} screen`} className="w-full rounded-[18px]" />
+                  ) : (
+                    <div className="aspect-[402/874] w-full rounded-[18px] bg-white/10" />
+                  )}
+                </div>
+              )}
             </div>
             <div className="border-t border-white/[0.08] p-4">
               <div className="flex items-center justify-between gap-3">
@@ -181,7 +198,7 @@ export default function TemplatesPage() {
               {[
                 { href: "#premium", icon: Crown, label: "Premium layouts", meta: `${PREMIUM_TEMPLATES.length} layouts · ${PREMIUM_TEMPLATES.filter((t) => !t.pro).length} free` },
                 { href: "#store-sets", icon: Store, label: "Store listing sets", meta: `${STORE_SETS.length} sets · 8 shots each` },
-                { href: "#app-screens", icon: Smartphone, label: "App screens", meta: `${APP_SCREEN_TEMPLATES.length} phones` },
+                { href: "#app-screens", icon: Smartphone, label: "App screens", meta: `${APP_SCREEN_TEMPLATES.length} screens` },
                 { href: "#content-cards", icon: LayoutGrid, label: "Content cards", meta: `${TEMPLATES.length} cards` },
                 { href: "#device-scenes", icon: MonitorSmartphone, label: "Device scenes", meta: `${groups.length} collections` },
               ].map(({ href, icon: Icon, label, meta }) => (

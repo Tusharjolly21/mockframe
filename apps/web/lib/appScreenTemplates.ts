@@ -42,6 +42,10 @@ export interface AppScreenTemplate {
   sub?: string;
   /** headline color (defaults to white) */
   ink?: string;
+  /** a desktop web page in a browser window instead of a phone app screen */
+  web?: boolean;
+  /** the address shown in the browser's URL bar (web templates) */
+  browserUrl?: string;
 }
 
 const studio = (id: string): Background => ({ type: "image", assetId: `builtin:${id}`, fit: "cover", blur: 0, opacity: 1 });
@@ -56,6 +60,8 @@ const mesh = (seed: number, colors: string[]): Background => ({ type: "mesh-grad
 const inPhone = <T extends ScreenDoc>(doc: T): T => ({ ...doc, standalone: false });
 const dark = <T extends ScreenDoc>(doc: T): T => ({ ...doc, chrome: { ...doc.chrome, dark: true } });
 const android = <T extends ScreenDoc>(doc: T): T => ({ ...doc, chrome: { ...doc.chrome, platform: "android" } });
+/** the desktop web page version of a screen (shown in a browser window) */
+const web = <T extends ScreenDoc>(doc: T): T => ({ ...doc, standalone: false, web: true } as T);
 
 export const APP_SCREEN_TEMPLATES: AppScreenTemplate[] = [
   /* ------------------------------ Messaging ------------------------------- */
@@ -265,6 +271,48 @@ export const APP_SCREEN_TEMPLATES: AppScreenTemplate[] = [
     background: studio("st-white"), cardBg: "radial-gradient(circle at 50% 30%,#ffffff,#c9ccd3)", ink: "#111827",
     headline: "Find your way",
   },
+  /* ------------------------------ On the web ------------------------------ */
+  {
+    slug: "google-maps-web", label: "Google Maps on the web", category: "Apps & Store", app: "googlemaps", web: true,
+    blurb: "Directions on maps.google.com: the route list on the left, the live map on the right.",
+    deviceId: "chrome-browser", doc: () => web(defaultScreenDoc("googlemaps")), browserUrl: "google.com/maps/dir/Cupertino/Mountain+View",
+    background: studio("st-white"), cardBg: "radial-gradient(circle at 50% 30%,#ffffff,#c9ccd3)", ink: "#111827",
+    headline: "Find your way, on any screen",
+  },
+  {
+    slug: "google-play-web", label: "Google Play on the web", category: "Apps & Store", app: "googleplay", web: true,
+    blurb: "A Google Play Store page in the browser, with the screenshot carousel and ratings.",
+    deviceId: "chrome-browser", doc: () => web(defaultScreenDoc("googleplay")), browserUrl: "play.google.com/store/apps/details",
+    background: lin(150, ["#34d399", "#01875f", "#003d2b"]), cardBg: "linear-gradient(150deg,#34d399,#003d2b)",
+    headline: "Get it on Google Play",
+  },
+  {
+    slug: "app-store-web", label: "App Store on the web", category: "Apps & Store", app: "appstore", web: true,
+    blurb: "Your app's apps.apple.com page: icon, ratings, preview screenshots and description.",
+    deviceId: "safari-browser", doc: () => web(defaultScreenDoc("appstore")), browserUrl: "apps.apple.com/us/app/mockframe",
+    background: lin(150, ["#38bdf8", "#2563eb", "#1e1b4b"]), cardBg: "linear-gradient(150deg,#38bdf8,#1e1b4b)",
+    headline: "Now on the App Store",
+  },
+  {
+    slug: "reddit-web", label: "Reddit on the web", category: "Social", app: "reddit", web: true,
+    blurb: "A reddit.com thread with the subreddit sidebar and nested comments.",
+    deviceId: "chrome-browser", doc: () => web(defaultScreenDoc("reddit")), browserUrl: "reddit.com/r/webdev/comments",
+    background: lin(150, ["#ff4500", "#ff8717"]), cardBg: "linear-gradient(150deg,#ff4500,#ff8717)",
+    headline: "Top of the front page",
+  },
+  {
+    slug: "x-post-web", label: "X post on the web", category: "Social", app: "xpost", web: true,
+    blurb: "An x.com post with replies, in the three-column desktop layout.",
+    deviceId: "chrome-browser", doc: () => web(dark(defaultScreenDoc("xpost"))), browserUrl: "x.com/mockframe/status/1",
+    background: studio("st-graphite"), cardBg: "radial-gradient(circle at 50% 20%,#3a3d44,#0a0b0d)",
+  },
+  {
+    slug: "threads-web", label: "Threads on the web", category: "Social", app: "social", web: true,
+    blurb: "A threads.net post and replies in the centred desktop feed.",
+    deviceId: "safari-browser", doc: () => web(defaultSocialDoc("threads")), browserUrl: "threads.net/@mockframe",
+    background: studio("st-white"), cardBg: "radial-gradient(circle at 50% 30%,#ffffff,#c9ccd3)", ink: "#111827",
+    headline: "Start a thread",
+  },
   {
     slug: "email-inbox", label: "Email", category: "Apps & Store", app: "email",
     blurb: "An email thread in a Gmail / Apple Mail style client.",
@@ -283,6 +331,7 @@ const CANVAS_H = 1350;
 
 /** A 4:5 social / store-ready scene: headline up top, the phone below. */
 export function makeAppScreenScene(t: AppScreenTemplate): SceneDocument {
+  if (t.web) return makeWebScreenScene(t);
   const scene = createScene({ width: CANVAS_W, height: CANVAS_H, background: t.background });
   const device = getDevice(t.deviceId);
   const frameH = device?.frame.height ?? 2700;
@@ -321,6 +370,40 @@ export function makeAppScreenScene(t: AppScreenTemplate): SceneDocument {
     sub.maxWidth = CANVAS_W - 160;
     sub.transform = { ...sub.transform, y: -CANVAS_H / 2 + 186 };
     scene.layers.push(sub);
+  }
+  scene.id = `scene-app-template-${t.slug}`;
+  return scene;
+}
+
+const WEB_W = 1600;
+const WEB_H = 1100;
+
+/** A landscape scene: headline up top, the page in a browser window below. */
+function makeWebScreenScene(t: AppScreenTemplate): SceneDocument {
+  const scene = createScene({ width: WEB_W, height: WEB_H, background: t.background });
+  const device = getDevice(t.deviceId);
+  const frameW = device?.frame.width ?? 2580;
+  const frameH = device?.frame.height ?? 1770;
+  const hasText = !!t.headline;
+  const scale = Math.min((WEB_W * 0.84) / frameW, (WEB_H * (hasText ? 0.7 : 0.84)) / frameH);
+  const layer = createMockupLayer({
+    deviceId: t.deviceId,
+    frameVariant: t.frameVariant,
+    media: { assetId: encodeScreenAsset(t.doc()), kind: "image", fit: "cover", offsetX: 0, offsetY: 0, scale: 1 },
+  });
+  layer.id = "layer-template";
+  layer.browserUrl = t.browserUrl;
+  layer.transform = { ...layer.transform, scale: Math.round(scale * 1000) / 1000, y: hasText ? Math.round(WEB_H * 0.07) : 0 };
+  layer.shadow = { mode: "adaptive", lightAngle: 90, distance: 46, softness: 90, opacity: 0.3, color: "#0b0b17" };
+  scene.layers.push(layer);
+  if (t.headline) {
+    const head = createTextLayer(t.headline);
+    head.id = "text-headline";
+    head.color = t.ink ?? "#ffffff";
+    head.font = { ...head.font, size: 62, weight: 800, letterSpacing: -0.03 };
+    head.maxWidth = WEB_W - 160;
+    head.transform = { ...head.transform, y: -WEB_H / 2 + 118 };
+    scene.layers.push(head);
   }
   scene.id = `scene-app-template-${t.slug}`;
   return scene;

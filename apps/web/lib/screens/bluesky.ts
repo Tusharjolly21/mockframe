@@ -2,7 +2,7 @@
 
 import { avatar, compact, esc, homeIndicator, SH, statusBar, SW, textWidth, wrapText } from "./common";
 import { fontFor } from "./fonts";
-import { renderFramed, type FramedResult } from "./frames";
+import { frameLookOf, renderFramed, type FramedResult } from "./frames";
 import type { BlueskyDoc } from "./types";
 
 /**
@@ -129,7 +129,7 @@ export function renderBlueskyCard(doc: BlueskyDoc, avatarUrl?: string, lookupUrl
     theme,
     (x, y, w) => blueskyBody(x, y, w, doc, c, font, avatarUrl, lookupUrl),
     Math.max(300, Math.min(620, doc.cardWidth ?? 402)),
-    { radius: doc.cardRadius, shadow: doc.cardShadow }
+    frameLookOf(doc)
   );
 }
 

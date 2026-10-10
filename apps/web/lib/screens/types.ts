@@ -7,7 +7,7 @@
  * Plain JSON, discriminated on `app` — new generators are new arms.
  */
 
-import type { FrameStyle } from "./frames";
+import type { FrameStyle, FrameOptions } from "./frames";
 export type { FrameStyle } from "./frames";
 
 /** Status-bar + theme chrome shared by every generator. */
@@ -108,7 +108,7 @@ export interface PostComment {
   avatar?: string;
 }
 
-export interface XPostDoc {
+export interface XPostDoc extends FrameOptions {
   app: "xpost";
   chrome: ScreenChrome;
   /** uploaded photo asset id for the contact / group / author */
@@ -128,6 +128,8 @@ export interface XPostDoc {
   comments?: PostComment[];
   /** Template mode: render as a window-framed card instead of a phone screen */
   standalone?: boolean;
+  /** Desktop browser version of this screen (a 1440×900 web page) instead of the phone app. */
+  web?: boolean;
   frame?: FrameStyle;
   /** Standalone post-card width in logical pixels. */
   cardWidth?: number;
@@ -142,7 +144,7 @@ export interface XPostDoc {
 }
 
 /** Bluesky post (PostSpark /bluesky-post). */
-export interface BlueskyDoc {
+export interface BlueskyDoc extends FrameOptions {
   app: "bluesky";
   chrome: ScreenChrome;
   avatar?: string;
@@ -167,7 +169,7 @@ export interface BlueskyDoc {
 
 /** Code template card (PostSpark /code): window frame + syntax theme + code font.
  *  Always a standalone card (a code editor makes no sense inside a phone). */
-export interface CodeDoc {
+export interface CodeDoc extends FrameOptions {
   app: "code";
   chrome: ScreenChrome;
   code: string;
@@ -266,6 +268,8 @@ export interface AppStoreDoc {
   buttonText?: string;
   dark?: boolean;
   standalone?: boolean;
+  /** Desktop browser version of this screen (a 1440×900 web page) instead of the phone app. */
+  web?: boolean;
 }
 
 export interface GoogleMapsDoc {
@@ -279,6 +283,8 @@ export interface GoogleMapsDoc {
   instruction: string;
   dark?: boolean;
   standalone?: boolean;
+  /** Desktop browser version of this screen (a 1440×900 web page) instead of the phone app. */
+  web?: boolean;
 }
 
 export interface GooglePlayDoc {
@@ -293,6 +299,8 @@ export interface GooglePlayDoc {
   avatar?: string;
   dark?: boolean;
   standalone?: boolean;
+  /** Desktop browser version of this screen (a 1440×900 web page) instead of the phone app. */
+  web?: boolean;
 }
 
 export interface WhatsAppGroupDoc {
@@ -476,7 +484,7 @@ export interface DiscordDoc {
 
 export type SocialNetwork = "facebook" | "linkedin" | "threads" | "x" | "bluesky" | "mastodon";
 
-export interface SocialPostDoc {
+export interface SocialPostDoc extends FrameOptions {
   app: "social";
   chrome: ScreenChrome;
   network: SocialNetwork;
@@ -501,6 +509,8 @@ export interface SocialPostDoc {
   sourceUrl?: string;
   /** Template mode: MockFrame's own provider-neutral post card. */
   standalone?: boolean;
+  /** Desktop browser version of this screen (a 1440×900 web page) instead of the phone app. */
+  web?: boolean;
   frame?: FrameStyle;
   cardWidth?: number;
   postFontSize?: number;
@@ -614,6 +624,8 @@ export interface RedditDoc {
   votes: number;
   commentCount: string;
   comments: RedditComment[];
+  /** Desktop browser version of this screen (a 1440×900 web page) instead of the phone app. */
+  web?: boolean;
 }
 
 export interface LineDoc {
@@ -1530,7 +1542,7 @@ export function defaultScreenDoc(app: ScreenApp): ScreenDoc {
         fontSize: 35,
         padding: 54,
         cardRadius: 28,
-        cardShadow: 1.15,
+        cardShadow: 0,
         cardColor: "#ffffff",
         textColor: "#16181d",
         accentColor: "#6d5dfc",
@@ -1677,7 +1689,8 @@ export function defaultTemplateDoc(app: "bluesky" | "xpost" | "social" | "code" 
       postFontSize: 27,
       postPadding: 18,
       cardRadius: 26,
-      cardShadow: 1.15,
+      // no halo behind the post by default; the user can switch a shadow on
+      cardShadow: 0,
     };
   }
   const base = defaultScreenDoc(app) as BlueskyDoc | XPostDoc;

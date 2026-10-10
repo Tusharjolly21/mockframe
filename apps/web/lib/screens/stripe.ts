@@ -132,7 +132,7 @@ export function renderStripe(doc: StripeDoc): string {
     const scale = Math.min(1.6, Math.max(0.65, doc.contentScale ?? 1.1));
     const parts: string[] = [];
     const inset = 8;
-    parts.push(`<rect x="${inset}" y="${inset}" width="${width - inset * 2}" height="${height - inset * 2}" rx="${Math.round(16 * Math.min(scale, 1.25))}" fill="${c.surface}" stroke="${c.border}" stroke-width="1" style="filter:drop-shadow(0 6px 24px rgba(20,20,40,0.12))"/>`);
+    parts.push(`<rect x="${inset}" y="${inset}" width="${width - inset * 2}" height="${height - inset * 2}" rx="${Math.round(16 * Math.min(scale, 1.25))}" fill="${c.surface}" stroke="${c.border}" stroke-width="1"/>`);
     metricCard(parts, doc, c, accent, font, inset, inset, width - inset * 2, height - inset * 2, scale);
     return parts.join("\n");
   }

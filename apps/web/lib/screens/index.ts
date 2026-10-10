@@ -39,8 +39,16 @@ import { consumeDeviceImagesPending } from "./deviceBodies";
 import { renderGoogleMaps, googleMapsCardSize } from "./googlemaps";
 import { renderGooglePlay, googlePlayCardSize } from "./googleplay";
 import { SCREEN_APP_LABELS, type ScreenDoc } from "./types";
+import { isWebDoc, WEB_H, WEB_W } from "./webPage";
+import { renderGoogleMapsWeb } from "./web/googlemaps";
+import { renderGooglePlayWeb } from "./web/googleplay";
+import { renderAppStoreWeb } from "./web/appstore";
+import { renderRedditWeb } from "./web/reddit";
+import { renderXPostWeb } from "./web/xpost";
+import { renderThreadsWeb } from "./web/threads";
 
 export * from "./types";
+export { hasWebVersion, isWebDoc, WEB_H, WEB_W } from "./webPage";
 
 /**
  * `screen:` asset scheme (framekit-screen-studio.md §2.1): the document IS
@@ -169,6 +177,7 @@ export type AssetUrlLookup = (assetId: string) => string | undefined;
 /** Logical height of a screen — normally full-phone (SH), but standalone
  *  chart cards export at a compact card height. */
 export function screenLogicalHeight(doc: ScreenDoc): number {
+  if (isWebDoc(doc)) return WEB_H;
   if (doc.app === "github" && doc.standalone) return githubStandaloneSize(doc).height;
   if (doc.app === "stripe" && doc.standalone) return stripeStandaloneSize(doc).height;
   if (doc.app === "testimonial") return testimonialSize(doc).height;
@@ -184,6 +193,7 @@ export function screenLogicalHeight(doc: ScreenDoc): number {
 
 /** Logical width of fixed-size screens and resizable standalone chart cards. */
 export function screenLogicalWidth(doc: ScreenDoc): number {
+  if (isWebDoc(doc)) return WEB_W;
   if (doc.app === "github" && doc.standalone) return githubStandaloneSize(doc).width;
   if (doc.app === "stripe" && doc.standalone) return stripeStandaloneSize(doc).width;
   if (doc.app === "testimonial") return testimonialSize(doc).width;
@@ -233,6 +243,7 @@ export function referencedAssetIds(doc: ScreenDoc): string[] {
 export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): { url: string; logicalH: number; logicalW: number } {
   const dp = "avatar" in doc && doc.avatar ? lookupUrl?.(doc.avatar) : undefined;
   const flat = (inner: string, h = SH, w = SW) => ({ url: svgDataUri(inner, h, w), logicalH: h, logicalW: w });
+  if (isWebDoc(doc)) return flat(renderWebPage(doc, dp, lookupUrl), WEB_H, WEB_W);
   switch (doc.app) {
     case "aiapp":
       return flat(renderAiApp(doc));
@@ -325,6 +336,26 @@ export function renderScreenSized(doc: ScreenDoc, lookupUrl?: AssetUrlLookup): {
       const r = renderCode(doc);
       return { url: svgDataUri(r.svg, r.totalH, r.totalW), logicalH: r.totalH, logicalW: r.totalW };
     }
+  }
+}
+
+/** The desktop web page version of a screen (1440×900, page content only). */
+function renderWebPage(doc: ScreenDoc, dp?: string, lookupUrl?: AssetUrlLookup): string {
+  switch (doc.app) {
+    case "googlemaps":
+      return renderGoogleMapsWeb(doc);
+    case "googleplay":
+      return renderGooglePlayWeb(doc, dp, lookupUrl);
+    case "appstore":
+      return renderAppStoreWeb(doc, dp, lookupUrl);
+    case "reddit":
+      return renderRedditWeb(doc, dp, lookupUrl);
+    case "xpost":
+      return renderXPostWeb(doc, dp, lookupUrl);
+    case "social":
+      return renderThreadsWeb(doc, dp, lookupUrl);
+    default:
+      return "";
   }
 }
 

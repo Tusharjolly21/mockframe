@@ -2,8 +2,9 @@
 
 import { avatar, compact, esc, homeIndicator, SH, statusBar, SW, textWidth, wrapText } from "./common";
 import { fontFor } from "./fonts";
-import { renderFramed, type FramedResult } from "./frames";
+import { frameLookOf, renderFramed, type FramedResult } from "./frames";
 import type { XPostDoc } from "./types";
+import { xColors, xDetail, xIcon, XI } from "./web/xp-shared";
 
 /**
  * X (Twitter) post. The post BODY is shared between the full-phone detail view
@@ -138,25 +139,34 @@ export function renderXPostCard(doc: XPostDoc, avatarUrl?: string, lookupUrl?: (
     theme,
     (x, y, w) => xpostBody(x, y, w, doc, c, font, avatarUrl, lookupUrl, false),
     Math.max(300, Math.min(620, doc.cardWidth ?? 402)),
-    { radius: doc.cardRadius, shadow: doc.cardShadow }
+    frameLookOf(doc)
   );
 }
 
-/** Full-phone detail view (mobile picker). */
+/** Full-phone detail view (mobile picker): the X app's "Post" screen. */
 export function renderXPost(doc: XPostDoc, avatarUrl?: string, lookupUrl?: (id: string) => string | undefined): string {
   const platform = doc.chrome.platform ?? "ios";
   const font = fontFor("xpost", platform);
-  const c = colors(doc.theme);
-  const parts: string[] = [
+  const c = xColors(doc.theme);
+  const android = platform === "android";
+  const NAV_Y = 77; // vertical centre of the top bar
+  const detail = xDetail({ x: 0, y: 98, w: SW, pad: 16, doc, c, font, avatarUrl, lookupUrl, limitY: SH });
+  return [
     `<rect width="${SW}" height="${SH}" fill="${c.bg}"/>`,
+    `<defs><clipPath id="xpscr"><rect y="0" width="${SW}" height="${SH}"/></clipPath></defs>`,
+    `<g clip-path="url(#xpscr)">${detail.svg}</g>`,
+    // top bar drawn over the scroll content, like the real translucent bar
+    `<rect width="${SW}" height="98" fill="${c.bg}"/>`,
     statusBar({ time: doc.chrome.time, battery: doc.chrome.battery, color: c.text, platform }),
-    `<path d="M30 70 l-11 11 11 11 M19 81 h24" fill="none" stroke="${c.text}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`,
-    `<text font-family="${font}" font-size="19" font-weight="700" fill="${c.text}" x="62" y="88">Post</text>`,
-    `<rect y="107" width="${SW}" height="0.5" fill="${c.hairline}"/>`,
-  ];
-  parts.push(xpostBody(0, 112, SW, doc, c, font, avatarUrl, lookupUrl, true).svg);
-  parts.push(homeIndicator(c.text, platform));
-  return parts.join("\n");
+    xIcon(XI.back, 28, NAV_Y, 22, c.text),
+    `<text font-family="${font}" font-size="20" font-weight="700" fill="${c.text}" x="${android ? 62 : 58}" y="${NAV_Y + 7}">Post</text>`,
+    xIcon(XI.more, SW - 28, NAV_Y, 22, c.text),
+    `<rect y="97.5" width="${SW}" height="1" fill="${c.hairline}"/>`,
+    // content scrolls under the gesture area: fade it out behind the home indicator
+    `<defs><linearGradient id="xpfade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.bg}" stop-opacity="0"/><stop offset="1" stop-color="${c.bg}"/></linearGradient></defs>`,
+    `<rect y="${SH - 44}" width="${SW}" height="44" fill="url(#xpfade)"/>`,
+    homeIndicator(c.text, platform),
+  ].join("\n");
 }
 
 /** X-style media grid (1–4 photos) with rounded outer corners. Returns height. */
