@@ -19,15 +19,23 @@ export type Account = {
   email: string | null;
   name: string | null;
   photo: string | null;
-  /** ISO time the account was created, when Firebase reports it */
-  createdAt: string | null;
-  /** how they sign in: "google", "password" or "email-link" */
-  providers: string[];
+  /** how they sign in: "google", "email" (link or password) or something else */
+  provider: string;
+  /** unix ms the account was created, when Firebase says */
+  createdAt: number | null;
 };
 
-function providersOf(user: User): string[] {
-  const ids = user.providerData.map((p) => p.providerId);
-  return [...new Set(ids.map((id) => (id === "google.com" ? "google" : id === "password" ? "email" : id)))];
+function toAccount(user: User): Account {
+  const id = user.providerData[0]?.providerId ?? "";
+  const created = Date.parse(user.metadata.creationTime ?? "");
+  return {
+    uid: user.uid,
+    email: user.email,
+    name: user.displayName,
+    photo: user.photoURL,
+    provider: id === "google.com" ? "google" : id === "password" ? "email" : id || "email",
+    createdAt: Number.isFinite(created) ? created : null,
+  };
 }
 
 type AuthValue = {
@@ -39,8 +47,8 @@ type AuthValue = {
   sendMagicLink: (email: string) => Promise<void>;
   signInPassword: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  /** rename the signed-in account */
-  setName: (name: string) => Promise<void>;
+  /** change the display name shown in the app */
+  setDisplayName: (name: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -69,18 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {});
     const unsub = onAuthChange((user: User | null) => {
-      setAccount(
-        user && !user.isAnonymous
-          ? {
-              uid: user.uid,
-              email: user.email,
-              name: user.displayName,
-              photo: user.photoURL,
-              createdAt: user.metadata.creationTime ? new Date(user.metadata.creationTime).toISOString() : null,
-              providers: providersOf(user),
-            }
-          : null
-      );
+      setAccount(user && !user.isAnonymous ? toAccount(user) : null);
       setLoading(false);
     });
     return unsub;
@@ -103,10 +100,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut: async () => {
         await signOutToGuest();
       },
-      setName: async (name: string) => {
+      setDisplayName: async (name: string) => {
         await updateDisplayName(name);
-        const clean = name.trim().slice(0, 60) || null;
-        setAccount((a) => (a ? { ...a, name: clean } : a));
+        setAccount((a) => (a ? { ...a, name: name.trim() || null } : a));
       },
     }),
     [loading, configured, account]

@@ -12,6 +12,7 @@ import {
   type DraftRecord,
 } from "./drafts";
 import { sceneTemporal, useSceneStore, useViewStore } from "./store";
+import { loadPreferences } from "./preferences";
 
 /**
  * Editor autosave. Every edit is written to the current draft in IndexedDB
@@ -28,6 +29,8 @@ const LOCAL_DELAY = 1200;
 const CLOUD_EVERY = 30_000;
 
 export function startAutosave(): () => void {
+  // switched off on /account: edits only reach Drafts when the user saves
+  if (!loadPreferences().autosave) return () => {};
   // the scene the canvas was last pointed at (fresh, loaded, reset)
   let baseline: SceneDocument = useSceneStore.getState().scene;
   // the scene object last written to storage since that baseline

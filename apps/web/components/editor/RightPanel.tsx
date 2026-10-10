@@ -7,6 +7,7 @@ import { getDevice } from "@framekit/devices";
 import type { MockupLayer, SceneDocument } from "@framekit/scene";
 import { Check, Copy, Dices, Download, Link2, Loader2, Lock, Plus, RotateCcw, Settings2, Share2, Sparkles, Stamp, Trash2, Upload } from "lucide-react";
 import { track, trackOnce } from "@/lib/analytics";
+import { loadPreferences } from "@/lib/preferences";
 import { exportScene, type ExportFormat, type ExportQuality } from "@/lib/export";
 import { isScreenAsset, type CodeDoc } from "@/lib/screens";
 import { CODE_THEME_LABELS, CODE_THEMES } from "@/lib/screens/code";
@@ -43,6 +44,12 @@ export function RightPanel() {
   const [format, setFormat] = useState<ExportFormat>("png");
   const [scale, setScale] = useState(1);
   const [quality, setQuality] = useState<ExportQuality>("balanced");
+  // the format and quality chosen on /account, applied once per editor load
+  useEffect(() => {
+    const prefs = loadPreferences();
+    setFormat(prefs.exportFormat);
+    setQuality(prefs.exportQuality);
+  }, []);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [busy, setBusy] = useState<"export" | "copy" | "share" | "remix" | null>(null);
   const [copied, setCopied] = useState(false);

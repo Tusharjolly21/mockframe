@@ -205,7 +205,7 @@ export async function signOutToGuest(): Promise<void> {
 export async function updateDisplayName(name: string): Promise<void> {
   const user = getFirebaseAuth()?.currentUser;
   if (!user || user.isAnonymous) throw new Error("Sign in first");
-  await updateProfile(user, { displayName: name.trim().slice(0, 60) || null });
+  await updateProfile(user, { displayName: name.trim() || null });
 }
 
 /** Returns an anonymous Firebase Auth session when the public web config exists.
