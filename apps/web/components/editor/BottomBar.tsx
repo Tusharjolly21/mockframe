@@ -5,8 +5,9 @@ import { AnimatePresence } from "motion/react";
 import { Baseline, Box, Move, Palette, RotateCcw, SlidersHorizontal, SmilePlus } from "lucide-react";
 import { getDevice } from "@framekit/devices";
 import type { MockupLayer } from "@framekit/scene";
+import { backgroundToCss, noiseTile, overlayStyle, patternStyle, stageStyle } from "@framekit/renderer";
 import { resolveAsset } from "@/lib/assets";
-import { applyTheme, BUILTIN_THEMES, loadSavedThemes, saveTheme, syncThemesFromServer, themeMatches, type StyleTheme } from "@/lib/themes";
+import { applyTheme, ALL_BUILTIN_THEMES, THEME_COLLECTIONS, loadSavedThemes, saveTheme, syncThemesFromServer, themeMatches, type StyleTheme } from "@/lib/themes";
 import { sceneTemporal, useSceneStore, useViewStore } from "@/lib/store";
 import { useDraftsUi } from "@/lib/drafts";
 import { IconButton, Popover, SliderRow } from "./ui";
@@ -248,8 +249,23 @@ export function BottomBar() {
   );
 }
 
-/* PostSpark's bottom-bar Themes popover: theme cards on their own background,
-   the active one ringed, plus a + card that saves the current styling. */
+/* Bottom-bar Themes popover: art-directed looks grouped into shelves, each card
+   a live miniature of the real thing (base + pattern + cast light + grain). */
+function ThemePreview({ theme, className }: { theme: StyleTheme; className?: string }) {
+  const grain = theme.effects?.find((e) => e.type === "grain");
+  const vignette = theme.effects?.find((e) => e.type === "vignette");
+  const layer = (style: React.CSSProperties): React.CSSProperties => ({ ...style, position: "absolute", inset: 0, pointerEvents: "none" });
+  return (
+    <span className={`relative block overflow-hidden ${className ?? ""}`} style={backgroundToCss(theme.background) as React.CSSProperties}>
+      {theme.backdrop?.pattern && <span style={layer(patternStyle(theme.backdrop.pattern))} />}
+      {theme.backdrop?.portrait?.mode === "stage" && <span style={layer(stageStyle(theme.backdrop.portrait))} />}
+      {theme.backdrop?.overlay && <span style={layer(overlayStyle(theme.backdrop.overlay))} />}
+      {grain && <span style={layer({ backgroundImage: noiseTile(grain.seed, 0.22), opacity: grain.intensity * 0.55, mixBlendMode: "overlay" })} />}
+      {vignette && <span style={layer({ background: `radial-gradient(120% 100% at 50% 40%, transparent 45%, ${vignette.color} 130%)`, opacity: vignette.intensity })} />}
+    </span>
+  );
+}
+
 function ThemesPopover({ onClose }: { onClose: () => void }) {
   const scene = useSceneStore((s) => s.scene);
   const setScene = useSceneStore((s) => s.setScene);
@@ -260,28 +276,34 @@ function ThemesPopover({ onClose }: { onClose: () => void }) {
   }, []);
   const setSavedThemes = () => setSaved(loadSavedThemes());
 
-  const all = [...BUILTIN_THEMES, ...saved];
+  const all = [...ALL_BUILTIN_THEMES, ...saved];
   const current = all.find((t) => themeMatches(scene, t));
+  const shelves = [
+    ...THEME_COLLECTIONS.map((c) => ({ ...c, themes: ALL_BUILTIN_THEMES.filter((t) => t.collection === c.id) })),
+    ...(saved.length ? [{ id: "saved", label: "Yours", blurb: "Saved from the canvas", themes: saved }] : []),
+  ].filter((c) => c.themes.length);
 
-  const cardBg = (t: StyleTheme): React.CSSProperties => {
-    const bg = t.background;
-    if (bg.type === "solid") return { background: bg.color };
-    if (bg.type === "linear-gradient")
-      return { background: `linear-gradient(${bg.angle}deg, ${bg.stops.map((s) => `${s.color} ${s.at * 100}%`).join(", ")})` };
-    if (bg.type === "radial-gradient")
-      return { background: `radial-gradient(circle at ${bg.cx * 100}% ${bg.cy * 100}%, ${bg.stops.map((s) => `${s.color} ${s.at * 100}%`).join(", ")})` };
-    return { background: "linear-gradient(135deg,#6d28d9,#0e7490)" };
-  };
-  const isDark = (t: StyleTheme) => {
-    const bg = t.background;
-    const hex = bg.type === "solid" ? bg.color : bg.type === "linear-gradient" || bg.type === "radial-gradient" ? bg.stops[bg.stops.length - 1].color : "#333333";
-    const n = parseInt(hex.slice(1, 7), 16);
-    const lum = 0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
-    return lum < 140;
-  };
+  const card = (t: StyleTheme) => (
+    <button
+      key={t.id}
+      aria-pressed={current?.id === t.id}
+      data-popover-autofocus={current?.id === t.id ? "true" : undefined}
+      onClick={() => {
+        setScene((s) => applyTheme(s, t));
+        onClose();
+      }}
+      className={`fk-press group text-left`}
+    >
+      <ThemePreview
+        theme={t}
+        className={`h-[74px] rounded-xl border-2 transition-shadow ${current?.id === t.id ? "border-teal-500 shadow-[0_0_0_2px_rgba(20,184,166,0.25)]" : "border-black/5 group-hover:border-black/20"}`}
+      />
+      <span className="mt-1 block truncate px-0.5 text-[11px] font-semibold text-[#26262e]">{t.name}</span>
+    </button>
+  );
 
   return (
-    <Popover onEscape={onClose} className="bottom-[calc(100%+10px)] right-0 max-h-80 w-64 overflow-y-auto p-3">
+    <Popover onEscape={onClose} className="bottom-[calc(100%+10px)] right-0 max-h-[26rem] w-[21rem] overflow-y-auto p-3">
       <div className="mb-2 flex items-center justify-between">
         <p className="text-[12px] font-bold text-[#17171c]">Themes</p>
         <button
@@ -291,33 +313,20 @@ function ThemesPopover({ onClose }: { onClose: () => void }) {
             setSavedThemes();
             toast(`Saved "${t.name}" ✓`);
           }}
-          className="fk-press grid h-6 w-6 place-items-center rounded-full border border-[#e4e4ec] text-[#17171c] hover:border-[#17171c]"
+          className="fk-press flex h-6 items-center gap-1 rounded-full border border-[#e4e4ec] px-2 text-[10.5px] font-semibold text-[#17171c] hover:border-[#17171c]"
         >
-          +
+          + Save current
         </button>
       </div>
-      <div className="flex flex-col gap-2">
-        {all.map((t) => (
-          <button
-            key={t.id}
-            aria-pressed={current?.id === t.id}
-            data-popover-autofocus={current?.id === t.id ? "true" : undefined}
-            onClick={() => {
-              setScene((s) => applyTheme(s, t));
-              onClose();
-            }}
-            className={`fk-press flex h-14 items-end rounded-2xl border-2 px-3 pb-2 text-left text-[13px] font-semibold ${
-              current?.id === t.id
-                ? "border-teal-500 shadow-[0_0_0_2px_rgba(20,184,166,0.25)]"
-                : "border-black/5"
-            }`}
-            style={cardBg(t)}
-          >
-            <span style={{ color: isDark(t) ? "#ffffff" : "#26262e" }}>{t.name}</span>
-          </button>
-        ))}
-      </div>
-      <p className="mt-2 text-center text-[10px] text-[#9a9aa4]">Arrow keys to browse · Enter or Space to apply</p>
+      {shelves.map((shelf) => (
+        <section key={shelf.id} className="mb-3">
+          <p className="mb-1.5 flex items-baseline gap-1.5 text-[10.5px] font-bold uppercase tracking-wide text-[#6b6b76]">
+            {shelf.label} <span className="text-[10px] font-medium normal-case tracking-normal text-[#a0a0aa]">{shelf.blurb}</span>
+          </p>
+          <div className="grid grid-cols-3 gap-2">{shelf.themes.map(card)}</div>
+        </section>
+      ))}
+      <p className="text-center text-[10px] text-[#9a9aa4]">Themes restyle the background, light and texture — your layers stay put.</p>
     </Popover>
   );
 }

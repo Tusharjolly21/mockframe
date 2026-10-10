@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Player, Thumbnail } from "@remotion/player";
+import { Player } from "@remotion/player";
 import { ArrowLeft, ArrowRight, Check, Download, Loader2, Plus, Upload, X } from "lucide-react";
 import { ingestFile, resolveAsset } from "@/lib/assets";
 import { openUpgrade, useIsPro } from "@/lib/billing/gate";
@@ -11,6 +11,8 @@ import { buildPromoInputProps, type PromoScreenshot } from "@/lib/promo/inputPro
 import { getPromoBackground, PROMO_BACKGROUND_IDS } from "@/remotion/promo/kit/backgrounds";
 import { PROMO_COMPONENTS } from "@/remotion/promo/templates";
 import { exportPromoVideo, PromoExportProError, type PromoMedia } from "@/lib/promo/export";
+import { canExportInBrowser, exportPromoInBrowser, type BrowserExportQuality } from "@/lib/promo/browserExport";
+import { downloadBlob } from "@/lib/videoEncode";
 import { loadBrandKit } from "@/lib/brand";
 
 const PLACEHOLDER: PromoScreenshot = {
@@ -60,7 +62,7 @@ function probeVideo(file: File): Promise<PromoMedia> {
   });
 }
 
-type Status = { kind: "idle" | "rendering" | "done" | "error"; message?: string };
+type Status = { kind: "idle" | "rendering" | "done" | "error"; message?: string; progress?: number };
 
 const Label = ({ children }: { children: React.ReactNode }) => (
   <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{children}</p>
@@ -78,6 +80,8 @@ export default function PromoPanel({ onClose, initialTemplateId }: { onClose: ()
     return brand ? { ...base, accent: brand.accent } : base;
   });
   const [status, setStatus] = useState<Status>({ kind: "idle" });
+  const [quality, setQuality] = useState<BrowserExportQuality>("fast");
+  const abortRef = useRef<AbortController | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const template = getPromoTemplate(project.templateId)!;
@@ -127,11 +131,37 @@ export default function PromoPanel({ onClose, initialTemplateId }: { onClose: ()
   async function onExport() {
     if (media.length === 0) return setStatus({ kind: "error", message: "Add at least one screenshot (step 2)" });
     if (!isPro) return openUpgrade("Promo video export");
-    setStatus({ kind: "rendering", message: "Rendering your video — this takes about a minute…" });
+    const full = { ...project, screenshotAssetIds: media.map((m) => m.id) };
+    const hasVideo = media.some((m) => m.kind === "video");
+    const name = `mockframe-promo-${project.format.replace(":", "x")}`;
+
+    // Preferred: render on this machine. It needs no cloud setup, no queue and
+    // no daily limit, and the file is frame-exact. Screen recordings can't be
+    // rasterised frame by frame, so those go to the cloud renderer.
+    if (!hasVideo && canExportInBrowser()) {
+      const ctl = new AbortController();
+      abortRef.current = ctl;
+      setStatus({ kind: "rendering", message: "Starting the renderer…", progress: 0 });
+      try {
+        const { blob, ext } = await exportPromoInBrowser(full, media, {
+          quality,
+          signal: ctl.signal,
+          onProgress: (fraction, label) => setStatus({ kind: "rendering", message: label, progress: fraction }),
+        });
+        downloadBlob(blob, `${name}.${ext}`);
+        setStatus({ kind: "done", message: "Downloaded! Check your files." });
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return setStatus({ kind: "idle" });
+        console.warn("[promo] in-browser export failed, trying the cloud renderer", err);
+      } finally {
+        abortRef.current = null;
+      }
+    }
+
+    setStatus({ kind: "rendering", message: "Rendering in the cloud — this takes about a minute…" });
     try {
-      await exportPromoVideo({ ...project, screenshotAssetIds: media.map((m) => m.id) }, media, (pct) =>
-        setStatus({ kind: "rendering", message: `Rendering in the cloud — ${pct}%` }),
-      );
+      await exportPromoVideo(full, media, (pct) => setStatus({ kind: "rendering", message: `Rendering in the cloud — ${pct}%`, progress: pct / 100 }));
       setStatus({ kind: "done", message: "Downloaded! Check your files." });
     } catch (err) {
       if (err instanceof PromoExportProError) {
@@ -182,12 +212,13 @@ export default function PromoPanel({ onClose, initialTemplateId }: { onClose: ()
               <Label>Pick a template</Label>
               <div className="grid grid-cols-2 gap-3">
                 {PROMO_TEMPLATES.map((t) => {
-                  const props = buildPromoInputProps(createPromoProject(t.id, media.map((m) => m.id)), { screenshots, watermark: false });
                   const active = project.templateId === t.id;
                   return (
                     <button key={t.id} onClick={() => selectTemplate(t.id)} className={`fk-press overflow-hidden rounded-xl border text-left transition-colors ${active ? "border-violet-400 ring-1 ring-violet-400/40" : "border-white/10 hover:border-white/25"}`}>
                       <div className="relative aspect-[9/16] w-full bg-black">
-                        <Thumbnail component={PROMO_COMPONENTS[t.id]} inputProps={props} compositionWidth={FORMAT_DIMENSIONS["9:16"].width} compositionHeight={FORMAT_DIMENSIONS["9:16"].height} durationInFrames={t.defaultDurationInFrames} fps={PROMO_FPS} frameToDisplay={Math.round(t.defaultDurationInFrames * 0.5)} style={{ width: "100%", height: "100%" }} />
+                        {/* pre-rendered posters: ten live Remotion/WebGL thumbnails at once froze the panel and exhausted the browser's GL contexts */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={`/templates/video/${t.id}.webp`} alt={t.name} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
                         {active && <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-violet-500"><Check size={12} /></span>}
                       </div>
                       <div className="px-2.5 py-2">
@@ -296,10 +327,29 @@ export default function PromoPanel({ onClose, initialTemplateId }: { onClose: ()
                   <div key={k} className="flex justify-between"><span className="text-zinc-500">{k}</span><span className="font-semibold">{v}</span></div>
                 ))}
               </div>
+              {!media.some((m) => m.kind === "video") && (
+                <div>
+                  <Label>Quality</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([["fast", "Fast · 720p", "Quickest, great for X and Reels"], ["full", "Full HD · 1080p", "Sharpest, takes longer"]] as const).map(([id, title, sub]) => (
+                      <button key={id} onClick={() => setQuality(id)} disabled={busy} className={`fk-press rounded-lg border px-3 py-2 text-left disabled:opacity-50 ${quality === id ? "border-violet-400 bg-white/10" : "border-white/10 text-zinc-400 hover:text-white"}`}>
+                        <span className="block text-[12px] font-semibold">{title}</span>
+                        <span className="block text-[10.5px] text-zinc-500">{sub}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <button onClick={onExport} disabled={busy} className="fk-press flex w-full items-center justify-center gap-2 rounded-lg bg-white py-3 text-[13.5px] font-semibold text-zinc-900 hover:bg-zinc-200 disabled:opacity-60">
                 {busy ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
                 {busy ? "Rendering…" : isPro ? "Export MP4" : "Export MP4 (Pro)"}
               </button>
+              {busy && typeof status.progress === "number" && (
+                <div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-violet-400 transition-[width] duration-200" style={{ width: `${Math.round(status.progress * 100)}%` }} /></div>
+              )}
+              {busy && abortRef.current && (
+                <button onClick={() => abortRef.current?.abort()} className="mx-auto block text-[11.5px] text-zinc-400 underline hover:text-white">Cancel</button>
+              )}
               {status.message && <p className={`text-center text-[11.5px] ${status.kind === "error" ? "text-rose-300" : status.kind === "done" ? "text-emerald-300" : "text-zinc-400"}`}>{status.message}</p>}
               {!isPro && status.kind === "idle" && <p className="text-center text-[11px] text-zinc-500">Preview is free. Exporting MP4 needs Pro.</p>}
             </section>

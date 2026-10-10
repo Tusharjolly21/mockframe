@@ -46,6 +46,13 @@ export function backgroundToCss(bg: Background, panoramaIdx?: number, panoramaTo
           .join(", ")})`,
       };
       break;
+    case "conic-gradient":
+      css = {
+        backgroundImage: `conic-gradient(from ${bg.angle}deg at ${bg.cx * 100}% ${bg.cy * 100}%, ${bg.stops
+          .map((s) => `${s.color} ${s.at * 100}%`)
+          .join(", ")})`,
+      };
+      break;
     case "mesh-gradient":
       css = meshGradientCss(bg.seed, bg.colors);
       break;
