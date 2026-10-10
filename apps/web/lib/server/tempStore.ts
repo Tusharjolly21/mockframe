@@ -1,9 +1,11 @@
+import { get as blobGet, put as blobPut } from "@vercel/blob";
 import { FirebaseConfigError, firebaseStorage, isFirebaseConfigured } from "./firebaseAdmin";
 
 /**
- * Short-lived files (Figma imports, API uploads and renders) in Firebase
- * Storage. Without Firebase, during local development only, they live in
- * memory so these features can be tried against `npm run dev`.
+ * Short-lived files (Figma imports, API uploads and renders). They go to
+ * Vercel Blob when BLOB_READ_WRITE_TOKEN is set (a private store), else
+ * Firebase Storage. Without either, during local development only, they live
+ * in memory so these features can be tried against `npm run dev`.
  */
 
 export interface StoredFile {
@@ -55,7 +57,26 @@ const firebaseBackend: Backend = {
   },
 };
 
+// Private store: nothing here is public, files are only served through our routes.
+const blobBackend: Backend = {
+  async save(path, data, contentType) {
+    await blobPut(path, data, { access: "private", contentType, addRandomSuffix: false, allowOverwrite: true, cacheControlMaxAge: 60 });
+  },
+  async read(path) {
+    // useCache: false so a file that was just overwritten (results.json) reads back fresh
+    const hit = await blobGet(path, { access: "private", useCache: false });
+    if (!hit || hit.statusCode !== 200) return null;
+    return { data: Buffer.from(await new Response(hit.stream).arrayBuffer()), contentType: hit.blob.contentType || "application/octet-stream" };
+  },
+  async signedUrl() {
+    return null;
+  },
+};
+
+export const hasBlobStore = () => !!process.env.BLOB_READ_WRITE_TOKEN;
+
 function backend(): Backend {
+  if (hasBlobStore()) return blobBackend;
   if (isFirebaseConfigured()) return firebaseBackend;
   if (process.env.NODE_ENV !== "production") return memoryBackend;
   throw new FirebaseConfigError("Firebase is not configured");
