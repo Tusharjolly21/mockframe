@@ -47,13 +47,15 @@ export const Background: FC<{ background: string; accent: string; pattern?: stri
             key={i}
             style={{
               position: "absolute",
-              left: blob.x * width - size / 2 + dx,
-              top: blob.y * height - size / 2 + dy,
+              left: blob.x * width - size / 2,
+              top: blob.y * height - size / 2,
               width: size,
               height: size,
               borderRadius: "50%",
+              // the radial gradient is already soft — a CSS blur on a moving,
+              // screen-sized layer would be re-rasterised every frame
               background: `radial-gradient(circle, ${blob.color} 0%, transparent 68%)`,
-              filter: "blur(8px)",
+              transform: `translate3d(${dx}px, ${dy}px, 0)`,
             }}
           />
         );
@@ -70,7 +72,6 @@ export const Background: FC<{ background: string; accent: string; pattern?: stri
           transform: "translate(-50%, -50%)",
           borderRadius: "50%",
           background: `radial-gradient(circle, ${rgba(accent, 0.16)} 0%, transparent 60%)`,
-          filter: "blur(14px)",
         }}
       />
 
