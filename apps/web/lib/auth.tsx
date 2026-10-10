@@ -11,9 +11,24 @@ import {
   signInWithGoogle,
   signInWithPassword,
   signOutToGuest,
+  updateDisplayName,
 } from "./firebaseClient";
 
-export type Account = { uid: string; email: string | null; name: string | null; photo: string | null };
+export type Account = {
+  uid: string;
+  email: string | null;
+  name: string | null;
+  photo: string | null;
+  /** ISO time the account was created, when Firebase reports it */
+  createdAt: string | null;
+  /** how they sign in: "google", "password" or "email-link" */
+  providers: string[];
+};
+
+function providersOf(user: User): string[] {
+  const ids = user.providerData.map((p) => p.providerId);
+  return [...new Set(ids.map((id) => (id === "google.com" ? "google" : id === "password" ? "email" : id)))];
+}
 
 type AuthValue = {
   loading: boolean;
@@ -24,6 +39,8 @@ type AuthValue = {
   sendMagicLink: (email: string) => Promise<void>;
   signInPassword: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** rename the signed-in account */
+  setName: (name: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -54,7 +71,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsub = onAuthChange((user: User | null) => {
       setAccount(
         user && !user.isAnonymous
-          ? { uid: user.uid, email: user.email, name: user.displayName, photo: user.photoURL }
+          ? {
+              uid: user.uid,
+              email: user.email,
+              name: user.displayName,
+              photo: user.photoURL,
+              createdAt: user.metadata.creationTime ? new Date(user.metadata.creationTime).toISOString() : null,
+              providers: providersOf(user),
+            }
           : null
       );
       setLoading(false);
@@ -78,6 +102,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       signOut: async () => {
         await signOutToGuest();
+      },
+      setName: async (name: string) => {
+        await updateDisplayName(name);
+        const clean = name.trim().slice(0, 60) || null;
+        setAccount((a) => (a ? { ...a, name: clean } : a));
       },
     }),
     [loading, configured, account]

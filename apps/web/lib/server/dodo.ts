@@ -106,3 +106,12 @@ export async function createCheckoutSession(input: CheckoutSessionInput): Promis
 export async function getSubscription(subscriptionId: string): Promise<DodoSubscription> {
   return dodoFetch<DodoSubscription>(`/subscriptions/${encodeURIComponent(subscriptionId)}`);
 }
+
+/** POST /customers/{id}/customer-portal/session → a short-lived link where the customer
+ *  updates their card, sees invoices and cancels. */
+export async function createPortalSession(customerId: string, returnUrl?: string): Promise<string> {
+  const query = returnUrl ? `?return_url=${encodeURIComponent(returnUrl)}` : "";
+  const res = await dodoFetch<{ link?: string }>(`/customers/${encodeURIComponent(customerId)}/customer-portal/session${query}`, { method: "POST", body: "{}" });
+  if (!res.link) throw new DodoApiError(502, "Dodo portal session has no link");
+  return res.link;
+}

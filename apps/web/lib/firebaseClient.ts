@@ -17,6 +17,7 @@ import {
   signInWithEmailLink,
   signInWithPopup,
   signOut,
+  updateProfile,
   type Auth,
   type User,
 } from "firebase/auth";
@@ -198,6 +199,13 @@ export async function signOutToGuest(): Promise<void> {
   if (!auth) return;
   await signOut(auth);
   await ensureGuestSession();
+}
+
+/** Change the signed-in user's display name. */
+export async function updateDisplayName(name: string): Promise<void> {
+  const user = getFirebaseAuth()?.currentUser;
+  if (!user || user.isAnonymous) throw new Error("Sign in first");
+  await updateProfile(user, { displayName: name.trim().slice(0, 60) || null });
 }
 
 /** Returns an anonymous Firebase Auth session when the public web config exists.

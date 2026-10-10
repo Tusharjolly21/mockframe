@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { AccountButton } from "@/components/AccountButton";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown, GalleryHorizontal, LayoutTemplate, Menu, Puzzle, Rocket, Smartphone, Sparkles, Video, Wrench, X, type LucideIcon } from "lucide-react";
@@ -165,6 +166,7 @@ export function MarketingNav() {
           >
             Start free
           </Link>
+          <AccountButton onDark />
           <button
             type="button"
             aria-label={open ? "Close menu" : "Open menu"}
