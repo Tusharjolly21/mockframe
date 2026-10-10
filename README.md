@@ -1,102 +1,212 @@
-# FrameKit
+<div align="center">
 
-Screenshot mockup studio (Shots.so class) built to the architecture in
-[`../framekit-architecture.md`](../framekit-architecture.md). Everything is a
-**Scene Document** (versioned JSON, `@framekit/scene`) rendered by **one
-renderer** (`@framekit/renderer`) that will run identically in the browser
-editor and the headless export worker.
+# MockFrame
 
-## Run
+**Screenshots in. Stunning mockups out.**
 
-```bash
-npm install
-npm run dev            # editor at http://localhost:3000/editor
-```
+Drop a screenshot into a real device, style the scene, and export a production-ready
+image or video. No design tools, no sign-up wall.
 
-Other scripts:
+[**mockframe.app**](https://mockframe.app) · [Open the editor](https://mockframe.app/editor) · [Templates](https://mockframe.app/templates) · [Pricing](https://mockframe.app/pricing) · [Developer API](https://mockframe.app/developers/api)
 
-```bash
-npm run gen:devices    # regenerate SVG frames + compile the registry
-npm run validate:frames  # CI gate: schema + geometry + SVG reference checks
-npm run build          # production build (webpack; turbopack build has a monorepo bug)
-```
+![MockFrame homepage](docs/screenshots/home.webp)
 
-## Status vs the build order (§13)
+</div>
 
-| Phase | Status |
+---
+
+## What it does
+
+MockFrame turns raw app and website screenshots into launch-ready marketing assets:
+device mockups, App Store screenshot sets, social posts and animated promo videos.
+Everything runs from one editor, works without an account, and syncs to the cloud
+when you sign in.
+
+<table>
+<tr>
+<td width="62%"><img src="docs/screenshots/editor.webp" alt="MockFrame editor with an iPhone mockup" /></td>
+<td width="38%"><img src="docs/screenshots/mockup-example.webp" alt="Example export: a tilted phone on a warm gradient" /></td>
+</tr>
+<tr>
+<td align="center"><sub>The editor: content, style and export in three steps</sub></td>
+<td align="center"><sub>An export made with MockFrame</sub></td>
+</tr>
+</table>
+
+### Features
+
+| | |
 |---|---|
-| Week 1–2 · renderer, scene schema, 5+ devices, validation | ✅ done |
-| Week 3–4 · editor (canvas, drag/tilt, inspector, undo, client export, guest mode) | ✅ core done |
-| Week 5 · persistence (Firebase Auth/Firestore/Storage) | ✅ cloud drafts + assets |
-| Week 6 · render worker + export packs | ⬜ |
-| Week 7 · billing + pSEO | ⬜ |
-| Week 8+ · public API, URL capture, templates | ⬜ |
+| 📱 **104 device frames** | iPhone, Pixel, Galaxy, iPad, MacBook, Apple Watch and browser windows, as photoreal scenes or clean frames, with exact-resolution device detection on drop. |
+| 🎨 **Scene styling** | Mesh, gradient, image and premium background collections; lighting-model shadows, 3D tilt, glare, borders, stickers, text and annotations. |
+| 🧩 **Template library** | Premium launch layouts, App Store listing sets, realistic app screens, content cards and device scenes, all fully editable. |
+| 🎬 **Promo videos** | Animated app ads with 3D shapes and camera moves, exported as MP4 in 9:16, 1:1 and 16:9. Rendered in the browser or on Remotion Lambda. |
+| 🛍️ **App Store screenshots** | Store-ready packs built by hand or with AI, translated into 39 languages. |
+| 💬 **Chat & social screens** | Pixel-accurate WhatsApp, iMessage, Discord and more, plus text-message videos. |
+| 🌐 **Website capture** | Paste a URL and capture the page straight into a browser frame. |
+| 📦 **Export** | PNG, JPG, WebP up to 6K, GIF and MP4 up to 4K at 60 fps, batch ZIP and hosted share links. |
+| 👥 **Teams & brand kits** | Shared template libraries, custom fonts, custom devices and brand watermarks. |
+| 🔌 **Developer platform** | REST render API, an MCP server for Claude and Cursor, an embeddable editor, a Figma plugin, and Chrome and VS Code extensions. |
 
-### Shipped so far
+<table>
+<tr>
+<td><img src="docs/screenshots/video.webp" alt="Promo video templates" /></td>
+<td><img src="docs/screenshots/templates.webp" alt="Template library" /></td>
+</tr>
+<tr>
+<td align="center"><sub>Promo video templates</sub></td>
+<td align="center"><sub>Template library</sub></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/mockups.webp" alt="Device library" /></td>
+<td><img src="docs/screenshots/pricing.webp" alt="Pricing" /></td>
+</tr>
+<tr>
+<td align="center"><sub>Device library</sub></td>
+<td align="center"><sub>Free and Pro plans</sub></td>
+</tr>
+</table>
 
-- **`packages/scene`** — Zod schema v3 (backgrounds incl. seeded mesh, mockup/text/sticker
-  layers, lighting-model shadows, effects, animation-ready `timeline`), factories,
-  migrate-on-read mechanism.
-- **`packages/devices`** — registry with 6 devices × 2 variants (iPhone 16 Pro,
-  Pixel 9 Pro, Galaxy S25 Ultra, MacBook Pro 14″, Chrome, Safari), generated from
-  `scripts/generate-frames.mjs` (parametric SVG), compiled by `scripts/build-registry.mjs`,
-  gated by `tooling/frame-validate`. Includes `suggestDevice(w, h)` — exact-resolution
-  device detection on drop.
-- **`packages/renderer`** — the §5.2 sandwich (frame SVG → clipped screenshot → overlay),
-  CSS 3D tilt, derived-offset shadows, text layers, mesh/linear/radial/solid/image/transparent
-  backgrounds, `collectAssets()`.
-- **`apps/web` editor** — guest mode, zoom/pan stage, device browser with live SVG
-  previews, drag/scale/rotate handles with center snapping, contextual inspector
-  (device/variant/media/transform/shadow/text/canvas/background), zundo undo/redo
-  (drags = one step), drop + paste + picker uploads, client-side PNG/JPG/WebP export
-  at 1–3× with web-font inlining.
+---
 
-### Feature queue (parity items, all renderer/editor work)
+## Architecture
 
-Borders · effects stack (noise/grain/vhs/glitch/vignette UI) · sticker registry ·
-layout presets (slot-based) · auto-palette from screenshot · frameless style family
-(liquid-glass/inset) · scene decorations · canvas-level light angle · watch/tablet
-devices · more phones.
+Every design is a **Scene Document**: versioned JSON validated by `@framekit/scene`.
+One isomorphic renderer, `@framekit/renderer`, draws that document identically in the
+browser editor and in headless export workers, so what you see is exactly what you export.
 
-## Firebase backend
+```
+┌──────────────────────────┐      ┌──────────────────────────┐
+│  Editor (Next.js, React) │      │  Render API / MCP / Embed │
+└────────────┬─────────────┘      └────────────┬─────────────┘
+             │        Scene Document (JSON)     │
+             └───────────────┬──────────────────┘
+                             ▼
+                 @framekit/renderer  ◄──  @framekit/devices (frames + registry)
+                             │
+          ┌──────────────────┼───────────────────┐
+          ▼                  ▼                   ▼
+   Client export       Puppeteer capture     Remotion (browser
+   (PNG/JPG/WebP)      (server images)        or AWS Lambda) → MP4
+```
 
-The first backend slice uses Firebase Admin in Next route handlers:
+### Tech stack
 
-- `GET/PUT /api/store/[key]` stores small JSON values such as saved themes in Firestore.
-- `GET/POST /api/drafts` and `GET/PATCH/DELETE /api/drafts/[id]` store scene documents in Firestore.
-- `GET/POST /api/assets` and `GET/DELETE /api/assets/[id]` upload image assets to Firebase Storage and return signed read URLs.
+| Layer | Technology |
+|---|---|
+| App | Next.js 15 (App Router), React 19, TypeScript, Zustand + zundo |
+| Rendering | `@framekit/renderer`, html-to-image, Three.js / React Three Fiber |
+| Video | Remotion 4 (in-browser export via Mediabunny, cloud renders on Remotion Lambda) |
+| Backend | Next.js route handlers, Firebase Auth, Firestore and Cloud Storage |
+| Billing | Dodo Payments hosted checkout and signed webhooks |
+| AI | Anthropic Claude for store copy, translation and screenshot packs |
+| Hosting | Vercel (web), AWS Lambda (video rendering), Cloudflare DNS |
 
-Routes accept `Authorization: Bearer <Firebase ID token>` when Firebase Auth is wired on the client. Without a token, they issue an `mf_guest_id` cookie so guest-mode data is still isolated.
+### Repository layout
 
-The editor uses Firebase Auth anonymously when the `NEXT_PUBLIC_FIREBASE_*` web-app values are present. Drafts and referenced image assets sync to Firestore/Storage, while IndexedDB remains an offline fallback. Enable **Authentication -> Sign-in method -> Anonymous** in Firebase and paste the web-app config into `.env.local`.
+```
+apps/web                 Next.js app: marketing site, editor, API routes, Remotion compositions
+packages/scene           Zod schemas, types, factories and migrate-on-read
+packages/devices         Device registry (JSON + SVG), frame generator and codegen
+packages/renderer        Isomorphic React scene renderer
+tooling/frame-validate   CI gate for the device registry (schema, geometry, SVG refs)
+extensions/chrome        "Capture visible tab" Chrome extension
+extensions/vscode        Code-screenshot VS Code extension
+docs/                    SEO plan, design notes and screenshots
+```
 
-Required server env:
+Boundary rule: `renderer` depends only on `scene`, `devices` and React. No fetches and
+no app imports; assets arrive as URLs resolved by the host.
+
+---
+
+## Getting started
+
+### Prerequisites
+
+- Node.js 22+ and npm 10+
+- A Firebase project (optional for local guest mode, required for cloud sync)
+
+### Run locally
 
 ```bash
-FIREBASE_PROJECT_ID=
-FIREBASE_CLIENT_EMAIL=
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-FIREBASE_STORAGE_BUCKET=
+git clone https://github.com/Tusharjolly21/mockframe.git
+cd mockframe
+npm install
+npm run dev            # http://localhost:3000, editor at /editor
+```
 
+The editor works fully in guest mode without any environment variables. Drafts are
+kept in IndexedDB until Firebase is configured.
+
+### Environment
+
+Create `apps/web/.env.local` with the values you need:
+
+```bash
+# Firebase web app (client)
 NEXT_PUBLIC_FIREBASE_API_KEY=
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
+
+# Firebase Admin (server)
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+FIREBASE_STORAGE_BUCKET=
 ```
 
-On Google-hosted infrastructure you can use Application Default Credentials instead of service-account key envs; set `FIREBASE_USE_ADC=1` plus `FIREBASE_PROJECT_ID` and `FIREBASE_STORAGE_BUCKET`.
+On Google-hosted infrastructure, set `FIREBASE_USE_ADC=1` with `FIREBASE_PROJECT_ID`
+and `FIREBASE_STORAGE_BUCKET` to use Application Default Credentials instead of a key.
+Billing, AI and Remotion Lambda variables are listed in [DEPLOY.md](DEPLOY.md).
 
-## Monorepo
+### Scripts
 
-```
-apps/web           Next.js 15 — editor (marketing + pSEO later)
-packages/scene     Zod schemas, types, migrations
-packages/devices   device registry (JSON + SVG) + codegen
-packages/renderer  isomorphic React scene renderer
-tooling/frame-validate  registry CI gate
-```
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the Next.js dev server (Turbopack) |
+| `npm run build` | Production build (webpack) |
+| `npm run typecheck` | Type-check every package and the app |
+| `npm test -w web` | Run the Vitest unit suite |
+| `npm run gen:devices` | Regenerate SVG frames and compile the device registry |
+| `npm run validate:frames` | Validate the device registry (CI gate) |
+| `npm run gen:icons` | Rebuild the icon sticker catalog |
 
-Boundary rule: `renderer` depends only on `scene` + `devices` + React. No fetches,
-no app imports — assets arrive as URLs resolved by the host.
+---
+
+## Deployment
+
+Production runs at **[mockframe.app](https://mockframe.app)**:
+
+- **Web**: Vercel, root directory `apps/web`. Node runtime is required because API
+  routes use `firebase-admin`.
+- **Video**: Remotion Lambda on AWS for cloud promo renders.
+- **Data**: Firebase Auth, Firestore and Storage, secured by `firestore.rules` and `storage.rules`.
+- **Billing**: Dodo Payments subscriptions ($9.99 / month or $59.99 / year).
+- **SEO**: IndexNow pings on every production deploy via GitHub Actions.
+
+The full step-by-step guide, including DNS, Firebase auth domains, Lambda setup and
+billing webhooks, is in [DEPLOY.md](DEPLOY.md).
+
+---
+
+## API
+
+Pro accounts can render mockups programmatically:
+
+- `POST /api/v1/render` renders a scene to an image
+- `POST /api/v1/screenshots` turns screenshot URLs into device mockups or a store listing set
+- `POST /api/v1/promo-render` starts a promo video render (poll `/api/v1/promo-render/status`)
+- `POST /api/mcp` exposes the same tools to MCP clients such as Claude and Cursor
+
+See [mockframe.app/developers/api](https://mockframe.app/developers/api) for
+authentication and request formats.
+
+---
+
+<div align="center">
+<sub>Built by <a href="https://github.com/Tusharjolly21">@Tusharjolly21</a> · <a href="https://mockframe.app">mockframe.app</a></sub>
+</div>
