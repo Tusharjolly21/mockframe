@@ -40,7 +40,7 @@ export interface Comparison {
   related: [href: string, label: string][];
 }
 
-const MOCKFRAME_PRICE = "Free plan with no watermark; Pro is $9.99 a month or $59.99 a year.";
+const MOCKFRAME_PRICE = "Free plan with a small “Made with MockFrame” badge; Pro is $9.99 a month or $59.99 a year.";
 
 export const COMPARISONS: Comparison[] = [
   {
@@ -140,11 +140,11 @@ export const COMPARISONS: Comparison[] = [
     keywords: ["previewed alternative", "previewed app alternative", "previewed vs mockframe", "free mockup generator", "app mockup generator", "previewed.app"],
     h1: "Previewed alternative: MockFrame for app mockups and store screenshots",
     intro:
-      "Previewed is a polished browser mockup tool whose standout is real 3D: rotate a device, light it, and animate it for a promo video. MockFrame is built around a different job — taking your screenshots to finished launch assets fast. The free plan exports full-resolution images with no watermark, the store pack generator outputs every required App Store and Google Play size in one zip, and Pro costs about half of Previewed's subscription.",
+      "Previewed is a polished browser mockup tool whose standout is real 3D: rotate a device, light it, and animate it for a promo video. MockFrame is built around a different job — taking your screenshots to finished launch assets fast. The free plan exports full-resolution images with a small “Made with MockFrame” badge, the store pack generator outputs every required App Store and Google Play size in one zip, and Pro costs about half of Previewed's subscription.",
     rows: [
       {
         dim: "Free plan",
-        mockframe: "Every device frame, the full editor and image export up to 3× resolution — no watermark. Personal-use license.",
+        mockframe: "Every device frame, the full editor and image export up to 3× resolution with a small “Made with MockFrame” badge on free exports. Personal-use license.",
         them: "Lite: unlimited 2D exports at 720p under a CC attribution license.",
       },
       {
@@ -184,7 +184,7 @@ export const COMPARISONS: Comparison[] = [
       },
     ],
     pickMockframe: [
-      "You want full-resolution, unwatermarked exports on the free plan.",
+      "You want full-resolution exports on the free plan.",
       "You need a complete App Store and Google Play screenshot set in every required size.",
       "You'd rather pay $9.99 a month (or $59.99 a year) than $228 a year.",
       "You also make chat screenshots, screen recordings or want an API for automation.",
@@ -199,7 +199,7 @@ export const COMPARISONS: Comparison[] = [
     faq: [
       {
         q: "Is MockFrame a free Previewed alternative?",
-        a: "Yes. MockFrame's free plan includes every device frame and the full editor, and exports images up to 3× resolution with no watermark. Previewed's free Lite plan exports at 720p under a Creative Commons attribution license.",
+        a: "Yes. MockFrame's free plan includes every device frame and the full editor, and exports images up to 3× resolution with a small “Made with MockFrame” badge. Previewed's free Lite plan exports at 720p under a Creative Commons attribution license.",
       },
       {
         q: "Does MockFrame do 3D mockups like Previewed?",
@@ -239,7 +239,7 @@ export const COMPARISONS: Comparison[] = [
     rows: [
       {
         dim: "Free plan",
-        mockframe: "Design and preview free; your first full store pack and two AI-generated packs are free, with no watermark.",
+        mockframe: "Design and preview free; your first full store pack and two AI-generated packs are free, with a small “Made with MockFrame” badge on exports.",
         them: "Free plan with 10 templates and a limited selection of devices, fonts and graphics; exports are limited.",
       },
       {
@@ -375,11 +375,11 @@ export const COMPARISONS: Comparison[] = [
       "You're happy with a lightweight tool and don't need store listing sets.",
     ],
     switching:
-      "There's nothing to move: open the MockFrame editor, drop in the same screenshot, pick a device and background, and export. No account is needed to try it, and the free plan has no watermark.",
+      "There's nothing to move: open the MockFrame editor, drop in the same screenshot, pick a device and background, and export. No account is needed to try it, and the free plan adds only a small “Made with MockFrame” badge.",
     faq: [
       {
         q: "Is MockFrame a free Shots.so alternative?",
-        a: "Yes. The free plan includes every device frame and the full editor and exports images up to 3× resolution with no watermark. Pro ($9.99 a month) adds video export, 6K images, premium backgrounds and unlimited store screenshot packs.",
+        a: "Yes. The free plan includes every device frame and the full editor and exports images up to 3× resolution, with a small “Made with MockFrame” badge on free exports. Pro ($9.99 a month) adds video export, 6K images, premium backgrounds and unlimited store screenshot packs.",
       },
       {
         q: "What does MockFrame do that Shots doesn't?",

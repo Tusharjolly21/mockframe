@@ -71,7 +71,7 @@ export function deviceFaq(device: Device, o: { name: string; base: string; ratio
   const faq = [
     {
       q: `Is the ${o.name} mockup generator free?`,
-      a: `Yes. The ${o.base} mockup and the full editor are free with no watermark, and you can export images up to 3× resolution for personal use. Pro adds 6K export, video and GIF export, and a commercial license.`,
+      a: `Yes. The ${o.base} mockup and the full editor are free, with a small “Made with MockFrame” badge on exports, and you can export images up to 3× resolution for personal use. Pro adds 6K export, video and GIF export, and a commercial license.`,
     },
     {
       q: `What screenshot size fits the ${o.base} mockup?`,

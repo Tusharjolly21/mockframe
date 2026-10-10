@@ -124,7 +124,7 @@ const TOOLS: { href: string; icon: LucideIcon; name: string; body: string }[] = 
 const FAQ: { q: string; a: string }[] = [
   {
     q: "Is it really free?",
-    a: "Yes. The full editor, every device frame and image export are free, and free exports never carry a watermark. Pro adds video and GIF export, 4K and 6K output, the premium background collections and more chat screens.",
+    a: "Yes. The full editor, every device frame and image export are free, and free exports carry a small “Made with MockFrame” badge. Pro removes it and adds video and GIF export, 4K and 6K output, the premium background collections and more chat screens.",
   },
   {
     q: "Do I need an account?",
@@ -338,7 +338,7 @@ export default function HomePage() {
             Start with the screenshot you already have.
           </h2>
           <p className="mt-6 max-w-md text-[16px] leading-relaxed text-zinc-400 sm:text-[17px]">
-            Drop it into the editor and download your first mockup free, with no sign-up and no watermark.
+            Drop it into the editor and download your first mockup free, with no sign-up.
           </p>
           <Link
             href="/editor"

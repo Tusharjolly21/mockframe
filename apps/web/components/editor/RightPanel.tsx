@@ -409,9 +409,8 @@ export function RightPanel() {
         </AnimatePresence>
       </div>
 
-      {/* Pro: custom brand watermark settings · free: upsell that same feature.
-          NOT "remove watermark" — exports are already clean on every tier, and
-          implying otherwise sells a fix for a problem we don't have. */}
+      {/* Pro: custom brand watermark settings · free: exports carry a small
+          "Made with MockFrame" badge, which Pro removes. */}
       <div className="px-3 pt-2">
         {removeWatermark ? (
           <button
@@ -429,7 +428,7 @@ export function RightPanel() {
             }}
             className="fk-press flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#e4c34d] bg-[#fdf7de] py-1.5 text-[11px] font-semibold text-[#8a6d12] hover:border-[#d4a72c]"
           >
-            <Sparkles size={12} /> Pro — stamp your own brand
+            <Sparkles size={12} /> Pro — remove the badge, add your brand
           </button>
         )}
         {!removeWatermark && (
