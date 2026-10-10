@@ -183,16 +183,18 @@ function ScreenPlaceholder({ device, layerId }: { device: Device; layerId: strin
   );
 }
 
-/** Swap the address shown in a Chrome/Safari frame's URL bar. The frame SVG
- *  tags its address <text> with id="fk_urltext_…"; replace only that text. */
-function browserUrlOverlay(overlay: string, url: string | undefined): string {
-  if (!url) return overlay;
-  const clean = url.replace(/^https?:\/\//i, "").replace(/\/$/, "");
-  const esc = clean.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  return overlay.replace(
-    /(<text\b[^>]*id="fk_urltext_[^"]*"[^>]*>)[^<]*(<\/text>)/g,
-    (_m, open: string, close: string) => `${open}${esc}${close}`
-  );
+/** Swap the address and tab title shown in a browser frame. The frame SVG tags
+ *  its address <text> with id="fk_urltext_…" and its tab label with
+ *  id="fk_tabtitle_…"; only those texts are replaced. */
+function browserUrlOverlay(overlay: string, url: string | undefined, title?: string): string {
+  if (!url && !title) return overlay;
+  const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const swap = (src: string, id: string, text: string) =>
+    src.replace(new RegExp(`(<text\\b[^>]*id="${id}[^"]*"[^>]*>)[^<]*(</text>)`, "g"), (_m, open: string, close: string) => `${open}${text}${close}`);
+  let out = overlay;
+  if (url) out = swap(out, "fk_urltext_", esc(url.replace(/^https?:\/\//i, "").replace(/\/$/, "")));
+  if (title) out = swap(out, "fk_tabtitle_", esc(title.slice(0, 60)));
+  return out;
 }
 
 /** Diagonal glass-glare streak: a wide main band + a thin echo band, both
@@ -631,7 +633,7 @@ export function MockupLayerView({
         )}
         <g
           filter={layer.clay ? `url(#${clipId}_clay)` : undefined}
-          dangerouslySetInnerHTML={{ __html: browserUrlOverlay(variant.body, layer.browserUrl) }}
+          dangerouslySetInnerHTML={{ __html: browserUrlOverlay(variant.body, layer.browserUrl, layer.browserTitle) }}
         />
         <clipPath id={clipId}>
           <path d={frame.maskPath} />
@@ -690,7 +692,7 @@ export function MockupLayerView({
             browser toolbars are part of the frame and take the finish */}
         <g
           filter={layer.clay && device.category === "browser" ? `url(#${clipId}_clay)` : undefined}
-          dangerouslySetInnerHTML={{ __html: browserUrlOverlay(variant.overlay, layer.browserUrl) }}
+          dangerouslySetInnerHTML={{ __html: browserUrlOverlay(variant.overlay, layer.browserUrl, layer.browserTitle) }}
         />
       </svg>
       {layer.blurZones?.map((zone, i) => (

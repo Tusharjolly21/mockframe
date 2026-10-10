@@ -10,7 +10,7 @@ describe("deviceForScreenshot", () => {
     expect(deviceForScreenshot(1668, 2420)).toBe("ipad-pro-11");
     expect(deviceForScreenshot(1200, 1200)).toBe("ipad-pro-13-landscape");
     expect(deviceForScreenshot(2880, 1800)).toBe("macbook-pro-14");
-    expect(deviceForScreenshot(1920, 1080)).toBe("imac-24");
+    expect(deviceForScreenshot(1920, 1080)).toBe("macbook-pro-16");
     expect(deviceForScreenshot(1920, 7000)).toBe("safari-browser");
   });
 

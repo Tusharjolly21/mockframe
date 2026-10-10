@@ -37,7 +37,7 @@ export interface Combo {
 
 const LAPTOP = { device: "macbook-pro-14", variant: "space-black" };
 const BROWSER = { device: "safari-browser", variant: "light" };
-const DESKTOP = { device: "imac-24", variant: "blue" };
+const BIG_LAPTOP = { device: "macbook-pro-16", variant: "silver" };
 const PHONE = "iphone-17-pro";
 
 export const COMBOS: Combo[] = [
@@ -84,9 +84,9 @@ export const COMBOS: Combo[] = [
   },
   {
     id: "combo-desktop",
-    label: "Desktop + phone",
+    label: "Big laptop + phone",
     slots: [
-      { kind: "wide", ...DESKTOP, x: -0.09, y: 0.0, size: 0.56, z: 0 },
+      { kind: "wide", ...BIG_LAPTOP, x: -0.09, y: 0.0, size: 0.56, z: 0 },
       { kind: "phone", device: PHONE, x: 0.27, y: 0.12, size: 0.6, z: 1 },
     ],
   },

@@ -5,26 +5,23 @@
 
 <path d="M36 10 H2544 A26 26 0 0 1 2570 36 V160 H10 V36 A26 26 0 0 1 36 10 Z" fill="#202124"/>
 
-<circle cx="54" cy="48" r="13" fill="#ff5f57"/>
-<circle cx="98" cy="48" r="13" fill="#febc2e"/>
-<circle cx="142" cy="48" r="13" fill="#28c840"/>
-<path d="M178 86 a12 12 0 0 0 12 -12 V40 a16 16 0 0 1 16 -16 H714 a16 16 0 0 1 16 16 V74 a12 12 0 0 0 12 12 Z" fill="#35363a"/>
-<clipPath id="fk_chrome-browser_dark_tabclip"><rect x="252" y="24" width="416" height="62"/></clipPath>
-<circle cx="226" cy="57" r="14" fill="#8ab4f8"/>
-<text x="226" y="64" text-anchor="middle" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="19" font-weight="700" fill="#ffffff">M</text>
-<g clip-path="url(#fk_chrome-browser_dark_tabclip)"><text x="256" y="65" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="25" fill="#e8eaed" id="fk_tabtitle_fk_chrome-browser_dark">MockFrame</text></g>
-<path d="M690 48 l18 18 m0 -18 l-18 18" stroke="#9aa0a6" stroke-width="3.6" stroke-linecap="round"/>
-<path d="M741 44 v28" stroke="#9aa0a6" stroke-width="2" opacity="0.5"/>
-<circle cx="780" cy="57" r="12" fill="#9aa0a6" opacity="0.55"/>
-<text x="806" y="65" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="24" fill="#9aa0a6">New tab</text>
-<path d="M992 57 h20 M1002 47 v20" stroke="#9aa0a6" stroke-width="3.6" stroke-linecap="round"/>
-
+<path d="M26 86 a12 12 0 0 0 12 -12 V40 a16 16 0 0 1 16 -16 H562 a16 16 0 0 1 16 16 V74 a12 12 0 0 0 12 12 Z" fill="#35363a"/>
+<clipPath id="fk_chrome-browser_dark-windows_tabclip"><rect x="100" y="24" width="416" height="62"/></clipPath>
+<circle cx="74" cy="57" r="14" fill="#8ab4f8"/>
+<text x="74" y="64" text-anchor="middle" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="19" font-weight="700" fill="#ffffff">M</text>
+<g clip-path="url(#fk_chrome-browser_dark-windows_tabclip)"><text x="104" y="65" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="25" fill="#e8eaed" id="fk_tabtitle_fk_chrome-browser_dark-windows">MockFrame</text></g>
+<path d="M538 48 l18 18 m0 -18 l-18 18" stroke="#9aa0a6" stroke-width="3.6" stroke-linecap="round"/>
+<path d="M589 44 v28" stroke="#9aa0a6" stroke-width="2" opacity="0.5"/>
+<circle cx="628" cy="57" r="12" fill="#9aa0a6" opacity="0.55"/>
+<text x="654" y="65" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="24" fill="#9aa0a6">New tab</text>
+<path d="M840 57 h20 M850 47 v20" stroke="#9aa0a6" stroke-width="3.6" stroke-linecap="round"/>
+<g stroke="#e8eaed" stroke-width="3.2" fill="none" stroke-linecap="round" opacity="0.85"><path d="M2308 48 h22"/><rect x="2384" y="37" width="22" height="22" rx="3"/><path d="M2464 37 l22 22 m0 -22 l-22 22"/></g>
 <rect x="10" y="86" width="2560" height="74" fill="#35363a"/>
 <path d="M79 123 H53 M63 113 l-10 10 10 10" stroke="#9aa0a6" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="1"/><path d="M113 123 H139 M129 113 l10 10 -10 10" stroke="#9aa0a6" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.45"/><path d="M198 116 A13.5 13.5 0 1 0 199 126" stroke="#9aa0a6" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M200 106 v11 h-11" stroke="#9aa0a6" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="260" y="95" width="1980" height="56" rx="28" fill="#282a2d"/>
 <g stroke="#9aa0a6" stroke-width="3.6" stroke-linecap="round"><path d="M287 117 h22 M287 130 h22"/></g><circle cx="303" cy="117" r="4.6" fill="#9aa0a6"/><circle cx="293" cy="130" r="4.6" fill="#9aa0a6"/>
-<clipPath id="fk_chrome-browser_dark_urlclip"><rect x="330" y="95" width="1840" height="56"/></clipPath>
-<g clip-path="url(#fk_chrome-browser_dark_urlclip)"><text x="336" y="133" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="30" fill="#e8eaed" id="fk_urltext_fk_chrome-browser_dark">mockframe.app</text></g>
+<clipPath id="fk_chrome-browser_dark-windows_urlclip"><rect x="330" y="95" width="1840" height="56"/></clipPath>
+<g clip-path="url(#fk_chrome-browser_dark-windows_urlclip)"><text x="336" y="133" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="30" fill="#e8eaed" id="fk_urltext_fk_chrome-browser_dark-windows">mockframe.app</text></g>
 <path d="M2196 109 l4.4 9.4 10.2 1.2 -7.5 7 2 10.1 -9.1 -5 -9.1 5 2 -10.1 -7.5 -7 10.2 -1.2 Z" stroke="#9aa0a6" stroke-width="3.4" fill="none" stroke-linejoin="round"/>
 <path d="M2308 114 h8 a5 5 0 1 1 10 0 h4 v8 a5 5 0 1 1 0 10 v6 h-22 Z" stroke="#9aa0a6" stroke-width="3.4" fill="none" stroke-linejoin="round"/>
 <circle cx="2400" cy="123" r="19" fill="#8ab4f8"/>

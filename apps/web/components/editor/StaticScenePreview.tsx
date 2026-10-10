@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 import { getDevice, previewDataUri } from "@framekit/devices";
 import type { MockupLayer, SceneDocument } from "@framekit/scene";
 
-function backgroundStyle(scene: SceneDocument): CSSProperties {
+export function backgroundStyle(scene: SceneDocument): CSSProperties {
   const bg = scene.canvas.background;
   if (bg.type === "solid") return { background: bg.color };
   if (bg.type === "transparent") return { background: "repeating-conic-gradient(#edf0f5 0 25%, #f8f9fb 0 50%) 0 / 16px 16px" };

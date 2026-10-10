@@ -1,7 +1,7 @@
 {
-  "id": "chrome-browser",
-  "name": "Chrome",
-  "brand": "google",
+  "id": "edge-browser",
+  "name": "Edge",
+  "brand": "microsoft",
   "category": "browser",
   "released": "2026-01",
   "screen": {
@@ -10,13 +10,14 @@
     "cornerRadius": 0
   },
   "aliases": [
-    "chrome browser mockup",
-    "browser frame"
+    "edge browser mockup",
+    "microsoft edge frame",
+    "windows browser mockup"
   ],
   "seo": {
     "monthlyQueries": [
-      "chrome mockup",
-      "browser mockup generator"
+      "edge mockup",
+      "windows browser mockup"
     ]
   },
   "urlBarText": "mockframe.app",
@@ -35,23 +36,13 @@
   "variants": [
     {
       "id": "light",
-      "label": "Light · Mac",
+      "label": "Light",
       "svg": "frame-light.svg"
     },
     {
       "id": "dark",
-      "label": "Dark · Mac",
+      "label": "Dark",
       "svg": "frame-dark.svg"
-    },
-    {
-      "id": "light-windows",
-      "label": "Light · Windows",
-      "svg": "frame-light-windows.svg"
-    },
-    {
-      "id": "dark-windows",
-      "label": "Dark · Windows",
-      "svg": "frame-dark-windows.svg"
     }
   ]
 }

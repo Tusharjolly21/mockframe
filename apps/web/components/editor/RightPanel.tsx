@@ -27,6 +27,7 @@ import { UpgradeModal } from "./UpgradeModal";
 import { WatermarkPanel } from "./WatermarkPanel";
 import { Popover, Seg, SliderRow } from "./ui";
 import { toast } from "./Toolbar";
+import { LayoutSketch } from "./LayoutSketch";
 import { StaticScenePreview } from "./StaticScenePreview";
 import { TeamLibrary } from "./TeamLibrary";
 
@@ -1218,7 +1219,7 @@ function LayoutPicker({
               }`}
               title={it.label}
             >
-              <ScenePreview scene={it.build()} className="rounded-lg" />
+              <LayoutSketch scene={it.build()} base={scene} className="w-full rounded-lg" />
               <span className={`block truncate px-1 pb-0.5 pt-1 text-[10.5px] font-semibold ${active ? "text-[#17171c]" : "text-[#5a5a66]"}`}>
                 {it.label}
               </span>

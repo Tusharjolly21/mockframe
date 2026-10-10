@@ -142,7 +142,7 @@ export function buildScreenScene(app: ScreenApp): SceneDocument | null {
 /**
  * The device a dropped screenshot reads best in, from its size: an exact
  * screen match when there is one, otherwise the closest-looking common frame
- * (phone, iPad, MacBook, iMac, or a browser window for tall full-page web
+ * (phone, iPad, MacBook, or a browser window for tall full-page web
  * captures). Never a photo scene.
  */
 export function deviceForScreenshot(width: number, height: number): string {
@@ -155,5 +155,5 @@ export function deviceForScreenshot(width: number, height: number): string {
   if (ar < 1) return "ipad-pro-13";
   if (ar < 1.42) return "ipad-pro-13-landscape";
   if (ar < 1.68) return "macbook-pro-14";
-  return "imac-24";
+  return "macbook-pro-16";
 }

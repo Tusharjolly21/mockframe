@@ -192,6 +192,8 @@ export const MockupLayerSchema = z.object({
   group: z.string().optional(),
   /** address shown in a browser-frame device's URL bar (Chrome/Safari) */
   browserUrl: z.string().optional(),
+  /** tab title shown in a browser-frame device (Chrome, Edge, Firefox) */
+  browserTitle: z.string().optional(),
   cornerRadius: z.number().min(0).optional(), // frameless only
   border: z
     .object({
