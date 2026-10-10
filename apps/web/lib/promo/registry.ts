@@ -128,6 +128,7 @@ export const PROMO_TEMPLATES: PromoTemplateMeta[] = [
       { key: "headline", label: "Headline", placeholder: "Your desk, upgraded", maxLen: 40 },
       { key: "caption", label: "Caption", placeholder: "Powerful tools in a calm interface", maxLen: 60 },
       { key: "feature", label: "Feature chip", placeholder: "Now on macOS & Windows", maxLen: 30 },
+      { key: "eyebrow", label: "Small label", placeholder: "For desktop", maxLen: 24 },
     ],
     defaultDurationInFrames: 10 * s,
     defaultBackground: "graphite",

@@ -18,7 +18,7 @@ export const DesktopStudio: FC<PromoInputProps> = ({ screenshots, texts, accent,
   const frame = useCurrentFrame();
   const { fps, durationInFrames: dur } = useVideoConfig();
   usePreloadScreenshots(screenshots.map((s) => s.url), screenshots.map((s) => s.kind));
-  const [headline = "", caption = "", feature = ""] = texts;
+  const [headline = "", caption = "", feature = "", eyebrow = "For desktop"] = texts;
   const portrait = height > width * 1.2;
   const u = Math.min(width, height);
 
@@ -93,7 +93,7 @@ export const DesktopStudio: FC<PromoInputProps> = ({ screenshots, texts, accent,
 
       {/* copy */}
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: height * (portrait ? 0.08 : 0.07), gap: height * 0.02 }}>
-        <Eyebrow text="For desktop" enterAt={6} size={u * 0.02} accent={accent} />
+        {eyebrow && <Eyebrow text={eyebrow} enterAt={6} size={u * 0.02} accent={accent} />}
         <MaskHeadline text={headline} enterAt={12} size={u * (portrait ? 0.078 : 0.07)} maxWidth={width * 0.86} accent={accent} />
       </AbsoluteFill>
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: height * (portrait ? 0.1 : 0.05), gap: height * 0.022 }}>

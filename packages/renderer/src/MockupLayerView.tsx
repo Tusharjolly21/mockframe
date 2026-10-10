@@ -186,7 +186,27 @@ function ScreenPlaceholder({ device, layerId }: { device: Device; layerId: strin
 /** Swap the address and tab title shown in a browser frame. The frame SVG tags
  *  its address <text> with id="fk_urltext_…" and its tab label with
  *  id="fk_tabtitle_…"; only those texts are replaced. */
+/**
+ * Device art lives at root-absolute URLs (/devices/…). Hosts that serve the app
+ * from somewhere else — the Remotion render bundle, a CDN — set
+ * `globalThis.__FK_ASSET_BASE__` and every such URL is re-based onto it, so the
+ * photographic device bodies load there instead of 404ing to a bare frame.
+ */
+function assetBase(): string {
+  const base = (globalThis as { __FK_ASSET_BASE__?: string }).__FK_ASSET_BASE__;
+  return typeof base === "string" ? base.replace(/\/$/, "") : "";
+}
+function rebaseUrl(url: string): string {
+  const base = assetBase();
+  return base && url.startsWith("/") && !url.startsWith("//") ? `${base}${url}` : url;
+}
+function rebase(markup: string): string {
+  const base = assetBase();
+  return base ? markup.replace(/(href|src)=(["'])\/(?!\/)/g, `$1=$2${base}/`) : markup;
+}
+
 function browserUrlOverlay(overlay: string, url: string | undefined, title?: string): string {
+  overlay = rebase(overlay);
   if (!url && !title) return overlay;
   const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const swap = (src: string, id: string, text: string) =>
@@ -412,7 +432,7 @@ export function MockupLayerView({
     const plateImg = (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={plate.src}
+        src={rebaseUrl(plate.src)}
         alt=""
         width={plate.width}
         height={plate.height}
