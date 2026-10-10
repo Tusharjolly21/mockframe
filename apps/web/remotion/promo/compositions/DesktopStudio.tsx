@@ -6,7 +6,7 @@ import { RealDeviceFrame, usePreloadScreenshots } from "../kit/RealDeviceFrame";
 import { Caption, Chip, Eyebrow, MaskHeadline } from "../kit/AnimatedText";
 import { LightSweep, PromoAudio, Watermark } from "../kit/Overlay";
 import { StudioFloor } from "../kit/Shapes";
-import { deviceAspect, LAPTOP_ID, Reflection, shotFor, ZoomCallout } from "../kit/MultiDevice";
+import { deviceAspect, LAPTOP_ID, ScreenReflection, shotFor, ZoomCallout } from "../kit/MultiDevice";
 import { cutsPassed, EASE_CINE, EASE_IN_OUT, EASE_OUT, rgba } from "../kit/theme";
 
 /**
@@ -73,15 +73,13 @@ export const DesktopStudio: FC<PromoInputProps> = ({ screenshots, texts, accent,
       {/* studio key light */}
       <AbsoluteFill style={{ background: `radial-gradient(60% 40% at 50% ${horizon * 100 - 22}%, rgba(255,255,255,0.08) 0%, transparent 70%)`, pointerEvents: "none" }} />
       {/* screen light spill */}
-      <div style={{ position: "absolute", left: "50%", top: `${horizon * 100}%`, width: lapW * 1.6, height: lapH * 0.7, transform: "translate(-50%, -30%)", background: `radial-gradient(ellipse at 50% 30%, ${rgba(accent, spill)} 0%, transparent 65%)`, filter: "blur(10px)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", left: "50%", top: `${horizon * 100}%`, width: lapW * 1.6, height: lapH * 0.7, transform: "translate(-50%, -30%)", background: `radial-gradient(ellipse at 50% 30%, ${rgba(accent, spill)} 0%, transparent 68%)`, pointerEvents: "none" }} />
 
       {/* laptop + floor reflection */}
       <div style={{ position: "absolute", left: width / 2 - lapW / 2, top: lapCy, width: lapW, height: lapH, opacity: enter }}>
         <div style={{ position: "relative" }}>
           {laptop}
-          <Reflection opacity={0.18} fade={0.4}>
-            {laptop}
-          </Reflection>
+          <ScreenReflection deviceId={LAPTOP_ID} width={lapW} shot={shot} opacity={0.2 * power} fade={0.45} rotateX={rotX} rotateY={rotY} scale={scale} perspective={width * 2.4} />
         </div>
       </div>
 

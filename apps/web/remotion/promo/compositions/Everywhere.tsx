@@ -9,7 +9,7 @@ import { CutFlash, LightSweep, PromoAudio, Watermark } from "../kit/Overlay";
 import { ContactShadow } from "../kit/Stage";
 import { StudioFloor } from "../kit/Shapes";
 import { Sculpture3D } from "../kit/Sculpture3D";
-import { deviceAspect, LAPTOP_ID, Reflection, shotFor, TABLET_ID } from "../kit/MultiDevice";
+import { deviceAspect, LAPTOP_ID, ScreenReflection, shotFor, TABLET_ID } from "../kit/MultiDevice";
 import { cutsPassed, EASE_CINE, EASE_OUT, rgba, velBlur } from "../kit/theme";
 
 /**
@@ -59,7 +59,7 @@ export const Everywhere: FC<PromoInputProps> = ({ deviceId, screenshots, texts, 
       <StudioFloor accent={accent} horizon={floorY / height} />
       <PromoAudio musicUrl={musicUrl} />
       {/* accent horizon glow */}
-      <div style={{ position: "absolute", left: 0, right: 0, top: floorY - u * 0.02, height: u * 0.04, background: `radial-gradient(50% 50% at 50% 50%, ${rgba(accent, 0.45)} 0%, transparent 100%)`, filter: "blur(6px)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", left: 0, right: 0, top: floorY - u * 0.02, height: u * 0.04, background: `radial-gradient(50% 50% at 50% 50%, ${rgba(accent, 0.45)} 0%, transparent 100%)`, pointerEvents: "none" }} />
 
 
       <AbsoluteFill style={{ transform: `scale(${push})` }}>
@@ -71,15 +71,13 @@ export const Everywhere: FC<PromoInputProps> = ({ deviceId, screenshots, texts, 
           const h = d.w * d.a;
           // front devices sit a touch lower so the lineup has depth
           const baseY = floorY - h + d.z * u * 0.03;
-          const el = <RealDeviceFrame deviceId={d.id} width={d.w} screenshot={shotFor(screenshots, d.id, beat + d.idx)} rotateY={arc + d.rot} rotateX={3} perspective={width * 2.6} glare={0.1} />;
+          const shot = shotFor(screenshots, d.id, beat + d.idx);
           return (
             <div key={d.idx} style={{ position: "absolute", left: width / 2 + d.x * lapW * 0.62 - d.w / 2 + arc * -d.z * u * 0.002, top: baseY + yOff, opacity: interpolate(e, [0, 0.3], [0, 1], { extrapolateRight: "clamp" }), filter: blur > 0.3 ? `blur(${blur}px)` : undefined, zIndex: d.z }}>
               <div style={{ position: "relative" }}>
-                {el}
+                <RealDeviceFrame deviceId={d.id} width={d.w} screenshot={shot} rotateY={arc + d.rot} rotateX={3} perspective={width * 2.6} glare={0.1} />
                 <ContactShadow width={d.w} opacity={0.4 * e} />
-                <Reflection opacity={0.16 * e} fade={0.35}>
-                  {el}
-                </Reflection>
+                <ScreenReflection deviceId={d.id} width={d.w} shot={shot} opacity={0.18 * e} fade={0.4} rotateX={3} rotateY={arc + d.rot} perspective={width * 2.6} />
               </div>
             </div>
           );

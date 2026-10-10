@@ -48,6 +48,7 @@ export function EditorShell({
   checkoutReturn,
   openCaptureOnLoad = false,
   openPromoOnLoad = false,
+  promoTemplateId,
   openReplayOnLoad = false,
   remixId,
   openDroppedOnLoad = false,
@@ -65,6 +66,8 @@ export function EditorShell({
   checkoutReturn?: { subscriptionId?: string; status?: string };
   openCaptureOnLoad?: boolean;
   openPromoOnLoad?: boolean;
+  /** a promo template to open straight into (/editor?promo=<template id>, from /templates/video) */
+  promoTemplateId?: string;
   openReplayOnLoad?: boolean;
   remixId?: string;
   /** a screenshot was dropped on a marketing page and parked for us (lib/handoff) */
@@ -608,7 +611,7 @@ export function EditorShell({
         )}
       </AnimatePresence>
 
-      {promoOpen && <PromoPanel onClose={() => setPromoOpen(false)} />}
+      {promoOpen && <PromoPanel initialTemplateId={promoTemplateId} onClose={() => setPromoOpen(false)} />}
       <ExportNextSteps />
       <ShortcutsSheet />
       <StarterModal embedded={embedded} deepLinked={deepLinked} />

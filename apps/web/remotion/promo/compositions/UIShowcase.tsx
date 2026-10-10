@@ -53,8 +53,9 @@ export const UIShowcase: FC<PromoInputProps> = ({ deviceId, screenshots, texts, 
   const gap = cardW * 0.16;
   const dive = interpolate(frame, [96, 138], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE_IN_EXPO });
   const wallScale = interpolate(dive, [0, 1], [1, 2.6]);
-  const wallO = interpolate(dive, [0, 0.7, 1], [1, 0.5, 0.14]);
-  const wallBlur = interpolate(dive, [0, 1], [0, 14]);
+  // fade (not blur) the wall out as the camera dives — blurring a wall of
+  // screenshots this size would be re-rasterised every frame
+  const wallO = interpolate(dive, [0, 0.6, 1], [1, 0.32, 0.1]);
   const wallIn = spring({ frame, fps, config: { damping: 22, stiffness: 70 } });
 
   // ── phase 2: hero phone + floating UI panels
@@ -85,14 +86,14 @@ export const UIShowcase: FC<PromoInputProps> = ({ deviceId, screenshots, texts, 
       <PromoAudio musicUrl={musicUrl} />
 
       {/* isometric wall */}
-      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", opacity: wallO * wallIn, filter: wallBlur > 0.3 ? `blur(${wallBlur}px)` : undefined }}>
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", opacity: wallO * wallIn }}>
         <div style={{ display: "flex", gap, transform: `scale(${wallScale * interpolate(wallIn, [0, 1], [0.85, 1])}) rotateX(52deg) rotateZ(-38deg)`, transformStyle: "preserve-3d" }}>
           {Array.from({ length: cols }, (_, c) => {
             const dir = c % 2 === 0 ? 1 : -1;
             const offset = dir * frame * u * 0.0035 + (c % 2 ? -cardW * 1.6 : 0);
             return (
-              <div key={c} style={{ display: "flex", flexDirection: "column", gap, transform: `translateY(${offset}px)` }}>
-                {Array.from({ length: 5 }, (_, r) => (
+              <div key={c} style={{ display: "flex", flexDirection: "column", gap, transform: `translate3d(0, ${offset}px, 0)`, willChange: "transform" }}>
+                {Array.from({ length: 4 }, (_, r) => (
                   <WallCard key={r} shot={screenshots.length ? screenAt(screenshots, c * 2 + r) : undefined} w={cardW} accent={accent} i={c + r} />
                 ))}
               </div>

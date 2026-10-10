@@ -36,7 +36,7 @@ export const Glow: FC<{ accent: string; strength: number; size?: number }> = ({ 
   if (strength <= 0.001) return null;
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-      <div style={{ width: width * size, height: width * size, borderRadius: "50%", background: `radial-gradient(circle, ${rgba(accent, strength)} 0%, transparent 62%)`, filter: "blur(24px)" }} />
+      <div style={{ width: width * size, height: width * size, borderRadius: "50%", background: `radial-gradient(circle, ${rgba(accent, strength)} 0%, ${rgba(accent, strength * 0.45)} 30%, transparent 64%)` }} />
     </AbsoluteFill>
   );
 };
@@ -73,10 +73,10 @@ export const LightSweep: FC<{ startAt: number; durationInFrames?: number }> = ({
         width: width * 0.35,
         height,
         transform: "skewX(-14deg)",
-        background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent)",
+        // soft edges come from the gradient itself — no per-frame blur pass
+        background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0.05) 75%, transparent 100%)",
         opacity,
         pointerEvents: "none",
-        filter: "blur(6px)",
       }}
     />
   );

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { ChevronDown, Code2, Figma, LayoutTemplate, Menu, Rocket, Smartphone, Sparkles, Store, Video, Wrench, X, type LucideIcon } from "lucide-react";
+import { ChevronDown, Clapperboard, Code2, Figma, LayoutTemplate, Menu, Rocket, Smartphone, Sparkles, Store, Video, Wrench, X, type LucideIcon } from "lucide-react";
 import { BrandMark } from "./BrandMark";
 import { useAuth } from "@/lib/auth";
 import { SITE_NAME } from "@/lib/site";
@@ -20,6 +20,7 @@ const PRODUCT_GROUPS: { title: string; items: NavItem[] }[] = [
       ["/app-store-screenshots", "Store screenshots", "App Store and Google Play packs", Store],
       ["/ai", "AI generator", "Describe your app, get the pack", Sparkles],
       ["/templates", "Templates", "Scenes to start from", LayoutTemplate],
+      ["/templates/video", "Video templates", "Animated app ads in 3D", Clapperboard],
     ],
   },
   {

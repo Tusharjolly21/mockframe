@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { EditorShell } from "@/components/editor/EditorShell";
+import { getPromoTemplate } from "@/lib/promo/registry";
 
 // The editor is the app itself, not indexable content — it was ranking on the
 // generic default title (duplicate-title risk). noindex,follow keeps it out of
@@ -23,5 +24,5 @@ export default async function EditorPage({
   searchParams: Promise<{ device?: string; screen?: string; calibrate?: string; upgrade?: string; capture?: string; plan?: string; promo?: string; replay?: string; remix?: string; drop?: string; figma?: string; showcase?: string; subscription_id?: string; status?: string }>;
 }) {
   const { device, screen, calibrate, upgrade, capture, plan, promo, replay, remix, drop, figma, showcase, subscription_id, status } = await searchParams;
-  return <EditorShell initialDeviceId={device} initialScreenApp={screen} openCalibrate={calibrate === "1"} openUpgradeOnLoad={upgrade === "1"} upgradePlan={plan} checkoutReturn={upgrade === "success" ? { subscriptionId: subscription_id, status } : undefined} openCaptureOnLoad={capture === "1"} openPromoOnLoad={promo === "1"} openReplayOnLoad={replay === "1"} remixId={remix} openDroppedOnLoad={drop === "1"} figmaImportId={figma} figmaShowcase={showcase === "1"} />;
+  return <EditorShell initialDeviceId={device} initialScreenApp={screen} openCalibrate={calibrate === "1"} openUpgradeOnLoad={upgrade === "1"} upgradePlan={plan} checkoutReturn={upgrade === "success" ? { subscriptionId: subscription_id, status } : undefined} openCaptureOnLoad={capture === "1"} openPromoOnLoad={promo === "1" || !!(promo && getPromoTemplate(promo))} promoTemplateId={promo && getPromoTemplate(promo) ? promo : undefined} openReplayOnLoad={replay === "1"} remixId={remix} openDroppedOnLoad={drop === "1"} figmaImportId={figma} figmaShowcase={showcase === "1"} />;
 }

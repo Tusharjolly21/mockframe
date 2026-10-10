@@ -1,7 +1,7 @@
 import { useEffect, useMemo, type FC } from "react";
 import { ThreeCanvas } from "@remotion/three";
 import { noise3D } from "@remotion/noise";
-import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { getRemotionEnvironment, spring, useCurrentFrame, useCurrentScale, useVideoConfig } from "remotion";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
@@ -47,17 +47,17 @@ interface Piece {
 function geometryFor(kind: Kind) {
   switch (kind) {
     case "sphere":
-      return <sphereGeometry args={[1, 96, 96]} />;
+      return <sphereGeometry args={[1, 64, 48]} />;
     case "torus":
-      return <torusGeometry args={[1, 0.38, 64, 160]} />;
+      return <torusGeometry args={[1, 0.38, 40, 112]} />;
     case "capsule":
-      return <capsuleGeometry args={[0.42, 1.3, 24, 64]} />;
+      return <capsuleGeometry args={[0.42, 1.3, 16, 48]} />;
     case "slab":
       return <boxGeometry args={[2.2, 1.4, 0.12]} />;
     case "ring":
-      return <torusGeometry args={[1, 0.06, 32, 200]} />;
+      return <torusGeometry args={[1, 0.06, 16, 160]} />;
     case "knot":
-      return <torusKnotGeometry args={[0.7, 0.22, 220, 32]} />;
+      return <torusKnotGeometry args={[0.7, 0.22, 160, 24]} />;
   }
 }
 
@@ -121,8 +121,23 @@ export const Sculpture3D: FC<{ accent: string; width: number; height: number; or
     ];
   }, [accent, portrait, layout]);
 
+  // The editor preview shows the composition scaled down, so a full-size WebGL
+  // canvas would shade millions of pixels nobody sees. Match the canvas to the
+  // on-screen size there; exports always render at full resolution.
+  const rendering = getRemotionEnvironment().isRendering;
+  const scale = useCurrentScale({ dontThrowIfOutsideOfRemotion: true });
+  const screenDpr = typeof window === "undefined" ? 1 : window.devicePixelRatio || 1;
+  const dpr = rendering ? 1 : Math.min(1, Math.max(0.25, scale * screenDpr));
+
   return (
-    <ThreeCanvas width={width} height={height} dpr={1} camera={{ fov: 32, position: [0, 0, 11] }} gl={{ antialias: true, preserveDrawingBuffer: true }} style={{ position: "absolute", inset: 0 }}>
+    <ThreeCanvas
+      width={width}
+      height={height}
+      dpr={dpr}
+      camera={{ fov: 32, position: [0, 0, 11] }}
+      gl={{ antialias: true, preserveDrawingBuffer: rendering, powerPreference: "high-performance" }}
+      style={{ position: "absolute", inset: 0 }}
+    >
       <StudioEnv />
       <ambientLight intensity={0.35} />
       <directionalLight position={[4, 6, 6]} intensity={1.6} />

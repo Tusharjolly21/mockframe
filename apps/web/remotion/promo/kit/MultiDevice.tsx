@@ -1,4 +1,4 @@
-import type { FC, ReactNode } from "react";
+import type { FC } from "react";
 import { getDevice } from "@framekit/devices";
 import type { PromoScreenshot } from "../../../lib/promo/inputProps";
 import { interpolate } from "remotion";
@@ -43,25 +43,59 @@ export function shotFor(screens: PromoScreenshot[], deviceId: string, index = 0)
   return screenAt(family, index);
 }
 
-/** Mirror its children into a soft floor reflection that fades out downward. */
-export const Reflection: FC<{ children: ReactNode; opacity?: number; fade?: number; gap?: number }> = ({ children, opacity = 0.22, fade = 0.45, gap = 0 }) => (
-  <div
-    style={{
-      position: "absolute",
-      left: 0,
-      right: 0,
-      top: `calc(100% + ${gap}px)`,
-      transform: "scaleY(-1)",
-      transformOrigin: "center",
-      opacity,
-      pointerEvents: "none",
-      WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) ${fade * 100}%)`,
-      maskImage: `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) ${fade * 100}%)`,
-    }}
-  >
-    {children}
-  </div>
-);
+/**
+ * A soft floor reflection of a device's screen. Instead of re-drawing the whole
+ * framed device upside down (a second heavy SVG + photo plate every frame), it
+ * mirrors just the screenshot as one image layer — the part of a real
+ * reflection the eye actually reads, at a fraction of the cost.
+ */
+export const ScreenReflection: FC<{
+  deviceId: string;
+  width: number;
+  shot: PromoScreenshot;
+  opacity?: number;
+  /** how much of the screen height the reflection shows before fading out */
+  fade?: number;
+  rotateY?: number;
+  rotateX?: number;
+  scale?: number;
+  perspective?: number;
+}> = ({ deviceId, width, shot, opacity = 0.2, fade = 0.4, rotateY = 0, rotateX = 0, scale = 1, perspective = 2600 }) => {
+  const d = getDevice(deviceId);
+  if (!d || opacity <= 0.001 || shot.kind === "video") return null;
+  const frameW = d.plate?.width ?? d.frame.width;
+  const frameH = d.plate?.height ?? d.frame.height;
+  const s = width / frameW;
+  const r = d.frame.screenRect;
+  const h = r.height * s;
+  // the gap between the screen's bottom edge and the frame's bottom edge
+  const below = (frameH - r.y - r.height) * s;
+  // the mask is applied before the flip, so it fades toward the screen's top
+  // edge — which lands farthest from the device once mirrored
+  const mask = `linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) ${fade * 100}%)`;
+  return (
+    <div style={{ position: "absolute", left: 0, top: "100%", width, perspective, pointerEvents: "none" }}>
+      <div style={{ transform: `rotateX(${-rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`, transformOrigin: "50% 0%" }}>
+        <div
+          style={{
+            marginLeft: r.x * s,
+            marginTop: below,
+            width: r.width * s,
+            height: h,
+            opacity,
+            backgroundImage: `url("${shot.url}")`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            transform: "scaleY(-1)",
+            borderRadius: d.screen.cornerRadius * s,
+            WebkitMaskImage: mask,
+            maskImage: mask,
+          }}
+        />
+      </div>
+    </div>
+  );
+};
 
 /** A magnified crop of the screenshot in a floating glass card — the "look
  *  closer" UI callout that pops out of the laptop screen. */
@@ -76,7 +110,7 @@ export const ZoomCallout: FC<{ shot: PromoScreenshot; fx: number; fy: number; w:
         overflow: "hidden",
         opacity: Math.min(1, p * 1.6),
         transform: `scale(${interpolate(p, [0, 1], [0.6, 1])}) translateY(${interpolate(p, [0, 1], [h * 0.3, 0])}px)`,
-        backgroundImage: `url(${shot.url})`,
+        backgroundImage: `url("${shot.url}")`,
         backgroundSize: `${zoom * 100}% auto`,
         backgroundPosition: `${fx * 100}% ${fy * 100}%`,
         backgroundColor: "#111",
