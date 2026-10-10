@@ -171,7 +171,9 @@ const ShotThumb = memo(function ShotThumb({
       }`}
       style={{ width: w, height: THUMB_H }}
     >
-      <span aria-hidden className="pointer-events-none absolute left-0 top-0 origin-top-left" style={{ transform: `scale(${k})` }}>
+      {/* zoom, not transform: scale — 3D devices under a scale() are composited at
+          full canvas size, and a strip of them stalls the GPU (blank, flickering editor) */}
+      <span aria-hidden className="pointer-events-none absolute left-0 top-0" style={{ zoom: k }}>
         <SceneRenderer scene={scene} resolveAsset={resolveAsset} panoramaIdx={index} panoramaTotal={total} />
       </span>
       <span className="absolute bottom-1 left-1 grid h-[15px] min-w-[15px] place-items-center rounded-full bg-black/55 px-1 text-[9.5px] font-semibold tabular-nums text-white backdrop-blur-sm">

@@ -72,8 +72,7 @@ export function StyleThumb({
             style={{
               width: scene.canvas.width,
               height: scene.canvas.height,
-              transform: `scale(${BOX_WIDTH / scene.canvas.width})`,
-              transformOrigin: "top left",
+              zoom: BOX_WIDTH / scene.canvas.width,
             }}
           >
             <SceneRenderer scene={scene} resolveAsset={resolveAsset} />

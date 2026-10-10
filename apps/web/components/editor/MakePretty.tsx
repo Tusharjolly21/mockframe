@@ -44,7 +44,7 @@ function LookThumb({ look, active, onClick }: { look: Look; active: boolean; onC
       }`}
     >
       <div className="pointer-events-none overflow-hidden rounded-lg" style={{ width: THUMB_W, height: Math.round(height * s) }}>
-        <div style={{ width, height, transform: `scale(${s})`, transformOrigin: "0 0" }}>
+        <div style={{ width, height, zoom: s }}>
           <SceneRenderer scene={look.scene} resolveAsset={resolveAsset} />
         </div>
       </div>

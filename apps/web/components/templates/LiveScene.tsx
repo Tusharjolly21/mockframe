@@ -63,7 +63,7 @@ export function LiveScene({
           className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden ${frameClassName}`}
           style={{ width: Math.round(W * s), height: Math.round(H * s) }}
         >
-          <div style={{ width: W, height: H, transform: `scale(${s})`, transformOrigin: "0 0" }}>
+          <div style={{ width: W, height: H, zoom: s }}>
             <SceneRenderer scene={scene} resolveAsset={resolveAsset} />
           </div>
         </div>

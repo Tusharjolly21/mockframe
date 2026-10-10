@@ -42,7 +42,7 @@ export function SharedSceneView({ scene, assets }: { scene: SceneDocument; asset
     <div ref={wrapRef} className="flex h-full w-full items-center justify-center">
       {ready && (
         <div style={{ width: dims.width, height: dims.height, overflow: "hidden", borderRadius: 12 }} className="shadow-[0_30px_90px_rgba(0,0,0,0.45)]">
-          <div style={{ transform: `scale(${scale})`, transformOrigin: "0 0", width: scene.canvas.width, height: scene.canvas.height }}>
+          <div style={{ zoom: scale, width: scene.canvas.width, height: scene.canvas.height }}>
             <SceneRenderer scene={scene} resolveAsset={resolveAsset} />
           </div>
         </div>
